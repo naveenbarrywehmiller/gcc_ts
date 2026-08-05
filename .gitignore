@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+client/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+server/data/*.db
+server/data/*.db-wal
+server/data/*.db-shm
+
+# Uploads
+server/uploads/*
+!server/uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+server/src/data/*.db
+server/src/data/*.db-wal
+server/src/data/*.db-shm

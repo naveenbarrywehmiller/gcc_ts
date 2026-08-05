@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html {
+    @apply antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  body {
+    @apply bg-surface-50 text-surface-900 dark:bg-surface-950 dark:text-surface-100;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-300 dark:bg-surface-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-400 dark:bg-surface-600;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-500/50 ring-offset-1 ring-offset-white dark:ring-offset-surface-900;
+  }
+}
+
+@layer components {
+  /* Input styles */
+  .input {
+    @apply w-full px-3 py-2 text-sm rounded-lg border border-surface-200 dark:border-surface-700 
+           bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100
+           placeholder:text-surface-400 dark:placeholder:text-surface-500
+           focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 dark:focus:border-brand-400
+           transition-all duration-150;
+  }
+
+  .input-sm {
+    @apply input py-1.5 px-2.5 text-xs;
+  }
+
+  /* Button styles */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
+           transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+           active:scale-[0.98];
+  }
+
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600
+           shadow-sm shadow-brand-600/25;
+  }
+
+  .btn-secondary {
+    @apply btn bg-surface-100 text-surface-700 hover:bg-surface-200 
+           dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700
+           border border-surface-200 dark:border-surface-700;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-surface-600 hover:bg-surface-100 
+           dark:text-surface-400 dark:hover:bg-surface-800;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-xs {
+    @apply px-2 py-1 text-xs;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-800
+           shadow-sm;
+  }
+
+  .card-hover {
+    @apply card hover:border-surface-300 dark:hover:border-surface-700 
+           hover:shadow-md transition-all duration-200;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full;
+  }
+
+  .badge-draft {
+    @apply badge bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400;
+  }
+
+  .badge-submitted {
+    @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400;
+  }
+
+  .badge-approved {
+    @apply badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400;
+  }
+
+  .badge-rejected {
+    @apply badge bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400;
+  }
+
+  .badge-recalled {
+    @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400;
+  }
+
+  /* Table */
+  .table-container {
+    @apply overflow-x-auto rounded-xl border border-surface-200 dark:border-surface-800;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply animate-pulse bg-surface-200 dark:bg-surface-800 rounded;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl;
+  }
+}
+
+/* Toast animations */
+.toast-enter {
+  animation: toastIn 0.3s ease-out;
+}
+.toast-exit {
+  animation: toastOut 0.2s ease-in forwards;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(100%) scale(0.95); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: 0; transform: translateX(100%) scale(0.95); }
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  animation: backdropIn 0.2s ease-out;
+}
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Number input hide spinners */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}

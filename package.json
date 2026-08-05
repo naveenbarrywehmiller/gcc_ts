@@ -1,0 +1,14 @@
+{
+  "name": "timesheet",
+  "version": "1.0.0",
+  "description": "Employee Time Tracking System — server + client monorepo",
+  "scripts": {
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && npm install",
+    "postinstall": "npm run install:server && npm run install:client",
+    "setup": "cd server && npm run setup",
+    "dev": "npm run dev:server & npm run dev:client & wait",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev"
+  }
+}
