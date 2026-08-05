@@ -231,7 +231,14 @@ export default function AdminApprovals() {
                               <td className="py-2 text-surface-600 dark:text-surface-400">
                                 {new Date(e.work_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                               </td>
-                              <td className="py-2 font-medium text-surface-800 dark:text-surface-200">{e.project_code} — {e.project_name}</td>
+                              <td className="py-2 font-medium text-surface-800 dark:text-surface-200">
+                                {e.project_code} — {e.project_name}
+                                {e.ownership_label && (
+                                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                    🏷️ {e.ownership_label}
+                                  </div>
+                                )}
+                              </td>
                               <td className="py-2 text-surface-500">{e.task_category || '—'}</td>
                               <td className="py-2 text-right font-semibold text-surface-900 dark:text-white">{e.hours}h</td>
                               <td className="py-2 text-surface-400 truncate max-w-[200px]">{e.description || '—'}</td>

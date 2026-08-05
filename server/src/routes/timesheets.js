@@ -61,12 +61,14 @@ router.get('/', authenticate, (req, res) => {
            p.division_id as project_division_id, p.subdivision_id as project_subdivision_id,
            tk.classification, tk.task_category, tk.task_description as task_desc, tk.requires_project,
            d.name as division_name,
-           s.name as subdivision_name
+           s.name as subdivision_name,
+           do_.label as ownership_label
     FROM timesheets t
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN tasks tk ON t.task_id = tk.id
     LEFT JOIN divisions d ON t.division_id = d.id
     LEFT JOIN subdivisions s ON t.subdivision_id = s.id
+    LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
     WHERE t.user_id = ? AND t.work_date BETWEEN ? AND ?
     ORDER BY t.work_date ASC, t.project_id ASC
   `).all(userId, startDate, endDate);
@@ -84,13 +86,15 @@ router.get('/all', authenticate, authorize('admin'), (req, res) => {
            p.project_code, p.project_name,
            tk.task_category,
            d.name as division_name,
-           s.name as subdivision_name
+           s.name as subdivision_name,
+           do_.label as ownership_label
     FROM timesheets t
     LEFT JOIN users u ON t.user_id = u.id
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN tasks tk ON t.task_id = tk.id
     LEFT JOIN divisions d ON t.division_id = d.id
     LEFT JOIN subdivisions s ON t.subdivision_id = s.id
+    LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
     WHERE u.name != '[Deleted User]'
   `;
   const params = [];
@@ -153,7 +157,7 @@ router.get('/summary', authenticate, authorize('admin'), (req, res) => {
 
 // POST /api/timesheets - Create or update a single entry (upsert)
 router.post('/', authenticate, (req, res) => {
-  const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description } = req.body;
+  const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = req.body;
   const userId = req.user.id;
 
   if (!work_date || hours === undefined) {
@@ -222,10 +226,10 @@ router.post('/', authenticate, (req, res) => {
     db.prepare(`
       UPDATE timesheets SET task_id = ?, hours = ?, description = ?, 
         week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-        status = 'draft', updated_at = CURRENT_TIMESTAMP
+        ownership_id = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(task_id || null, hours, description || null, week, weekYear, 
-           effectiveDivisionId || null, subdivision_id || null, project_description || null, existing.id);
+           effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, existing.id);
 
     const entry = db.prepare(`
       SELECT t.*, p.project_code, p.project_name, tk.task_category, tk.requires_project,
@@ -243,10 +247,10 @@ router.post('/', authenticate, (req, res) => {
   // Create new
   const result = db.prepare(`
     INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year, 
-                            division_id, subdivision_id, project_description, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
+                            division_id, subdivision_id, project_description, ownership_id, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
   `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
-         effectiveDivisionId || null, subdivision_id || null, project_description || null);
+         effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null);
 
   const entry = db.prepare(`
     SELECT t.*, p.project_code, p.project_name, tk.task_category, tk.requires_project,
@@ -274,7 +278,7 @@ router.post('/batch', authenticate, (req, res) => {
   const upsertEntry = db.transaction((entries) => {
     const results = [];
     for (const entry of entries) {
-      const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description } = entry;
+      const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = entry;
       if (!work_date || hours === undefined) continue;
       if (!project_id && !task_id) continue; // Need at least one identifier
       if (hours < 0 || hours > 24) continue;
@@ -312,18 +316,18 @@ router.post('/batch', authenticate, (req, res) => {
           db.prepare(`
             UPDATE timesheets SET task_id = ?, hours = ?, description = ?, 
               week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-              status = 'draft', updated_at = CURRENT_TIMESTAMP
+              ownership_id = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
           `).run(task_id || null, hours, description || null, week, weekYear,
-                 division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, existing.id);
+                 division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, existing.id);
         }
       } else if (hours > 0) {
         db.prepare(`
           INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year, 
-                                  division_id, subdivision_id, project_description, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
+                                  division_id, subdivision_id, project_description, ownership_id, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
         `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
-               division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null);
+               division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null);
       }
       results.push({ project_id, task_id, work_date, hours, status: 'saved' });
     }

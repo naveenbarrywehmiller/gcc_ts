@@ -134,6 +134,15 @@ function migrate() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS department_ownerships (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      department_id INTEGER NOT NULL,
+      label TEXT NOT NULL,
+      active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (department_id) REFERENCES departments(id)
+    );
+
     -- Indexes for performance
     CREATE UNIQUE INDEX IF NOT EXISTS idx_timesheets_user_project_date ON timesheets(user_id, project_id, work_date);
     CREATE INDEX IF NOT EXISTS idx_timesheets_user_date ON timesheets(user_id, work_date);
@@ -150,6 +159,7 @@ function migrate() {
     CREATE INDEX IF NOT EXISTS idx_holidays_date ON holidays(date);
     CREATE INDEX IF NOT EXISTS idx_admin_divisions_user ON admin_divisions(user_id);
     CREATE INDEX IF NOT EXISTS idx_subdivisions_division ON subdivisions(division_id);
+    CREATE INDEX IF NOT EXISTS idx_dept_ownerships_department ON department_ownerships(department_id);
   `;
 
   db.exec(migrationSQL);
@@ -182,6 +192,10 @@ function migrate() {
   if (!timesheetColumns.includes('project_description')) {
     console.log('  → Adding timesheets.project_description column...');
     db.exec('ALTER TABLE timesheets ADD COLUMN project_description TEXT');
+  }
+  if (!timesheetColumns.includes('ownership_id')) {
+    console.log('  → Adding timesheets.ownership_id column...');
+    db.exec('ALTER TABLE timesheets ADD COLUMN ownership_id INTEGER REFERENCES department_ownerships(id)');
   }
 
   const auditColumns = db.prepare("PRAGMA table_info(audit_logs)").all().map(c => c.name);

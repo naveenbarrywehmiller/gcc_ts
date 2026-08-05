@@ -4,7 +4,7 @@ const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/departments - List all departments
+// GET /api/departments - List all departments (with ownerships)
 router.get('/', authenticate, (req, res) => {
   const { active } = req.query;
   let query = 'SELECT * FROM departments WHERE 1=1';
@@ -19,6 +19,13 @@ router.get('/', authenticate, (req, res) => {
 
   query += ' ORDER BY name ASC';
   const departments = db.prepare(query).all(...params);
+
+  // Fetch active ownerships for each department
+  const ownershipStmt = db.prepare('SELECT * FROM department_ownerships WHERE department_id = ? AND active = 1 ORDER BY label ASC');
+  departments.forEach(dept => {
+    dept.ownerships = ownershipStmt.all(dept.id);
+  });
+
   res.json({ departments });
 });
 

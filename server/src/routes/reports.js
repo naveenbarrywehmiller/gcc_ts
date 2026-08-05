@@ -469,13 +469,15 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
            u.name as employee_name, u.email as employee_email, u.division as employee_division,
            p.project_code, p.project_name, p.customer_name,
            tk.classification, tk.task_category, tk.task_description,
-           d.name as division_name, s.name as subdivision_name
+           d.name as division_name, s.name as subdivision_name,
+           do_.label as ownership_label
     FROM timesheets t
     JOIN users u ON t.user_id = u.id
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN tasks tk ON t.task_id = tk.id
     LEFT JOIN divisions d ON t.division_id = d.id
     LEFT JOIN subdivisions s ON t.subdivision_id = s.id
+    LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
     WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
   `;
   const params = [startDate, endDate];
@@ -513,6 +515,7 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
       { header: 'Week', key: 'week_number', width: 10 },
       { header: 'Project', key: 'project_code', width: 15 },
       { header: 'Task', key: 'task_category', width: 20 },
+      { header: 'Ownership', key: 'ownership_label', width: 20 },
       { header: 'Hours', key: 'hours', width: 10 },
       { header: 'Status', key: 'status', width: 15 }
     ];
@@ -525,6 +528,7 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
         week_number: `W${r.week_number}`,
         project_code: r.project_code,
         task_category: r.task_category || '',
+        ownership_label: r.ownership_label || '',
         hours: r.hours,
         status: r.status
       });
@@ -552,12 +556,13 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
       `W${r.week_number}`, 
       r.project_code || '', 
       r.task_category || '', 
+      r.ownership_label || '',
       r.hours.toString(), 
       r.status
     ]);
 
     const table = {
-      headers: ['Employee', 'Division', 'Date', 'Week', 'Project', 'Task', 'Hours', 'Status'],
+      headers: ['Employee', 'Division', 'Date', 'Week', 'Project', 'Task', 'Ownership', 'Hours', 'Status'],
       rows: rows
     };
     

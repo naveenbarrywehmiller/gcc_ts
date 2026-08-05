@@ -93,10 +93,6 @@ export function AdminActivities() {
   return <SimpleListManager endpoint="/activities" title="Activities" fieldName="name" />;
 }
 
-export function AdminDepartments() {
-  return <SimpleListManager endpoint="/departments" title="Departments" fieldName="name" />;
-}
-
 export function AdminSupportingCategories() {
   return <SimpleListManager endpoint="/supporting-categories" title="Supporting Categories" fieldName="name" />;
 }

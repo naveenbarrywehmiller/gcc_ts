@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 import { TimesheetSkeleton } from '../components/ui/Skeleton';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import Modal from '../components/ui/Modal';
@@ -37,6 +38,7 @@ function getWeekMonday(weekNum, year) {
 
 export default function Timesheet() {
   const toast = useToast();
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [currentWeekInfo, setCurrentWeekInfo] = useState(() => getISOWeekInfo(new Date()));
   const [entries, setEntries] = useState([]);
@@ -47,6 +49,7 @@ export default function Timesheet() {
   const [divisions, setDivisions] = useState([]);
   const [subdivisions, setSubdivisions] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [departmentOwnerships, setDepartmentOwnerships] = useState([]);
   
   const [rows, setRows] = useState([]);
   
@@ -57,6 +60,7 @@ export default function Timesheet() {
   const [newRowProject, setNewRowProject] = useState(null);
   const [newRowProjectDesc, setNewRowProjectDesc] = useState('');
   const [newRowTask, setNewRowTask] = useState(null);
+  const [newRowOwnership, setNewRowOwnership] = useState(null);
   
   // UI State
   const [showRecallModal, setShowRecallModal] = useState(false);
@@ -97,21 +101,28 @@ export default function Timesheet() {
   const { data: fetchedData, isLoading: loading, isError } = useQuery({
     queryKey: ['timesheet', week, year, refreshTrigger],
     queryFn: async () => {
-      const [tsRes, pRes, tkRes, divRes, subRes, hRes] = await Promise.all([
+      const fetches = [
         api.get(`/timesheets?week=${week}&year=${year}`),
         api.get('/projects?active=1'),
         api.get('/tasks?active=1'),
         api.get('/divisions?active=1'),
         api.get('/subdivisions?active=1'),
         api.get(`/holidays?year=${year}`),
-      ]);
+      ];
+      // Fetch ownerships for the user's department (if assigned)
+      if (user?.department_id) {
+        fetches.push(api.get(`/department-ownerships?department_id=${user.department_id}&active=1`));
+      }
+      const results = await Promise.all(fetches);
+      const [tsRes, pRes, tkRes, divRes, subRes, hRes] = results;
       return {
         entries: tsRes.data.entries,
         projects: pRes.data.projects,
         tasks: tkRes.data.tasks,
         divisions: divRes.data.divisions,
         subdivisions: subRes.data.subdivisions,
-        holidays: hRes.data.holidays
+        holidays: hRes.data.holidays,
+        ownerships: results[6]?.data?.ownerships || []
       };
     }
   });
@@ -130,10 +141,11 @@ export default function Timesheet() {
       setDivisions(fetchedData.divisions);
       setSubdivisions(fetchedData.subdivisions);
       setHolidays(fetchedData.holidays);
+      setDepartmentOwnerships(fetchedData.ownerships || []);
 
       const rowMap = {};
       fetchedData.entries.forEach(e => {
-        const key = `${e.project_id || 'null'}-${e.task_id || 0}-${e.division_id || 0}-${e.subdivision_id || 0}-${e.project_description || ''}`;
+        const key = `${e.project_id || 'null'}-${e.task_id || 0}-${e.division_id || 0}-${e.subdivision_id || 0}-${e.project_description || ''}-${e.ownership_id || 0}`;
         if (!rowMap[key]) {
           rowMap[key] = {
             project_id: e.project_id,
@@ -141,6 +153,8 @@ export default function Timesheet() {
             division_id: e.division_id,
             subdivision_id: e.subdivision_id,
             project_description: e.project_description,
+            ownership_id: e.ownership_id,
+            ownership_label: e.ownership_label,
             project_code: e.project_code,
             project_name: e.project_name,
             division_name: e.division_name,
@@ -275,12 +289,16 @@ export default function Timesheet() {
     const division = divisions.find(d => d.id === newRowDivision);
     const subdivision = subdivisions.find(s => s.id === newRowSubdivision);
 
+    const ownership = departmentOwnerships.find(o => o.id === newRowOwnership);
+
     setRows(prev => [...prev, {
       project_id: selectedTaskRequiresProject ? newRowProject : null,
       task_id: newRowTask || null,
       division_id: selectedTaskRequiresProject ? (newRowDivision || null) : null,
       subdivision_id: selectedTaskRequiresProject ? (newRowSubdivision || null) : null,
       project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
+      ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
+      ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
       project_code: project?.project_code || null,
       project_name: project?.project_name || null,
       division_name: selectedTaskRequiresProject ? division?.name : null,
@@ -299,6 +317,7 @@ export default function Timesheet() {
     setNewRowDivision(null);
     setNewRowSubdivision(null);
     setNewRowProjectDesc('');
+    setNewRowOwnership(null);
     setShowAddRow(false);
     toast.success('Row added');
   };
@@ -331,6 +350,7 @@ export default function Timesheet() {
               division_id: row.division_id,
               subdivision_id: row.subdivision_id,
               project_description: row.project_description,
+              ownership_id: row.ownership_id,
               work_date: date,
               hours,
               description: row.descriptions?.[date] || null,
@@ -773,7 +793,7 @@ export default function Timesheet() {
                   const isLocked = row.status === 'approved' || row.status === 'submitted';
 
                   return (
-                    <tr key={`${row.project_id || 'null'}-${row.task_id}-${row.division_id}-${row.subdivision_id}-${row.project_description}`} className="border-b border-surface-100 dark:border-surface-800/50 group hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
+                    <tr key={`${row.project_id || 'null'}-${row.task_id}-${row.division_id}-${row.subdivision_id}-${row.project_description}-${row.ownership_id || 0}`} className="border-b border-surface-100 dark:border-surface-800/50 group hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
                       <td className="sticky left-0 z-10 bg-white dark:bg-surface-900 group-hover:bg-surface-50 dark:group-hover:bg-surface-850 px-4 py-2 transition-colors border-r border-surface-100 dark:border-surface-800/50">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center justify-between">
@@ -799,6 +819,11 @@ export default function Timesheet() {
                                   {row.project_description && (
                                     <p className="text-[11px] text-surface-600 dark:text-surface-400 truncate" title={row.project_description}>
                                       📝 {row.project_description}
+                                    </p>
+                                  )}
+                                  {row.ownership_label && (
+                                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate" title={`Ownership: ${row.ownership_label}`}>
+                                      🏷️ {row.ownership_label}
                                     </p>
                                   )}
                                 </>
@@ -932,6 +957,7 @@ export default function Timesheet() {
           setNewRowDivision(null);
           setNewRowSubdivision(null);
           setNewRowProjectDesc('');
+          setNewRowOwnership(null);
         }}
         title="Add Project Row"
         size="lg"
@@ -1015,6 +1041,18 @@ export default function Timesheet() {
                   id="add-row-project-desc"
                 />
               </div>
+
+              {departmentOwnerships.length > 0 && (
+                <SearchableSelect
+                  label="Ownership (optional)"
+                  options={departmentOwnerships.map(o => ({ value: o.id, label: o.label }))}
+                  value={newRowOwnership}
+                  onChange={setNewRowOwnership}
+                  placeholder="Select ownership type..."
+                  clearable
+                  id="add-row-ownership"
+                />
+              )}
             </>
           )}
         </div>

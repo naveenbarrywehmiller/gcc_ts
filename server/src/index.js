@@ -50,6 +50,7 @@ app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/divisions', require('./routes/divisions'));
 app.use('/api/subdivisions', require('./routes/subdivisions'));
 app.use('/api/departments', require('./routes/departments'));
+app.use('/api/department-ownerships', require('./routes/department-ownerships'));
 app.use('/api/supporting-categories', require('./routes/supporting-categories'));
 app.use('/api/activities', require('./routes/activities'));
 app.use('/api/holidays', require('./routes/holidays'));
