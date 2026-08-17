@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MsalProvider } from '@azure/msal-react';
+import { msalInstance } from './services/msal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -19,10 +21,19 @@ import AdminApprovals from './pages/admin/Approvals';
 import AdminImport from './pages/admin/Import';
 import AdminAuditLog from './pages/admin/AuditLog';
 
+// We'll create ManagerApprovals shortly
+import ManagerApprovals from './pages/manager/ManagerApprovals';
+
 function AdminRoute({ children }) {
   const { isAdmin, loading } = useAuth();
   if (loading) return null;
   return isAdmin ? children : <Navigate to="/" replace />;
+}
+
+function ManagerRoute({ children }) {
+  const { isAdmin, isManager, loading } = useAuth();
+  if (loading) return null;
+  return (isAdmin || isManager) ? children : <Navigate to="/" replace />;
 }
 
 function AppRoutes() {
@@ -32,6 +43,11 @@ function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/timesheet" element={<Timesheet />} />
+        
+        {/* Manager Routes */}
+        <Route path="/manager/approvals" element={<ManagerRoute><ManagerApprovals /></ManagerRoute>} />
+
+        {/* Admin Routes */}
         <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
         <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
         <Route path="/admin/projects" element={<AdminRoute><AdminProjects /></AdminRoute>} />
@@ -60,18 +76,27 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppWithProviders = () => (
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  </QueryClientProvider>
+);
+
 export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider>
-          <ToastProvider>
-            <AuthProvider>
-              <AppRoutes />
-            </AuthProvider>
-          </ToastProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
+  if (msalInstance) {
+    return (
+      <MsalProvider instance={msalInstance}>
+        <AppWithProviders />
+      </MsalProvider>
+    );
+  }
+  return <AppWithProviders />;
 }

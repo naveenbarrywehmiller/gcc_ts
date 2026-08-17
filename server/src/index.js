@@ -44,6 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth-ms'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/tasks', require('./routes/tasks'));
@@ -55,10 +56,12 @@ app.use('/api/supporting-categories', require('./routes/supporting-categories'))
 app.use('/api/activities', require('./routes/activities'));
 app.use('/api/holidays', require('./routes/holidays'));
 app.use('/api/timesheets', require('./routes/timesheets'));
+app.use('/api/manager', require('./routes/manager'));
+app.use('/api/powerbi', require('./routes/powerbi'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/audit', require('./routes/audit'));
-
+app.use('/api/sharepoint-sync', require('./routes/sharepoint-sync'));
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

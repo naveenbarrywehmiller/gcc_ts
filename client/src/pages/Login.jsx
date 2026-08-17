@@ -115,8 +115,49 @@ export default function Login() {
             </button>
           </form>
 
-
         </div>
+
+        {msalEnabled && (
+          <>
+            <div className="flex items-center gap-3 my-6 mx-8">
+              <div className="h-px bg-surface-700 flex-1" />
+              <span className="text-xs font-medium text-surface-500 uppercase tracking-wider">Or</span>
+              <div className="h-px bg-surface-700 flex-1" />
+            </div>
+
+            <div className="bg-surface-900/80 backdrop-blur-xl border border-surface-800 rounded-2xl p-6 shadow-xl mx-4">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    await loginWithMicrosoft();
+                    toast.success('Welcome back!');
+                    navigate('/');
+                  } catch (err) {
+                    toast.error(err.message || 'Microsoft login failed');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold
+                  bg-white text-gray-900 border border-gray-200
+                  hover:bg-gray-50 focus:ring-4 focus:ring-gray-100
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-all duration-200"
+              >
+                <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 10H0V0H10V10Z" fill="#F25022"/>
+                  <path d="M21 10H11V0H21V10Z" fill="#7FBA00"/>
+                  <path d="M10 21H0V11H10V21Z" fill="#00A4EF"/>
+                  <path d="M21 21H11V11H21V21Z" fill="#FFB900"/>
+                </svg>
+                Sign in with Microsoft
+              </button>
+            </div>
+          </>
+        )}
 
         <p className="text-center text-xs text-surface-600 mt-6">
           Internal use only • {new Date().getFullYear()}

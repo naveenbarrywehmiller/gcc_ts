@@ -12,7 +12,7 @@ function migrate() {
       name TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','employee')),
+      role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee')),
       division TEXT,
       core TEXT,
       team_type TEXT,
@@ -73,6 +73,7 @@ function migrate() {
       status TEXT DEFAULT 'draft' CHECK(status IN ('draft','submitted','approved','rejected','recalled')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      billable INTEGER DEFAULT 0,
       FOREIGN KEY (user_id) REFERENCES users(id),
       FOREIGN KEY (project_id) REFERENCES projects(id),
       FOREIGN KEY (task_id) REFERENCES tasks(id)
@@ -196,6 +197,10 @@ function migrate() {
   if (!timesheetColumns.includes('ownership_id')) {
     console.log('  → Adding timesheets.ownership_id column...');
     db.exec('ALTER TABLE timesheets ADD COLUMN ownership_id INTEGER REFERENCES department_ownerships(id)');
+  }
+  if (!timesheetColumns.includes('billable')) {
+    console.log('  → Adding timesheets.billable column...');
+    db.exec('ALTER TABLE timesheets ADD COLUMN billable INTEGER DEFAULT 0');
   }
 
   const auditColumns = db.prepare("PRAGMA table_info(audit_logs)").all().map(c => c.name);
@@ -405,6 +410,46 @@ function migrate() {
   } catch (e) {
     // Index may already exist or partial indexes not supported in older SQLite builds
     console.log('  → Note: partial index for non-project entries skipped (may already exist).');
+  }
+
+  // --- Users table: add manager role to CHECK constraint (requires table recreation) ---
+  const userTableSchema = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get().sql;
+  if (!userTableSchema.includes("'manager'")) {
+    console.log('  → Migrating users table to add manager role constraint...');
+    db.exec(`
+      PRAGMA foreign_keys=off;
+
+      DROP TABLE IF EXISTS users_new;
+      CREATE TABLE users_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee')),
+        division TEXT,
+        core TEXT,
+        team_type TEXT,
+        active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        division_id INTEGER REFERENCES divisions(id),
+        department_id INTEGER REFERENCES departments(id),
+        supporting_category_id INTEGER REFERENCES supporting_categories(id),
+        last_seen_at DATETIME
+      );
+
+      INSERT INTO users_new (id, name, email, password_hash, role, division, core, team_type, active, created_at, updated_at, division_id, department_id, supporting_category_id, last_seen_at)
+      SELECT id, name, email, password_hash, role, division, core, team_type, active, created_at, updated_at, division_id, department_id, supporting_category_id, last_seen_at
+      FROM users;
+
+      DROP TABLE users;
+      ALTER TABLE users_new RENAME TO users;
+
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+      PRAGMA foreign_keys=on;
+    `);
   }
 
   console.log('✅ Database migrations complete.');

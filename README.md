@@ -30,6 +30,12 @@ A lightweight, modern internal employee timesheet web application built for orga
 - 🐳 Docker deployment support
 - ⚡ Fast SQLite database
 
+### Microsoft 365 Integration (Optional)
+- 🔑 **Azure AD / Entra ID:** Single Sign-On (SSO) using `@azure/msal-react`.
+- 🗄️ **SharePoint Online:** Dual-write syncing for timesheet records.
+- ⚙️ **Power Automate:** Manager approval webhooks and workflow orchestration.
+- 📊 **Power BI:** Flat CSV endpoint for direct dashboard import.
+
 ---
 
 ## 🚀 Quick Start

@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../config/db');
+const config = require('../config/env');
 const { authenticate, authorize } = require('../middleware/auth');
 const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
+const timesheetRepo = require('../repositories/TimesheetRepository');
 
 const router = express.Router();
 
@@ -222,14 +224,17 @@ router.post('/', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Cannot edit submitted entries' });
     }
 
+    const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
+    const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+
     // Update existing
     db.prepare(`
       UPDATE timesheets SET task_id = ?, hours = ?, description = ?, 
         week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-        ownership_id = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
+        ownership_id = ?, billable = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(task_id || null, hours, description || null, week, weekYear, 
-           effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, existing.id);
+           effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, existing.id);
 
     const entry = db.prepare(`
       SELECT t.*, p.project_code, p.project_name, tk.task_category, tk.requires_project,
@@ -244,13 +249,16 @@ router.post('/', authenticate, (req, res) => {
     return res.json({ entry });
   }
 
+  const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
+  const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+
   // Create new
   const result = db.prepare(`
     INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year, 
-                            division_id, subdivision_id, project_description, ownership_id, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
+                            division_id, subdivision_id, project_description, ownership_id, billable, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
   `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
-         effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null);
+         effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable);
 
   const entry = db.prepare(`
     SELECT t.*, p.project_code, p.project_name, tk.task_category, tk.requires_project,
@@ -313,21 +321,27 @@ router.post('/batch', authenticate, (req, res) => {
           // Delete zero-hour entries
           db.prepare('DELETE FROM timesheets WHERE id = ?').run(existing.id);
         } else {
+          const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
+          const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+
           db.prepare(`
             UPDATE timesheets SET task_id = ?, hours = ?, description = ?, 
               week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-              ownership_id = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
+              ownership_id = ?, billable = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
           `).run(task_id || null, hours, description || null, week, weekYear,
-                 division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, existing.id);
+                 division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, existing.id);
         }
       } else if (hours > 0) {
+        const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
+        const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+
         db.prepare(`
           INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year, 
-                                  division_id, subdivision_id, project_description, ownership_id, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
+                                  division_id, subdivision_id, project_description, ownership_id, billable, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
         `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
-               division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null);
+               division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable);
       }
       results.push({ project_id, task_id, work_date, hours, status: 'saved' });
     }
@@ -359,7 +373,7 @@ router.delete('/:id', authenticate, (req, res) => {
 });
 
 // POST /api/timesheets/submit - Submit week for approval
-router.post('/submit', authenticate, (req, res) => {
+router.post('/submit', authenticate, async (req, res) => {
   const { week, year } = req.body;
   const userId = req.user.id;
 
@@ -370,7 +384,7 @@ router.post('/submit', authenticate, (req, res) => {
   const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
 
   const drafts = db.prepare(`
-    SELECT COUNT(*) as count FROM timesheets 
+    SELECT COUNT(*) as count, SUM(hours) as total_hours FROM timesheets 
     WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('draft', 'rejected', 'recalled')
   `).get(userId, startDate, endDate);
 
@@ -378,14 +392,35 @@ router.post('/submit', authenticate, (req, res) => {
     return res.status(400).json({ error: 'No draft/rejected/recalled entries found for this week' });
   }
 
-  db.prepare(`
-    UPDATE timesheets SET status = 'submitted', admin_comment = NULL, updated_at = CURRENT_TIMESTAMP
-    WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('draft', 'rejected', 'recalled')
-  `).run(userId, startDate, endDate);
+  // Use repository to handle SQLite + optional SharePoint sync
+  await timesheetRepo.submitWeek(userId, week, year);
 
   db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, ip_address) VALUES (?, ?, ?, ?, ?)').run(
     userId, 'SUBMIT_TIMESHEET', `Submitted timesheet for Week ${week}, ${year}`, 'timesheet', req.ip
   );
+
+  // Trigger Power Automate Webhook if enabled
+  if (config.enablePowerAutomate && config.powerAutomateWebhookUrl) {
+    const user = db.prepare('SELECT name, email FROM users WHERE id = ?').get(userId);
+    
+    // Fire and forget
+    fetch(config.powerAutomateWebhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        employeeEmail: user.email,
+        employeeName: user.name,
+        weekNumber: parseInt(week),
+        weekYear: parseInt(year),
+        weekStart: startDate,
+        weekEnd: endDate,
+        totalHours: drafts.total_hours,
+        timesheetUrl: `${req.protocol}://${req.get('host')}/timesheet`,
+        callbackUrl: `${req.protocol}://${req.get('host')}/api/timesheets/pa-callback`,
+        callbackSecret: config.powerAutomateCallbackSecret
+      })
+    }).catch(err => console.error('[Power Automate] Webhook failed:', err.message));
+  }
 
   res.json({ message: 'Timesheet submitted for approval', count: drafts.count });
 });
@@ -435,7 +470,7 @@ router.post('/reject', authenticate, authorize('admin'), (req, res) => {
 });
 
 // POST /api/timesheets/recall - Admin or Employee: Recall an approved timesheet
-router.post('/recall', authenticate, (req, res) => {
+router.post('/recall', authenticate, async (req, res) => {
   const { user_id, week, year, comment } = req.body;
 
   if (!week || !year) {
@@ -444,33 +479,62 @@ router.post('/recall', authenticate, (req, res) => {
 
   const targetUserId = req.user.role === 'admin' ? (user_id || req.user.id) : req.user.id;
 
-  // Employees can only recall their own timesheets
   if (req.user.role !== 'admin' && user_id && parseInt(user_id) !== req.user.id) {
     return res.status(403).json({ error: 'You can only recall your own timesheets' });
   }
 
-  const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
-
-  const recallable = db.prepare(`
-    SELECT COUNT(*) as count FROM timesheets 
-    WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('approved', 'submitted')
-  `).get(targetUserId, startDate, endDate);
-
-  if (recallable.count === 0) {
+  const changed = await timesheetRepo.recallWeek(targetUserId, week, year, req.user.role === 'admin' ? req.user.id : null);
+  
+  if (changed === 0) {
     return res.status(400).json({ error: 'No approved or submitted entries found for this week' });
   }
-
-  db.prepare(`
-    UPDATE timesheets SET status = 'recalled', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('approved', 'submitted')
-  `).run(comment || null, targetUserId, startDate, endDate);
 
   const action = req.user.role === 'admin' ? 'ADMIN_RECALL_TIMESHEET' : 'EMPLOYEE_RECALL_TIMESHEET';
   db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
     req.user.id, action, `Recalled timesheet for user ${targetUserId}, Week ${week} ${year}. Reason: ${comment || 'N/A'}`, 'timesheet', comment || null, req.ip
   );
 
-  res.json({ message: 'Timesheet recalled for correction', updated: recallable.count });
+  res.json({ message: 'Timesheet recalled for correction', updated: changed });
+});
+
+// PATCH /api/timesheets/pa-callback - Power Automate Webhook Callback
+router.patch('/pa-callback', async (req, res) => {
+  const secret = req.headers['x-callback-secret'];
+  if (!config.powerAutomateCallbackSecret || secret !== config.powerAutomateCallbackSecret) {
+    return res.status(401).json({ error: 'Unauthorized callback' });
+  }
+
+  const { status, employeeEmail, weekNumber, weekYear, approverEmail, approverComments } = req.body;
+
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  const user = db.prepare('SELECT id FROM users WHERE email = ?').get(employeeEmail);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const { startDate, endDate } = getWeekDateRange(parseInt(weekNumber), parseInt(weekYear));
+
+  const result = db.prepare(`
+    UPDATE timesheets SET status = ?, admin_comment = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status = 'submitted'
+  `).run(status, approverComments || null, user.id, startDate, endDate);
+
+  if (result.changes > 0) {
+    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
+      user.id, 'POWER_AUTOMATE_APPROVAL', `Timesheet ${status} by ${approverEmail} via Power Automate, Week ${weekNumber} ${weekYear}`, 'timesheet', approverComments || null, req.ip
+    );
+
+    // Sync to SharePoint
+    if (config.enableSharepointSync) {
+      const sp = require('../services/sharepoint');
+      sp.updateTimesheetStatus(employeeEmail, weekNumber, weekYear, status, approverEmail, approverComments).catch(err => {
+        console.error(`[SharePoint] PA callback failed to sync status:`, err.message);
+      });
+    }
+  }
+
+  res.json({ message: `Timesheet ${status}`, updated: result.changes });
 });
 
 module.exports = router;
