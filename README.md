@@ -1,288 +1,257 @@
-# ⏰ TimeSheet — Employee Time Tracking System
+# ⏰ GCC TimeSheet
 
-A lightweight, modern internal employee timesheet web application built for organizations that need a simple, self-hosted time tracking solution without cloud dependency.
-
-## ✨ Features
-
-### Employee
-- 📅 Monthly calendar/grid timesheet view
-- ⏱️ Daily hour entry with auto-totals
-- 📋 Project & task selection with searchable dropdowns
-- 💾 Auto-save drafts (every 30 seconds)
-- 📨 Submit for approval workflow
-- ⚠️ Validation: max 24h/day, 8h warning, weekend highlighting
-
-### Admin
-- 👥 User management (CRUD)
-- 📁 Project, task, division, activity management
-- ✅ Timesheet approval/rejection workflow
-- 📊 Utilization & project hours reports
-- 📥 Excel import (projects, users, tasks, divisions)
-- 📤 Excel export for reports
-- 🗓️ Holiday calendar management
-- 📈 Dashboard analytics
-
-### General
-- 🌗 Dark / Light mode
-- 📱 Mobile responsive
-- 🔐 JWT authentication with bcrypt password hashing
-- 🏠 LAN accessible — no cloud required
-- 🐳 Docker deployment support
-- ⚡ Fast SQLite database
-
-### Microsoft 365 Integration (Optional)
-- 🔑 **Azure AD / Entra ID:** Single Sign-On (SSO) using `@azure/msal-react`.
-- 🗄️ **SharePoint Online:** Dual-write syncing for timesheet records.
-- ⚙️ **Power Automate:** Manager approval webhooks and workflow orchestration.
-- 📊 **Power BI:** Flat CSV endpoint for direct dashboard import.
+> **Internal Employee Time Tracking System** — A full-stack web application for logging, submitting, approving, and reporting on employee timesheets, with optional Microsoft 365 / Entra ID SSO integration.
 
 ---
 
-## 🚀 Quick Start
+## 🧱 Tech Stack
+
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| **React** | 19 | UI framework |
+| **Vite** | 8 | Build tool & dev server |
+| **React Router v7** | 7 | Client-side routing |
+| **TanStack Query** | v5 | Server-state management & caching |
+| **@azure/msal-react** | — | Microsoft SSO (optional) |
+| **Lucide React** | — | Icon library |
+| **Vanilla CSS** | — | Custom design system with dark mode |
+
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| **Node.js** | ≥18 | Runtime |
+| **Express** | 4 | REST API framework |
+| **better-sqlite3** | 11 | SQLite ORM (synchronous, fast) |
+| **jsonwebtoken** | 9 | JWT auth (HttpOnly cookie) |
+| **jwks-rsa** | 4 | Microsoft Entra ID token validation |
+| **bcryptjs** | 2 | Password hashing |
+| **helmet** | 8 | HTTP security headers |
+| **express-rate-limit** | 7 | API rate limiting |
+| **multer** | 1 | File uploads (CSV import) |
+| **ExcelJS** | 4 | Excel report generation |
+| **PDFKit** | 0.19 | PDF report generation |
+| **nodemon** | 3 | Dev auto-restart |
+| **PM2** | 7 | Production process manager |
+
+### Database
+| Technology | Details |
+|---|---|
+| **SQLite** (via `better-sqlite3`) | File-based, zero-config, embedded |
+| **Location** | `server/data/timesheet.db` |
+| **Migrations** | Auto-run on startup via `src/config/migrate.js` |
+| **Seeding** | Initial data via `src/config/seed.js` |
+
+### DevOps & Infrastructure
+| Technology | Purpose |
+|---|---|
+| **Docker** | Containerisation |
+| **GitHub Actions** | CI/CD — auto build & push to GHCR |
+| **GHCR** (GitHub Container Registry) | Docker image hosting |
+| **PM2** | Production process manager |
+
+---
+
+## 🗂️ Project Structure
+
+```
+├── client/                  # React frontend (Vite)
+│   └── src/
+│       ├── pages/           # Route-level pages
+│       │   ├── Login.jsx
+│       │   ├── Dashboard.jsx
+│       │   ├── Timesheet.jsx
+│       │   ├── Reports.jsx
+│       │   ├── admin/       # Admin-only pages
+│       │   └── manager/     # Manager-only pages
+│       ├── components/      # Reusable UI components
+│       ├── contexts/        # React contexts (Auth, Theme, Toast)
+│       └── services/        # API client & MSAL config
+│
+├── server/                  # Express backend
+│   └── src/
+│       ├── routes/          # API route handlers (19 route files)
+│       ├── config/          # DB, migrations, seed, backup
+│       └── utils/           # Shared utilities
+│
+├── .github/workflows/       # GitHub Actions CI/CD
+├── docker-compose.yml       # Docker Compose config
+└── Dockerfile               # Multi-stage Docker build
+```
+
+---
+
+## ✨ Features
+
+### 👤 Authentication & Roles
+- **JWT authentication** stored in secure HttpOnly cookies
+- **Three roles**: `admin`, `manager`, `employee`
+- **Optional Microsoft SSO** via Azure Entra ID (MSAL) — disabled automatically if `VITE_ENTRA_CLIENT_ID` is not set
+- Route-level protection (Admin/Manager guards)
+
+### 🕐 Timesheet Management
+- Log hours per day against **Project + Task** combinations
+- Support for **non-project tasks** (Leave, Meeting, Training, Admin) that don't require a project
+- Weekly view with ISO week number tracking
+- Timesheet **status workflow**: `draft → submitted → approved / rejected → recalled`
+- **Admin comments** on approval/rejection
+- Cumulative project hours tracking
+
+### 📊 Dashboard
+- Personal hours summary
+- Weekly/monthly breakdowns
+- Recent activity overview
+
+### 📁 Organisational Hierarchy
+| Entity | Description |
+|---|---|
+| **Divisions** | Top-level business units |
+| **Subdivisions** | Sub-units under divisions |
+| **Departments** | Cross-cutting departments |
+| **Department Ownerships** | Ownership labels within departments |
+| **Supporting Categories** | Team type classification (e.g. Dedicated Team, Flex Team) |
+| **Activities** | Project activity types |
+
+### 🗂️ Project & Task Management
+- **Projects**: code, name, customer, activity, division, subdivision
+- **Tasks**: classification (Billable / Non-Billable), category, description, `requires_project` flag
+- Soft-delete (deactivate) for both
+
+### 👔 Manager Features
+- **Manager Approvals** page — review and act on team submissions
+- Filtered views by division ownership
+
+### 🛡️ Admin Features
+| Feature | Route |
+|---|---|
+| User Management | `/admin/users` |
+| Project Management | `/admin/projects` |
+| Task Management | `/admin/tasks` |
+| Division Management | `/admin/divisions` |
+| Subdivision Management | `/admin/subdivisions` |
+| Department Management | `/admin/departments` |
+| Supporting Categories | `/admin/supporting-categories` |
+| Activities | `/admin/activities` |
+| Holiday Calendar | `/admin/holidays` |
+| Approvals (all users) | `/admin/approvals` |
+| CSV/Excel Import | `/admin/import` |
+| Audit Log | `/admin/audit` |
+
+### 📈 Reports & Exports
+- Filterable reports by user, project, date range, division
+- Export to **Excel (.xlsx)** and **PDF**
+- Power BI integration endpoint (`/api/powerbi`)
+- SharePoint sync (`/api/sharepoint-sync`)
+
+### 🔍 Audit Log
+- Every create/update/delete action is logged
+- Captures: user, action, entity type & ID, old value, new value, IP address
+
+### 🌗 UI/UX
+- **Dark mode** support (system preference + manual toggle)
+- Toast notifications
+- Loading skeletons
+- Responsive layout
+- Glassmorphism design with animated gradient backgrounds
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- **Node.js** v18+ 
-- **npm** v9+
+- **Node.js** ≥ 18
+- **npm** ≥ 9
 
 ### 1. Clone & Install
 
 ```bash
-# Install server dependencies
-cd server
-npm install
-
-# Install client dependencies  
-cd ../client
-npm install
+git clone https://github.com/naveen-ramalingam/GENERAL_GCCTimeSheet.git
+cd GENERAL_GCCTimeSheet
+npm install          # installs both server and client dependencies
 ```
 
-### 2. One-Click Launcher (Recommended)
-
-**macOS** — Double-click `start.command` in Finder. First time only, make it executable:
+### 2. Configure Environment
 
 ```bash
-chmod +x start.command
+cp .env.example server/.env
+# Edit server/.env with your settings
 ```
 
-**Windows** — Double-click `start.bat`.
+Key variables in `server/.env`:
 
-This automates: dependency install, database setup, and starting both servers.
+```env
+PORT=3001
+JWT_SECRET=your-secret-key
+DB_PATH=./data/timesheet.db
+CORS_ORIGIN=http://localhost:5173
 
-### 3. Manual Setup (Alternative)
+# Optional: Microsoft SSO
+VITE_ENTRA_CLIENT_ID=
+VITE_ENTRA_TENANT_ID=
+```
 
-#### Setup Database
+### 3. Run Database Migrations & Seed
 
 ```bash
-cd server
-npm run setup   # Runs migrations + seeds sample data
+npm run setup        # runs migrate + seed
 ```
-
-This creates the SQLite database and seeds it with:
-- **Admin account**: `admin@company.com` / `admin123`
-- **Employee accounts**: `john.smith@company.com` / `password123` (and 3 more)
-- Sample projects, tasks, divisions, activities, and holidays
 
 ### 4. Start Development Servers
 
-**Terminal 1 — Backend:**
 ```bash
-cd server
-npm run dev
-```
-Server runs on `http://localhost:3001`
+# Terminal 1 — Backend (port 3001)
+cd server && npm run dev
 
-**Terminal 2 — Frontend:**
-```bash
-cd client
-npm run dev
+# Terminal 2 — Frontend (port 5173)
+cd client && npm run dev
 ```
-Frontend runs on `http://localhost:5173`
 
-### 5. Open Browser
-Navigate to `http://localhost:5173` and login with `admin@company.com` / `admin123`
+Open **http://localhost:5173**
+
+### Default Admin Credentials
+> Set in `server/src/config/seed.js` — change immediately after first login.
 
 ---
 
-## 🐳 Docker Deployment
+## 🐳 Docker
 
-### Prebuilt Image (GitHub Container Registry)
+### Build & Run with Docker Compose
 
 ```bash
-docker pull ghcr.io/naveen-ramalingam/general-gcctimesheet:main
-docker run -d -p 3001:3001 \
-  -e JWT_SECRET=your-secure-random-string \
-  -v timesheet-data:/app/server/data \
-  ghcr.io/naveen-ramalingam/general-gcctimesheet:main
+docker compose up --build
 ```
 
-Access at `http://localhost:3001`
-
-### Build Locally (docker-compose)
+### Pull from GitHub Container Registry
 
 ```bash
-docker-compose up -d --build
-```
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Server port |
-| `JWT_SECRET` | (set in .env) | JWT signing secret — **change in production!** |
-| `JWT_EXPIRES_IN` | `7d` | Token expiration |
-| `DB_PATH` | `./data/timesheet.db` | SQLite database path |
-| `CORS_ORIGIN` | `http://localhost:5173` | Allowed CORS origin |
-
-### Production Build (without Docker)
-
-```bash
-# Build frontend
-cd client
-npm run build
-
-# Start server (serves frontend from client/dist)
-cd ../server
-NODE_ENV=production node src/index.js
+docker pull ghcr.io/naveen-ramalingam/general_gcctimesheet:latest
 ```
 
 ---
 
-## 📁 Project Structure
+## ⚙️ CI/CD
 
-```
-├── client/                  # React + Vite frontend
-│   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   │   ├── layout/      # Sidebar, Header, Layout
-│   │   │   └── ui/          # Modal, SearchableSelect, Skeleton
-│   │   ├── contexts/        # Auth, Theme, Toast contexts
-│   │   ├── pages/           # Route pages
-│   │   │   └── admin/       # Admin-only pages
-│   │   ├── services/        # API client (axios)
-│   │   ├── App.jsx          # Routes & providers
-│   │   └── index.css        # Tailwind + custom styles
-│   ├── tailwind.config.js
-│   └── vite.config.js
-├── server/                  # Node.js + Express backend
-│   ├── src/
-│   │   ├── config/          # DB, env, migrations, seeds
-│   │   ├── middleware/      # Auth, error handling
-│   │   └── routes/          # API route handlers
-│   ├── data/                # SQLite database (auto-created)
-│   └── uploads/             # Excel import temp files
-├── Dockerfile
-├── docker-compose.yml
-└── README.md
-```
-
----
-
-## 📡 API Endpoints
-
-### Auth
-- `POST /api/auth/login` — Login
-- `GET /api/auth/me` — Current user
-- `POST /api/auth/change-password` — Change password
-
-### Users (Admin)
-- `GET /api/users` — List users
-- `POST /api/users` — Create user
-- `PUT /api/users/:id` — Update user
-- `DELETE /api/users/:id` — Soft-delete
-
-### Projects
-- `GET /api/projects` — List (with search)
-- `POST /api/projects` — Create
-- `PUT /api/projects/:id` — Update
-- `DELETE /api/projects/:id` — Soft-delete
-
-### Tasks / Divisions / Activities / Holidays
-- Standard CRUD on `/api/tasks`, `/api/divisions`, `/api/activities`, `/api/holidays`
-
-### Timesheets
-- `GET /api/timesheets?month=&year=` — Monthly entries
-- `POST /api/timesheets` — Create/update entry
-- `POST /api/timesheets/batch` — Batch save (auto-save)
-- `POST /api/timesheets/submit` — Submit for approval
-- `POST /api/timesheets/approve` — Admin approve
-- `POST /api/timesheets/reject` — Admin reject
-- `GET /api/timesheets/summary` — Monthly summary (admin)
-
-### Reports
-- `GET /api/reports/dashboard` — Dashboard data
-- `GET /api/reports/utilization` — Utilization report
-- `GET /api/reports/project-hours` — Project hours
-- `GET /api/reports/export` — Export data
-
-### Import (Admin)
-- `POST /api/import/projects` — Import from Excel
-- `POST /api/import/users` — Import from Excel
-- `POST /api/import/tasks` — Import from Excel
-- `POST /api/import/divisions` — Import from Excel
+GitHub Actions workflow (`.github/workflows/docker-build.yml`) automatically:
+1. Builds the Docker image on every push to `main`
+2. Publishes to GHCR with tags:
+   - `latest` — always points to the newest `main` build
+   - `main` — branch name tag
+   - `<sha>` — commit SHA tag
+   - `v*.*` — semantic version tags (on git tags)
 
 ---
 
 ## 🔒 Security
 
-- Passwords hashed with **bcrypt** (12 rounds)
-- **JWT** authentication with configurable expiry
-- Role-based authorization middleware
-- Parameterized SQL queries (SQL injection protection)
-- Rate limiting on API routes
-- Helmet security headers
-- Input validation on all endpoints
-- CORS configuration
-
----
-
-## 🌐 LAN Access
-
-To make accessible on your local network:
-
-1. Find your machine's LAN IP: `ipconfig` (Windows) or `ifconfig` (Linux)
-2. Update `CORS_ORIGIN` in `.env` to include the LAN IP
-3. Access from any device on the network: `http://<LAN-IP>:3001`
-
----
-
-## 💾 Database Backup & Restore
-
-### Interactive Manager (recommended)
-
-```bash
-chmod +x db-manager.sh
-./db-manager.sh
-```
-
-Menu-driven tool for backup, restore, listing backups, and cron scheduling.
-
-### Manual Backup (safe while running)
-
-```bash
-cd server
-npm run backup
-```
-
-Creates `server/backup/timesheet-YYYY-MM-DD.db` — a consistent SQLite snapshot.
-
-### Manual Restore
-
-```bash
-# 1. Stop the server first
-# 2. Replace the database:
-cd server
-npm run restore -- ./backup/timesheet-2026-08-01.db
-# 3. Restart the server
-```
-
-### Automated daily backup (cron)
-
-```bash
-0 2 * * * cd /path/to/server && npm run backup >> /var/log/timesheet-backup.log 2>&1
-```
+- Passwords hashed with **bcryptjs**
+- JWT stored in **HttpOnly cookies** (not localStorage)
+- **Helmet.js** security headers on all responses
+- **Rate limiting** on all API routes (configurable via env)
+- Input validation on all API endpoints
+- Role-based route guards on both frontend and backend
 
 ---
 
 ## 📝 License
 
-Internal use only. © 2026
+Internal use only. © GCC TimeSheet Team.
