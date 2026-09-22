@@ -9,7 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithMicrosoft, msalEnabled } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
