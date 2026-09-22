@@ -104,7 +104,7 @@ class TimesheetRepository {
 
     const result = db.prepare(`
       UPDATE timesheets 
-      SET status = 'submitted', submitted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+      SET status = 'submitted', updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ? AND work_date BETWEEN ? AND ?
       AND status IN ('draft', 'recalled', 'rejected')
     `).run(userId, startDate, endDate);
