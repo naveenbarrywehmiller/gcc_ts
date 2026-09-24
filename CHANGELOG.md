@@ -1,0 +1,17 @@
+# Changelog
+
+## 1.0.0 (2026-09-24)
+
+
+### Features
+
+* Add department ownership details feature ([d1a55e3](https://github.com/naveenbarrywehmiller/gcc_ts/commit/d1a55e3d35614297189d3b353950b431f20f91a8))
+* migrate timesheet application to Microsoft 365 Architecture (SharePoint, MSAL, Power Automate, Power BI) ([2cf2cf3](https://github.com/naveenbarrywehmiller/gcc_ts/commit/2cf2cf34b112278251651f564f4e53a068c28a86))
+
+
+### Bug Fixes
+
+* destructure msalEnabled and loginWithMicrosoft from useAuth in Login ([08ece47](https://github.com/naveenbarrywehmiller/gcc_ts/commit/08ece47dce679274b879f95badca217edff492e8))
+* escape redirection operator in start.bat to prevent accidental file creation ([f4ab14e](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f4ab14e3a00d18a0d6afb1a0c8efd15800b229c0))
+* improve start.bat with DB setup, correct working dir, better startup waits ([f636ce7](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f636ce7de269aaa42f371d2efb07ac3c20f6fb46))
+* remove non-existent submitted_at column from SQL query to prevent server crash ([7bd898d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/7bd898dc8b12418354603eb806114830f5f1e968))
