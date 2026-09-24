@@ -165,8 +165,8 @@
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/naveen-ramalingam/GENERAL_GCCTimeSheet.git
-cd GENERAL_GCCTimeSheet
+git clone https://github.com/naveenbarrywehmiller/gcc_ts.git
+cd gcc_ts
 npm install          # installs both server and client dependencies
 ```
 
@@ -224,7 +224,7 @@ docker compose up --build
 ### Pull from GitHub Container Registry
 
 ```bash
-docker pull ghcr.io/naveen-ramalingam/general_gcctimesheet:latest
+docker pull ghcr.io/naveenbarrywehmiller/gcc_ts:latest
 ```
 
 ---
