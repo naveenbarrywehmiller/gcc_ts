@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.0.0...v1.0.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* bump version to test integrated docker build ([8cb0388](https://github.com/naveenbarrywehmiller/gcc_ts/commit/8cb038886d1c59ec8cdb42f8c34046224a8b59ac))
+
 ## 1.0.0 (2026-09-24)
 
 
