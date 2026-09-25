@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.2.0...v1.3.0) (2026-09-25)
+
+
+### Features
+
+* implement secure read-only REST API for Power BI reporting ([646c9fa](https://github.com/naveenbarrywehmiller/gcc_ts/commit/646c9face00e64a5461fc56e23f3fc4a8595f0ae))
+
 ## [1.2.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.1.0...v1.2.0) (2026-09-25)
 
 
