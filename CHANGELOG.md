@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.0.1...v1.1.0) (2026-09-25)
+
+
+### Features
+
+* improve macOS start.command launcher and update better-sqlite3 for Node 26 ([a8e5de6](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a8e5de68dabee4efa47701aef9c2412b88b5029c))
+
+
+### Bug Fixes
+
+* **docker:** add build dependencies for better-sqlite3 in builder stage ([36cf3a2](https://github.com/naveenbarrywehmiller/gcc_ts/commit/36cf3a28371f3d65cf833830cc0bb992b1e1dfb6))
+
 ## [1.0.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.0.0...v1.0.1) (2026-09-24)
 
 
