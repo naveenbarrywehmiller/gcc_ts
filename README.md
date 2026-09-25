@@ -213,6 +213,38 @@ Open **http://localhost:5173**
 
 ---
 
+## 💾 Database Management
+
+The application includes built-in scripts to safely backup and restore your SQLite database. These commands should be run from within the `server` directory.
+
+### 🚧 Maintenance Mode (Zero-Restart)
+To prevent users from modifying data while you take a backup or restore, you can instantly put the app in maintenance mode without stopping PM2:
+```bash
+cd server
+touch .maintenance   # Enables maintenance mode instantly
+```
+*When finished, simply run `rm .maintenance` to restore normal access.*
+
+### Taking a Backup
+While in maintenance mode, safely backup the database (handles WAL mode correctly):
+```bash
+cd server
+npm run backup
+```
+The backup will be saved to `server/backup/timesheet-YYYY-MM-DD.db`.
+
+### Restoring a Backup
+Before restoring, put the app in maintenance mode. Then run:
+```bash
+cd server
+npm run restore -- ./backup/timesheet-YYYY-MM-DD.db
+```
+*(Replace `timesheet-YYYY-MM-DD.db` with the actual name of your backup file).*
+
+**Important:** After restoring a database, you must restart the server process (e.g., `pm2 restart timesheet-server`) to apply the new database before removing the `.maintenance` file.
+
+---
+
 ## 🐳 Docker
 
 ### Build & Run with Docker Compose

@@ -13,6 +13,25 @@ migrate();
 
 const app = express();
 
+// 🚧 Maintenance Mode Middleware
+// Create a empty ".maintenance" file in the server directory to enable instantly without restarting
+app.use((req, res, next) => {
+  const fs = require('fs');
+  if (fs.existsSync(path.join(__dirname, '..', '.maintenance'))) {
+    if (req.path.startsWith('/api')) {
+      return res.status(503).json({ error: 'System is currently down for maintenance (Database operations in progress).' });
+    }
+    return res.status(503).send(`
+      <div style="text-align:center; padding:50px; font-family:system-ui, sans-serif;">
+        <h1>🚧 System Under Maintenance 🚧</h1>
+        <p>We are currently performing database backups or restoration.</p>
+        <p>Please check back in a few minutes.</p>
+      </div>
+    `);
+  }
+  next();
+});
+
 // Security
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
