@@ -29,7 +29,7 @@ function authenticate(req, res, next) {
     const decoded = jwt.verify(token, config.jwtSecret);
     const user = db.prepare(`
       SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active,
-             u.division_id, u.department_id, u.supporting_category_id,
+             u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
              d.name as division_name,
              dept.name as department_name,
              sc.name as supporting_category_name

@@ -32,7 +32,7 @@ router.post('/login', (req, res) => {
 
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.password_hash, u.role, u.division, u.core, u.team_type, u.active,
-           u.division_id, u.department_id, u.supporting_category_id,
+           u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
            d.name as division_name,
            dept.name as department_name,
            sc.name as supporting_category_name
@@ -78,6 +78,7 @@ router.post('/login', (req, res) => {
       division: user.division,
       core: user.core,
       team_type: user.team_type,
+      employee_id: user.employee_id,
       division_id: user.division_id,
       department_id: user.department_id,
       supporting_category_id: user.supporting_category_id,

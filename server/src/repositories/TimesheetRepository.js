@@ -123,36 +123,57 @@ class TimesheetRepository {
 
   /**
    * Recall a submitted or approved week.
+   * Rules:
+   * - User can recall their timesheet BEFORE approval (while status is 'submitted').
+   * - Once approved, only an admin can recall the timesheet.
+   * - Admin can recall past and current weeks' timesheets.
    */
-  async recallWeek(userId, week, year, adminId = null) {
+  async recallWeek(userId, week, year, adminId = null, comment = null) {
     const { getWeekDateRange } = require('../utils/dateUtils');
     const { startDate, endDate } = getWeekDateRange(week, year);
-
-    // If an admin is recalling, they can recall ANY user's week
-    const targetUserId = adminId ? userId : userId;
-    // But if a regular user is recalling, they can only recall their own
+    const targetUserId = userId;
     
-    // Check if there are actually items to recall
-    const itemsCount = db.prepare(`
-      SELECT COUNT(*) as count FROM timesheets 
+    // Check existing items
+    const rows = db.prepare(`
+      SELECT status FROM timesheets 
       WHERE user_id = ? AND work_date BETWEEN ? AND ? 
       AND status IN ('submitted', 'approved')
-    `).get(targetUserId, startDate, endDate).count;
+    `).all(targetUserId, startDate, endDate);
 
-    if (itemsCount === 0) return 0;
+    if (rows.length === 0) return 0;
 
-    const result = db.prepare(`
+    // If regular user (non-admin), verify entries are NOT approved
+    if (!adminId) {
+      const hasApproved = rows.some(r => r.status === 'approved');
+      if (hasApproved) {
+        throw new Error('Once approved, a timesheet can only be recalled by an admin.');
+      }
+    }
+
+    const statusesToRecall = adminId ? ['submitted', 'approved'] : ['submitted'];
+    const placeholders = statusesToRecall.map(() => '?').join(',');
+
+    let updateSql = `
       UPDATE timesheets 
       SET status = 'recalled', updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = ? AND work_date BETWEEN ? AND ?
-      AND status IN ('submitted', 'approved')
-    `).run(targetUserId, startDate, endDate);
+    `;
+    const updateParams = [];
+    if (adminId && comment) {
+      updateSql += `, admin_comment = ?`;
+      updateParams.push(comment);
+    }
+    updateSql += ` WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN (${placeholders})`;
+    updateParams.push(targetUserId, startDate, endDate, ...statusesToRecall);
+
+    const result = db.prepare(updateSql).run(...updateParams);
 
     if (config.enableSharepointSync && result.changes > 0) {
       const user = db.prepare('SELECT email FROM users WHERE id = ?').get(targetUserId);
-      sp.updateTimesheetStatus(user.email, week, year, 'recalled').catch(err => {
-         console.error(`[SharePoint] Failed to sync recall status for ${user.email} W${week}/${year}:`, err.message);
-      });
+      if (user) {
+        sp.updateTimesheetStatus(user.email, week, year, 'recalled').catch(err => {
+          console.error(`[SharePoint] Failed to sync recall status for ${user.email} W${week}/${year}:`, err.message);
+        });
+      }
     }
 
     return result.changes;

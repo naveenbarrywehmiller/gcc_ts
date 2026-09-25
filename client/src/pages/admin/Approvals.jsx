@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
+import TimesheetHistoryModal from '../../components/TimesheetHistoryModal';
 import {
   ChevronLeft, ChevronRight, Check, X, Clock, RotateCcw,
-  MessageSquare, Calendar, Filter, Eye, ChevronDown, ChevronUp
+  MessageSquare, Calendar, Filter, Eye, ChevronDown, ChevronUp,
+  History, UserCheck
 } from 'lucide-react';
 
 function getISOWeekInfo(date) {
@@ -37,13 +40,20 @@ function getWeekLabel(weekNum, year) {
 
 export default function AdminApprovals() {
   const toast = useToast();
+  const { user: currentUser } = useAuth();
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentWeekInfo, setCurrentWeekInfo] = useState(() => getISOWeekInfo(new Date()));
   const [divisionFilter, setDivisionFilter] = useState('');
+  const [assignedOnlyFilter, setAssignedOnlyFilter] = useState(false);
   const [divisions, setDivisions] = useState([]);
+  const [assignedUsers, setAssignedUsers] = useState([]);
   const [expandedUser, setExpandedUser] = useState(null);
   const [userDetails, setUserDetails] = useState({});
+
+  // Timesheet history modal across all weeks
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyTargetUser, setHistoryTargetUser] = useState(null);
 
   // Modal state
   const [actionModal, setActionModal] = useState({ open: false, type: '', userId: null, userName: '' });
@@ -54,7 +64,18 @@ export default function AdminApprovals() {
 
   useEffect(() => {
     api.get('/divisions').then(res => setDivisions(res.data.divisions)).catch(() => {});
+    api.get('/admin-ownership/my-users').then(res => setAssignedUsers(res.data.users || [])).catch(() => {});
   }, []);
+
+  const openHistoryForUser = (userId, userName) => {
+    setHistoryTargetUser({ id: userId, name: userName });
+    setShowHistoryModal(true);
+  };
+
+  const openAllAssignedHistory = () => {
+    setHistoryTargetUser(null);
+    setShowHistoryModal(true);
+  };
 
   const load = () => {
     setLoading(true);
@@ -122,10 +143,13 @@ export default function AdminApprovals() {
 
   if (loading) return <LoadingSkeleton />;
 
-  // Filter by division
-  const filtered = divisionFilter
+  // Filter by division & assigned only
+  let filtered = divisionFilter
     ? summaries.filter(s => s.division === divisionFilter)
     : summaries;
+  if (assignedOnlyFilter) {
+    filtered = filtered.filter(s => s.assigned_admin_id === currentUser?.id);
+  }
 
   const submitted = filtered.filter(s => s.status === 'submitted');
   const approved = filtered.filter(s => s.status === 'approved');
@@ -145,7 +169,33 @@ export default function AdminApprovals() {
           </div>
           <button onClick={nextWeek} className="btn-ghost btn-sm p-1.5"><ChevronRight className="w-5 h-5" /></button>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Assigned Only toggle */}
+          <button
+            onClick={() => setAssignedOnlyFilter(prev => !prev)}
+            className={`btn-sm flex items-center gap-1.5 transition-colors ${
+              assignedOnlyFilter
+                ? 'bg-brand-600 text-white hover:bg-brand-700'
+                : 'btn-secondary text-surface-600 dark:text-surface-300'
+            }`}
+            title="Filter to only users assigned to you"
+            id="assigned-only-toggle"
+          >
+            <UserCheck className="w-4 h-4" />
+            <span>My Assigned Users Only</span>
+          </button>
+
+          {/* All Weeks Assigned History */}
+          <button
+            onClick={openAllAssignedHistory}
+            className="btn-secondary btn-sm flex items-center gap-1.5"
+            title="View timesheet history for all your assigned users across all weeks"
+            id="view-all-assigned-history-approvals-btn"
+          >
+            <History className="w-4 h-4" />
+            <span>Assigned Timesheets (All Weeks)</span>
+          </button>
+
           {/* Division filter */}
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-surface-400" />
@@ -186,17 +236,41 @@ export default function AdminApprovals() {
                         {s.user_name?.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-surface-800 dark:text-surface-200">{s.user_name}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-surface-800 dark:text-surface-200">{s.user_name}</p>
+                          {s.employee_id && (
+                            <span className="text-[11px] text-surface-400 font-mono">({s.employee_id})</span>
+                          )}
+                          {s.assigned_admin_id === currentUser?.id ? (
+                            <span className="bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
+                              Assigned to You
+                            </span>
+                          ) : s.assigned_admin_name ? (
+                            <span className="text-[10px] text-surface-400">
+                              Assigned: {s.assigned_admin_name}
+                            </span>
+                          ) : null}
+                        </div>
                         <p className="text-xs text-surface-400">{s.email} • {s.division || 'No division'}</p>
                       </div>
-                      <button
-                        onClick={() => toggleExpand(s.user_id)}
-                        className="btn-ghost btn-sm text-xs"
-                        title="View details"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        {expandedUser === s.user_id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openHistoryForUser(s.user_id, s.user_name)}
+                          className="btn-ghost btn-sm text-xs text-surface-500 hover:text-brand-600"
+                          title="View all weeks timesheet history"
+                        >
+                          <History className="w-3.5 h-3.5 mr-1" />
+                          All Weeks
+                        </button>
+                        <button
+                          onClick={() => toggleExpand(s.user_id)}
+                          className="btn-ghost btn-sm text-xs"
+                          title="View details"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          {expandedUser === s.user_id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3 ml-4">
                       <div className="text-right mr-2">
@@ -276,19 +350,38 @@ export default function AdminApprovals() {
               <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
                 {approved.map(s => (
                   <tr key={`${s.user_id}-approved`} className="hover:bg-surface-50 dark:hover:bg-surface-800/30">
-                    <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">{s.user_name}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{s.user_name}</span>
+                        {s.employee_id && <span className="text-[11px] text-surface-400 font-mono">({s.employee_id})</span>}
+                        {s.assigned_admin_id === currentUser?.id && (
+                          <span className="bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
+                            Assigned to You
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-sm text-surface-500">{s.division || '—'}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-surface-900 dark:text-white text-right">{s.total_hours?.toFixed(1)}h</td>
                     <td className="px-4 py-3 text-sm text-surface-500 text-right">{s.days_worked}</td>
                     <td className="px-4 py-3 text-xs text-surface-400 max-w-[200px] truncate">{s.admin_comment || '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => openActionModal('recall', s.user_id, s.user_name)}
-                        className="btn-ghost btn-xs text-amber-600 hover:text-amber-700 dark:text-amber-400"
-                        title="Recall for correction"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 mr-1" /> Recall
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => openHistoryForUser(s.user_id, s.user_name)}
+                          className="btn-ghost btn-xs text-surface-500 hover:text-brand-600"
+                          title="View timesheet history across all weeks"
+                        >
+                          <History className="w-3.5 h-3.5 mr-1" /> All Weeks
+                        </button>
+                        <button
+                          onClick={() => openActionModal('recall', s.user_id, s.user_name)}
+                          className="btn-ghost btn-xs text-amber-600 hover:text-amber-700 dark:text-amber-400"
+                          title="Recall for correction"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 mr-1" /> Recall
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -312,9 +405,23 @@ export default function AdminApprovals() {
                     {s.user_name?.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">{s.user_name}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">{s.user_name}</p>
+                      {s.assigned_admin_id === currentUser?.id && (
+                        <span className="bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
+                          Assigned
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-surface-400">{s.total_hours?.toFixed(1)}h • {s.days_worked} days</p>
                   </div>
+                  <button
+                    onClick={() => openHistoryForUser(s.user_id, s.user_name)}
+                    className="btn-ghost btn-xs text-surface-500 hover:text-brand-600"
+                    title="View timesheet history across all weeks"
+                  >
+                    <History className="w-3.5 h-3.5 mr-1" /> All Weeks
+                  </button>
                 </div>
                 {s.admin_comment && (
                   <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 rounded p-2 mt-1">
@@ -342,9 +449,23 @@ export default function AdminApprovals() {
                     {s.user_name?.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">{s.user_name}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">{s.user_name}</p>
+                      {s.assigned_admin_id === currentUser?.id && (
+                        <span className="bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
+                          Assigned
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-surface-400">{s.total_hours?.toFixed(1)}h • {s.days_worked} days</p>
                   </div>
+                  <button
+                    onClick={() => openHistoryForUser(s.user_id, s.user_name)}
+                    className="btn-ghost btn-xs text-surface-500 hover:text-brand-600"
+                    title="View timesheet history across all weeks"
+                  >
+                    <History className="w-3.5 h-3.5 mr-1" /> All Weeks
+                  </button>
                 </div>
                 {s.admin_comment && (
                   <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 rounded p-2 mt-1">
@@ -369,9 +490,23 @@ export default function AdminApprovals() {
                   {s.user_name?.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-surface-600 dark:text-surface-400 truncate">{s.user_name}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-medium text-surface-600 dark:text-surface-400 truncate">{s.user_name}</p>
+                    {s.assigned_admin_id === currentUser?.id && (
+                      <span className="bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
+                        Assigned
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-surface-400">{s.total_hours?.toFixed(1)}h • {s.days_worked} days</p>
                 </div>
+                <button
+                  onClick={() => openHistoryForUser(s.user_id, s.user_name)}
+                  className="btn-ghost btn-xs text-surface-500 hover:text-brand-600"
+                  title="View timesheet history across all weeks"
+                >
+                  <History className="w-3.5 h-3.5 mr-1" /> All Weeks
+                </button>
                 <span className="badge-draft">Draft</span>
               </div>
             ))}
@@ -450,6 +585,18 @@ export default function AdminApprovals() {
           </div>
         </div>
       </Modal>
+
+      {/* Timesheet History Modal (All Weeks) */}
+      <TimesheetHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => {
+          setShowHistoryModal(false);
+          setHistoryTargetUser(null);
+        }}
+        initialUser={historyTargetUser}
+        assignedUsers={assignedUsers}
+        onRecallSuccess={load}
+      />
     </div>
   );
 }

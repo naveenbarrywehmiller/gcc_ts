@@ -61,6 +61,7 @@ app.use('/api/powerbi', require('./routes/powerbi'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/audit', require('./routes/audit'));
+app.use('/api/admin-ownership', require('./routes/admin-ownership'));
 app.use('/api/sharepoint-sync', require('./routes/sharepoint-sync'));
 // Health check
 app.get('/api/health', (req, res) => {

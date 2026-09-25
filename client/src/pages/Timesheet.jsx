@@ -8,7 +8,7 @@ import SearchableSelect from '../components/ui/SearchableSelect';
 import Modal from '../components/ui/Modal';
 import {
   ChevronLeft, ChevronRight, Plus, Send, Save, Trash2, AlertTriangle, Check,
-  Calendar, CalendarDays, RotateCcw, MessageSquare, Info, Clock
+  Calendar, CalendarDays, RotateCcw, MessageSquare, Info, Clock, Edit2
 } from 'lucide-react';
 
 /**
@@ -38,8 +38,19 @@ function getWeekMonday(weekNum, year) {
 
 export default function Timesheet() {
   const toast = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [saving, setSaving] = useState(false);
+
+  // Check admin ownership status for self-posting
+  const { data: adminData } = useQuery({
+    queryKey: ['my-admin'],
+    queryFn: async () => {
+      const res = await api.get('/admin-ownership/my-admin');
+      return res.data;
+    }
+  });
+  const hasAssignedAdmin = !!adminData?.admin;
+  const canSelfPost = (isAdmin || user?.role === 'admin') && !hasAssignedAdmin;
   const [currentWeekInfo, setCurrentWeekInfo] = useState(() => getISOWeekInfo(new Date()));
   const [entries, setEntries] = useState([]);
   
@@ -53,8 +64,9 @@ export default function Timesheet() {
   
   const [rows, setRows] = useState([]);
   
-  // Add Row Modal State
+  // Add/Edit Row Modal State
   const [showAddRow, setShowAddRow] = useState(false);
+  const [editingRowIdx, setEditingRowIdx] = useState(null);
   const [newRowDivision, setNewRowDivision] = useState(null);
   const [newRowSubdivision, setNewRowSubdivision] = useState(null);
   const [newRowProject, setNewRowProject] = useState(null);
@@ -191,10 +203,32 @@ export default function Timesheet() {
     }, 60000);
   }, [rows]);
 
+  // Weekend/holiday warning tracking (per date, shown once per session)
+  const warnedDatesRef = useRef(new Set());
+
   // Update hours for a cell
   const updateHours = (rowIndex, date, value) => {
     const numVal = value === '' ? 0 : parseFloat(value);
     if (isNaN(numVal) || numVal < 0 || numVal > 24) return;
+
+    // Show weekend/holiday warning (informational only — does NOT block saving)
+    if (numVal > 0 && !warnedDatesRef.current.has(date)) {
+      const dateObj = new Date(date + 'T00:00:00');
+      const dow = dateObj.getDay(); // 0=Sun, 6=Sat
+      const isWeekend = dow === 0 || dow === 6;
+      const isHolidayDate = holidayDates.has(date);
+
+      if (isWeekend && isHolidayDate) {
+        toast.warning(`Warning: ${date} is a weekend and a company holiday (${holidayNames[date]}). You can still enter hours, but please verify that the entry is correct.`);
+        warnedDatesRef.current.add(date);
+      } else if (isWeekend) {
+        toast.warning(`Warning: ${date} is a weekend. You can still enter hours, but please verify that the entry is correct.`);
+        warnedDatesRef.current.add(date);
+      } else if (isHolidayDate) {
+        toast.warning(`Warning: ${date} is a company holiday (${holidayNames[date]}). You can still enter hours, but please verify that the entry is correct.`);
+        warnedDatesRef.current.add(date);
+      }
+    }
 
     setRows(prev => {
       const updated = [...prev];
@@ -265,12 +299,36 @@ export default function Timesheet() {
       .reduce((sum, r) => sum + getRowTotal(r), 0);
   }, [newRowProject, rows]);
 
-  // Add a new project row
+  // Reset row modal form fields
+  const resetRowForm = () => {
+    setEditingRowIdx(null);
+    setNewRowProject(null);
+    setNewRowTask(null);
+    setNewRowDivision(null);
+    setNewRowSubdivision(null);
+    setNewRowProjectDesc('');
+    setNewRowOwnership(null);
+  };
+
+  // Open edit row modal
+  const openEditRow = (row, index) => {
+    setEditingRowIdx(index);
+    setNewRowTask(row.task_id);
+    setNewRowDivision(row.division_id);
+    setNewRowSubdivision(row.subdivision_id);
+    setNewRowProject(row.project_id);
+    setNewRowProjectDesc(row.project_description || '');
+    setNewRowOwnership(row.ownership_id);
+    setShowAddRow(true);
+  };
+
+  // Add or update a project row
   const handleAddRow = () => {
     if (!newRowTask) { toast.warning('Please select a task category'); return; }
     if (selectedTaskRequiresProject && !newRowProject) { toast.warning('Please select a project category'); return; }
 
-    const exists = rows.some(r => {
+    const exists = rows.some((r, i) => {
+      if (editingRowIdx !== null && i === editingRowIdx) return false;
       if (selectedTaskRequiresProject) {
         return r.project_id === newRowProject && 
           r.task_id === (newRowTask || null) &&
@@ -288,8 +346,61 @@ export default function Timesheet() {
     const task = tasks.find(t => t.id === newRowTask);
     const division = divisions.find(d => d.id === newRowDivision);
     const subdivision = subdivisions.find(s => s.id === newRowSubdivision);
-
     const ownership = departmentOwnerships.find(o => o.id === newRowOwnership);
+
+    if (editingRowIdx !== null) {
+      const oldRow = rows[editingRowIdx];
+      const isChangedKey = oldRow.project_id !== (selectedTaskRequiresProject ? newRowProject : null) ||
+                           oldRow.task_id !== (newRowTask || null);
+
+      if (isChangedKey && Object.keys(oldRow.hours || {}).length > 0) {
+        // Remove old entries from DB by sending hours: 0
+        const deleteOldEntries = Object.entries(oldRow.hours)
+          .filter(([_, h]) => h > 0)
+          .map(([date]) => ({
+            project_id: oldRow.project_id,
+            task_id: oldRow.task_id,
+            work_date: date,
+            hours: 0
+          }));
+        if (deleteOldEntries.length > 0) {
+          api.post('/timesheets/batch', { entries: deleteOldEntries }).catch(() => {});
+        }
+      }
+
+      setRows(prev => prev.map((r, i) => {
+        if (i !== editingRowIdx) return r;
+        return {
+          ...r,
+          project_id: selectedTaskRequiresProject ? newRowProject : null,
+          task_id: newRowTask || null,
+          division_id: selectedTaskRequiresProject ? (newRowDivision || null) : null,
+          subdivision_id: selectedTaskRequiresProject ? (newRowSubdivision || null) : null,
+          project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
+          ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
+          ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
+          project_code: project?.project_code || null,
+          project_name: project?.project_name || null,
+          division_name: selectedTaskRequiresProject ? division?.name : null,
+          subdivision_name: selectedTaskRequiresProject ? subdivision?.name : null,
+          task_category: task?.task_category || '',
+          task_desc: task?.task_description || '',
+          classification: task?.classification || '',
+          requires_project: task?.requires_project,
+        };
+      }));
+
+      // Mark cells of updated row dirty so delta auto-save or manual save saves them with new metadata
+      Object.keys(oldRow.hours || {}).forEach(date => {
+        dirtyRef.current.add(`${editingRowIdx}:${date}`);
+      });
+
+      resetRowForm();
+      setShowAddRow(false);
+      toast.success('Row updated');
+      setTimeout(() => handleSave(true), 150);
+      return;
+    }
 
     setRows(prev => [...prev, {
       project_id: selectedTaskRequiresProject ? newRowProject : null,
@@ -312,12 +423,7 @@ export default function Timesheet() {
       status: 'draft',
     }]);
 
-    setNewRowProject(null);
-    setNewRowTask(null);
-    setNewRowDivision(null);
-    setNewRowSubdivision(null);
-    setNewRowProjectDesc('');
-    setNewRowOwnership(null);
+    resetRowForm();
     setShowAddRow(false);
     toast.success('Row added');
   };
@@ -326,24 +432,61 @@ export default function Timesheet() {
   const removeRow = (index) => {
     if (rows[index].status === 'approved') { toast.error('Cannot remove approved entries'); return; }
     if (rows[index].status === 'submitted') { toast.error('Cannot remove submitted entries'); return; }
+    const row = rows[index];
+    const deleteEntries = Object.entries(row.hours || {})
+      .filter(([_, h]) => h > 0)
+      .map(([date]) => ({
+        project_id: row.project_id,
+        task_id: row.task_id,
+        work_date: date,
+        hours: 0
+      }));
+    if (deleteEntries.length > 0) {
+      api.post('/timesheets/batch', { entries: deleteEntries }).catch(() => {});
+    }
     setRows(prev => prev.filter((_, i) => i !== index));
     toast.info('Row removed');
   };
 
+  // Extract all entries with hours > 0 from current rows
+  const getAllEntries = () => {
+    const all = [];
+    rows.forEach((row) => {
+      Object.entries(row.hours || {}).forEach(([date, hours]) => {
+        const numHours = parseFloat(hours) || 0;
+        if (numHours > 0) {
+          all.push({
+            project_id: row.project_id,
+            task_id: row.task_id,
+            division_id: row.division_id,
+            subdivision_id: row.subdivision_id,
+            project_description: row.project_description,
+            ownership_id: row.ownership_id,
+            work_date: date,
+            hours: numHours,
+            description: row.descriptions?.[date] || null,
+          });
+        }
+      });
+    });
+    return all;
+  };
+
   // Save all entries (or delta-only for auto-save)
-  const handleSave = async (silent = false) => {
+  const handleSave = async (silent = false, forceAll = false) => {
     setSaving(true);
     try {
-      const allEntries = [];
-      const isAutoSave = silent; // silent = auto-save
+      const isAutoSave = silent && !forceAll; // only delta if auto-save AND not forced
       const dirtyKeys = isAutoSave ? dirtyRef.current : null;
+      const allEntries = [];
 
       rows.forEach((row, rowIndex) => {
-        Object.entries(row.hours).forEach(([date, hours]) => {
+        Object.entries(row.hours || {}).forEach(([date, hours]) => {
           const cellKey = `${rowIndex}:${date}`;
           // Auto-save: only send cells that changed
           if (isAutoSave && !dirtyKeys.has(cellKey)) return;
-          if (hours > 0) {
+          const numHours = parseFloat(hours) || 0;
+          if (numHours > 0) {
             allEntries.push({
               project_id: row.project_id,
               task_id: row.task_id,
@@ -352,7 +495,7 @@ export default function Timesheet() {
               project_description: row.project_description,
               ownership_id: row.ownership_id,
               work_date: date,
-              hours,
+              hours: numHours,
               description: row.descriptions?.[date] || null,
             });
           }
@@ -370,15 +513,44 @@ export default function Timesheet() {
       } else {
         toast.error('Failed to save timesheet');
       }
+      throw err;
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Admin self-post timesheet (allowed if no other admin assigned)
+  const handlePost = async () => {
+    try {
+      const entriesToPost = getAllEntries();
+      if (entriesToPost.length === 0) {
+        toast.warning('Please enter hours before posting your timesheet');
+        return;
+      }
+      // 1. Force-save all entries first
+      await handleSave(true, true);
+      // 2. Post with entries included in request
+      const res = await api.post('/timesheets/post', {
+        week,
+        year,
+        entries: entriesToPost
+      });
+      toast.success(res.data.message || 'Timesheet posted successfully');
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to post timesheet');
     }
   };
 
   // Submit for approval
   const handleSubmit = async () => {
     try {
-      await handleSave(true);
+      const entriesToSubmit = getAllEntries();
+      if (entriesToSubmit.length === 0) {
+        toast.warning('Please enter hours before submitting your timesheet');
+        return;
+      }
+      await handleSave(true, true);
       await api.post('/timesheets/submit', { week, year });
       toast.success('Timesheet submitted for approval');
       // Reload
@@ -640,6 +812,17 @@ export default function Timesheet() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {canSelfPost && (
+            <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/60 inline-flex items-center gap-1">
+              <Check className="w-3 h-3 text-emerald-500" /> Self-Posting
+            </span>
+          )}
+          {(isAdmin || user?.role === 'admin') && hasAssignedAdmin && (
+            <span className="text-[11px] font-medium text-surface-600 dark:text-surface-400 bg-surface-100 dark:bg-surface-800 px-2 py-0.5 rounded-md">
+              Approver: {adminData.admin.name}
+            </span>
+          )}
+
           {weekStatus !== 'draft' && (
             <span className={`badge-${weekStatus}`}>
               {weekStatus === 'approved' && <Check className="w-3 h-3 mr-1" />}
@@ -649,7 +832,7 @@ export default function Timesheet() {
           )}
 
           {isEditable && (
-            <button onClick={() => setShowAddRow(true)} className="btn-secondary btn-sm">
+            <button onClick={() => { resetRowForm(); setShowAddRow(true); }} className="btn-secondary btn-sm">
               <Plus className="w-4 h-4" />
               Add Project
             </button>
@@ -660,20 +843,63 @@ export default function Timesheet() {
               {saving ? 'Saving...' : 'Save'}
             </button>
           )}
-          {hasDrafts && (
+
+          {/* If admin can self-post, show Post Timesheet button */}
+          {canSelfPost && (hasDrafts || hasSubmitted) && (
+            <button
+              onClick={handlePost}
+              disabled={saving}
+              className="btn-primary btn-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+              title="Post and approve your timesheet directly (no admin assigned to you)"
+            >
+              <Send className="w-4 h-4" />
+              Post Timesheet
+            </button>
+          )}
+
+          {/* Normal submit week button for employees or admins with an assigned admin */}
+          {!canSelfPost && hasDrafts && (
             <button onClick={handleSubmit} className="btn-primary btn-sm">
               <Send className="w-4 h-4" />
               Submit Week
             </button>
           )}
-          {(hasSubmitted || allApproved) && (
+
+          {/* User can recall BEFORE admin approves (while status is submitted).
+              Once admin approved, recall can only be done from Admin side. */}
+          {hasSubmitted && !allApproved && (
             <button
               onClick={() => setShowRecallModal(true)}
               className="btn-ghost btn-sm text-amber-600 hover:text-amber-700 dark:text-amber-400"
+              title="Recall submitted timesheet to make corrections before admin approval"
+              id="timesheet-recall-btn"
             >
               <RotateCcw className="w-4 h-4" />
               Recall
             </button>
+          )}
+
+          {/* Unassigned Admin can recall their own self-posted timesheet */}
+          {allApproved && isAdmin && canSelfPost && (
+            <button
+              onClick={() => setShowRecallModal(true)}
+              className="btn-ghost btn-sm text-amber-600 hover:text-amber-700 dark:text-amber-400"
+              title="Recall approved timesheet for correction"
+              id="timesheet-recall-admin-btn"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Recall
+            </button>
+          )}
+
+          {/* User message when week is already approved */}
+          {allApproved && (!isAdmin || !canSelfPost) && (
+            <span
+              className="text-xs text-emerald-700 dark:text-emerald-400 font-medium px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
+              title="Timesheet is approved. If corrections are needed, please contact your admin to recall."
+            >
+              Approved (Admin Recall Only)
+            </span>
           )}
         </div>
       </div>
@@ -882,15 +1108,26 @@ export default function Timesheet() {
                       </td>
 
                       <td className="px-1 py-1 text-center">
-                        {!isLocked && (
-                          <button
-                            onClick={() => removeRow(rowIdx)}
-                            className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 opacity-0 group-hover:opacity-100 transition-all"
-                            title="Remove row"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                        <div className="flex items-center gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-all">
+                          {!isLocked && (
+                            <button
+                              onClick={() => openEditRow(row, rowIdx)}
+                              className="p-1.5 rounded-lg text-surface-300 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/20"
+                              title="Edit row"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {!isLocked && (
+                            <button
+                              onClick={() => removeRow(rowIdx)}
+                              className="p-1.5 rounded-lg text-surface-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+                              title="Remove row"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -947,25 +1184,21 @@ export default function Timesheet() {
         </div>
       )}
 
-      {/* Add project row modal */}
+      {/* Add/Edit project row modal */}
       <Modal
         isOpen={showAddRow}
         onClose={() => { 
+          resetRowForm();
           setShowAddRow(false); 
-          setNewRowProject(null); 
-          setNewRowTask(null); 
-          setNewRowDivision(null);
-          setNewRowSubdivision(null);
-          setNewRowProjectDesc('');
-          setNewRowOwnership(null);
         }}
-        title="Add Project Row"
+        title={editingRowIdx !== null ? "Edit Row" : "Add Project Row"}
         size="lg"
         footer={
           <>
-            <button onClick={() => setShowAddRow(false)} className="btn-secondary btn-sm">Cancel</button>
+            <button onClick={() => { resetRowForm(); setShowAddRow(false); }} className="btn-secondary btn-sm">Cancel</button>
             <button onClick={handleAddRow} className="btn-primary btn-sm">
-              <Plus className="w-4 h-4" /> Add Row
+              {editingRowIdx !== null ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {editingRowIdx !== null ? 'Update Row' : 'Add Row'}
             </button>
           </>
         }

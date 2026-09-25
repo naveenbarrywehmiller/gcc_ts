@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
-import { Plus, Search, Edit2, Trash2, UserCheck, UserX, Dice5, Eye, EyeOff, Copy, Key, Building2, AlertTriangle, Power } from 'lucide-react';
+import TimesheetHistoryModal from '../../components/TimesheetHistoryModal';
+import { Plus, Search, Edit2, Trash2, UserCheck, UserX, Dice5, Eye, EyeOff, Copy, Key, Building2, AlertTriangle, Power, UserPlus, UserMinus, History } from 'lucide-react';
 
 export default function AdminUsers() {
   const toast = useToast();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [subdivisions, setSubdivisions] = useState([]);
@@ -18,7 +21,7 @@ export default function AdminUsers() {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
     division_id: '',
-    subdivision_id: '', // Note: Subdivisions aren't on user directly, but we can filter by them if needed. Actually the requirement said filter by Subdivision.
+    subdivision_id: '',
     department_id: '',
     supporting_category_id: '',
     role: '',
@@ -31,7 +34,7 @@ export default function AdminUsers() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ 
     name: '', email: '', password: '', role: 'employee', 
-    division_id: '', department_id: '', supporting_category_id: '' 
+    division_id: '', department_id: '', supporting_category_id: '', employee_id: '' 
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -45,6 +48,16 @@ export default function AdminUsers() {
   const [showDivModal, setShowDivModal] = useState(false);
   const [divEditUser, setDivEditUser] = useState(null);
   const [selectedDivisions, setSelectedDivisions] = useState([]);
+
+  // Assign/Release confirmation modal
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignTarget, setAssignTarget] = useState(null);
+  const [assignAction, setAssignAction] = useState(''); // 'assign' or 'release'
+  const [assigning, setAssigning] = useState(false);
+
+  // Timesheet history modal
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyUser, setHistoryUser] = useState(null);
 
   const loadData = () => {
     setLoading(true);
@@ -90,7 +103,7 @@ export default function AdminUsers() {
     setEditing(null);
     setForm({ 
       name: '', email: '', password: '', role: 'employee', 
-      division_id: '', department_id: '', supporting_category_id: '' 
+      division_id: '', department_id: '', supporting_category_id: '', employee_id: '' 
     });
     setShowPassword(false);
     setShowModal(true);
@@ -105,7 +118,8 @@ export default function AdminUsers() {
       role: user.role, 
       division_id: user.division_id || '', 
       department_id: user.department_id || '', 
-      supporting_category_id: user.supporting_category_id || '' 
+      supporting_category_id: user.supporting_category_id || '',
+      employee_id: user.employee_id || ''
     });
     setShowPassword(false);
     setShowModal(true);
@@ -211,6 +225,56 @@ export default function AdminUsers() {
     }
   };
 
+  // Admin assign/release
+  const openAssignConfirm = (user, action) => {
+    setAssignTarget(user);
+    setAssignAction(action);
+    setShowAssignModal(true);
+  };
+
+  const handleAssignRelease = async () => {
+    if (!assignTarget) return;
+    setAssigning(true);
+    try {
+      if (assignAction === 'assign') {
+        const res = await api.post(`/admin-ownership/assign/${assignTarget.id}`);
+        toast.success(res.data.message);
+      } else {
+        const res = await api.post(`/admin-ownership/release/${assignTarget.id}`);
+        toast.success(res.data.message);
+      }
+      setShowAssignModal(false);
+      setAssignTarget(null);
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.error || `Failed to ${assignAction} user`);
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const openHistoryModal = (user) => {
+    setHistoryUser(user);
+    setShowHistoryModal(true);
+  };
+
+  const openAllAssignedHistory = () => {
+    setHistoryUser(null);
+    setShowHistoryModal(true);
+  };
+
+  // Helper to determine admin display
+  const getAdminDisplay = (user) => {
+    if (!user.admin_id) {
+      if (user.id === currentUser?.id) {
+        return <span className="text-emerald-600 dark:text-emerald-400 italic font-medium" title="No admin assigned — you can self-post your timesheet">Not Assigned (Self)</span>;
+      }
+      return <span className="text-surface-400 italic">Not Assigned</span>;
+    }
+    if (user.admin_id === currentUser?.id) return <span className="text-brand-600 dark:text-brand-400 font-semibold">You</span>;
+    return <span className="text-surface-600 dark:text-surface-300">{user.admin_name}</span>;
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -220,9 +284,14 @@ export default function AdminUsers() {
             {activeCount} Active • {inactiveCount} Inactive
           </p>
         </div>
-        <button onClick={openCreate} className="btn-primary btn-sm" id="create-user-btn">
-          <Plus className="w-4 h-4" /> Add User
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={openAllAssignedHistory} className="btn-secondary btn-sm" id="view-assigned-history-btn" title="View timesheets for all your assigned users across all weeks">
+            <History className="w-4 h-4" /> Assigned Timesheets (All Weeks)
+          </button>
+          <button onClick={openCreate} className="btn-primary btn-sm" id="create-user-btn">
+            <Plus className="w-4 h-4" /> Add User
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -286,11 +355,11 @@ export default function AdminUsers() {
             <thead>
               <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-800">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Name</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Employee ID</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Role</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Division</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Department</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Supporting Category</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Admin</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Status</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -303,18 +372,19 @@ export default function AdminUsers() {
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-semibold">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium text-surface-800 dark:text-surface-200">{user.name}</span>
+                      <div>
+                        <span className="text-sm font-medium text-surface-800 dark:text-surface-200">{user.name}</span>
+                        <span className={`ml-2 badge ${user.role === 'admin' ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'}`}>
+                          {user.role}
+                        </span>
+                      </div>
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-sm text-surface-500">{user.employee_id || '—'}</td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.email}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge ${user.role === 'admin' ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'}`}>
-                      {user.role}
-                    </span>
-                  </td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.division_name || user.division || '—'}</td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.department_name || '—'}</td>
-                  <td className="px-4 py-3 text-sm text-surface-500">{user.supporting_category_name || user.team_type || '—'}</td>
+                  <td className="px-4 py-3 text-sm">{getAdminDisplay(user)}</td>
                   <td className="px-4 py-3">
                     {user.active ? (
                       <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400"><UserCheck className="w-3.5 h-3.5" /> Active</span>
@@ -324,6 +394,25 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {/* Admin ownership actions — for other active users */}
+                      {user.id !== currentUser?.id && user.active && (
+                        <>
+                          {!user.admin_id && (
+                            <button onClick={() => openAssignConfirm(user, 'assign')} className="btn-ghost btn-xs p-1.5 text-emerald-500 hover:text-emerald-600" title="Assign to me">
+                              <UserPlus className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {user.admin_id === currentUser?.id && (
+                            <button onClick={() => openAssignConfirm(user, 'release')} className="btn-ghost btn-xs p-1.5 text-amber-500 hover:text-amber-600" title="Release from me">
+                              <UserMinus className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {/* Timesheet history */}
+                      <button onClick={() => openHistoryModal(user)} className="btn-ghost btn-xs p-1.5" title="Timesheet History">
+                        <History className="w-3.5 h-3.5" />
+                      </button>
                       {user.role === 'admin' && (
                         <button onClick={() => openDivisionModal(user)} className="btn-ghost btn-xs p-1.5" title="Manage Divisions">
                           <Building2 className="w-3.5 h-3.5" />
@@ -380,6 +469,10 @@ export default function AdminUsers() {
           <div>
             <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Email *</label>
             <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@company.com" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Employee ID</label>
+            <input className="input" value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. EMP-001" />
           </div>
           <div>
             <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">
@@ -499,6 +592,52 @@ export default function AdminUsers() {
           </div>
         </div>
       </Modal>
+
+      {/* Assign/Release Confirmation Modal */}
+      <Modal
+        isOpen={showAssignModal}
+        onClose={() => { setShowAssignModal(false); setAssignTarget(null); }}
+        title={assignAction === 'assign' ? 'Assign User' : 'Release User'}
+        size="sm"
+        footer={
+          <>
+            <button onClick={() => { setShowAssignModal(false); setAssignTarget(null); }} className="btn-secondary btn-sm">Cancel</button>
+            <button
+              onClick={handleAssignRelease}
+              disabled={assigning}
+              className={`btn-sm px-4 py-2 rounded-lg text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                assignAction === 'assign' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-600 hover:bg-amber-700'
+              }`}
+            >
+              {assignAction === 'assign' ? <UserPlus className="w-4 h-4 inline mr-1.5" /> : <UserMinus className="w-4 h-4 inline mr-1.5" />}
+              {assigning ? 'Processing...' : assignAction === 'assign' ? 'Assign to Me' : 'Release'}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          {assignAction === 'assign' ? (
+            <p className="text-sm text-surface-600 dark:text-surface-400">
+              Assign <strong className="text-surface-900 dark:text-white">{assignTarget?.name}</strong> to yourself as admin?
+            </p>
+          ) : (
+            <p className="text-sm text-surface-600 dark:text-surface-400">
+              Release <strong className="text-surface-900 dark:text-white">{assignTarget?.name}</strong> from your admin assignment? They will become unassigned and another authorized admin can assign them.
+            </p>
+          )}
+        </div>
+      </Modal>
+
+      {/* Timesheet History Modal */}
+      <TimesheetHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => {
+          setShowHistoryModal(false);
+          setHistoryUser(null);
+        }}
+        initialUser={historyUser}
+        assignedUsers={users.filter(u => u.admin_id === currentUser?.id)}
+      />
 
       {/* Permanent Delete Confirmation Modal */}
       <Modal

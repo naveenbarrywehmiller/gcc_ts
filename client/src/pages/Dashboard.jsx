@@ -5,7 +5,7 @@ import api from '../services/api';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import {
   Clock, Users, FolderKanban, ClipboardCheck, TrendingUp,
-  BarChart3, AlertTriangle, RotateCcw, Calendar, Wifi
+  BarChart3, AlertTriangle, RotateCcw, Calendar, Wifi, UserCheck, Hash
 } from 'lucide-react';
 
 function getISOWeekInfo(date) {
@@ -28,6 +28,15 @@ export default function Dashboard() {
     }
   });
 
+  // Fetch user's admin assignment
+  const { data: adminData } = useQuery({
+    queryKey: ['my-admin'],
+    queryFn: async () => {
+      const res = await api.get('/admin-ownership/my-admin');
+      return res.data;
+    }
+  });
+
   if (loading) return <CardSkeleton count={4} />;
 
   const now = new Date();
@@ -39,11 +48,23 @@ export default function Dashboard() {
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-surface-900 dark:text-white">
-          Welcome back, {user?.name?.split(' ')[0]} 👋
+          Welcome back, {user?.name} 👋
         </h1>
-        <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-          Week {data?.stats?.currentWeek || currentWeek} • {monthName}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+          <p className="text-sm text-surface-500 dark:text-surface-400">
+            Week {data?.stats?.currentWeek || currentWeek} • {monthName}
+          </p>
+          {user?.employee_id && (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-surface-500 dark:text-surface-400 bg-surface-100 dark:bg-surface-800 px-2 py-0.5 rounded-md">
+              <Hash className="w-3 h-3" />
+              Employee ID: {user.employee_id}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400">
+            <UserCheck className="w-3 h-3" />
+            Admin: {adminData?.admin ? adminData.admin.name : 'Not Assigned'}
+          </span>
+        </div>
       </div>
 
       {/* Recalled timesheets alert for employees */}

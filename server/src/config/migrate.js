@@ -452,6 +452,35 @@ function migrate() {
     `);
   }
 
+  // --- Migration: user_admin_assignments table (one-admin-per-user ownership) ---
+  const uaaExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_admin_assignments'").get();
+  if (!uaaExists) {
+    console.log('  → Creating user_admin_assignments table...');
+    db.exec(`
+      CREATE TABLE user_admin_assignments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL UNIQUE,
+        admin_id INTEGER NOT NULL,
+        assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        assigned_by INTEGER,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (admin_id) REFERENCES users(id),
+        FOREIGN KEY (assigned_by) REFERENCES users(id)
+      );
+      CREATE INDEX idx_uaa_admin ON user_admin_assignments(admin_id);
+      CREATE INDEX idx_uaa_user ON user_admin_assignments(user_id);
+    `);
+    console.log('  → user_admin_assignments table created with UNIQUE(user_id) constraint.');
+  }
+
+  // --- Migration: add employee_id column to users ---
+  const userColsLatest = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+  if (!userColsLatest.includes('employee_id')) {
+    console.log('  → Adding users.employee_id column...');
+    db.exec("ALTER TABLE users ADD COLUMN employee_id TEXT");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_users_employee_id ON users(employee_id)");
+  }
+
   console.log('✅ Database migrations complete.');
 }
 

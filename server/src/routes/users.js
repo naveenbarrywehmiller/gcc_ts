@@ -59,14 +59,18 @@ router.get('/', authenticate, authorize('admin'), (req, res) => {
   const { search, division, division_id, department_id, supporting_category_id, role, active, sort_by, sort_dir } = req.query;
   let query = `
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
-           u.division_id, u.department_id, u.supporting_category_id,
+           u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
            d.name as division_name,
            dept.name as department_name,
-           sc.name as supporting_category_name
+           sc.name as supporting_category_name,
+           uaa.admin_id,
+           admin_u.name as admin_name
     FROM users u
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN user_admin_assignments uaa ON uaa.user_id = u.id
+    LEFT JOIN users admin_u ON uaa.admin_id = admin_u.id
     WHERE u.name != '[Deleted User]'
   `;
   const params = [];
@@ -123,14 +127,18 @@ router.get('/', authenticate, authorize('admin'), (req, res) => {
 router.get('/:id', authenticate, authorize('admin'), (req, res) => {
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
-           u.division_id, u.department_id, u.supporting_category_id,
+           u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
            d.name as division_name,
            dept.name as department_name,
-           sc.name as supporting_category_name
+           sc.name as supporting_category_name,
+           uaa.admin_id,
+           admin_u.name as admin_name
     FROM users u
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN user_admin_assignments uaa ON uaa.user_id = u.id
+    LEFT JOIN users admin_u ON uaa.admin_id = admin_u.id
     WHERE u.id = ?
   `).get(req.params.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -188,7 +196,7 @@ router.put('/:id/divisions', authenticate, authorize('admin'), (req, res) => {
 
 // POST /api/users - Create user
 router.post('/', authenticate, authorize('admin'), (req, res) => {
-  const { name, email, password, role, division, core, team_type, division_id, department_id, supporting_category_id } = req.body;
+  const { name, email, password, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email, and password are required' });
@@ -219,9 +227,9 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 
   const hash = bcrypt.hashSync(password, 12);
   const result = db.prepare(`
-    INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(name.trim(), email.toLowerCase().trim(), hash, role || 'employee', divisionName, core || null, teamType, division_id || null, department_id || null, supporting_category_id || null);
+    INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(name.trim(), email.toLowerCase().trim(), hash, role || 'employee', divisionName, core || null, teamType, division_id || null, department_id || null, supporting_category_id || null, employee_id || null);
 
   db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
     req.user.id, 'CREATE_USER', `Created user: ${email}`, 'user', result.lastInsertRowid, req.ip
@@ -242,7 +250,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 
 // PUT /api/users/:id - Update user
 router.put('/:id', authenticate, authorize('admin'), (req, res) => {
-  const { name, email, password, role, division, core, team_type, active, division_id, department_id, supporting_category_id } = req.body;
+  const { name, email, password, role, division, core, team_type, active, division_id, department_id, supporting_category_id, employee_id } = req.body;
   const userId = req.params.id;
 
   const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
@@ -261,6 +269,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   if (role !== undefined) { updateFields.push('role = ?'); params.push(role); }
   if (core !== undefined) { updateFields.push('core = ?'); params.push(core); }
   if (active !== undefined) { updateFields.push('active = ?'); params.push(active ? 1 : 0); }
+  if (employee_id !== undefined) { updateFields.push('employee_id = ?'); params.push(employee_id || null); }
   if (password) {
     updateFields.push('password_hash = ?');
     params.push(bcrypt.hashSync(password, 12));
@@ -425,6 +434,8 @@ router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => 
 
     // Clean up admin division assignments
     db.prepare('DELETE FROM admin_divisions WHERE user_id = ?').run(userId);
+    // Clean up admin-user ownership assignments (as admin or as user)
+    db.prepare('DELETE FROM user_admin_assignments WHERE user_id = ? OR admin_id = ?').run(userId, userId);
   });
 
   permanentDelete();
