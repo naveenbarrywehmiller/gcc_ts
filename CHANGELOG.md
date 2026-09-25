@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.3.0...v1.4.0) (2026-09-25)
+
+
+### Features
+
+* implement comprehensive Power BI dashboard with dedicated reporting API ([9f7f684](https://github.com/naveenbarrywehmiller/gcc_ts/commit/9f7f684e76be44e05565d1b60e0b32d5901849f3))
+
 ## [1.3.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.2.0...v1.3.0) (2026-09-25)
 
 
