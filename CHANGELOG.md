@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.1.0...v1.2.0) (2026-09-25)
+
+
+### Features
+
+* implement strict admin ownership, timesheet history for all weeks, and recall workflow ([0b33c7a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/0b33c7a3092473faa8b4b1b52c315523479b1162))
+
 ## [1.1.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.0.1...v1.1.0) (2026-09-25)
 
 
