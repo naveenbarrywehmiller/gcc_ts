@@ -13,6 +13,11 @@ services:
       - JWT_SECRET=${JWT_SECRET:-change-this-to-a-secure-random-string}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - DB_PATH=./data/timesheet.db
+      - APP_BASE_URL=${APP_BASE_URL:-}
+      - POWERBI_API_ENABLED=${POWERBI_API_ENABLED:-true}
+      - POWERBI_API_BASE_PATH=${POWERBI_API_BASE_PATH:-/api/powerbi}
+      - POWERBI_API_KEY=${POWERBI_API_KEY:-}
+      - POWERBI_MAX_RECORDS=${POWERBI_MAX_RECORDS:-50000}
     volumes:
       - timesheet-data:/app/server/data
       - timesheet-uploads:/app/server/uploads

@@ -57,7 +57,11 @@ app.use('/api/activities', require('./routes/activities'));
 app.use('/api/holidays', require('./routes/holidays'));
 app.use('/api/timesheets', require('./routes/timesheets'));
 app.use('/api/manager', require('./routes/manager'));
-app.use('/api/powerbi', require('./routes/powerbi'));
+const powerBiBasePath = config.powerBiApiBasePath || '/api/powerbi';
+app.use(powerBiBasePath, require('./routes/powerbi'));
+if (powerBiBasePath !== '/api/powerbi') {
+  app.use('/api/powerbi', require('./routes/powerbi'));
+}
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/audit', require('./routes/audit'));
@@ -82,8 +86,9 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Start server
-app.listen(config.port, '0.0.0.0', () => {
-  console.log(`
+if (require.main === module) {
+  app.listen(config.port, '0.0.0.0', () => {
+    console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║         ⏰ Timesheet Server Running               ║
 ║                                                   ║
@@ -92,7 +97,8 @@ app.listen(config.port, '0.0.0.0', () => {
 ║   Mode:    ${config.nodeEnv.padEnd(37)}║
 ║                                                   ║
 ╚═══════════════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
 
 module.exports = app;

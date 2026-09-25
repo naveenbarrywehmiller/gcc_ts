@@ -34,8 +34,14 @@ module.exports = {
   powerAutomateWebhookUrl: process.env.POWER_AUTOMATE_WEBHOOK_URL || '',
   powerAutomateCallbackSecret: process.env.POWER_AUTOMATE_CALLBACK_SECRET || '',
 
+  // ── Application Base URL ────────────────────────────────────
+  appBaseUrl: (process.env.APP_BASE_URL || '').replace(/\/$/, ''),
+
   // ── Power BI ────────────────────────────────────────────────
   powerBiApiKey: process.env.POWERBI_API_KEY || '',
+  powerBiApiEnabled: process.env.POWERBI_API_ENABLED !== 'false',
+  powerBiApiBasePath: process.env.POWERBI_API_BASE_PATH || '/api/powerbi',
+  powerBiMaxRecords: parseInt(process.env.POWERBI_MAX_RECORDS, 10) || 50000,
 
   // ── Feature flags ───────────────────────────────────────────
   enableMsalAuth: process.env.ENABLE_MSAL_AUTH === 'true',

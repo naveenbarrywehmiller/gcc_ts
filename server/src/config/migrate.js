@@ -481,6 +481,14 @@ function migrate() {
     db.exec("CREATE INDEX IF NOT EXISTS idx_users_employee_id ON users(employee_id)");
   }
 
+  // --- Reporting & Power BI Performance Indexes ---
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_timesheets_division ON timesheets(division_id);
+    CREATE INDEX IF NOT EXISTS idx_timesheets_work_date_status ON timesheets(work_date, status);
+    CREATE INDEX IF NOT EXISTS idx_users_department ON users(department_id);
+    CREATE INDEX IF NOT EXISTS idx_users_division ON users(division_id);
+  `);
+
   console.log('✅ Database migrations complete.');
 }
 

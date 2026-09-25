@@ -11,7 +11,9 @@
     "seed": "node src/config/seed.js",
     "setup": "npm run migrate && npm run seed",
     "backup": "node src/config/backup.js",
-    "restore": "node src/config/restore.js"
+    "restore": "node src/config/restore.js",
+    "test": "node ../scripts/test-powerbi-api.js",
+    "test:powerbi": "node ../scripts/test-powerbi-api.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -35,14 +35,22 @@ Power BI connects to SharePoint Online lists to provide rich analytics and repor
    - TS_TimesheetEntries
 6. Click **Load** (or **Transform Data** to apply filters first)
 
-### Option B: REST API endpoint (for programmatic refresh)
+### Option B: Dedicated Read-Only REST API (Recommended for Direct Refresh)
 
-The application exposes a flat export endpoint for Power BI:
-```
-GET /api/powerbi/export?apiKey=YOUR_POWERBI_API_KEY
-```
+The application provides a dedicated, read-only REST API namespace (`/api/powerbi/*`) designed specifically for Power BI reporting and automated refresh without direct database access.
 
-This returns a flat JSON optimized for Power BI with no nested lookups.
+Key endpoints:
+- `GET /api/powerbi/timesheets` — Timesheet fact records with server-side filtering (`from`, `to`, `employeeId`, `division`, `department`, `project`, `status`)
+- `GET /api/powerbi/users` — Employee and user dimension data
+- `GET /api/powerbi/divisions` — Division reference data
+- `GET /api/powerbi/departments` — Department reference data
+- `GET /api/powerbi/projects` — Project reference data
+- `GET /api/powerbi/holidays` — Company holiday reference data
+- `GET /api/powerbi/export` — Legacy flat export endpoint
+
+Authenticated via `X-API-Key` header, `Authorization: Bearer <token>`, Basic Auth, or `?apiKey=<token>`.
+
+📖 **Full Power BI REST API documentation:** See [docs/POWERBI.md](docs/POWERBI.md) for endpoint details, query parameters, Power Query transformation steps, and security guidelines.
 
 ---
 

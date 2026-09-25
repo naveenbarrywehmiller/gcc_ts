@@ -140,7 +140,7 @@
 ### 📈 Reports & Exports
 - Filterable reports by user, project, date range, division
 - Export to **Excel (.xlsx)** and **PDF**
-- Power BI integration endpoint (`/api/powerbi`)
+- Power BI Read-Only REST API endpoints (`/api/powerbi/*` — see [docs/POWERBI.md](docs/POWERBI.md))
 - SharePoint sync (`/api/sharepoint-sync`)
 
 ### 🔍 Audit Log
