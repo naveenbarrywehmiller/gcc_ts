@@ -7,16 +7,23 @@ RUN npm ci
 COPY client/ ./
 RUN npm run build
 
+# Build server dependencies (requires python3, make, g++ for better-sqlite3 native compilation)
+WORKDIR /app/server
+RUN apk add --no-cache python3 make g++
+COPY server/package*.json ./
+RUN cd /app/server && npm ci --omit=dev
+
 # Production image
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install server dependencies
-COPY server/package*.json ./server/
-RUN cd server && npm ci --production
+# Install runtime libstdc++ required by compiled native addon (better-sqlite3)
+RUN apk add --no-cache libstdc++
 
-# Copy server source + PM2 config
+# Copy built server node_modules and server source
+COPY --from=builder /app/server/node_modules ./server/node_modules
+COPY server/package*.json ./server/
 COPY server/src ./server/src
 COPY server/ecosystem.config.js ./server/
 
