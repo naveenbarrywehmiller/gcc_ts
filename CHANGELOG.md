@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.4.0...v1.5.0) (2026-09-25)
+
+
+### Features
+
+* add missing Power Query M scripts for new API endpoints ([588d9a7](https://github.com/naveenbarrywehmiller/gcc_ts/commit/588d9a7b0d7a1b68e976ec0b55667076c88c8f25))
+* add zero-restart maintenance mode and documentation ([d7b0de1](https://github.com/naveenbarrywehmiller/gcc_ts/commit/d7b0de1e83f55a1f199077a56bed039b7a32bdd2))
+
 ## [1.4.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.3.0...v1.4.0) (2026-09-25)
 
 
