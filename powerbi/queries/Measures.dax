@@ -1,0 +1,328 @@
+// ═══════════════════════════════════════════════════════════════════════
+// DAX Measures Library — GCC Timesheet Power BI Dashboard v1.0.0
+// ═══════════════════════════════════════════════════════════════════════
+// Usage: Create a measures table in Power BI Desktop:
+//   Home → Enter Data → name it "_Measures" → Load
+//   Then add each measure below to the _Measures table.
+// ═══════════════════════════════════════════════════════════════════════
+
+
+// ─────────────────────────────────────────────────────────────
+// CORE HOURS MEASURES
+// ─────────────────────────────────────────────────────────────
+
+Total Hours =
+SUM(FactTimesheet[hours])
+
+Average Hours =
+AVERAGE(FactTimesheet[hours])
+
+Average Daily Hours =
+DIVIDE(
+    [Total Hours],
+    DISTINCTCOUNT(FactTimesheet[date]),
+    0
+)
+
+Average Weekly Hours =
+DIVIDE(
+    [Total Hours],
+    DISTINCTCOUNT(FactTimesheet[week]),
+    0
+)
+
+
+// ─────────────────────────────────────────────────────────────
+// EMPLOYEE COUNTS
+// ─────────────────────────────────────────────────────────────
+
+Employee Count =
+COUNTROWS(DimEmployee)
+
+Active Employee Count =
+CALCULATE(
+    COUNTROWS(DimEmployee),
+    DimEmployee[isActive] = TRUE()
+)
+
+Active Employees with Entries =
+DISTINCTCOUNT(FactTimesheet[employeeId])
+
+Project Count =
+CALCULATE(
+    COUNTROWS(DimProject),
+    DimProject[isActive] = TRUE()
+)
+
+Active Projects with Entries =
+CALCULATE(
+    DISTINCTCOUNT(FactTimesheet[projectCode]),
+    NOT(ISBLANK(FactTimesheet[projectCode]))
+)
+
+
+// ─────────────────────────────────────────────────────────────
+// STATUS-BASED HOURS
+// ─────────────────────────────────────────────────────────────
+
+Submitted Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[status] = "submitted"
+)
+
+Approved Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[status] = "approved"
+)
+
+Pending Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[status] IN {"draft", "submitted"}
+)
+
+Rejected Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[status] = "rejected"
+)
+
+Draft Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[status] = "draft"
+)
+
+Recalled Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[status] = "recalled"
+)
+
+
+// ─────────────────────────────────────────────────────────────
+// WEEKEND & HOLIDAY HOURS
+// ─────────────────────────────────────────────────────────────
+
+Weekend Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DimDate[IsWeekend] = TRUE()
+)
+
+Holiday Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DimDate[IsHoliday] = TRUE()
+)
+
+Billable Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[isBillable] = TRUE()
+)
+
+Non-Billable Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[isBillable] = FALSE()
+)
+
+Billable Percentage =
+DIVIDE([Billable Hours], [Total Hours], 0)
+
+
+// ─────────────────────────────────────────────────────────────
+// RATES & PERCENTAGES
+// ─────────────────────────────────────────────────────────────
+
+Submission Rate =
+VAR TotalEntries = COUNTROWS(FactTimesheet)
+VAR SubmittedOrBeyond =
+    CALCULATE(
+        COUNTROWS(FactTimesheet),
+        FactTimesheet[status] IN {"submitted", "approved", "rejected"}
+    )
+RETURN
+    DIVIDE(SubmittedOrBeyond, TotalEntries, 0)
+
+Approval Rate =
+VAR SubmittedAndApproved =
+    CALCULATE(
+        COUNTROWS(FactTimesheet),
+        FactTimesheet[status] IN {"submitted", "approved", "rejected"}
+    )
+VAR ApprovedOnly =
+    CALCULATE(
+        COUNTROWS(FactTimesheet),
+        FactTimesheet[status] = "approved"
+    )
+RETURN
+    DIVIDE(ApprovedOnly, SubmittedAndApproved, 0)
+
+Rejection Rate =
+VAR SubmittedAndBeyond =
+    CALCULATE(
+        COUNTROWS(FactTimesheet),
+        FactTimesheet[status] IN {"submitted", "approved", "rejected"}
+    )
+VAR RejectedOnly =
+    CALCULATE(
+        COUNTROWS(FactTimesheet),
+        FactTimesheet[status] = "rejected"
+    )
+RETURN
+    DIVIDE(RejectedOnly, SubmittedAndBeyond, 0)
+
+
+// ─────────────────────────────────────────────────────────────
+// TIME INTELLIGENCE
+// ─────────────────────────────────────────────────────────────
+
+Current Month Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DATESMTD(DimDate[Date])
+)
+
+Previous Month Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    PREVIOUSMONTH(DimDate[Date])
+)
+
+Current Week Hours =
+VAR CurrentDate = TODAY()
+VAR WeekStart = CurrentDate - WEEKDAY(CurrentDate, 2) + 1
+VAR WeekEnd = WeekStart + 6
+RETURN
+    CALCULATE(
+        SUM(FactTimesheet[hours]),
+        DimDate[Date] >= WeekStart && DimDate[Date] <= WeekEnd
+    )
+
+Previous Week Hours =
+VAR CurrentDate = TODAY()
+VAR PrevWeekStart = CurrentDate - WEEKDAY(CurrentDate, 2) + 1 - 7
+VAR PrevWeekEnd = PrevWeekStart + 6
+RETURN
+    CALCULATE(
+        SUM(FactTimesheet[hours]),
+        DimDate[Date] >= PrevWeekStart && DimDate[Date] <= PrevWeekEnd
+    )
+
+YTD Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DATESYTD(DimDate[Date])
+)
+
+Previous Year Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    SAMEPERIODLASTYEAR(DimDate[Date])
+)
+
+Previous Year YTD Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DATESYTD(SAMEPERIODLASTYEAR(DimDate[Date]))
+)
+
+
+// ─────────────────────────────────────────────────────────────
+// VARIANCE CALCULATIONS
+// ─────────────────────────────────────────────────────────────
+
+Variance =
+[Current Month Hours] - [Previous Month Hours]
+
+Variance Percentage =
+DIVIDE(
+    [Current Month Hours] - [Previous Month Hours],
+    [Previous Month Hours],
+    0
+)
+
+YTD Variance =
+[YTD Hours] - [Previous Year YTD Hours]
+
+YTD Variance Percentage =
+DIVIDE(
+    [YTD Hours] - [Previous Year YTD Hours],
+    [Previous Year YTD Hours],
+    0
+)
+
+Week over Week Change =
+[Current Week Hours] - [Previous Week Hours]
+
+Week over Week Change Percentage =
+DIVIDE(
+    [Current Week Hours] - [Previous Week Hours],
+    [Previous Week Hours],
+    0
+)
+
+
+// ─────────────────────────────────────────────────────────────
+// UTILIZATION
+// ─────────────────────────────────────────────────────────────
+
+Working Days in Period =
+CALCULATE(
+    COUNTROWS(DimDate),
+    DimDate[IsWeekend] = FALSE(),
+    DimDate[IsHoliday] = FALSE()
+)
+
+Expected Hours =
+[Working Days in Period] * 8
+
+Utilization Rate =
+DIVIDE([Total Hours], [Expected Hours], 0)
+
+
+// ─────────────────────────────────────────────────────────────
+// ENTRY COUNTS
+// ─────────────────────────────────────────────────────────────
+
+Total Entries =
+COUNTROWS(FactTimesheet)
+
+Submitted Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] = "submitted"
+)
+
+Approved Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] = "approved"
+)
+
+Pending Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] IN {"draft", "submitted"}
+)
+
+Rejected Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] = "rejected"
+)
+
+
+// ─────────────────────────────────────────────────────────────
+// DASHBOARD VERSION
+// ─────────────────────────────────────────────────────────────
+
+Dashboard Version =
+"GCC Timesheet Power BI v1.0.0"
+
+Dashboard Info =
+"Version 1.0.0 | API v1.x | " & FORMAT(NOW(), "YYYY-MM-DD HH:MM")

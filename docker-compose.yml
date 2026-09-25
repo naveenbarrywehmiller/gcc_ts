@@ -18,6 +18,7 @@ services:
       - POWERBI_API_BASE_PATH=${POWERBI_API_BASE_PATH:-/api/powerbi}
       - POWERBI_API_KEY=${POWERBI_API_KEY:-}
       - POWERBI_MAX_RECORDS=${POWERBI_MAX_RECORDS:-50000}
+      - POWERBI_CACHE_TTL=${POWERBI_CACHE_TTL:-60}
     volumes:
       - timesheet-data:/app/server/data
       - timesheet-uploads:/app/server/uploads

@@ -10,6 +10,10 @@
  *   - GET /api/powerbi/departments
  *   - GET /api/powerbi/projects
  *   - GET /api/powerbi/holidays
+ *   - GET /api/powerbi/tasks
+ *   - GET /api/powerbi/assignments
+ *   - GET /api/powerbi/status-summary
+ *   - GET /api/powerbi/version
  *   - GET /api/powerbi/export (legacy flat table export)
  *
  * Security:
@@ -52,6 +56,20 @@ function isValidDateString(str) {
 }
 
 const ALLOWED_STATUSES = ['draft', 'submitted', 'approved', 'rejected', 'recalled'];
+
+/**
+ * GET /api/powerbi/version
+ * Returns API version, compatibility information, and available endpoints.
+ */
+router.get('/version', (req, res) => {
+  try {
+    const result = powerBiService.getVersion();
+    res.json(result);
+  } catch (err) {
+    console.error('[PowerBI API] Error fetching version:', err);
+    res.status(500).json({ error: 'Failed to retrieve version information' });
+  }
+});
 
 /**
  * GET /api/powerbi/timesheets
@@ -264,6 +282,78 @@ router.get('/holidays', (req, res) => {
   } catch (err) {
     console.error('[PowerBI API] Error fetching holidays:', err);
     res.status(500).json({ error: 'Failed to retrieve holiday reporting data' });
+  }
+});
+
+/**
+ * GET /api/powerbi/tasks
+ * Read-only reference endpoint for task categories.
+ *
+ * Supported query parameters:
+ *   - active: 1 | 0
+ *   - classification: Billable | Non-Billable
+ */
+router.get('/tasks', (req, res) => {
+  try {
+    const { active, classification } = req.query;
+    const filters = {
+      active: active !== undefined ? active : undefined,
+      classification: classification ? String(classification).trim() : undefined,
+    };
+
+    const result = powerBiService.getTasks(filters);
+    res.json(result);
+  } catch (err) {
+    console.error('[PowerBI API] Error fetching tasks:', err);
+    res.status(500).json({ error: 'Failed to retrieve task reporting data' });
+  }
+});
+
+/**
+ * GET /api/powerbi/assignments
+ * Read-only endpoint for admin-employee assignment mapping.
+ */
+router.get('/assignments', (req, res) => {
+  try {
+    const result = powerBiService.getAssignments();
+    res.json(result);
+  } catch (err) {
+    console.error('[PowerBI API] Error fetching assignments:', err);
+    res.status(500).json({ error: 'Failed to retrieve assignment reporting data' });
+  }
+});
+
+/**
+ * GET /api/powerbi/status-summary
+ * Read-only endpoint providing aggregated timesheet status overview.
+ *
+ * Supported query parameters:
+ *   - from: YYYY-MM-DD
+ *   - to: YYYY-MM-DD
+ *   - division: string
+ */
+router.get('/status-summary', (req, res) => {
+  try {
+    const { from, to, division } = req.query;
+
+    if (from !== undefined && !isValidDateString(from)) {
+      return res.status(400).json({ error: "Invalid 'from' date parameter. Format must be YYYY-MM-DD." });
+    }
+    if (to !== undefined && !isValidDateString(to)) {
+      return res.status(400).json({ error: "Invalid 'to' date parameter. Format must be YYYY-MM-DD." });
+    }
+
+    const filters = {
+      from,
+      to,
+      division: division ? String(division).trim() : undefined,
+    };
+
+    const result = powerBiService.getStatusSummary(filters);
+    res.json(result);
+  } catch (err) {
+    console.error('[PowerBI API] Error fetching status summary:', err);
+    res.status(500).json({ error: 'Failed to retrieve status summary data' });
   }
 });
 

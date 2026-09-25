@@ -40,3 +40,7 @@ coverage/
 server/src/data/*.db
 server/src/data/*.db-wal
 server/src/data/*.db-shm
+
+# Power BI (large binaries — use GitHub Releases or Git LFS)
+*.pbix
+*.pbit

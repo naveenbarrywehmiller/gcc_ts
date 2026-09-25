@@ -1,0 +1,51 @@
+// ═══════════════════════════════════════════════════════════════
+// DimDate — Date Dimension Table for GCC Timesheet Power BI
+// ═══════════════════════════════════════════════════════════════
+// Usage: In Power BI Desktop → Home → New Table → paste this DAX
+// ═══════════════════════════════════════════════════════════════
+
+DimDate =
+VAR StartDate = DATE(2020, 1, 1)
+VAR EndDate = DATE(2030, 12, 31)
+VAR HolidayDates = VALUES(DimHoliday[date])
+VAR DateTable =
+    ADDCOLUMNS(
+        CALENDAR(StartDate, EndDate),
+
+        // ── Year ──
+        "Year", YEAR([Date]),
+
+        // ── Quarter ──
+        "Quarter", "Q" & FORMAT(CEILING(MONTH([Date]) / 3, 1), "0"),
+        "QuarterNumber", CEILING(MONTH([Date]) / 3, 1),
+
+        // ── Month ──
+        "Month", MONTH([Date]),
+        "MonthName", FORMAT([Date], "MMMM"),
+        "MonthShort", FORMAT([Date], "MMM"),
+        "MonthNumber", MONTH([Date]),
+
+        // ── Week ──
+        "WeekNumber", WEEKNUM([Date], 21),
+        "WeekStart", [Date] - WEEKDAY([Date], 2) + 1,
+
+        // ── Day ──
+        "Day", DAY([Date]),
+        "DayOfWeek", WEEKDAY([Date], 2),
+        "DayName", FORMAT([Date], "dddd"),
+
+        // ── Flags ──
+        "IsWeekend", IF(WEEKDAY([Date], 2) >= 6, TRUE(), FALSE()),
+        "IsHoliday", IF(
+            COUNTROWS(FILTER(HolidayDates, HolidayDates[date] = FORMAT([Date], "YYYY-MM-DD"))) > 0,
+            TRUE(),
+            FALSE()
+        ),
+
+        // ── Formatted ──
+        "YearMonth", FORMAT([Date], "YYYY-MM"),
+        "YearQuarter", FORMAT([Date], "YYYY") & " Q" & FORMAT(CEILING(MONTH([Date]) / 3, 1), "0"),
+        "MonthYearLabel", FORMAT([Date], "MMM YYYY"),
+        "WeekLabel", "W" & FORMAT(WEEKNUM([Date], 21), "00") & " " & FORMAT([Date], "YYYY")
+    )
+RETURN DateTable

@@ -7,7 +7,42 @@ const config = require('../config/env');
  * Service for Power BI Read-Only Reporting.
  * Encapsulates all reporting queries with parameterized SQL to prevent SQL injection.
  * Strips all authentication hashes, secrets, and internal tokens from reporting payloads.
+ *
+ * Includes server-side caching to optimise performance for multiple concurrent Power BI clients.
  */
+
+// ─── In-Memory Cache ────────────────────────────────────────────
+const _cache = new Map();
+const CACHE_TTL_MS = (parseInt(config.powerBiCacheTtl, 10) || 60) * 1000;
+
+/**
+ * Get a cached value or compute it.
+ * @param {string} key - Cache key
+ * @param {Function} computeFn - Function that returns the value to cache
+ * @returns {*} Cached or freshly computed value
+ */
+function cachedQuery(key, computeFn) {
+  if (CACHE_TTL_MS <= 0) return computeFn();
+
+  const now = Date.now();
+  const cached = _cache.get(key);
+  if (cached && (now - cached.timestamp) < CACHE_TTL_MS) {
+    return cached.value;
+  }
+
+  const value = computeFn();
+  _cache.set(key, { value, timestamp: now });
+
+  // Periodic cleanup — remove stale entries when cache grows beyond 200 keys
+  if (_cache.size > 200) {
+    for (const [k, v] of _cache) {
+      if ((now - v.timestamp) >= CACHE_TTL_MS) _cache.delete(k);
+    }
+  }
+
+  return value;
+}
+
 class PowerBiService {
   /**
    * Retrieve reporting timesheet entries with server-side filtering and optional pagination.
@@ -26,6 +61,11 @@ class PowerBiService {
    * @returns {{ data: Array, pagination: Object }}
    */
   getTimesheets(filters = {}, pagination = {}) {
+    const cacheKey = `timesheets:${JSON.stringify(filters)}:${JSON.stringify(pagination)}`;
+    return cachedQuery(cacheKey, () => this._queryTimesheets(filters, pagination));
+  }
+
+  _queryTimesheets(filters, pagination) {
     let whereClause = "WHERE u.name != '[Deleted User]'";
     const params = [];
 
@@ -186,6 +226,11 @@ class PowerBiService {
    * Excludes password hashes, secrets, and auth tokens.
    */
   getUsers(filters = {}) {
+    const cacheKey = `users:${JSON.stringify(filters)}`;
+    return cachedQuery(cacheKey, () => this._queryUsers(filters));
+  }
+
+  _queryUsers(filters) {
     let sql = `
       SELECT 
         u.id as id,
@@ -262,6 +307,11 @@ class PowerBiService {
    * Retrieve read-only division reporting data.
    */
   getDivisions(filters = {}) {
+    const cacheKey = `divisions:${JSON.stringify(filters)}`;
+    return cachedQuery(cacheKey, () => this._queryDivisions(filters));
+  }
+
+  _queryDivisions(filters) {
     let sql = `
       SELECT 
         d.id as id,
@@ -297,6 +347,11 @@ class PowerBiService {
    * Retrieve read-only department reporting data.
    */
   getDepartments(filters = {}) {
+    const cacheKey = `departments:${JSON.stringify(filters)}`;
+    return cachedQuery(cacheKey, () => this._queryDepartments(filters));
+  }
+
+  _queryDepartments(filters) {
     let sql = `
       SELECT 
         dept.id as id,
@@ -332,6 +387,11 @@ class PowerBiService {
    * Retrieve read-only project reporting data.
    */
   getProjects(filters = {}) {
+    const cacheKey = `projects:${JSON.stringify(filters)}`;
+    return cachedQuery(cacheKey, () => this._queryProjects(filters));
+  }
+
+  _queryProjects(filters) {
     let sql = `
       SELECT 
         p.id as id,
@@ -388,6 +448,11 @@ class PowerBiService {
    * Retrieve read-only holiday reporting data.
    */
   getHolidays(filters = {}) {
+    const cacheKey = `holidays:${JSON.stringify(filters)}`;
+    return cachedQuery(cacheKey, () => this._queryHolidays(filters));
+  }
+
+  _queryHolidays(filters) {
     let sql = `
       SELECT 
         h.id as id,
@@ -428,9 +493,198 @@ class PowerBiService {
   }
 
   /**
-   * Legacy flat export endpoint for backward compatibility with existing Power BI setups.
+   * Retrieve read-only task category data.
+   */
+  getTasks(filters = {}) {
+    const cacheKey = `tasks:${JSON.stringify(filters)}`;
+    return cachedQuery(cacheKey, () => this._queryTasks(filters));
+  }
+
+  _queryTasks(filters) {
+    let sql = `
+      SELECT 
+        tk.id as id,
+        COALESCE(tk.classification, '') as classification,
+        tk.task_category as taskCategory,
+        COALESCE(tk.task_description, '') as taskDescription,
+        CASE WHEN tk.requires_project = 1 THEN 1 ELSE 0 END as requiresProject,
+        CASE WHEN tk.active = 1 THEN 'Active' ELSE 'Inactive' END as status,
+        tk.active as active,
+        tk.created_at as createdDate
+      FROM tasks tk
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (filters.active !== undefined) {
+      sql += ' AND tk.active = ?';
+      params.push(parseInt(filters.active, 10));
+    }
+
+    if (filters.classification) {
+      sql += ' AND LOWER(tk.classification) = LOWER(?)';
+      params.push(filters.classification);
+    }
+
+    sql += ' ORDER BY tk.task_category ASC';
+    const rows = db.prepare(sql).all(...params);
+
+    return {
+      data: rows.map((tk) => ({
+        id: tk.id,
+        classification: tk.classification,
+        taskCategory: tk.taskCategory,
+        taskDescription: tk.taskDescription,
+        requiresProject: tk.requiresProject === 1,
+        status: tk.status,
+        isActive: tk.active === 1,
+        createdDate: tk.createdDate,
+      })),
+    };
+  }
+
+  /**
+   * Retrieve admin-employee assignment mapping for reporting.
+   */
+  getAssignments() {
+    return cachedQuery('assignments', () => this._queryAssignments());
+  }
+
+  _queryAssignments() {
+    const sql = `
+      SELECT
+        uaa.id as id,
+        COALESCE(emp.employee_id, CAST(emp.id AS TEXT)) as employeeId,
+        emp.name as employeeName,
+        emp.email as employeeEmail,
+        COALESCE(admin_u.employee_id, CAST(admin_u.id AS TEXT)) as adminId,
+        admin_u.name as adminName,
+        admin_u.email as adminEmail,
+        COALESCE(d.name, emp.division, '') as employeeDivision,
+        COALESCE(dept.name, '') as employeeDepartment,
+        uaa.assigned_at as assignedDate
+      FROM user_admin_assignments uaa
+      JOIN users emp ON uaa.user_id = emp.id
+      JOIN users admin_u ON uaa.admin_id = admin_u.id
+      LEFT JOIN divisions d ON emp.division_id = d.id
+      LEFT JOIN departments dept ON emp.department_id = dept.id
+      WHERE emp.name != '[Deleted User]' AND emp.active = 1
+      ORDER BY admin_u.name ASC, emp.name ASC
+    `;
+
+    const rows = db.prepare(sql).all();
+
+    return {
+      data: rows.map((r) => ({
+        id: r.id,
+        employeeId: r.employeeId,
+        employeeName: r.employeeName,
+        employeeEmail: r.employeeEmail,
+        adminId: r.adminId,
+        adminName: r.adminName,
+        adminEmail: r.adminEmail,
+        employeeDivision: r.employeeDivision,
+        employeeDepartment: r.employeeDepartment,
+        assignedDate: r.assignedDate,
+      })),
+    };
+  }
+
+  /**
+   * Retrieve aggregated timesheet status summary for reporting.
+   */
+  getStatusSummary(filters = {}) {
+    const cacheKey = `status-summary:${JSON.stringify(filters)}`;
+    return cachedQuery(cacheKey, () => this._queryStatusSummary(filters));
+  }
+
+  _queryStatusSummary(filters) {
+    let whereClause = "WHERE u.name != '[Deleted User]'";
+    const params = [];
+
+    if (filters.from) {
+      whereClause += ' AND t.work_date >= ?';
+      params.push(filters.from);
+    }
+    if (filters.to) {
+      whereClause += ' AND t.work_date <= ?';
+      params.push(filters.to);
+    }
+    if (filters.division) {
+      whereClause += ' AND (LOWER(d.name) = LOWER(?) OR LOWER(u.division) = LOWER(?))';
+      params.push(filters.division, filters.division);
+    }
+
+    const sql = `
+      SELECT
+        t.status as status,
+        COUNT(*) as entryCount,
+        COALESCE(SUM(t.hours), 0) as totalHours,
+        COUNT(DISTINCT t.user_id) as employeeCount
+      FROM timesheets t
+      JOIN users u ON t.user_id = u.id
+      LEFT JOIN divisions d ON COALESCE(t.division_id, u.division_id) = d.id
+      ${whereClause}
+      GROUP BY t.status
+      ORDER BY t.status ASC
+    `;
+
+    const rows = db.prepare(sql).all(...params);
+
+    const totalEntries = rows.reduce((s, r) => s + r.entryCount, 0);
+    const totalHours = rows.reduce((s, r) => s + r.totalHours, 0);
+
+    return {
+      data: rows.map((r) => ({
+        status: r.status,
+        entryCount: r.entryCount,
+        totalHours: r.totalHours,
+        employeeCount: r.employeeCount,
+        percentage: totalEntries > 0 ? Math.round((r.entryCount / totalEntries) * 10000) / 100 : 0,
+      })),
+      summary: {
+        totalEntries,
+        totalHours,
+        totalEmployees: new Set(rows.map((r) => r.employeeCount)).size,
+      },
+    };
+  }
+
+  /**
+   * API version and compatibility information.
+   */
+  getVersion() {
+    return {
+      apiVersion: '1.0.0',
+      dashboardVersion: '1.0.0',
+      apiNamespace: '/api/powerbi',
+      serverTime: new Date().toISOString(),
+      cacheEnabled: CACHE_TTL_MS > 0,
+      cacheTtlSeconds: CACHE_TTL_MS > 0 ? CACHE_TTL_MS / 1000 : 0,
+      endpoints: [
+        'timesheets',
+        'users',
+        'divisions',
+        'departments',
+        'projects',
+        'holidays',
+        'tasks',
+        'assignments',
+        'status-summary',
+        'version',
+        'export',
+      ],
+    };
+  }
+
+  /**
+   * Legacy flat star-schema export array for existing Power BI datasets.
    */
   getLegacyExport() {
+    return cachedQuery('legacy-export', () => this._queryLegacyExport());
+  }
+
+  _queryLegacyExport() {
     const query = `
       SELECT 
         t.id as TimesheetId,

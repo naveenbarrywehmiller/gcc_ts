@@ -42,6 +42,7 @@ module.exports = {
   powerBiApiEnabled: process.env.POWERBI_API_ENABLED !== 'false',
   powerBiApiBasePath: process.env.POWERBI_API_BASE_PATH || '/api/powerbi',
   powerBiMaxRecords: parseInt(process.env.POWERBI_MAX_RECORDS, 10) || 50000,
+  powerBiCacheTtl: parseInt(process.env.POWERBI_CACHE_TTL, 10) || 60,
 
   // ── Feature flags ───────────────────────────────────────────
   enableMsalAuth: process.env.ENABLE_MSAL_AUTH === 'true',
