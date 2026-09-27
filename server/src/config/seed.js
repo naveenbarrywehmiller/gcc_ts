@@ -81,7 +81,7 @@ function seed() {
   `);
 
   const seedUsers = db.transaction(() => {
-    insertUser.run('System Admin', 'systemadmin@barry-wehmiller.com', bcrypt.hashSync('Barry!2026', 12), 'system admin', 'IT', 'Core', 'Dedicated', getDivisionId('IT'), itDeptId, dedicatedId);
+    insertUser.run('System Admin', 'systemadmin@barry-wehmiller.com', bcrypt.hashSync('systemadmin', 12), 'system admin', 'IT', 'Core', 'Dedicated', getDivisionId('IT'), itDeptId, dedicatedId);
     insertUser.run('Default Admin', 'admin@company.com', adminHash, 'admin', 'IT', 'Core', 'Dedicated', getDivisionId('IT'), itDeptId, dedicatedId);
     insertUser.run('John Smith', 'john.smith@company.com', employeeHash, 'employee', 'Engineering', 'Core', 'Dedicated', getDivisionId('Engineering'), mechDeptId, dedicatedId);
     insertUser.run('Jane Doe', 'jane.doe@company.com', employeeHash, 'employee', 'Engineering', 'Support', 'Flex', getDivisionId('Engineering'), elecDeptId, flexId);
@@ -163,7 +163,7 @@ function seed() {
   seedHolidays();
 
   console.log('✅ Database seeded successfully.');
-  console.log('   System Admin: systemadmin@barry-wehmiller.com / Barry!2026');
+  console.log('   System Admin: systemadmin@barry-wehmiller.com / systemadmin');
   console.log('   Admin: admin@company.com / admin123');
   console.log('   Employees: john.smith@company.com / password123');
 }

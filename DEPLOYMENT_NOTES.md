@@ -129,7 +129,7 @@ Two CI workflows triggered in parallel upon merging release pull requests:
    - Added `system admin` to the SQLite `role` column `CHECK` constraints.
    - The database seeding process (`npm run seed`) automatically injects a default system admin account:
      - **Email**: `systemadmin@barry-wehmiller.com`
-     - **Password**: `Barry!2026`
+     - **Password**: `systemadmin`
 2. **Dedicated Admin UI**:
    - Built a secure frontend page at `/admin/system` strictly accessible by `system admin` accounts.
 3. **Maintenance Mode**:

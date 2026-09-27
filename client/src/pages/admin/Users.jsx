@@ -522,6 +522,7 @@ export default function AdminUsers() {
               <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="employee">Employee</option>
                 <option value="admin">Admin</option>
+                {form.role === 'system admin' && <option value="system admin">System Admin</option>}
               </select>
             </div>
             <div>

@@ -495,7 +495,7 @@ function migrate() {
   const sysAdminExists = db.prepare('SELECT id FROM users WHERE email = ?').get(sysAdminEmail);
   if (!sysAdminExists) {
     console.log('  → Creating default system admin account...');
-    const sysAdminHash = bcrypt.hashSync('Barry!2026', 12);
+    const sysAdminHash = bcrypt.hashSync('systemadmin', 12);
     db.prepare(`
       INSERT INTO users (name, email, password_hash, role)
       VALUES (?, ?, ?, ?)
