@@ -247,6 +247,39 @@ npm run restore -- ./backup/timesheet-YYYY-MM-DD.db
 
 ---
 
+## 📡 REST API Reference
+
+The backend provides a comprehensive JSON REST API. All endpoints are prefixed with `/api`.
+
+👉 **For the complete documentation with request/response schemas and examples, see [`API_REFERENCE.md`](./API_REFERENCE.md).**
+
+### Quick Endpoints Overview
+
+| Category | Endpoint | Methods | Description |
+|---|---|---|---|
+| **System** | `/api/health` | `GET` | Service status, timestamp & release version |
+| **Auth** | `/api/auth/login` | `POST` | Local user login (sets HttpOnly cookie) |
+| | `/api/auth/logout` | `POST` | Clear session cookies |
+| | `/api/auth/me` | `GET` | Current user profile & permissions |
+| | `/api/auth/ms/login` | `POST` | Microsoft 365 Entra ID SSO |
+| **Timesheets** | `/api/timesheets` | `GET`, `POST` | Log and retrieve weekly time entries |
+| | `/api/timesheets/batch` | `POST` | Bulk save weekly grid |
+| | `/api/timesheets/submit` | `POST` | Submit week for manager approval |
+| | `/api/timesheets/recall` | `POST` | Recall submitted timesheet back to draft |
+| | `/api/timesheets/approve` | `POST` | Manager/Admin timesheet approval |
+| | `/api/timesheets/reject` | `POST` | Manager/Admin timesheet rejection |
+| **Manager** | `/api/manager/pending-approvals` | `GET` | Team pending review list |
+| | `/api/manager/week-details/:userId/:year/:week` | `GET` | Detailed employee week breakdown |
+| **Reports** | `/api/reports/dashboard` | `GET` | Dashboard KPI metrics |
+| | `/api/reports/utilization` | `GET` | Employee utilization rates |
+| | `/api/reports/project-hours` | `GET` | Project hour aggregations |
+| | `/api/reports/export` | `GET` | Export timesheet records to Excel or PDF |
+| **Power BI** | `/api/powerbi/*` | `GET` | Secure read-only feeds for Power BI reporting |
+| **Master Data** | `/api/users`, `/api/projects`, `/api/tasks`, ... | CRUD | Entity catalogs and management |
+| **Admin** | `/api/audit`, `/api/import`, `/api/sharepoint-sync/*` | `GET`, `POST` | Audit logs, CSV import, sync |
+
+---
+
 ## 🐳 Docker Deployment Guide (GitHub Container Registry)
 
 Follow these step-by-step instructions to deploy the GCC Timesheet application on any Linux server, Raspberry Pi, Mac, or VM using the pre-built multi-architecture Docker image from GitHub Container Registry (`ghcr.io`).
