@@ -10,7 +10,8 @@ This document records the infrastructure, Docker, CI/CD, and platform compatibil
 3. [Raspberry Pi (DietPi) Setup & Auto-Refresh](#3-raspberry-pi-dietpi-setup--auto-refresh)
 4. [Dual Tailscale Funnels (Timesheet + OmniRoute)](#4-dual-tailscale-funnels)
 5. [Dynamic Release Versioning & Removal of Hardcoded Year](#5-dynamic-release-versioning)
-6. [CI/CD Race Condition & Image Manifest Overwrite Fix](#6-cicd-race-condition--image-manifest-overwrite-fix)
+13. [CI/CD Race Condition & Image Manifest Overwrite Fix](#6-cicd-race-condition--image-manifest-overwrite-fix)
+14. [System Admin & Maintenance Mode Setup](#7-system-admin--maintenance-mode-setup)
 
 ---
 
@@ -118,3 +119,25 @@ Two CI workflows triggered in parallel upon merging release pull requests:
    - Added checkout and package version extraction steps to the `merge` job.
    - Configured `docker/metadata-action` to tag both `:latest` and `:v${version}` (`v1.7.1`) as full multi-arch manifests.
    - Pushes verified unified multi-architecture manifests supporting both `linux/amd64` and `linux/arm64`.
+
+---
+
+## 7. System Admin & Maintenance Mode Setup
+
+### Feature Additions
+1. **System Admin Role**:
+   - Added `system admin` to the SQLite `role` column `CHECK` constraints.
+   - The database seeding process (`npm run seed`) automatically injects a default system admin account:
+     - **Email**: `systemadmin@barry-wehmiller.com`
+     - **Password**: `Barry!2026`
+2. **Dedicated Admin UI**:
+   - Built a secure frontend page at `/admin/system` strictly accessible by `system admin` accounts.
+3. **Maintenance Mode**:
+   - Exposes a toggle to enable/disable system-wide maintenance mode.
+   - Instantly drops an empty `.maintenance` file in the root.
+   - The Express middleware immediately returns HTTP 503 for all standard `/api/*` endpoints except the `/api/system/*` routes used by the maintenance UI.
+4. **Database Tools**:
+   - Allows triggering the `npm run backup` and `npm run restore` backend scripts directly via the UI.
+5. **API Token Generator & REST Links**:
+   - Form generates dedicated JWT tokens with custom expirations (`1h`, `1d`, `30d`, or `never`) explicitly for REST API authentication (e.g. for external Raspberry Pi ingestion).
+   - Embedded a reference table matching `API_REFERENCE.md` directly into the web UI for quick integrations.

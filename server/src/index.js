@@ -18,6 +18,11 @@ const app = express();
 app.use((req, res, next) => {
   const fs = require('fs');
   if (fs.existsSync(path.join(__dirname, '..', '.maintenance'))) {
+    // Allow system routes so admins can disable maintenance mode
+    if (req.path.startsWith('/api/system')) {
+      return next();
+    }
+    
     if (req.path.startsWith('/api')) {
       return res.status(503).json({ error: 'System is currently down for maintenance (Database operations in progress).' });
     }
@@ -86,6 +91,7 @@ app.use('/api/import', require('./routes/import'));
 app.use('/api/audit', require('./routes/audit'));
 app.use('/api/admin-ownership', require('./routes/admin-ownership'));
 app.use('/api/sharepoint-sync', require('./routes/sharepoint-sync'));
+app.use('/api/system', require('./routes/system'));
 // Health check
 app.get('/api/health', (req, res) => {
   const { version } = require('./config/version');

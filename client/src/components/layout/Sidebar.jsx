@@ -8,7 +8,7 @@ import {
 import { useState } from 'react';
 
 export default function Sidebar() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSystemAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
 
@@ -36,6 +36,11 @@ export default function Sidebar() {
   ];
 
   const allItems = isAdmin ? [...navItems, ...adminItems] : navItems;
+  
+  if (isSystemAdmin) {
+    allItems.push({ type: 'divider', label: 'System' });
+    allItems.push({ to: '/admin/system', icon: Settings, label: 'Maintenance' });
+  }
 
   return (
     <aside

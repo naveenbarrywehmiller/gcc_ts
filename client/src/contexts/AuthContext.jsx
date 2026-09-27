@@ -83,8 +83,9 @@ export function AuthProvider({ children }) {
       loginWithMicrosoft, 
       logout, 
       loading, 
-      isAdmin: user?.role === 'admin',
+      isAdmin: user?.role === 'admin' || user?.role === 'system admin',
       isManager: user?.role === 'manager',
+      isSystemAdmin: user?.role === 'system admin',
       msalEnabled: msalConfig.enabled 
     }}>
       {children}

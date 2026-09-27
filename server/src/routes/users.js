@@ -253,8 +253,12 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   const { name, email, password, role, division, core, team_type, active, division_id, department_id, supporting_category_id, employee_id } = req.body;
   const userId = req.params.id;
 
-  const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  if (existing.role === 'system admin' && req.user.role !== 'system admin') {
+    return res.status(403).json({ error: 'Only a system admin can modify another system admin account' });
+  }
 
   if (email) {
     const emailExists = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email.toLowerCase().trim(), userId);
@@ -343,8 +347,12 @@ router.post('/:id/reset-password', authenticate, authorize('admin'), (req, res) 
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  if (existing.role === 'system admin' && req.user.role !== 'system admin') {
+    return res.status(403).json({ error: 'Only a system admin can reset a system admin password' });
+  }
 
   const hash = bcrypt.hashSync(password, 12);
   db.prepare('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hash, userId);
@@ -364,8 +372,12 @@ router.post('/:id/toggle-active', authenticate, authorize('admin'), (req, res) =
     return res.status(400).json({ error: 'Cannot deactivate your own account' });
   }
 
-  const existing = db.prepare('SELECT id, name, active FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT id, name, active, role FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  if (existing.role === 'system admin') {
+    return res.status(403).json({ error: 'System admin accounts cannot be deactivated' });
+  }
 
   const newActive = existing.active ? 0 : 1;
   db.prepare('UPDATE users SET active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newActive, userId);
@@ -400,8 +412,12 @@ router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => 
     return res.status(400).json({ error: 'Cannot delete your own account' });
   }
 
-  const existing = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  if (existing.role === 'system admin') {
+    return res.status(403).json({ error: 'System admin accounts cannot be deleted' });
+  }
 
   // Check if user has any timesheet entries
   const hasTimesheets = db.prepare('SELECT COUNT(*) as count FROM timesheets WHERE user_id = ?').get(userId);
@@ -464,8 +480,12 @@ router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
     return res.status(400).json({ error: 'Cannot delete your own account' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  if (existing.role === 'system admin') {
+    return res.status(403).json({ error: 'System admin accounts cannot be deactivated/deleted' });
+  }
 
   db.prepare('UPDATE users SET active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(userId);
 

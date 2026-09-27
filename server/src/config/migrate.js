@@ -12,7 +12,7 @@ function migrate() {
       name TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee')),
+      role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee','system admin')),
       division TEXT,
       core TEXT,
       team_type TEXT,
@@ -412,10 +412,10 @@ function migrate() {
     console.log('  → Note: partial index for non-project entries skipped (may already exist).');
   }
 
-  // --- Users table: add manager role to CHECK constraint (requires table recreation) ---
+  // --- Users table: add manager and system admin roles to CHECK constraint (requires table recreation) ---
   const userTableSchema = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get().sql;
-  if (!userTableSchema.includes("'manager'")) {
-    console.log('  → Migrating users table to add manager role constraint...');
+  if (!userTableSchema.includes("'system admin'")) {
+    console.log('  → Migrating users table to add system admin role constraint...');
     db.exec(`
       PRAGMA foreign_keys=off;
 
@@ -425,7 +425,7 @@ function migrate() {
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee')),
+        role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee','system admin')),
         division TEXT,
         core TEXT,
         team_type TEXT,

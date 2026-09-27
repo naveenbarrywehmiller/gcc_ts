@@ -20,14 +20,23 @@ import AdminHolidays from './pages/admin/Holidays';
 import AdminApprovals from './pages/admin/Approvals';
 import AdminImport from './pages/admin/Import';
 import AdminAuditLog from './pages/admin/AuditLog';
+import SystemMaintenance from './pages/admin/SystemMaintenance';
 
 // We'll create ManagerApprovals shortly
 import ManagerApprovals from './pages/manager/ManagerApprovals';
 
 function AdminRoute({ children }) {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, user, loading } = useAuth();
   if (loading) return null;
-  return isAdmin ? children : <Navigate to="/" replace />;
+  // Allow system admins to also access normal admin pages if needed, or strictly check.
+  // Actually, let's keep it strictly isAdmin or isSystemAdmin.
+  return (isAdmin || user?.role === 'system admin') ? children : <Navigate to="/" replace />;
+}
+
+function SystemAdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user?.role === 'system admin' ? children : <Navigate to="/" replace />;
 }
 
 function ManagerRoute({ children }) {
@@ -61,6 +70,9 @@ function AppRoutes() {
         <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
         <Route path="/admin/import" element={<AdminRoute><AdminImport /></AdminRoute>} />
         <Route path="/admin/audit" element={<AdminRoute><AdminAuditLog /></AdminRoute>} />
+        
+        {/* System Admin Routes */}
+        <Route path="/admin/system" element={<SystemAdminRoute><SystemMaintenance /></SystemAdminRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
