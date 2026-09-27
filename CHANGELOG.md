@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.5](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.4...v1.9.5) (2026-09-27)
+
+
+### Bug Fixes
+
+* support HTTP LAN deployments by relaxing cookie Secure flag and adding Bearer token fallback ([7ab0769](https://github.com/naveenbarrywehmiller/gcc_ts/commit/7ab0769ff4cd61cc99950e02f3ffab0a22c59175))
+
 ## [1.9.4](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.3...v1.9.4) (2026-09-27)
 
 
