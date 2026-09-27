@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS builder
+FROM node:22-bookworm-slim AS builder
 
 # Build frontend
 WORKDIR /app/client
@@ -14,7 +14,7 @@ COPY server/package*.json ./
 RUN cd /app/server && npm ci --omit=dev
 
 # Production image
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
