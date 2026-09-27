@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.11.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.1...v1.11.2) (2026-09-27)
+## [1.11.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.2...v1.11.3) (2026-09-27)
 
 
 ### Bug Fixes
