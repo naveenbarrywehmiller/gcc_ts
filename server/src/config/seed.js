@@ -8,8 +8,8 @@ function seed() {
   // Run migrations first
   migrate();
 
-  // Check if already seeded
-  const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@company.com');
+  // Check if already seeded (check the first user we insert — systemadmin)
+  const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('systemadmin@barry-wehmiller.com');
   if (existingAdmin) {
     console.log('⚠️  Database already seeded. Skipping.');
     // Still seed new tables if they're empty
@@ -76,7 +76,7 @@ function seed() {
 
   // Seed users
   const insertUser = db.prepare(`
-    INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id)
+    INSERT OR IGNORE INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
