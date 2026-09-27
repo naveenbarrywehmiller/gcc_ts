@@ -41,7 +41,15 @@ app.use((req, res, next) => {
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
-  origin: config.corsOrigin,
+  // When CORS_ORIGIN='*', reflect the request origin so HttpOnly cookies work.
+  // Browsers reject credentials with a literal wildcard Access-Control-Allow-Origin.
+  origin: (origin, callback) => {
+    const allowed = config.corsOrigin;
+    if (allowed === '*' || !origin) return callback(null, origin || '*');
+    const origins = allowed.split(',').map(o => o.trim());
+    if (origins.includes(origin)) return callback(null, origin);
+    return callback(null, false);
+  },
   credentials: true,
 }));
 app.use(cookieParser());
