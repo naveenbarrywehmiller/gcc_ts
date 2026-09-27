@@ -60,6 +60,17 @@ export default function SystemMaintenance() {
     }
   });
 
+function getFormattedTimestamp(d = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  return `${yyyy}-${mm}-${dd}_${hh}-${min}-${ss}`;
+}
+
   // Direct Download to PC
   const handleDownloadToPc = async () => {
     setIsDownloading(true);
@@ -70,8 +81,8 @@ export default function SystemMaintenance() {
       });
 
       // Extract filename from content-disposition header if available
-      let filename = `timesheet-backup-${new Date().toISOString().slice(0, 10)}.db`;
-      const disposition = res.headers['content-disposition'];
+      let filename = `timesheet-backup-${getFormattedTimestamp()}.db`;
+      const disposition = res.headers?.['content-disposition'];
       if (disposition && disposition.includes('filename=')) {
         const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
         if (matches && matches[1]) {

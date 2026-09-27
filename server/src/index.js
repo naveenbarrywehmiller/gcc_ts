@@ -51,6 +51,7 @@ app.use(cors({
     return callback(null, false);
   },
   credentials: true,
+  exposedHeaders: ['Content-Disposition'],
 }));
 app.use(cookieParser());
 

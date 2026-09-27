@@ -51,9 +51,20 @@ const upload = multer({
   },
 });
 
+function getFormattedTimestamp(d = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  return `${yyyy}-${mm}-${dd}_${hh}-${min}-${ss}`;
+}
+
 // --- Direct Download Database to PC ---
 router.get('/database/download', async (req, res) => {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = getFormattedTimestamp();
   const filename = `timesheet-backup-${timestamp}.db`;
   const tempFile = path.join(os.tmpdir(), filename);
 
@@ -146,7 +157,7 @@ router.post('/database/restore-upload', (req, res, next) => {
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir, { recursive: true });
     }
-    const safetyFile = path.join(backupDir, `timesheet-pre-restore-${Date.now()}.db`);
+    const safetyFile = path.join(backupDir, `timesheet-pre-restore-${getFormattedTimestamp()}.db`);
     try {
       await db.backup(safetyFile);
       console.log(`[DB Restore] Safety backup created at: ${safetyFile}`);
