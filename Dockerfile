@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 # Build frontend
 WORKDIR /app/client
@@ -7,19 +7,16 @@ RUN npm ci
 COPY client/ ./
 RUN npm run build
 
-# Build server dependencies (requires python3, make, g++ for better-sqlite3 native compilation)
+# Build server dependencies
 WORKDIR /app/server
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 COPY server/package*.json ./
 RUN cd /app/server && npm ci --omit=dev
 
 # Production image
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
 WORKDIR /app
-
-# Install runtime libstdc++ required by compiled native addon (better-sqlite3)
-RUN apk add --no-cache libstdc++
 
 # Copy built server node_modules and server source
 COPY --from=builder /app/server/node_modules ./server/node_modules
