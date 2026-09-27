@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.5...v1.10.0) (2026-09-27)
+
+
+### Features
+
+* add direct PC database download and restore upload options in System Maintenance ([07dee0f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/07dee0f1c00267be77d5b2a18796ad12979ff44a))
+
 ## [1.9.5](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.4...v1.9.5) (2026-09-27)
 
 
