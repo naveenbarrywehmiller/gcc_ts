@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { Timer, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import api from '../services/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,13 @@ export default function Login() {
   const { login, loginWithMicrosoft, msalEnabled } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+  const [version, setVersion] = useState(null);
+
+  useEffect(() => {
+    api.get('/health')
+      .then(res => { if (res.data?.version) setVersion(res.data.version); })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -160,7 +168,11 @@ export default function Login() {
         )}
 
         <p className="text-center text-xs text-surface-600 mt-6">
-          Internal use only • {new Date().getFullYear()}
+          Internal use only{version && (
+            <span className="ml-2 px-1.5 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400">
+              {version}
+            </span>
+          )}
         </p>
       </div>
     </div>

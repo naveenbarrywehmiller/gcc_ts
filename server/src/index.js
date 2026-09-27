@@ -88,7 +88,8 @@ app.use('/api/admin-ownership', require('./routes/admin-ownership'));
 app.use('/api/sharepoint-sync', require('./routes/sharepoint-sync'));
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const { version } = require('../../package.json');
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: `v${version}` });
 });
 
 // Serve static frontend in production
