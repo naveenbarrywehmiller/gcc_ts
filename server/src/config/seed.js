@@ -93,14 +93,16 @@ function seed() {
   // Seed admin_divisions - assign admin to multiple divisions
   const adminUser = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@company.com');
   const allDivisions = db.prepare('SELECT id FROM divisions').all();
-  const insertAdminDiv = db.prepare('INSERT INTO admin_divisions (user_id, division_id) VALUES (?, ?)');
-  const seedAdminDivisions = db.transaction(() => {
-    allDivisions.forEach(d => insertAdminDiv.run(adminUser.id, d.id));
-  });
-  seedAdminDivisions();
+  const insertAdminDiv = db.prepare('INSERT OR IGNORE INTO admin_divisions (user_id, division_id) VALUES (?, ?)');
+  if (adminUser) {
+    const seedAdminDivisions = db.transaction(() => {
+      allDivisions.forEach(d => insertAdminDiv.run(adminUser.id, d.id));
+    });
+    seedAdminDivisions();
+  }
 
   // Seed activities
-  const insertActivity = db.prepare('INSERT INTO activities (name) VALUES (?)');
+  const insertActivity = db.prepare('INSERT OR IGNORE INTO activities (name) VALUES (?)');
   const seedActivities = db.transaction(() => {
     ['Development', 'Testing', 'Design', 'Documentation', 'Meeting', 'Training', 'Support', 'Research', 'Deployment', 'Code Review'].forEach(a => insertActivity.run(a));
   });
