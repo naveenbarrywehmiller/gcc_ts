@@ -247,16 +247,44 @@ npm run restore -- ./backup/timesheet-YYYY-MM-DD.db
 
 ## 🐳 Docker
 
-### Build & Run with Docker Compose
+### Deploy using Docker Compose (Recommended)
+
+To deploy the application using the pre-built image from GitHub Container Registry (which supports both Intel/AMD and Apple Silicon/ARM processors), create a `docker-compose.yml` file with the following content:
+
+```yaml
+services:
+  gcc-ts:
+    image: ghcr.io/naveenbarrywehmiller/gcc_ts:latest
+    container_name: gcc_ts
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+    # volumes:
+    #   - ./data:/app/server/data
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 300 gcc_ts
+```
+
+Then run:
+```bash
+docker compose up -d
+```
+
+### Build & Run Locally from Source
+
+If you need to build the image locally instead of pulling it:
 
 ```bash
 docker compose up --build
-```
-
-### Pull from GitHub Container Registry
-
-```bash
-docker pull ghcr.io/naveenbarrywehmiller/gcc_ts:latest
 ```
 
 ---
