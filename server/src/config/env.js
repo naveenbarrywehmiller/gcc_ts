@@ -13,7 +13,7 @@ module.exports = {
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
 
   // ── SQLite database ─────────────────────────────────────────
-  dbPath: path.resolve(__dirname, '..', process.env.DB_PATH || './data/timesheet.db'),
+  dbPath: path.resolve(__dirname, '..', '..', process.env.DB_PATH || './data/timesheet.db'),
 
   // ── CORS & Rate Limiting ────────────────────────────────────
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
