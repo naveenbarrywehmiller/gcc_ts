@@ -1,15 +1,17 @@
 // ═══════════════════════════════════════════════════════════════════════
-// DAX Measures Library — GCC Timesheet Power BI Dashboard v1.0.0
+// DAX Measures Library — GCC Timesheet Power BI Dashboard v1.1.0
 // ═══════════════════════════════════════════════════════════════════════
 // Usage: Create a measures table in Power BI Desktop:
 //   Home → Enter Data → name it "_Measures" → Load
 //   Then add each measure below to the _Measures table.
 // ═══════════════════════════════════════════════════════════════════════
 
+// ─────────────────────────────────────────────────────────────
+// POPULATION & FACT BASELINES
+// ─────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────
-// CORE HOURS MEASURES
-// ─────────────────────────────────────────────────────────────
+Total Entries =
+COUNTROWS(FactTimesheet)
 
 Total Hours =
 SUM(FactTimesheet[hours])
@@ -17,53 +19,45 @@ SUM(FactTimesheet[hours])
 Average Hours =
 AVERAGE(FactTimesheet[hours])
 
-Average Daily Hours =
-DIVIDE(
-    [Total Hours],
-    DISTINCTCOUNT(FactTimesheet[date]),
-    0
-)
+Average Hours per Employee =
+DIVIDE([Total Hours], [Active Employee Count], 0)
 
-Average Weekly Hours =
-DIVIDE(
-    [Total Hours],
-    DISTINCTCOUNT(FactTimesheet[week]),
-    0
-)
-
-
-// ─────────────────────────────────────────────────────────────
-// EMPLOYEE COUNTS
-// ─────────────────────────────────────────────────────────────
+Average Hours per Entry =
+DIVIDE([Total Hours], [Total Entries], 0)
 
 Employee Count =
-COUNTROWS(DimEmployee)
+DISTINCTCOUNT(DimEmployee[employeeId])
 
 Active Employee Count =
 CALCULATE(
-    COUNTROWS(DimEmployee),
+    DISTINCTCOUNT(DimEmployee[employeeId]),
     DimEmployee[isActive] = TRUE()
 )
 
-Active Employees with Entries =
-DISTINCTCOUNT(FactTimesheet[employeeId])
-
 Project Count =
+DISTINCTCOUNT(DimProject[projectCode])
+
+Active Project Count =
 CALCULATE(
-    COUNTROWS(DimProject),
+    DISTINCTCOUNT(DimProject[projectCode]),
     DimProject[isActive] = TRUE()
 )
 
-Active Projects with Entries =
+Division Count =
+DISTINCTCOUNT(DimDivision[divisionName])
+
+Department Count =
+DISTINCTCOUNT(DimDepartment[departmentName])
+
+// ─────────────────────────────────────────────────────────────
+// STATUS DISTRIBUTIONS (HOURS)
+// ─────────────────────────────────────────────────────────────
+
+Draft Hours =
 CALCULATE(
-    DISTINCTCOUNT(FactTimesheet[projectCode]),
-    NOT(ISBLANK(FactTimesheet[projectCode]))
+    SUM(FactTimesheet[hours]),
+    FactTimesheet[status] = "draft"
 )
-
-
-// ─────────────────────────────────────────────────────────────
-// STATUS-BASED HOURS
-// ─────────────────────────────────────────────────────────────
 
 Submitted Hours =
 CALCULATE(
@@ -77,22 +71,10 @@ CALCULATE(
     FactTimesheet[status] = "approved"
 )
 
-Pending Hours =
-CALCULATE(
-    SUM(FactTimesheet[hours]),
-    FactTimesheet[status] IN {"draft", "submitted"}
-)
-
 Rejected Hours =
 CALCULATE(
     SUM(FactTimesheet[hours]),
     FactTimesheet[status] = "rejected"
-)
-
-Draft Hours =
-CALCULATE(
-    SUM(FactTimesheet[hours]),
-    FactTimesheet[status] = "draft"
 )
 
 Recalled Hours =
@@ -101,22 +83,49 @@ CALCULATE(
     FactTimesheet[status] = "recalled"
 )
 
-
-// ─────────────────────────────────────────────────────────────
-// WEEKEND & HOLIDAY HOURS
-// ─────────────────────────────────────────────────────────────
-
-Weekend Hours =
+Pending Hours =
 CALCULATE(
     SUM(FactTimesheet[hours]),
-    DimDate[IsWeekend] = TRUE()
+    FactTimesheet[status] IN {"draft", "submitted"}
 )
 
-Holiday Hours =
+// ─────────────────────────────────────────────────────────────
+// STATUS DISTRIBUTIONS (ENTRIES)
+// ─────────────────────────────────────────────────────────────
+
+Draft Entries =
 CALCULATE(
-    SUM(FactTimesheet[hours]),
-    DimDate[IsHoliday] = TRUE()
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] = "draft"
 )
+
+Submitted Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] = "submitted"
+)
+
+Approved Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] = "approved"
+)
+
+Rejected Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] = "rejected"
+)
+
+Pending Entries =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] IN {"draft", "submitted"}
+)
+
+// ─────────────────────────────────────────────────────────────
+// BILLABLE & NON-BILLABLE
+// ─────────────────────────────────────────────────────────────
 
 Billable Hours =
 CALCULATE(
@@ -133,65 +142,98 @@ CALCULATE(
 Billable Percentage =
 DIVIDE([Billable Hours], [Total Hours], 0)
 
-
 // ─────────────────────────────────────────────────────────────
-// RATES & PERCENTAGES
+// COMPLIANCE & SUBMISSION RATES
 // ─────────────────────────────────────────────────────────────
 
 Submission Rate =
-VAR TotalEntries = COUNTROWS(FactTimesheet)
 VAR SubmittedOrBeyond =
     CALCULATE(
         COUNTROWS(FactTimesheet),
-        FactTimesheet[status] IN {"submitted", "approved", "rejected"}
+        FactTimesheet[status] IN {"submitted", "approved", "rejected", "recalled"}
     )
 RETURN
-    DIVIDE(SubmittedOrBeyond, TotalEntries, 0)
+    DIVIDE(SubmittedOrBeyond, [Total Entries], 0)
 
 Approval Rate =
-VAR SubmittedAndApproved =
-    CALCULATE(
-        COUNTROWS(FactTimesheet),
-        FactTimesheet[status] IN {"submitted", "approved", "rejected"}
-    )
 VAR ApprovedOnly =
     CALCULATE(
         COUNTROWS(FactTimesheet),
         FactTimesheet[status] = "approved"
     )
-RETURN
-    DIVIDE(ApprovedOnly, SubmittedAndApproved, 0)
-
-Rejection Rate =
-VAR SubmittedAndBeyond =
+VAR SubmittedOrBeyond =
     CALCULATE(
         COUNTROWS(FactTimesheet),
-        FactTimesheet[status] IN {"submitted", "approved", "rejected"}
+        FactTimesheet[status] IN {"submitted", "approved", "rejected", "recalled"}
     )
+RETURN
+    DIVIDE(ApprovedOnly, SubmittedOrBeyond, 0)
+
+Rejection Rate =
 VAR RejectedOnly =
     CALCULATE(
         COUNTROWS(FactTimesheet),
         FactTimesheet[status] = "rejected"
     )
+VAR SubmittedOrBeyond =
+    CALCULATE(
+        COUNTROWS(FactTimesheet),
+        FactTimesheet[status] IN {"submitted", "approved", "rejected", "recalled"}
+    )
 RETURN
-    DIVIDE(RejectedOnly, SubmittedAndBeyond, 0)
+    DIVIDE(RejectedOnly, SubmittedOrBeyond, 0)
 
+// ─────────────────────────────────────────────────────────────
+// WORKING DAYS / UTILIZATION
+// ─────────────────────────────────────────────────────────────
+
+Standard Daily Hours =
+8
+
+Working Days =
+CALCULATE(
+    DISTINCTCOUNT(DimDate[Date]),
+    DimDate[IsWeekend] = FALSE(),
+    DimDate[IsHoliday] = FALSE()
+)
+
+Expected Hours =
+[Working Days] * [Standard Daily Hours]
+
+Utilization Rate =
+DIVIDE([Total Hours], [Expected Hours], 0)
+
+Weekend Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DimDate[IsWeekend] = TRUE()
+)
+
+Holiday Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DimDate[IsHoliday] = TRUE()
+)
+
+Weekend Employees =
+DISTINCTCOUNT(
+    CALCULATE(
+        FactTimesheet[employeeId],
+        DimDate[IsWeekend] = TRUE()
+    )
+)
+
+Holiday Employees =
+DISTINCTCOUNT(
+    CALCULATE(
+        FactTimesheet[employeeId],
+        DimDate[IsHoliday] = TRUE()
+    )
+)
 
 // ─────────────────────────────────────────────────────────────
 // TIME INTELLIGENCE
 // ─────────────────────────────────────────────────────────────
-
-Current Month Hours =
-CALCULATE(
-    SUM(FactTimesheet[hours]),
-    DATESMTD(DimDate[Date])
-)
-
-Previous Month Hours =
-CALCULATE(
-    SUM(FactTimesheet[hours]),
-    PREVIOUSMONTH(DimDate[Date])
-)
 
 Current Week Hours =
 VAR CurrentDate = TODAY()
@@ -213,6 +255,38 @@ RETURN
         DimDate[Date] >= PrevWeekStart && DimDate[Date] <= PrevWeekEnd
     )
 
+Week over Week Change =
+[Current Week Hours] - [Previous Week Hours]
+
+Week over Week Change % =
+DIVIDE(
+    [Current Week Hours] - [Previous Week Hours],
+    ABS([Previous Week Hours]) + 0.0000001,
+    0
+)
+
+Current Month Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    DATESMTD(DimDate[Date])
+)
+
+Previous Month Hours =
+CALCULATE(
+    SUM(FactTimesheet[hours]),
+    PREVIOUSMONTH(DimDate[Date])
+)
+
+Month over Month Change =
+[Current Month Hours] - [Previous Month Hours]
+
+Month over Month Change % =
+DIVIDE(
+    [Current Month Hours] - [Previous Month Hours],
+    ABS([Previous Month Hours]) + 0.0000001,
+    0
+)
+
 YTD Hours =
 CALCULATE(
     SUM(FactTimesheet[hours]),
@@ -225,39 +299,110 @@ CALCULATE(
     SAMEPERIODLASTYEAR(DimDate[Date])
 )
 
-Previous Year YTD Hours =
+Previous Year YTD =
 CALCULATE(
     SUM(FactTimesheet[hours]),
     DATESYTD(SAMEPERIODLASTYEAR(DimDate[Date]))
 )
 
-
-// ─────────────────────────────────────────────────────────────
-// VARIANCE CALCULATIONS
-// ─────────────────────────────────────────────────────────────
-
-Variance =
-[Current Month Hours] - [Previous Month Hours]
-
-Variance Percentage =
-DIVIDE(
-    [Current Month Hours] - [Previous Month Hours],
-    [Previous Month Hours],
-    0
-)
-
 YTD Variance =
-[YTD Hours] - [Previous Year YTD Hours]
+[YTD Hours] - [Previous Year YTD]
 
-YTD Variance Percentage =
+YTD Variance % =
 DIVIDE(
-    [YTD Hours] - [Previous Year YTD Hours],
-    [Previous Year YTD Hours],
+    [YTD Hours] - [Previous Year YTD],
+    ABS([Previous Year YTD]) + 0.0000001,
     0
 )
 
-Week over Week Change =
-[Current Week Hours] - [Previous Week Hours]
+// ─────────────────────────────────────────────────────────────
+// DAILY / WEEKLY / MONTHLY AVERAGES
+// ─────────────────────────────────────────────────────────────
+
+Average Daily Hours =
+DIVIDE(
+    [Total Hours],
+    DISTINCTCOUNT(FactTimesheet[date]),
+    0
+)
+
+Average Weekly Hours =
+DIVIDE(
+    [Total Hours],
+    DISTINCTCOUNT(FactTimesheet[week]),
+    0
+)
+
+Monthly Total =
+[Total Hours]
+
+Daily Average =
+DIVIDE([Total Hours], DISTINCTCOUNT(FactTimesheet[date]), 0)
+
+Weekly Average =
+DIVIDE([Total Hours], DISTINCTCOUNT(FactTimesheet[week]), 0)
+
+// ─────────────────────────────────────────────────────────────
+// MISSING / DATA QUALITY SUPPORT
+// ─────────────────────────────────────────────────────────────
+
+Invalid Hours Count =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    OR(FactTimesheet[hours] < 0, FactTimesheet[hours] > 24)
+)
+
+Missing Employee IDs =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    ISBLANK(FactTimesheet[employeeId])
+)
+
+Invalid Status Count =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    NOT(FactTimesheet[status] IN {"draft", "submitted", "approved", "rejected", "recalled"})
+)
+
+// ─────────────────────────────────────────────────────────────
+// LAST REFRESH METADATA (DISPLAY ONLY)
+// ─────────────────────────────────────────────────────────────
+
+Last Data Refresh =
+NOW()
+
+// ─────────────────────────────────────────────────────────────
+// DOCUMENTATION-STYLE EXECUTIVE SUMMARY
+// ─────────────────────────────────────────────────────────────
+
+Active Employees =
+[Active Employee Count]
+
+Active Projects =
+[Active Project Count]
+
+Total Employees =
+[Employee Count]
+
+Total Divisions =
+[Division Count]
+
+Total Departments =
+[Department Count]
+
+Total Projects =
+[Project Count]
+
+Total Hours Managed =
+[Total Hours]
+
+Pending Approvals =
+CALCULATE(
+    COUNTROWS(FactTimesheet),
+    FactTimesheet[status] IN {"draft", "submitted"}
+)
+
+// End of measures library
 
 Week over Week Change Percentage =
 DIVIDE(

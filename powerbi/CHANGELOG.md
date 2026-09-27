@@ -5,6 +5,23 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.0] — 2026-09-27
+
+### Added
+- Enterprise-grade Power Query pattern with secure config handling, response validation, and API error messaging
+- Robust pagination design for the timesheet fact table using the API page/limit contract
+- Updated date dimension logic with Monday-first business week semantics and holiday flags
+- Expanded documentation for deployment, troubleshooting, development, and release workflow
+
+### Changed
+- Standardized the validation pattern across main Power BI query scripts
+- Updated Power BI version metadata to reflect the dashboard implementation workstream
+
+### Security
+- Kept the reporting architecture read-only and credential-based, with placeholders instead of live secrets
+
+---
+
 ## [1.0.0] — 2026-09-25
 
 ### Added

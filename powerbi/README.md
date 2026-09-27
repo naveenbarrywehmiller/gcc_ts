@@ -1,6 +1,6 @@
 # GCC Timesheet — Power BI Dashboard
 
-> **Version:** 1.0.0  
+> **Version:** 1.1.0
 > **API Compatibility:** Power BI API v1.x  
 > **Application Compatibility:** GCC Timesheet v1.3.0+
 
@@ -63,7 +63,10 @@ powerbi/
 │   ├── DATA_MODEL.md            # Star schema & relationships
 │   ├── REFRESH.md               # Refresh architecture & limitations
 │   ├── DEPLOYMENT.md            # Deployment & multi-user guide
-│   └── API_COMPATIBILITY.md     # API version compatibility matrix
+│   ├── API_COMPATIBILITY.md     # API version compatibility matrix
+│   ├── DEVELOPMENT.md           # Maintenance and extension workflow
+│   ├── RELEASE_PROCESS.md       # Version/release management process
+│   └── TROUBLESHOOTING.md      # Operational troubleshooting guide
 ├── theme/
 │   └── gcc_timesheet_theme.json # Custom Power BI theme
 ├── queries/
@@ -74,9 +77,15 @@ powerbi/
 │   ├── Divisions.pq             # Power Query M for divisions
 │   ├── Departments.pq           # Power Query M for departments
 │   ├── Projects.pq              # Power Query M for projects
-│   └── Holidays.pq              # Power Query M for holidays
-└── assets/
-    └── dashboard_preview.md     # Dashboard page descriptions
+│   ├── Holidays.pq              # Power Query M for holidays
+│   ├── StatusSummary.pq         # Status summary query
+│   ├── Tasks.pq                 # Task category reference
+│   ├── Assignments.pq           # Admin assignment reference
+│   └── ...
+├── assets/
+│   └── dashboard_preview.md     # Dashboard page descriptions
+└── pbix/
+    # optional generated artifacts for report distribution
 ```
 
 ## Versioning

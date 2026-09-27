@@ -8,7 +8,8 @@
 
 | Power BI Dashboard Version | Required API Version | GCC Timesheet App Version | Status |
 |---------------------------|---------------------|--------------------------|--------|
-| v1.0.0 | v1.x | v1.3.0+ | ✅ Current |
+| v1.1.0 | v1.x | v1.3.0+ | ✅ Current |
+| v1.0.0 | v1.x | v1.3.0+ | ✅ Legacy |
 
 ---
 
