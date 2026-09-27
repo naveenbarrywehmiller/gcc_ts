@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.1...v1.9.2) (2026-09-27)
+
+
+### Bug Fixes
+
+* make remaining seed inserts idempotent (INSERT OR IGNORE) ([c464c49](https://github.com/naveenbarrywehmiller/gcc_ts/commit/c464c4921cc4c25e171845ddcc4b0cde5d64b621))
+
 ## [1.9.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.0...v1.9.1) (2026-09-27)
 
 
