@@ -368,7 +368,8 @@ router.delete('/:id', authenticate, (req, res) => {
   const entry = db.prepare('SELECT * FROM timesheets WHERE id = ?').get(entryId);
 
   if (!entry) return res.status(404).json({ error: 'Entry not found' });
-  if (entry.user_id !== req.user.id && req.user.role !== 'admin') {
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
+  if (entry.user_id !== req.user.id && !isAdmin) {
     return res.status(403).json({ error: 'Not authorized' });
   }
   if (entry.status === 'approved') {
@@ -606,13 +607,14 @@ router.post('/recall', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Week and year are required' });
   }
 
-  const targetUserId = req.user.role === 'admin' ? (user_id || req.user.id) : req.user.id;
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
+  const targetUserId = isAdmin ? (user_id || req.user.id) : req.user.id;
 
-  if (req.user.role !== 'admin' && user_id && parseInt(user_id) !== req.user.id) {
+  if (!isAdmin && user_id && parseInt(user_id) !== req.user.id) {
     return res.status(403).json({ error: 'You can only recall your own timesheets' });
   }
 
-  // If admin is recalling another user's timesheet, verify division scope
+  // If division admin (not system admin) is recalling another user's timesheet, verify division scope
   if (req.user.role === 'admin' && targetUserId !== req.user.id) {
     const adminDivisions = db.prepare('SELECT division_id FROM admin_divisions WHERE user_id = ?').all(req.user.id).map(d => d.division_id);
     const targetUser = db.prepare('SELECT division_id FROM users WHERE id = ?').get(targetUserId);
@@ -626,7 +628,7 @@ router.post('/recall', authenticate, async (req, res) => {
       targetUserId,
       parseInt(week),
       parseInt(year),
-      req.user.role === 'admin' ? req.user.id : null,
+      isAdmin ? req.user.id : null,
       comment || null
     );
     
@@ -634,7 +636,7 @@ router.post('/recall', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'No recallable timesheet entries found for this week' });
     }
 
-    const action = req.user.role === 'admin' ? 'ADMIN_RECALL_TIMESHEET' : 'EMPLOYEE_RECALL_TIMESHEET';
+    const action = isAdmin ? 'ADMIN_RECALL_TIMESHEET' : 'EMPLOYEE_RECALL_TIMESHEET';
     db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
       req.user.id, action, `Recalled timesheet for user ${targetUserId}, Week ${week} ${year}. Reason: ${comment || 'N/A'}`, 'timesheet', comment || null, req.ip
     );

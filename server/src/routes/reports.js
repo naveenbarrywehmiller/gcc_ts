@@ -11,7 +11,7 @@ const router = express.Router();
 
 // GET /api/reports/dashboard - Dashboard stats
 router.get('/dashboard', authenticate, (req, res) => {
-  const isAdmin = req.user.role === 'admin';
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
   const userId = req.user.id;
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;

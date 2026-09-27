@@ -37,9 +37,10 @@ router.get('/pending-approvals', authenticate, authorize('manager', 'admin'), (r
   const params = [];
 
   // If not admin, restrict to manager's organization
-  if (req.user.role !== 'admin') {
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
+  if (!isAdmin) {
     query += ` AND u.division_id = ? `;
-    params.push(manager.division_id);
+    params.push(manager?.division_id);
   }
 
   query += `
@@ -56,10 +57,11 @@ router.get('/week-details/:userId/:year/:week', authenticate, authorize('manager
   const { userId, year, week } = req.params;
 
   // Basic security: if manager, ensure user is in their org
-  if (req.user.role !== 'admin') {
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
+  if (!isAdmin) {
     const manager = db.prepare('SELECT division_id FROM users WHERE id = ?').get(req.user.id);
     const target = db.prepare('SELECT division_id FROM users WHERE id = ?').get(userId);
-    if (manager.division_id !== target.division_id) {
+    if (!manager || !target || manager.division_id !== target.division_id) {
       return res.status(403).json({ error: 'Not authorized to view this user' });
     }
   }
