@@ -45,10 +45,12 @@
 ### DevOps & Infrastructure
 | Technology | Purpose |
 |---|---|
-| **Docker** | Containerisation |
-| **GitHub Actions** | CI/CD — auto build & push to GHCR |
+| **Docker** | Multi-architecture containerisation (`linux/amd64` + `linux/arm64`) |
+| **GitHub Actions** | CI/CD — automated multi-arch build & push to GHCR |
 | **GHCR** (GitHub Container Registry) | Docker image hosting |
-| **PM2** | Production process manager |
+| **Tailscale Funnel** | Secure public HTTPS tunneling |
+| **Watchtower** | Automated container auto-refresh on new releases |
+| **Deployment Log** | See [DEPLOYMENT_NOTES.md](./DEPLOYMENT_NOTES.md) for full infrastructure & fix notes |
 
 ---
 
