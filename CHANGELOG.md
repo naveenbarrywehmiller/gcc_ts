@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.0...v1.9.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* prevent UNIQUE constraint crash on container restart ([17b9669](https://github.com/naveenbarrywehmiller/gcc_ts/commit/17b9669daa53c4811eb58675fd2cafd830ee44e4))
+* use INSERT OR IGNORE for users seed to prevent UNIQUE constraint crash on restart ([d8ef0e8](https://github.com/naveenbarrywehmiller/gcc_ts/commit/d8ef0e88609683fac3fead9ff9a9f47f13de2ca7))
+
 ## [1.9.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.8.0...v1.9.0) (2026-09-27)
 
 
