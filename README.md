@@ -247,11 +247,55 @@ npm run restore -- ./backup/timesheet-YYYY-MM-DD.db
 
 ---
 
-## 🐳 Docker
+## 🐳 Docker Deployment Guide (GitHub Container Registry)
 
-### Deploy using Docker Compose (Recommended)
+Follow these step-by-step instructions to deploy the GCC Timesheet application on any Linux server, Raspberry Pi, Mac, or VM using the pre-built multi-architecture Docker image from GitHub Container Registry (`ghcr.io`).
 
-To deploy the application using the pre-built image from GitHub Container Registry (which supports both Intel/AMD and Apple Silicon/ARM processors), create a `docker-compose.yml` file with the following content:
+Both **`linux/arm64`** (Raspberry Pi 3/4/5, Apple Silicon) and **`linux/amd64`** (Intel/AMD x86_64) are supported natively.
+
+---
+
+### Step 1: Install Docker & Docker Compose
+
+Ensure Docker and the Docker Compose plugin are installed on your target machine:
+
+```bash
+# Ubuntu / Debian / DietPi / Raspberry Pi OS
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+```
+
+Verify installation:
+```bash
+docker --version
+docker compose version
+```
+
+---
+
+### Step 2: Create the Project Directory and Storage
+
+Create a dedicated directory on your server (e.g., `/opt/gcc_ts` or `~/gcc_ts`) and set up persistent storage folders for SQLite data, file uploads, and backups:
+
+```bash
+# Create directory
+sudo mkdir -p /opt/gcc_ts/data /opt/gcc_ts/uploads /opt/gcc_ts/backup
+cd /opt/gcc_ts
+```
+
+> **Important:** Persistent volume mounts ensure your timesheet database, users, and audit logs are preserved across container updates and restarts.
+
+---
+
+### Step 3: Create `docker-compose.yml`
+
+In `/opt/gcc_ts`, create a `docker-compose.yml` file:
+
+```bash
+nano /opt/gcc_ts/docker-compose.yml
+```
+
+Paste the following production configuration:
 
 ```yaml
 services:
@@ -264,8 +308,16 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=production
-    # volumes:
-    #   - ./data:/app/server/data
+      - DB_PATH=./data/timesheet.db
+      - CORS_ORIGIN=*
+      - JWT_SECRET=replace_with_a_secure_random_key_64_characters
+      - JWT_REFRESH_SECRET=replace_with_another_secure_random_key_64_characters
+    volumes:
+      - /opt/gcc_ts/data:/app/server/data
+      - /opt/gcc_ts/uploads:/app/server/uploads
+      - /opt/gcc_ts/backup:/app/server/backup
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -273,21 +325,95 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 gcc_ts
+    command: --interval 300 --cleanup --label-enable
 ```
 
-Then run:
+#### What this configuration does:
+* **`image: ghcr.io/naveenbarrywehmiller/gcc_ts:latest`**: Pulls the multi-arch native image directly from GitHub Container Registry.
+* **Persistent Volumes**: Maps `/opt/gcc_ts/data` on host ➔ `/app/server/data` in container.
+* **`watchtower`**: Automatically checks GHCR every 5 minutes (`--interval 300`), pulls any new GitHub release, and recreates the `gcc_ts` container with zero manual intervention.
+
+---
+
+### Step 4: Pull the Image & Start Containers
+
+Pull the latest multi-architecture image and launch in detached mode:
+
 ```bash
+cd /opt/gcc_ts
+docker compose pull
 docker compose up -d
 ```
 
-### Build & Run Locally from Source
+---
 
-If you need to build the image locally instead of pulling it:
+### Step 5: Verify the Deployment
+
+1. **Check container status:**
+   ```bash
+   docker compose ps
+   ```
+   Both `gcc_ts` and `watchtower` should be listed with `Up` status.
+
+2. **Check container logs:**
+   ```bash
+   docker logs -f gcc_ts
+   ```
+   You should see:
+   ```text
+   ✅ Database migrations complete.
+   ╔═══════════════════════════════════════════════════╗
+   ║         ⏰ Timesheet Server Running               ║
+   ║   Local:   http://localhost:3001                  ║
+   ║   Network: http://0.0.0.0:3001                    ║
+   ║   Mode:    production                             ║
+   ╚═══════════════════════════════════════════════════╝
+   ```
+
+3. **Check the health & version endpoint:**
+   ```bash
+   curl -s http://localhost:3001/api/health
+   ```
+   Expected response:
+   ```json
+   {"status":"ok","timestamp":"...","version":"v1.7.1"}
+   ```
+
+4. **Access in browser:**
+   Open `http://<your-server-ip>:3001` in your browser. The login screen should display the active release version tag in the footer.
+
+---
+
+### Step 6: Public HTTPS Access with Tailscale Funnel (Optional)
+
+If your machine runs Tailscale and you want public HTTPS access without opening firewall ports:
 
 ```bash
-docker compose up --build
+# Enable Tailscale Funnel on port 443 -> local port 3001 in background
+tailscale funnel --https=443 --bg 3001
 ```
+
+Check the funnel status:
+```bash
+tailscale funnel status
+```
+
+Your app is now accessible securely at `https://<your-tailscale-node>.ts.net`!
+
+---
+
+### Step 7: Updates and Maintenance
+
+* **Automatic Updates**: Watchtower checks GHCR every 5 minutes. Whenever a new release is merged to `main`, the container updates automatically.
+* **Manual Immediate Update**:
+  ```bash
+  cd /opt/gcc_ts && docker compose pull && docker compose up -d
+  ```
+* **Database Backup**:
+  The SQLite database is stored on the host at `/opt/gcc_ts/data/timesheet.db`. To take an instant snapshot:
+  ```bash
+  sqlite3 /opt/gcc_ts/data/timesheet.db ".backup /opt/gcc_ts/backup/backup_$(date +%Y%m%d_%H%M%S).db"
+  ```
 
 ---
 
