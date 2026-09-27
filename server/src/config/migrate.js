@@ -1,6 +1,7 @@
 const db = require('./db');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 const { getISOWeekNumber } = require('../utils/dateUtils');
 
 function migrate() {
@@ -488,6 +489,18 @@ function migrate() {
     CREATE INDEX IF NOT EXISTS idx_users_department ON users(department_id);
     CREATE INDEX IF NOT EXISTS idx_users_division ON users(division_id);
   `);
+
+  // --- Migration: ensure systemadmin exists ---
+  const sysAdminEmail = 'systemadmin@barry-wehmiller.com';
+  const sysAdminExists = db.prepare('SELECT id FROM users WHERE email = ?').get(sysAdminEmail);
+  if (!sysAdminExists) {
+    console.log('  → Creating default system admin account...');
+    const sysAdminHash = bcrypt.hashSync('Barry!2026', 12);
+    db.prepare(`
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `).run('System Admin', sysAdminEmail, sysAdminHash, 'system admin');
+  }
 
   console.log('✅ Database migrations complete.');
 }
