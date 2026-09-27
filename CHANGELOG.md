@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.4](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.3...v1.9.4) (2026-09-27)
+
+
+### Bug Fixes
+
+* CORS wildcard breaks cookie auth — reflect request origin when CORS_ORIGIN=* ([a1d166d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a1d166d159aa4656c8339761a4a5793988ea9513))
+
 ## [1.9.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.2...v1.9.3) (2026-09-27)
 
 
