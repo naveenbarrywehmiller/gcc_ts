@@ -155,6 +155,55 @@ Copy the Power Query M scripts from `powerbi/queries/` into the Advanced Editor:
 3. Paste the contents of the `.pq` file
 4. Update the `ApiBaseUrl` and `ApiKey` parameters
 
+### REST API URLs and Token Configuration
+
+Power BI must connect only to the read-only `/api/powerbi/*` API. Do not connect Power BI directly to SQLite or any application database.
+
+| Query | REST endpoint |
+|---|---|
+| `FactTimesheet` | `http://localhost:3001/api/powerbi/timesheets` |
+| `DimEmployee` | `http://localhost:3001/api/powerbi/users` |
+| `DimProject` | `http://localhost:3001/api/powerbi/projects` |
+| `DimDivision` | `http://localhost:3001/api/powerbi/divisions` |
+| `DimDepartment` | `http://localhost:3001/api/powerbi/departments` |
+| `DimHoliday` | `http://localhost:3001/api/powerbi/holidays` |
+
+For another machine or a deployed server, replace `http://localhost:3001` with the reachable server URL. Keep the `/api/powerbi/` path unchanged.
+
+In **Power Query Editor**:
+
+1. Select **Home** -> **New Source** -> **Blank Query**.
+2. Select **Home** -> **Advanced Editor**.
+3. Set the endpoint URL and token in the `Web.Contents` request headers:
+
+```powerquery
+let
+   ApiUrl = "http://localhost:3001/api/powerbi/timesheets?limit=1000",
+   ApiToken = "YOUR_POWERBI_API_KEY",
+   Response = Web.Contents(
+      ApiUrl,
+      [
+         Headers = [
+            #"X-API-Key" = ApiToken,
+            Accept = "application/json"
+         ]
+      ]
+   ),
+   Json = Json.Document(Response),
+   Data = Json[data]
+in
+   Data
+```
+
+Use the same header for every endpoint:
+
+```text
+Header name:  X-API-Key
+Header value: YOUR_POWERBI_API_KEY
+```
+
+Do not put the token in the URL, commit it to GitHub, or paste it into a screenshot. For production, use a Power Query parameter or Power BI data-source credential configuration. The `.pq` scripts in `powerbi/queries/` contain `YOUR_API_KEY_HERE` as a safe placeholder.
+
 ---
 
 ## 6. Load Dimension Tables
