@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.8.0...v1.9.0) (2026-09-27)
+
+
+### Features
+
+* change default sysadmin password to systemadmin and fix role dropdown ([fa28764](https://github.com/naveenbarrywehmiller/gcc_ts/commit/fa287647775667e56ec178c637f836a6e6d85ebd))
+
+
+### Bug Fixes
+
+* ensure sysadmin user is created on existing databases during migration ([2af032d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/2af032d5612c3cc04bb93d68f3851cfefc06407e))
+
 ## [1.8.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.7.2...v1.8.0) (2026-09-27)
 
 
