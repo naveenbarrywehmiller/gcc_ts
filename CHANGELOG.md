@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.6.0...v1.6.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* **docker:** switch base image to debian-slim to eliminate better-sqlite3 segfault on ARM64 ([386514e](https://github.com/naveenbarrywehmiller/gcc_ts/commit/386514e7241dfa03f858feeb8c39031e4dc5827a))
+* **docker:** upgrade to Node 22 — required by better-sqlite3 v13 (engines: node&gt;=22) ([33c750f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/33c750f6958996ee9500c8cd142f4af0575b37a8))
+
 ## [1.6.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.5.0...v1.6.0) (2026-09-27)
 
 
