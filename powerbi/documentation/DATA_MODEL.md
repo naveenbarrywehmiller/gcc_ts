@@ -1,7 +1,7 @@
 # Power BI Data Model — GCC Timesheet
 
-> **Dashboard Version:** 1.0.0  
-> **Last Updated:** 2026-09-25
+> **Dashboard Version:** 1.1.0
+> **Last Updated:** 2026-09-27
 
 ---
 
@@ -164,7 +164,7 @@ The central fact table containing individual timesheet entries.
 - **Active:** Yes for all relationships above
 
 ### Notes:
-- The `DimHoliday` table is used in the `DimDate[IsHoliday]` calculated column, not as a direct relationship
+- The `DimHoliday[date]` column has an active many-to-one relationship to `DimDate[Date]` and supports the `DimDate[IsHoliday]` calculation
 - `admin` is a denormalized text field in FactTimesheet; for admin drill-through, filter `DimEmployee` by `role = "admin"`
 - Avoid many-to-many relationships — they degrade performance and cause ambiguity
 
@@ -200,4 +200,4 @@ The following database tables feed the REST API. Power BI never accesses these d
 
 ---
 
-*GCC Timesheet Power BI Data Model v1.0.0*
+*GCC Timesheet Power BI Data Model v1.1.0*

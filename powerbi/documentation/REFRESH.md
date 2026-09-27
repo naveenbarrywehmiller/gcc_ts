@@ -1,7 +1,7 @@
 # Power BI Refresh Architecture — GCC Timesheet
 
-> **Dashboard Version:** 1.0.0  
-> **Last Updated:** 2026-09-25
+> **Dashboard Version:** 1.1.0
+> **Last Updated:** 2026-09-27
 
 ---
 
@@ -171,4 +171,4 @@ Before confirming refresh works correctly:
 
 ---
 
-*GCC Timesheet Power BI Refresh Architecture v1.0.0*
+*GCC Timesheet Power BI Refresh Architecture v1.1.0*

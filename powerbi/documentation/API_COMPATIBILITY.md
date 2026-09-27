@@ -1,6 +1,6 @@
 # Power BI API Compatibility — GCC Timesheet
 
-> **Last Updated:** 2026-09-25
+> **Last Updated:** 2026-09-27
 
 ---
 
@@ -168,4 +168,4 @@ New query parameters may be added in future minor versions.
 
 ---
 
-*GCC Timesheet Power BI API Compatibility v1.0.0*
+*GCC Timesheet Power BI API Compatibility v1.1.0*

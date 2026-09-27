@@ -1,6 +1,6 @@
 # GCC Timesheet Power BI Dashboard — Page Layouts
 
-> **Version:** 1.0.0
+> **Version:** 1.1.0
 
 ---
 
@@ -282,4 +282,4 @@ In Power BI: Select visual → Format → **No data message** → Enter text.
 
 ---
 
-*GCC Timesheet Power BI Dashboard Pages v1.0.0*
+*GCC Timesheet Power BI Dashboard Pages v1.1.0*

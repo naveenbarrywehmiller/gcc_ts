@@ -99,7 +99,7 @@ Power BI uses **independent Semantic Versioning**, separate from the GCC Timeshe
 | Component | Version |
 |-----------|---------|
 | GCC Timesheet Application | v1.3.0 |
-| Power BI Dashboard | v1.0.0 |
+| Power BI Dashboard | v1.1.0 |
 | Power BI REST API | v1.x |
 
 ### Version Rules
@@ -162,4 +162,4 @@ Internal — Barry Wehmiller / GCC
 
 ---
 
-*GCC Timesheet Power BI Dashboard v1.0.0 — 2026-09-25*
+*GCC Timesheet Power BI Dashboard v1.1.0 — 2026-09-27*

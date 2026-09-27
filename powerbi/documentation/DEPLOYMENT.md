@@ -1,7 +1,7 @@
 # Power BI Deployment Guide — GCC Timesheet
 
-> **Dashboard Version:** 1.0.0  
-> **Last Updated:** 2026-09-25
+> **Dashboard Version:** 1.1.0
+> **Last Updated:** 2026-09-27
 
 ---
 
@@ -219,12 +219,13 @@ Required if the GCC Timesheet server is **not** accessible from the public inter
 ### GitHub Release Strategy
 
 ```
-Tag: powerbi-v1.0.0
-Title: GCC Timesheet Power BI Dashboard v1.0.0
+Tag: v1.11.2
+Title: GCC Timesheet Power BI Dashboard v1.1.0
 
 Artifacts:
-  - GCC_Timesheet_Dashboard_v1.0.0.pbit
-  - GCC_Timesheet_Dashboard_v1.0.0.pbix (optional, via LFS)
+  - GCC_Timesheet_Model.bim
+  - GCC_Timesheet_Model/ (TMDL package)
+  - GCC_Timesheet.pbix (optional, local Desktop artifact)
 ```
 
 ---
@@ -250,7 +251,7 @@ Before releasing a Power BI version:
 - [ ] Version number updated
 - [ ] Documentation updated
 - [ ] Docker does not depend on Power BI
-- [ ] GitHub Release created with tag `powerbi-v<VERSION>`
+- [ ] GitHub Release created with the repository tag `v1.11.2`
 
 ---
 
@@ -267,4 +268,4 @@ Before releasing a Power BI version:
 
 ---
 
-*GCC Timesheet Power BI Deployment Guide v1.0.0*
+*GCC Timesheet Power BI Deployment Guide v1.1.0*
