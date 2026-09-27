@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.10.0...v1.11.0) (2026-09-27)
+
+
+### Features
+
+* format backup filename timestamp as clean YYYY-MM-DD_HH-mm-ss and expose Content-Disposition ([b223809](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b2238092c947ff1db676d4eaa69d1c2a1ff19d4d))
+
 ## [1.10.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.5...v1.10.0) (2026-09-27)
 
 
