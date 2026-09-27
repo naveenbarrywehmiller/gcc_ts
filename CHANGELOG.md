@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.2...v1.9.3) (2026-09-27)
+
+
+### Bug Fixes
+
+* correct DB path resolution — was writing to src/data/ instead of volume-mounted data/ ([b12b91b](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b12b91bef2fcd02b915cc00a52b44621f634b1b9))
+* use absolute DB_PATH in docker-compose to avoid path.resolve() issues ([5b836f4](https://github.com/naveenbarrywehmiller/gcc_ts/commit/5b836f4c47d20fa4310d50db8c13e7a962c0defb))
+
 ## [1.9.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.9.1...v1.9.2) (2026-09-27)
 
 
