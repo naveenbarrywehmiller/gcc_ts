@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.0...v1.11.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* grant system admin role full access in authorize middleware and admin routes ([c58209a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/c58209a7b2649e76b22ca0ea5994faa50d2ead4a))
+
 ## [1.11.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.10.0...v1.11.0) (2026-09-27)
 
 
