@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.7.2...v1.8.0) (2026-09-27)
+
+
+### Features
+
+* implement system maintenance and sysadmin role protection ([149cd6b](https://github.com/naveenbarrywehmiller/gcc_ts/commit/149cd6b7050fa79b20a618539cf90ee0e926abcb))
+
 ## [1.7.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.7.1...v1.7.2) (2026-09-27)
 
 
