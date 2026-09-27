@@ -1,0 +1,39 @@
+/// Department dimension loaded from /api/powerbi/departments.
+table DimDepartment
+	lineageTag: 773de3d4-6e97-4e42-9729-7645b200e35c
+
+	column id
+		dataType: int64
+		lineageTag: ff1a30f8-8f15-448f-9007-46ac6a4a5a20
+		sourceColumn: id
+
+	column departmentName
+		dataType: string
+		isKey
+		lineageTag: 95595927-4e31-49f7-a8d7-adfababe0cdf
+		sourceColumn: departmentName
+
+	column status
+		dataType: string
+		lineageTag: 46b3a49c-ebe4-41b3-bac7-dc53b54fa404
+		sourceColumn: status
+
+	column isActive
+		dataType: boolean
+		lineageTag: 1efad83f-212e-46d7-9a46-7e2a4467352f
+		sourceColumn: isActive
+
+	column createdDate
+		dataType: dateTime
+		lineageTag: 608c5a31-f0a6-49b7-bef9-1a4afaa43405
+		sourceColumn: createdDate
+
+	partition DimDepartment = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(Web.Contents("http://localhost:3001/api/powerbi/departments", [Headers=[#"X-API-Key"="YOUR_API_KEY_HERE", #"Accept"="application/json"]])),
+				    Data = if Record.HasFields(Source, "data") then Source[data] else {},
+				    Rows = Table.FromRecords(Data, {"id","departmentName","status","isActive","createdDate"}, MissingField.UseNull)
+				in
+				    Rows

@@ -84,9 +84,13 @@ powerbi/
 │   └── ...
 ├── assets/
 │   └── dashboard_preview.md     # Dashboard page descriptions
+├── GCC_Timesheet_Model.bim      # Portable semantic model definition
+├── GCC_Timesheet_Model/         # Portable TMDL semantic model package
 └── pbix/
     # optional generated artifacts for report distribution
 ```
+
+The portable semantic model is available as [GCC_Timesheet_Model.bim](GCC_Timesheet_Model.bim) and the [GCC_Timesheet_Model TMDL package](GCC_Timesheet_Model/). Native `.pbix` files remain local Desktop artifacts and are excluded from source control.
 
 ## Versioning
 

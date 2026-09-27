@@ -1,0 +1,85 @@
+/// Official Monday-first date dimension for time intelligence.
+table DimDate
+	lineageTag: bd941a39-5f7a-4339-9b4d-6a88bcffa535
+	dataCategory: Time
+
+	column Date
+		isUnique
+		isNameInferred
+		sourceColumn: [Date]
+
+	column Year
+		isNameInferred
+		sourceColumn: [Year]
+
+	column QuarterNumber
+		isNameInferred
+		sourceColumn: [QuarterNumber]
+
+	column Quarter
+		isNameInferred
+		sourceColumn: [Quarter]
+
+	column Month
+		isNameInferred
+		sourceColumn: [Month]
+
+	column MonthName
+		isNameInferred
+		sourceColumn: [MonthName]
+
+	column MonthShort
+		isNameInferred
+		sourceColumn: [MonthShort]
+
+	column WeekNumber
+		isNameInferred
+		sourceColumn: [WeekNumber]
+
+	column WeekStart
+		isNameInferred
+		sourceColumn: [WeekStart]
+
+	column DayOfMonth
+		isNameInferred
+		sourceColumn: [DayOfMonth]
+
+	column DayOfWeek
+		isNameInferred
+		sourceColumn: [DayOfWeek]
+
+	column DayName
+		isNameInferred
+		sourceColumn: [DayName]
+
+	column IsWeekend
+		isNameInferred
+		sourceColumn: [IsWeekend]
+
+	column IsHoliday
+		isNameInferred
+		sourceColumn: [IsHoliday]
+
+	column YearMonth
+		isNameInferred
+		sourceColumn: [YearMonth]
+
+	column YearQuarter
+		isNameInferred
+		sourceColumn: [YearQuarter]
+
+	column MonthYearLabel
+		isNameInferred
+		sourceColumn: [MonthYearLabel]
+
+	column WeekLabel
+		isNameInferred
+		sourceColumn: [WeekLabel]
+
+	partition DimDate = calculated
+		mode: import
+		source =
+				VAR StartDate = DATE(2020, 1, 1)
+				VAR EndDate = DATE(2035, 12, 31)
+				RETURN
+				ADDCOLUMNS(CALENDAR(StartDate, EndDate), "Year", YEAR([Date]), "QuarterNumber", ROUNDUP(MONTH([Date]) / 3, 0), "Quarter", "Q" & FORMAT(ROUNDUP(MONTH([Date]) / 3, 0), "0"), "Month", MONTH([Date]), "MonthName", FORMAT([Date], "MMMM"), "MonthShort", FORMAT([Date], "MMM"), "WeekNumber", WEEKNUM([Date], 2), "WeekStart", [Date] - WEEKDAY([Date], 2) + 1, "DayOfMonth", DAY([Date]), "DayOfWeek", WEEKDAY([Date], 2), "DayName", FORMAT([Date], "dddd"), "IsWeekend", WEEKDAY([Date], 2) >= 6, "IsHoliday", CONTAINS(DimHoliday, DimHoliday[date], [Date]), "YearMonth", FORMAT([Date], "YYYY-MM"), "YearQuarter", FORMAT([Date], "YYYY") & " Q" & FORMAT(ROUNDUP(MONTH([Date]) / 3, 0), "0"), "MonthYearLabel", FORMAT([Date], "MMM YYYY"), "WeekLabel", "W" & FORMAT(WEEKNUM([Date], 2), "00") & " " & FORMAT([Date], "YYYY"))

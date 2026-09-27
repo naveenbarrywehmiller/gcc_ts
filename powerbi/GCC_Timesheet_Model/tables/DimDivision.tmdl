@@ -1,0 +1,39 @@
+/// Division dimension loaded from /api/powerbi/divisions.
+table DimDivision
+	lineageTag: ee6b20bc-d484-4a7e-b445-535886eab0c4
+
+	column id
+		dataType: int64
+		lineageTag: 6c5de48b-8644-45e2-8575-4e89cee26969
+		sourceColumn: id
+
+	column divisionName
+		dataType: string
+		isKey
+		lineageTag: 8cb290b2-099c-44ed-a097-6106a57b27d0
+		sourceColumn: divisionName
+
+	column status
+		dataType: string
+		lineageTag: 2dffadf4-1e60-47f3-8bc6-a095c3a6427a
+		sourceColumn: status
+
+	column isActive
+		dataType: boolean
+		lineageTag: a1804176-764c-45f8-81c5-dda78608eb2f
+		sourceColumn: isActive
+
+	column createdDate
+		dataType: dateTime
+		lineageTag: eb8d8874-ac48-486b-9e3b-eacf28cfdc83
+		sourceColumn: createdDate
+
+	partition DimDivision = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(Web.Contents("http://localhost:3001/api/powerbi/divisions", [Headers=[#"X-API-Key"="YOUR_API_KEY_HERE", #"Accept"="application/json"]])),
+				    Data = if Record.HasFields(Source, "data") then Source[data] else {},
+				    Rows = Table.FromRecords(Data, {"id","divisionName","status","isActive","createdDate"}, MissingField.UseNull)
+				in
+				    Rows

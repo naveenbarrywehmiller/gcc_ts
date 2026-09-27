@@ -1,0 +1,119 @@
+/// Timesheet fact table loaded exclusively from /api/powerbi/timesheets.
+table FactTimesheet
+	lineageTag: cf24408f-3700-487c-a770-314f6860f043
+
+	column id
+		dataType: int64
+		isKey
+		lineageTag: b90a9bed-081a-4a00-a596-48bb2d6cf004
+		sourceColumn: id
+
+	column employeeId
+		dataType: string
+		lineageTag: 3a069a75-7277-4647-bfe4-6f2ba4454cdf
+		sourceColumn: employeeId
+
+	column employeeName
+		dataType: string
+		lineageTag: 1be5ab5c-d3eb-4fe0-b248-cfebaf9b268e
+		sourceColumn: employeeName
+
+	column email
+		dataType: string
+		lineageTag: 5932c574-d242-4243-802b-04a7cee9d6f9
+		sourceColumn: email
+
+	column division
+		dataType: string
+		lineageTag: d7200822-2ddc-4b0c-9d85-9285a227b1ae
+		sourceColumn: division
+
+	column department
+		dataType: string
+		lineageTag: 561638e8-190f-406e-aaf4-774d40eb293b
+		sourceColumn: department
+
+	column admin
+		dataType: string
+		lineageTag: 8a4c24b6-e10e-4555-93f2-3c16cef42af0
+		sourceColumn: admin
+
+	column date
+		dataType: dateTime
+		lineageTag: 44950435-eb4f-4f99-b13b-11ce47b704f0
+		sourceColumn: date
+
+	column week
+		dataType: int64
+		lineageTag: f7f21d6d-e6f3-481f-a1c2-8f81b6f0b69f
+		sourceColumn: week
+
+	column weekYear
+		dataType: int64
+		lineageTag: df255f24-2c61-4a82-afdf-3db2043ba189
+		sourceColumn: weekYear
+
+	column project
+		dataType: string
+		lineageTag: 3ec6fb34-0b4f-44f3-82a6-1f0fd42d018b
+		sourceColumn: project
+
+	column projectCode
+		dataType: string
+		lineageTag: b59ec801-667a-4abc-9cd1-b56287be297c
+		sourceColumn: projectCode
+
+	column projectCategory
+		dataType: string
+		lineageTag: 24032129-6039-4648-965b-9a62076a7efe
+		sourceColumn: projectCategory
+
+	column taskClassification
+		dataType: string
+		lineageTag: 85ae8594-7b0a-436f-8316-2528788511a6
+		sourceColumn: taskClassification
+
+	column hours
+		dataType: double
+		lineageTag: 9ffae424-92f5-4b33-ba9e-56d76f4e56b6
+		sourceColumn: hours
+
+	column status
+		dataType: string
+		lineageTag: 83455717-ecc9-483f-8d8b-a52ee0671996
+		sourceColumn: status
+
+	column isBillable
+		dataType: boolean
+		lineageTag: 5bfefc87-e38e-4869-8a6b-56fcb9ef0a63
+		sourceColumn: isBillable
+
+	column submissionDate
+		dataType: dateTime
+		lineageTag: 03fd9529-a848-4ea6-89b0-08e9535ae256
+		sourceColumn: submissionDate
+
+	column approvalDate
+		dataType: dateTime
+		lineageTag: 4bcd3e7c-5dd7-4d3e-a9c6-e634e7bb3eae
+		sourceColumn: approvalDate
+
+	column createdDate
+		dataType: dateTime
+		lineageTag: 8586ba31-814e-42c1-a0da-c90662f6ed41
+		sourceColumn: createdDate
+
+	column updatedDate
+		dataType: dateTime
+		lineageTag: 880f2aeb-ad3b-4394-8315-83f31b731bf9
+		sourceColumn: updatedDate
+
+	partition FactTimesheet = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(Web.Contents("http://localhost:3001/api/powerbi/timesheets?limit=1000", [Headers=[#"X-API-Key"="YOUR_API_KEY_HERE", #"Accept"="application/json"]])),
+				    Data = if Record.HasFields(Source, "data") then Source[data] else {},
+				    Rows = Table.FromRecords(Data, {"id","employeeId","employeeName","email","division","department","admin","date","week","weekYear","project","projectCode","projectCategory","taskClassification","hours","status","isBillable","submissionDate","approvalDate","createdDate","updatedDate"}, MissingField.UseNull)
+				in
+				    Rows

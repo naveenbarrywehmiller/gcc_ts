@@ -1,0 +1,79 @@
+/// Employee dimension loaded from /api/powerbi/users.
+table DimEmployee
+	lineageTag: e5ba9e14-63c4-4a82-b4a4-a334a20b626a
+
+	column id
+		dataType: int64
+		lineageTag: da219513-9b57-4969-a36c-03296a362eae
+		sourceColumn: id
+
+	column employeeId
+		dataType: string
+		isKey
+		lineageTag: 51e48cfb-3efc-47ef-8132-6953ef28d0f9
+		sourceColumn: employeeId
+
+	column employeeName
+		dataType: string
+		lineageTag: aaeceb70-d42f-4175-84bc-cd1fc3cdb33f
+		sourceColumn: employeeName
+
+	column email
+		dataType: string
+		lineageTag: 365b6425-a56d-4731-8d9b-caf2d95ef91f
+		sourceColumn: email
+
+	column role
+		dataType: string
+		lineageTag: 12eb8b1c-a6a6-4158-b8ca-0e43e29b6e92
+		sourceColumn: role
+
+	column division
+		dataType: string
+		lineageTag: 6f32d926-9586-4b13-b156-fb4ddbf043e3
+		sourceColumn: division
+
+	column department
+		dataType: string
+		lineageTag: 91ec93b6-262c-43a4-a9f1-cf89d76df052
+		sourceColumn: department
+
+	column supportingCategory
+		dataType: string
+		lineageTag: 9e735851-b951-44c1-a196-63e424ac8dfe
+		sourceColumn: supportingCategory
+
+	column admin
+		dataType: string
+		lineageTag: e1da07dd-b019-492f-a484-576994f08765
+		sourceColumn: admin
+
+	column status
+		dataType: string
+		lineageTag: 87e9b6e7-db1b-487b-869b-73c0864dbc58
+		sourceColumn: status
+
+	column isActive
+		dataType: boolean
+		lineageTag: b1201614-93cd-46e6-8616-fb167f29248d
+		sourceColumn: isActive
+
+	column createdDate
+		dataType: dateTime
+		lineageTag: 16b9595b-1a94-4bb9-97bf-23c9fa8ae82d
+		sourceColumn: createdDate
+
+	column updatedDate
+		dataType: dateTime
+		lineageTag: 5ed32949-eded-45d5-9580-9a6a14c1e849
+		sourceColumn: updatedDate
+
+	partition DimEmployee = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(Web.Contents("http://localhost:3001/api/powerbi/users", [Headers=[#"X-API-Key"="YOUR_API_KEY_HERE", #"Accept"="application/json"]])),
+				    Data = if Record.HasFields(Source, "data") then Source[data] else {},
+				    Rows = Table.FromRecords(Data, {"id","employeeId","employeeName","email","role","division","department","supportingCategory","admin","status","isActive","createdDate","updatedDate"}, MissingField.UseNull)
+				in
+				    Rows

@@ -1,0 +1,74 @@
+/// Project dimension loaded from /api/powerbi/projects.
+table DimProject
+	lineageTag: 86e6fd1d-f8e3-46de-9677-a334f1dcc3c6
+
+	column id
+		dataType: int64
+		lineageTag: dcdadc43-cab2-4483-90e3-832f49cbb639
+		sourceColumn: id
+
+	column projectCode
+		dataType: string
+		isKey
+		lineageTag: 66fb9b61-6fb1-4ad9-aad5-eacc675f66f7
+		sourceColumn: projectCode
+
+	column projectName
+		dataType: string
+		lineageTag: cb190114-848b-43bc-a597-1e8110fd17cc
+		sourceColumn: projectName
+
+	column customerName
+		dataType: string
+		lineageTag: 9d74da41-a68f-42cf-9224-cf407835ea1e
+		sourceColumn: customerName
+
+	column activity
+		dataType: string
+		lineageTag: 421b07c4-4751-421f-ad46-30ae93d01f0e
+		sourceColumn: activity
+
+	column division
+		dataType: string
+		lineageTag: e08aa5d2-e0a7-48c5-ba58-386be20e2af2
+		sourceColumn: division
+
+	column subdivision
+		dataType: string
+		lineageTag: 4a71067b-a151-4c93-abf2-dbeb4793f85e
+		sourceColumn: subdivision
+
+	column teamType
+		dataType: string
+		lineageTag: 306fc8d1-b70b-4e6e-9aaf-dcf10b60459f
+		sourceColumn: teamType
+
+	column status
+		dataType: string
+		lineageTag: 9a56791a-af59-4d1c-be7e-712363559892
+		sourceColumn: status
+
+	column isActive
+		dataType: boolean
+		lineageTag: b9dbac28-68e9-4543-bd56-6381e5c3c4be
+		sourceColumn: isActive
+
+	column createdDate
+		dataType: dateTime
+		lineageTag: c5769cb6-f443-4eb6-b46e-ec3cfb592cc6
+		sourceColumn: createdDate
+
+	column updatedDate
+		dataType: dateTime
+		lineageTag: bc0635c5-df3c-421f-8e72-1292496d7499
+		sourceColumn: updatedDate
+
+	partition DimProject = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(Web.Contents("http://localhost:3001/api/powerbi/projects", [Headers=[#"X-API-Key"="YOUR_API_KEY_HERE", #"Accept"="application/json"]])),
+				    Data = if Record.HasFields(Source, "data") then Source[data] else {},
+				    Rows = Table.FromRecords(Data, {"id","projectCode","projectName","customerName","activity","division","subdivision","teamType","status","isActive","createdDate","updatedDate"}, MissingField.UseNull)
+				in
+				    Rows

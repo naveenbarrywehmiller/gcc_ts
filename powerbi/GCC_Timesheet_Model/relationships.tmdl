@@ -1,0 +1,23 @@
+relationship DimEmployee_employeeId_FactTimesheet_employeeId
+	fromColumn: FactTimesheet.employeeId
+	toColumn: DimEmployee.employeeId
+
+relationship DimProject_projectCode_FactTimesheet_projectCode
+	fromColumn: FactTimesheet.projectCode
+	toColumn: DimProject.projectCode
+
+relationship DimDivision_divisionName_FactTimesheet_division
+	fromColumn: FactTimesheet.division
+	toColumn: DimDivision.divisionName
+
+relationship DimDepartment_departmentName_FactTimesheet_department
+	fromColumn: FactTimesheet.department
+	toColumn: DimDepartment.departmentName
+
+relationship DimDate_Date_FactTimesheet_date
+	fromColumn: FactTimesheet.date
+	toColumn: DimDate.Date
+
+relationship DimDate_Date_DimHoliday_date
+	fromColumn: DimHoliday.date
+	toColumn: DimDate.Date

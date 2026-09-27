@@ -1,0 +1,1943 @@
+{
+  "name": "911c813f-ae0c-4b3e-8b33-12b6eb51731f",
+  "compatibilityLevel": 1606,
+  "createdTimestamp": "2026-09-27T08:32:58.706667-07:00",
+  "lastUpdate": "2026-09-27T08:33:00.186667-07:00",
+  "lastSchemaUpdate": "2026-09-27T08:32:58.706667-07:00",
+  "lastProcessed": "1699-12-30T16:00:00-08:00",
+  "model": {
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "valueFilterBehavior": "independent",
+    "modifiedTime": "2026-09-27T15:32:58.846667",
+    "structureModifiedTime": "2026-09-27T15:48:05.273333",
+    "tables": [
+      {
+        "name": "FactTimesheet",
+        "description": "Timesheet fact table loaded exclusively from /api/powerbi/timesheets.",
+        "lineageTag": "cf24408f-3700-487c-a770-314f6860f043",
+        "modifiedTime": "2026-09-27T15:47:46.106667",
+        "structureModifiedTime": "2026-09-27T15:47:46.106667",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "isKey": true,
+            "sourceColumn": "id",
+            "lineageTag": "b90a9bed-081a-4a00-a596-48bb2d6cf004",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.663333",
+              "refreshedTime": "2026-09-27T15:50:42.663333"
+            }
+          },
+          {
+            "name": "employeeId",
+            "dataType": "string",
+            "sourceColumn": "employeeId",
+            "lineageTag": "3a069a75-7277-4647-bfe4-6f2ba4454cdf",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.663333",
+              "refreshedTime": "2026-09-27T15:50:42.663333"
+            }
+          },
+          {
+            "name": "employeeName",
+            "dataType": "string",
+            "sourceColumn": "employeeName",
+            "lineageTag": "1be5ab5c-d3eb-4fe0-b248-cfebaf9b268e",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.663333",
+              "refreshedTime": "2026-09-27T15:50:42.663333"
+            }
+          },
+          {
+            "name": "email",
+            "dataType": "string",
+            "sourceColumn": "email",
+            "lineageTag": "5932c574-d242-4243-802b-04a7cee9d6f9",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "division",
+            "dataType": "string",
+            "sourceColumn": "division",
+            "lineageTag": "d7200822-2ddc-4b0c-9d85-9285a227b1ae",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "department",
+            "dataType": "string",
+            "sourceColumn": "department",
+            "lineageTag": "561638e8-190f-406e-aaf4-774d40eb293b",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "admin",
+            "dataType": "string",
+            "sourceColumn": "admin",
+            "lineageTag": "8a4c24b6-e10e-4555-93f2-3c16cef42af0",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "lineageTag": "44950435-eb4f-4f99-b13b-11ce47b704f0",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "week",
+            "dataType": "int64",
+            "sourceColumn": "week",
+            "lineageTag": "f7f21d6d-e6f3-481f-a1c2-8f81b6f0b69f",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "weekYear",
+            "dataType": "int64",
+            "sourceColumn": "weekYear",
+            "lineageTag": "df255f24-2c61-4a82-afdf-3db2043ba189",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "project",
+            "dataType": "string",
+            "sourceColumn": "project",
+            "lineageTag": "3ec6fb34-0b4f-44f3-82a6-1f0fd42d018b",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "projectCode",
+            "dataType": "string",
+            "sourceColumn": "projectCode",
+            "lineageTag": "b59ec801-667a-4abc-9cd1-b56287be297c",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "projectCategory",
+            "dataType": "string",
+            "sourceColumn": "projectCategory",
+            "lineageTag": "24032129-6039-4648-965b-9a62076a7efe",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          },
+          {
+            "name": "taskClassification",
+            "dataType": "string",
+            "sourceColumn": "taskClassification",
+            "lineageTag": "85ae8594-7b0a-436f-8316-2528788511a6",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "hours",
+            "dataType": "double",
+            "sourceColumn": "hours",
+            "lineageTag": "9ffae424-92f5-4b33-ba9e-56d76f4e56b6",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "lineageTag": "83455717-ecc9-483f-8d8b-a52ee0671996",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "isBillable",
+            "dataType": "boolean",
+            "sourceColumn": "isBillable",
+            "lineageTag": "5bfefc87-e38e-4869-8a6b-56fcb9ef0a63",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "submissionDate",
+            "dataType": "dateTime",
+            "sourceColumn": "submissionDate",
+            "lineageTag": "03fd9529-a848-4ea6-89b0-08e9535ae256",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "approvalDate",
+            "dataType": "dateTime",
+            "sourceColumn": "approvalDate",
+            "lineageTag": "4bcd3e7c-5dd7-4d3e-a9c6-e634e7bb3eae",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "createdDate",
+            "dataType": "dateTime",
+            "sourceColumn": "createdDate",
+            "lineageTag": "8586ba31-814e-42c1-a0da-c90662f6ed41",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "name": "updatedDate",
+            "dataType": "dateTime",
+            "sourceColumn": "updatedDate",
+            "lineageTag": "880f2aeb-ad3b-4394-8315-83f31b731bf9",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.65",
+              "refreshedTime": "2026-09-27T15:50:42.65"
+            }
+          },
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.646667",
+              "refreshedTime": "2026-09-27T15:50:42.646667"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactTimesheet",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:51:21.11",
+            "refreshedTime": "2026-09-27T15:50:42.643333",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/timesheets?limit=1000\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"id\",\"employeeId\",\"employeeName\",\"email\",\"division\",\"department\",\"admin\",\"date\",\"week\",\"weekYear\",\"project\",\"projectCode\",\"projectCategory\",\"taskClassification\",\"hours\",\"status\",\"isBillable\",\"submissionDate\",\"approvalDate\",\"createdDate\",\"updatedDate\"}, MissingField.UseNull)\nin\n    Rows"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimEmployee",
+        "description": "Employee dimension loaded from /api/powerbi/users.",
+        "lineageTag": "e5ba9e14-63c4-4a82-b4a4-a334a20b626a",
+        "modifiedTime": "2026-09-27T15:47:46.106667",
+        "structureModifiedTime": "2026-09-27T15:47:46.106667",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "lineageTag": "da219513-9b57-4969-a36c-03296a362eae",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.833333",
+              "refreshedTime": "2026-09-27T15:50:42.833333"
+            }
+          },
+          {
+            "name": "employeeId",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "employeeId",
+            "lineageTag": "51e48cfb-3efc-47ef-8132-6953ef28d0f9",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.833333",
+              "refreshedTime": "2026-09-27T15:50:42.833333"
+            }
+          },
+          {
+            "name": "employeeName",
+            "dataType": "string",
+            "sourceColumn": "employeeName",
+            "lineageTag": "aaeceb70-d42f-4175-84bc-cd1fc3cdb33f",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.833333",
+              "refreshedTime": "2026-09-27T15:50:42.833333"
+            }
+          },
+          {
+            "name": "email",
+            "dataType": "string",
+            "sourceColumn": "email",
+            "lineageTag": "365b6425-a56d-4731-8d9b-caf2d95ef91f",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.833333",
+              "refreshedTime": "2026-09-27T15:50:42.833333"
+            }
+          },
+          {
+            "name": "role",
+            "dataType": "string",
+            "sourceColumn": "role",
+            "lineageTag": "12eb8b1c-a6a6-4158-b8ca-0e43e29b6e92",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.833333",
+              "refreshedTime": "2026-09-27T15:50:42.833333"
+            }
+          },
+          {
+            "name": "division",
+            "dataType": "string",
+            "sourceColumn": "division",
+            "lineageTag": "6f32d926-9586-4b13-b156-fb4ddbf043e3",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "name": "department",
+            "dataType": "string",
+            "sourceColumn": "department",
+            "lineageTag": "91ec93b6-262c-43a4-a9f1-cf89d76df052",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "name": "supportingCategory",
+            "dataType": "string",
+            "sourceColumn": "supportingCategory",
+            "lineageTag": "9e735851-b951-44c1-a196-63e424ac8dfe",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "name": "admin",
+            "dataType": "string",
+            "sourceColumn": "admin",
+            "lineageTag": "e1da07dd-b019-492f-a484-576994f08765",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "lineageTag": "87e9b6e7-db1b-487b-869b-73c0864dbc58",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "name": "isActive",
+            "dataType": "boolean",
+            "sourceColumn": "isActive",
+            "lineageTag": "b1201614-93cd-46e6-8616-fb167f29248d",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "name": "createdDate",
+            "dataType": "dateTime",
+            "sourceColumn": "createdDate",
+            "lineageTag": "16b9595b-1a94-4bb9-97bf-23c9fa8ae82d",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "name": "updatedDate",
+            "dataType": "dateTime",
+            "sourceColumn": "updatedDate",
+            "lineageTag": "5ed32949-eded-45d5-9580-9a6a14c1e849",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.836667",
+              "refreshedTime": "2026-09-27T15:50:42.836667"
+            }
+          },
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:42.826667",
+              "refreshedTime": "2026-09-27T15:50:42.826667"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimEmployee",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:51:21.11",
+            "refreshedTime": "2026-09-27T15:50:42.81",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/users\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"id\",\"employeeId\",\"employeeName\",\"email\",\"role\",\"division\",\"department\",\"supportingCategory\",\"admin\",\"status\",\"isActive\",\"createdDate\",\"updatedDate\"}, MissingField.UseNull)\nin\n    Rows"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimProject",
+        "description": "Project dimension loaded from /api/powerbi/projects.",
+        "lineageTag": "86e6fd1d-f8e3-46de-9677-a334f1dcc3c6",
+        "modifiedTime": "2026-09-27T15:47:46.106667",
+        "structureModifiedTime": "2026-09-27T15:47:46.106667",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "lineageTag": "dcdadc43-cab2-4483-90e3-832f49cbb639",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "projectCode",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "projectCode",
+            "lineageTag": "66fb9b61-6fb1-4ad9-aad5-eacc675f66f7",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "projectName",
+            "dataType": "string",
+            "sourceColumn": "projectName",
+            "lineageTag": "cb190114-848b-43bc-a597-1e8110fd17cc",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "customerName",
+            "dataType": "string",
+            "sourceColumn": "customerName",
+            "lineageTag": "9d74da41-a68f-42cf-9224-cf407835ea1e",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "activity",
+            "dataType": "string",
+            "sourceColumn": "activity",
+            "lineageTag": "421b07c4-4751-421f-ad46-30ae93d01f0e",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "division",
+            "dataType": "string",
+            "sourceColumn": "division",
+            "lineageTag": "e08aa5d2-e0a7-48c5-ba58-386be20e2af2",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "subdivision",
+            "dataType": "string",
+            "sourceColumn": "subdivision",
+            "lineageTag": "4a71067b-a151-4c93-abf2-dbeb4793f85e",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "teamType",
+            "dataType": "string",
+            "sourceColumn": "teamType",
+            "lineageTag": "306fc8d1-b70b-4e6e-9aaf-dcf10b60459f",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "lineageTag": "9a56791a-af59-4d1c-be7e-712363559892",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "isActive",
+            "dataType": "boolean",
+            "sourceColumn": "isActive",
+            "lineageTag": "b9dbac28-68e9-4543-bd56-6381e5c3c4be",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "name": "createdDate",
+            "dataType": "dateTime",
+            "sourceColumn": "createdDate",
+            "lineageTag": "c5769cb6-f443-4eb6-b46e-ec3cfb592cc6",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.403333",
+              "refreshedTime": "2026-09-27T15:50:46.403333"
+            }
+          },
+          {
+            "name": "updatedDate",
+            "dataType": "dateTime",
+            "sourceColumn": "updatedDate",
+            "lineageTag": "bc0635c5-df3c-421f-8e72-1292496d7499",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          },
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:50:46.4",
+              "refreshedTime": "2026-09-27T15:50:46.4"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimProject",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:51:21.11",
+            "refreshedTime": "2026-09-27T15:50:46.386667",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/projects\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"id\",\"projectCode\",\"projectName\",\"customerName\",\"activity\",\"division\",\"subdivision\",\"teamType\",\"status\",\"isActive\",\"createdDate\",\"updatedDate\"}, MissingField.UseNull)\nin\n    Rows"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimDivision",
+        "description": "Division dimension loaded from /api/powerbi/divisions.",
+        "lineageTag": "ee6b20bc-d484-4a7e-b445-535886eab0c4",
+        "modifiedTime": "2026-09-27T15:47:46.106667",
+        "structureModifiedTime": "2026-09-27T15:47:46.106667",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "lineageTag": "6c5de48b-8644-45e2-8575-4e89cee26969",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.436667",
+              "refreshedTime": "2026-09-27T15:51:26.436667"
+            }
+          },
+          {
+            "name": "divisionName",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "divisionName",
+            "lineageTag": "8cb290b2-099c-44ed-a097-6106a57b27d0",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.436667",
+              "refreshedTime": "2026-09-27T15:51:26.436667"
+            }
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "lineageTag": "2dffadf4-1e60-47f3-8bc6-a095c3a6427a",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.436667",
+              "refreshedTime": "2026-09-27T15:51:26.436667"
+            }
+          },
+          {
+            "name": "isActive",
+            "dataType": "boolean",
+            "sourceColumn": "isActive",
+            "lineageTag": "a1804176-764c-45f8-81c5-dda78608eb2f",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.436667",
+              "refreshedTime": "2026-09-27T15:51:26.436667"
+            }
+          },
+          {
+            "name": "createdDate",
+            "dataType": "dateTime",
+            "sourceColumn": "createdDate",
+            "lineageTag": "eb8d8874-ac48-486b-9e3b-eacf28cfdc83",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.436667",
+              "refreshedTime": "2026-09-27T15:51:26.436667"
+            }
+          },
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.436667",
+              "refreshedTime": "2026-09-27T15:51:26.436667"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimDivision",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:51:26.436667",
+            "refreshedTime": "2026-09-27T15:51:26.436667",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/divisions\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"id\",\"divisionName\",\"status\",\"isActive\",\"createdDate\"}, MissingField.UseNull)\nin\n    Rows"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimDepartment",
+        "description": "Department dimension loaded from /api/powerbi/departments.",
+        "lineageTag": "773de3d4-6e97-4e42-9729-7645b200e35c",
+        "modifiedTime": "2026-09-27T15:47:46.106667",
+        "structureModifiedTime": "2026-09-27T15:47:46.106667",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "lineageTag": "ff1a30f8-8f15-448f-9007-46ac6a4a5a20",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.663333",
+              "refreshedTime": "2026-09-27T15:51:26.663333"
+            }
+          },
+          {
+            "name": "departmentName",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "departmentName",
+            "lineageTag": "95595927-4e31-49f7-a8d7-adfababe0cdf",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.663333",
+              "refreshedTime": "2026-09-27T15:51:26.663333"
+            }
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "lineageTag": "46b3a49c-ebe4-41b3-bac7-dc53b54fa404",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.663333",
+              "refreshedTime": "2026-09-27T15:51:26.663333"
+            }
+          },
+          {
+            "name": "isActive",
+            "dataType": "boolean",
+            "sourceColumn": "isActive",
+            "lineageTag": "1efad83f-212e-46d7-9a46-7e2a4467352f",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.663333",
+              "refreshedTime": "2026-09-27T15:51:26.663333"
+            }
+          },
+          {
+            "name": "createdDate",
+            "dataType": "dateTime",
+            "sourceColumn": "createdDate",
+            "lineageTag": "608c5a31-f0a6-49b7-bef9-1a4afaa43405",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.663333",
+              "refreshedTime": "2026-09-27T15:51:26.663333"
+            }
+          },
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.663333",
+              "refreshedTime": "2026-09-27T15:51:26.663333"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimDepartment",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:51:26.66",
+            "refreshedTime": "2026-09-27T15:51:26.66",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/departments\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"id\",\"departmentName\",\"status\",\"isActive\",\"createdDate\"}, MissingField.UseNull)\nin\n    Rows"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimHoliday",
+        "description": "Holiday dimension loaded from /api/powerbi/holidays.",
+        "lineageTag": "91e44059-5d6b-4361-a545-a2e7fb31351d",
+        "modifiedTime": "2026-09-27T15:47:46.106667",
+        "structureModifiedTime": "2026-09-27T15:47:46.106667",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "lineageTag": "1c3f781a-b893-48b4-9240-6f479c06e1ae",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.516667",
+              "refreshedTime": "2026-09-27T15:51:26.516667"
+            }
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "isKey": true,
+            "sourceColumn": "date",
+            "lineageTag": "6b938709-3450-4c8f-8b37-1913dac52807",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.516667",
+              "refreshedTime": "2026-09-27T15:51:26.516667"
+            }
+          },
+          {
+            "name": "holidayName",
+            "dataType": "string",
+            "sourceColumn": "holidayName",
+            "lineageTag": "117f28d7-c93b-4129-950c-34e87f28359a",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.516667",
+              "refreshedTime": "2026-09-27T15:51:26.516667"
+            }
+          },
+          {
+            "name": "createdDate",
+            "dataType": "dateTime",
+            "sourceColumn": "createdDate",
+            "lineageTag": "1cd0fba6-7871-47e9-8899-c23fba06ea8c",
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.516667",
+              "refreshedTime": "2026-09-27T15:51:26.516667"
+            }
+          },
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:47:46.106667",
+            "structureModifiedTime": "2026-09-27T15:47:46.106667",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.516667",
+              "refreshedTime": "2026-09-27T15:51:26.516667"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimHoliday",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:51:26.513333",
+            "refreshedTime": "2026-09-27T15:51:26.513333",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/holidays\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"id\",\"date\",\"holidayName\",\"createdDate\"}, MissingField.UseNull)\nin\n    Rows"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimDate",
+        "description": "Official Monday-first date dimension for time intelligence.",
+        "lineageTag": "bd941a39-5f7a-4339-9b4d-6a88bcffa535",
+        "dataCategory": "Time",
+        "modifiedTime": "2026-09-27T15:48:01.296667",
+        "structureModifiedTime": "2026-09-27T15:47:52.79",
+        "columns": [
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isKey": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.79",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Date",
+            "dataType": "dateTime",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "isUnique": true,
+            "sourceColumn": "[Date]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Year",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Year]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "QuarterNumber",
+            "dataType": "double",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[QuarterNumber]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Quarter",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Quarter]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Month",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Month]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "MonthName",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[MonthName]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "MonthShort",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[MonthShort]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "WeekNumber",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[WeekNumber]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "WeekStart",
+            "dataType": "dateTime",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[WeekStart]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "DayOfMonth",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[DayOfMonth]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "DayOfWeek",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[DayOfWeek]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "DayName",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[DayName]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "IsWeekend",
+            "dataType": "boolean",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[IsWeekend]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "IsHoliday",
+            "dataType": "boolean",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[IsHoliday]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "YearMonth",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[YearMonth]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "YearQuarter",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[YearQuarter]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "MonthYearLabel",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[MonthYearLabel]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "WeekLabel",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[WeekLabel]",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "structureModifiedTime": "2026-09-27T15:47:52.803333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:51:26.576667",
+              "refreshedTime": "2026-09-27T15:51:26.576667"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimDate",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:51:26.573333",
+            "refreshedTime": "2026-09-27T15:51:26.573333",
+            "source": {
+              "type": "calculated",
+              "expression": "VAR StartDate = DATE(2020, 1, 1)\nVAR EndDate = DATE(2035, 12, 31)\nRETURN\nADDCOLUMNS(CALENDAR(StartDate, EndDate), \"Year\", YEAR([Date]), \"QuarterNumber\", ROUNDUP(MONTH([Date]) / 3, 0), \"Quarter\", \"Q\" & FORMAT(ROUNDUP(MONTH([Date]) / 3, 0), \"0\"), \"Month\", MONTH([Date]), \"MonthName\", FORMAT([Date], \"MMMM\"), \"MonthShort\", FORMAT([Date], \"MMM\"), \"WeekNumber\", WEEKNUM([Date], 2), \"WeekStart\", [Date] - WEEKDAY([Date], 2) + 1, \"DayOfMonth\", DAY([Date]), \"DayOfWeek\", WEEKDAY([Date], 2), \"DayName\", FORMAT([Date], \"dddd\"), \"IsWeekend\", WEEKDAY([Date], 2) >= 6, \"IsHoliday\", CONTAINS(DimHoliday, DimHoliday[date], [Date]), \"YearMonth\", FORMAT([Date], \"YYYY-MM\"), \"YearQuarter\", FORMAT([Date], \"YYYY\") & \" Q\" & FORMAT(ROUNDUP(MONTH([Date]) / 3, 0), \"0\"), \"MonthYearLabel\", FORMAT([Date], \"MMM YYYY\"), \"WeekLabel\", \"W\" & FORMAT(WEEKNUM([Date], 2), \"00\") & \" \" & FORMAT([Date], \"YYYY\"))"
+            }
+          }
+        ]
+      },
+      {
+        "name": "_Measures",
+        "description": "GCC Timesheet enterprise measure table.",
+        "lineageTag": "2bb830ec-4f5d-4361-b48f-760c4eacb8ad",
+        "modifiedTime": "2026-09-27T15:48:05.273333",
+        "structureModifiedTime": "2026-09-27T15:48:18.653333",
+        "columns": [
+          {
+            "type": "rowNumber",
+            "name": "RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61",
+            "dataType": "int64",
+            "isHidden": true,
+            "isUnique": true,
+            "isKey": true,
+            "isNullable": false,
+            "modifiedTime": "2026-09-27T15:48:05.273333",
+            "structureModifiedTime": "2026-09-27T15:48:05.273333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:48:28.06",
+              "refreshedTime": "2026-09-27T15:48:28.06"
+            }
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Measure Group",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Measure Group]",
+            "modifiedTime": "2026-09-27T15:48:28.056667",
+            "structureModifiedTime": "2026-09-27T15:48:05.283333",
+            "refreshedTime": "1699-12-31T00:00:00",
+            "attributeHierarchy": {
+              "state": "ready",
+              "modifiedTime": "2026-09-27T15:48:28.06",
+              "refreshedTime": "2026-09-27T15:48:28.06"
+            }
+          }
+        ],
+        "partitions": [
+          {
+            "name": "_Measures",
+            "mode": "import",
+            "state": "ready",
+            "modifiedTime": "2026-09-27T15:48:28.056667",
+            "refreshedTime": "2026-09-27T15:48:28.056667",
+            "source": {
+              "type": "calculated",
+              "expression": "DATATABLE(\"Measure Group\", STRING, {{\"GCC Timesheet Measures\"}})"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Entries",
+            "expression": "COUNTROWS(FactTimesheet)",
+            "formatString": "#,##0",
+            "displayFolder": "01 Executive",
+            "lineageTag": "facad5fb-f369-4c44-935f-695c415b2978",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Total Hours",
+            "expression": "SUM(FactTimesheet[hours])",
+            "formatString": "#,##0.0",
+            "displayFolder": "01 Executive",
+            "lineageTag": "d7819c3b-ec64-4f6e-b903-d3d9f0041344",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Average Hours per Employee",
+            "expression": "DIVIDE([Total Hours], [Active Employee Count], 0)",
+            "formatString": "#,##0.0",
+            "displayFolder": "01 Executive",
+            "lineageTag": "64fdbf85-c30a-4f33-b7b0-a33d641b7d64",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Active Employee Count",
+            "expression": "CALCULATE(DISTINCTCOUNT(DimEmployee[employeeId]), DimEmployee[isActive] = TRUE())",
+            "formatString": "#,##0",
+            "displayFolder": "01 Executive",
+            "lineageTag": "7b272ca0-0ee4-4794-a78a-f4afa5695758",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Active Project Count",
+            "expression": "CALCULATE(DISTINCTCOUNT(DimProject[projectCode]), DimProject[isActive] = TRUE())",
+            "formatString": "#,##0",
+            "displayFolder": "01 Executive",
+            "lineageTag": "5447999d-f644-491f-8136-8af160fc563e",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Division Count",
+            "expression": "DISTINCTCOUNT(DimDivision[divisionName])",
+            "formatString": "#,##0",
+            "displayFolder": "01 Executive",
+            "lineageTag": "4087f484-9928-4f39-9bfb-5024ec787b1e",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Department Count",
+            "expression": "DISTINCTCOUNT(DimDepartment[departmentName])",
+            "formatString": "#,##0",
+            "displayFolder": "01 Executive",
+            "lineageTag": "f20a30a2-f7bc-4aa5-b214-acd4e437a819",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Draft Hours",
+            "expression": "CALCULATE([Total Hours], FactTimesheet[status] = \"draft\")",
+            "formatString": "#,##0.0",
+            "displayFolder": "02 Status",
+            "lineageTag": "bd7b8d2f-d00f-47a8-a552-996ed607244a",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Submitted Hours",
+            "expression": "CALCULATE([Total Hours], FactTimesheet[status] = \"submitted\")",
+            "formatString": "#,##0.0",
+            "displayFolder": "02 Status",
+            "lineageTag": "3d4dfed5-ed03-4f98-ac46-5f149cbc3668",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Approved Hours",
+            "expression": "CALCULATE([Total Hours], FactTimesheet[status] = \"approved\")",
+            "formatString": "#,##0.0",
+            "displayFolder": "02 Status",
+            "lineageTag": "0f720de2-15d9-46ee-a0f3-c709fee86f56",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Rejected Hours",
+            "expression": "CALCULATE([Total Hours], FactTimesheet[status] = \"rejected\")",
+            "formatString": "#,##0.0",
+            "displayFolder": "02 Status",
+            "lineageTag": "052bcff9-6c44-49c6-ac2f-f24c3c6c453a",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Pending Hours",
+            "expression": "CALCULATE([Total Hours], FactTimesheet[status] IN {\"draft\", \"submitted\"})",
+            "formatString": "#,##0.0",
+            "displayFolder": "02 Status",
+            "lineageTag": "8fde07c0-6a3b-4074-b428-af461535cb0a",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Billable Hours",
+            "expression": "CALCULATE([Total Hours], FactTimesheet[isBillable] = TRUE())",
+            "formatString": "#,##0.0",
+            "displayFolder": "03 Billing",
+            "lineageTag": "50b211ac-7e66-4023-b9b3-dfa3de3066da",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Non-Billable Hours",
+            "expression": "CALCULATE([Total Hours], FactTimesheet[isBillable] = FALSE())",
+            "formatString": "#,##0.0",
+            "displayFolder": "03 Billing",
+            "lineageTag": "1fc560da-69bb-4aa4-84eb-6b86b4756b1a",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Billable Percentage",
+            "expression": "DIVIDE([Billable Hours], [Total Hours], 0)",
+            "formatString": "0.0%",
+            "displayFolder": "03 Billing",
+            "lineageTag": "c7e73f0f-204d-4c1b-808e-2ea156c3f4ce",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Submission Rate",
+            "expression": "VAR SubmittedOrBeyond = CALCULATE([Total Entries], FactTimesheet[status] IN {\"submitted\", \"approved\", \"rejected\", \"recalled\"}) RETURN DIVIDE(SubmittedOrBeyond, [Total Entries], 0)",
+            "formatString": "0.0%",
+            "displayFolder": "04 Compliance",
+            "lineageTag": "b6483b3f-7e68-4168-ac2a-5278e084b1b3",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Approval Rate",
+            "expression": "VAR ApprovedOnly = CALCULATE([Total Entries], FactTimesheet[status] = \"approved\") VAR SubmittedOrBeyond = CALCULATE([Total Entries], FactTimesheet[status] IN {\"submitted\", \"approved\", \"rejected\", \"recalled\"}) RETURN DIVIDE(ApprovedOnly, SubmittedOrBeyond, 0)",
+            "formatString": "0.0%",
+            "displayFolder": "04 Compliance",
+            "lineageTag": "86aafcc6-c7d0-4855-adb5-82e5282d311f",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Rejection Rate",
+            "expression": "VAR RejectedOnly = CALCULATE([Total Entries], FactTimesheet[status] = \"rejected\") VAR SubmittedOrBeyond = CALCULATE([Total Entries], FactTimesheet[status] IN {\"submitted\", \"approved\", \"rejected\", \"recalled\"}) RETURN DIVIDE(RejectedOnly, SubmittedOrBeyond, 0)",
+            "formatString": "0.0%",
+            "displayFolder": "04 Compliance",
+            "lineageTag": "024a39fb-89ff-4bea-86fe-f3d5d13d850c",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Working Days",
+            "expression": "CALCULATE(DISTINCTCOUNT(DimDate[Date]), DimDate[IsWeekend] = FALSE(), DimDate[IsHoliday] = FALSE())",
+            "formatString": "#,##0",
+            "displayFolder": "05 Utilization",
+            "lineageTag": "cfb98f47-d846-4893-a53d-cd1f0701f811",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Standard Daily Hours",
+            "expression": "8",
+            "formatString": "#,##0.0",
+            "displayFolder": "05 Utilization",
+            "lineageTag": "5860cfca-bb6a-4836-9325-41f43085c889",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Expected Hours",
+            "expression": "[Working Days] * [Standard Daily Hours]",
+            "formatString": "#,##0.0",
+            "displayFolder": "05 Utilization",
+            "lineageTag": "3d830a43-472a-4ad0-a59e-ea489135e55c",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Utilization Rate",
+            "expression": "DIVIDE([Total Hours], [Expected Hours], 0)",
+            "formatString": "0.0%",
+            "displayFolder": "05 Utilization",
+            "lineageTag": "e0128d35-7536-4cc4-9539-e951a5195de2",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Weekend Hours",
+            "expression": "CALCULATE([Total Hours], DimDate[IsWeekend] = TRUE())",
+            "formatString": "#,##0.0",
+            "displayFolder": "05 Utilization",
+            "lineageTag": "513723dd-e41d-4aa3-a728-cf37380ebcd5",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Holiday Hours",
+            "expression": "CALCULATE([Total Hours], DimDate[IsHoliday] = TRUE())",
+            "formatString": "#,##0.0",
+            "displayFolder": "05 Utilization",
+            "lineageTag": "3b427bc5-659f-486f-8c8f-514a7aa52f21",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Current Month Hours",
+            "expression": "CALCULATE([Total Hours], DATESMTD(DimDate[Date]))",
+            "formatString": "#,##0.0",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "4fa1610e-0867-4cb0-9485-f320e7cdba2d",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Previous Month Hours",
+            "expression": "CALCULATE([Total Hours], PREVIOUSMONTH(DimDate[Date]))",
+            "formatString": "#,##0.0",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "e610929f-554a-46c7-a266-78bbf620efe3",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Month over Month Change",
+            "expression": "[Current Month Hours] - [Previous Month Hours]",
+            "formatString": "#,##0.0;(#,##0.0);-",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "7a819bec-fb90-418f-a351-3f6177fab4c4",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Month over Month Change %",
+            "expression": "DIVIDE([Month over Month Change], ABS([Previous Month Hours]) + 0.0000001, 0)",
+            "formatString": "0.0%;(0.0%);-",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "ce9e4b66-e5ba-4154-9ece-fde17252043e",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "YTD Hours",
+            "expression": "CALCULATE([Total Hours], DATESYTD(DimDate[Date]))",
+            "formatString": "#,##0.0",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "496bb962-fc9c-413f-b73f-4d6c9541fefa",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Previous Year YTD",
+            "expression": "CALCULATE([Total Hours], DATESYTD(SAMEPERIODLASTYEAR(DimDate[Date])))",
+            "formatString": "#,##0.0",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "f41263cd-39a7-4728-a25f-427bc28752b6",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "YTD Variance",
+            "expression": "[YTD Hours] - [Previous Year YTD]",
+            "formatString": "#,##0.0;(#,##0.0);-",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "47d4d52c-3c12-464a-9f20-3a6d3c492269",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "YTD Variance %",
+            "expression": "DIVIDE([YTD Variance], ABS([Previous Year YTD]) + 0.0000001, 0)",
+            "formatString": "0.0%;(0.0%);-",
+            "displayFolder": "06 Time Intelligence",
+            "lineageTag": "66c7b43e-7864-48dd-9b48-15833ab3ca6c",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Average Daily Hours",
+            "expression": "DIVIDE([Total Hours], DISTINCTCOUNT(FactTimesheet[date]), 0)",
+            "formatString": "#,##0.0",
+            "displayFolder": "07 Averages",
+            "lineageTag": "84396f65-84b7-425a-bd61-55992a811a50",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Average Weekly Hours",
+            "expression": "DIVIDE([Total Hours], DISTINCTCOUNT(FactTimesheet[week]), 0)",
+            "formatString": "#,##0.0",
+            "displayFolder": "07 Averages",
+            "lineageTag": "a1e37634-d0e4-47d3-bdfa-a7e30c3c6f42",
+            "dataType": "double",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Invalid Hours Count",
+            "expression": "CALCULATE(COUNTROWS(FactTimesheet), OR(FactTimesheet[hours] < 0, FactTimesheet[hours] > 24))",
+            "formatString": "#,##0",
+            "displayFolder": "08 Data Quality",
+            "lineageTag": "9678830d-867f-4797-b1b0-5f3031184e89",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Missing Employee IDs",
+            "expression": "CALCULATE(COUNTROWS(FactTimesheet), ISBLANK(FactTimesheet[employeeId]))",
+            "formatString": "#,##0",
+            "displayFolder": "08 Data Quality",
+            "lineageTag": "bab0b43f-2a05-4cb8-b63b-aa146d2009f1",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Invalid Status Count",
+            "expression": "CALCULATE(COUNTROWS(FactTimesheet), NOT(FactTimesheet[status] IN {\"draft\", \"submitted\", \"approved\", \"rejected\", \"recalled\"}))",
+            "formatString": "#,##0",
+            "displayFolder": "08 Data Quality",
+            "lineageTag": "72979b85-a627-4a49-8d32-e0d7eba02387",
+            "dataType": "int64",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          },
+          {
+            "name": "Last Data Refresh",
+            "expression": "NOW()",
+            "formatString": "General Date",
+            "displayFolder": "09 Metadata",
+            "lineageTag": "d6482cc9-540f-48f0-a13f-9841abed2fe2",
+            "dataType": "dateTime",
+            "modifiedTime": "2026-09-27T15:48:18.686667",
+            "structureModifiedTime": "2026-09-27T15:48:18.653333"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "DimEmployee_employeeId_FactTimesheet_employeeId",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "employeeId",
+        "toTable": "DimEmployee",
+        "toColumn": "employeeId",
+        "state": "ready",
+        "modifiedTime": "2026-09-27T15:50:42.646667",
+        "refreshedTime": "2026-09-27T15:50:42.836667"
+      },
+      {
+        "name": "DimProject_projectCode_FactTimesheet_projectCode",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "projectCode",
+        "toTable": "DimProject",
+        "toColumn": "projectCode",
+        "state": "ready",
+        "modifiedTime": "2026-09-27T15:50:42.65",
+        "refreshedTime": "2026-09-27T15:50:46.4"
+      },
+      {
+        "name": "DimDivision_divisionName_FactTimesheet_division",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "division",
+        "toTable": "DimDivision",
+        "toColumn": "divisionName",
+        "state": "ready",
+        "modifiedTime": "2026-09-27T15:50:42.646667",
+        "refreshedTime": "2026-09-27T15:51:26.436667"
+      },
+      {
+        "name": "DimDepartment_departmentName_FactTimesheet_department",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "department",
+        "toTable": "DimDepartment",
+        "toColumn": "departmentName",
+        "state": "ready",
+        "modifiedTime": "2026-09-27T15:50:42.646667",
+        "refreshedTime": "2026-09-27T15:51:26.663333"
+      },
+      {
+        "name": "DimDate_Date_FactTimesheet_date",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "state": "ready",
+        "modifiedTime": "2026-09-27T15:51:26.576667",
+        "refreshedTime": "2026-09-27T15:51:26.576667"
+      },
+      {
+        "name": "DimDate_Date_DimHoliday_date",
+        "fromTable": "DimHoliday",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "state": "ready",
+        "modifiedTime": "2026-09-27T15:51:26.576667",
+        "refreshedTime": "2026-09-27T15:51:26.576667"
+      }
+    ],
+    "cultures": [
+      {
+        "name": "en-US",
+        "modifiedTime": "2026-09-27T15:32:58.846667",
+        "structureModifiedTime": "2026-09-27T15:32:58.846667"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "1",
+        "modifiedTime": "2026-09-27T15:32:58.846667"
+      },
+      {
+        "name": "PBI_ProTooling",
+        "value": "[\"MCP-PBIModeling\"]",
+        "modifiedTime": "2026-09-27T15:47:46.106667"
+      }
+    ]
+  }
+}

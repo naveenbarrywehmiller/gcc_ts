@@ -1,0 +1,34 @@
+/// Holiday dimension loaded from /api/powerbi/holidays.
+table DimHoliday
+	lineageTag: 91e44059-5d6b-4361-a545-a2e7fb31351d
+
+	column id
+		dataType: int64
+		lineageTag: 1c3f781a-b893-48b4-9240-6f479c06e1ae
+		sourceColumn: id
+
+	column date
+		dataType: dateTime
+		isKey
+		lineageTag: 6b938709-3450-4c8f-8b37-1913dac52807
+		sourceColumn: date
+
+	column holidayName
+		dataType: string
+		lineageTag: 117f28d7-c93b-4129-950c-34e87f28359a
+		sourceColumn: holidayName
+
+	column createdDate
+		dataType: dateTime
+		lineageTag: 1cd0fba6-7871-47e9-8899-c23fba06ea8c
+		sourceColumn: createdDate
+
+	partition DimHoliday = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(Web.Contents("http://localhost:3001/api/powerbi/holidays", [Headers=[#"X-API-Key"="YOUR_API_KEY_HERE", #"Accept"="application/json"]])),
+				    Data = if Record.HasFields(Source, "data") then Source[data] else {},
+				    Rows = Table.FromRecords(Data, {"id","date","holidayName","createdDate"}, MissingField.UseNull)
+				in
+				    Rows

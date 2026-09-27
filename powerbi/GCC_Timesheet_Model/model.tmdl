@@ -1,0 +1,23 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["MCP-PBIModeling"]
+
+ref table FactTimesheet
+ref table DimEmployee
+ref table DimProject
+ref table DimDivision
+ref table DimDepartment
+ref table DimHoliday
+ref table DimDate
+ref table _Measures
+
+ref cultureInfo en-US
