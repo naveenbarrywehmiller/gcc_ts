@@ -34,13 +34,17 @@ export function AuthProvider({ children }) {
       .catch(() => {
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
       })
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    const { user } = res.data;
+    const { user, token } = res.data;
+    if (token) {
+      localStorage.setItem('token', token);
+    }
     localStorage.setItem('user', JSON.stringify(user));
     setUser(user);
     return user;
@@ -52,7 +56,10 @@ export function AuthProvider({ children }) {
       if (response && response.idToken) {
         // Send the MSAL ID token to our backend to establish a local session
         const res = await api.post('/auth/ms-callback', { idToken: response.idToken });
-        const { user } = res.data;
+        const { user, token } = res.data;
+        if (token) {
+          localStorage.setItem('token', token);
+        }
         localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         return user;
@@ -73,6 +80,7 @@ export function AuthProvider({ children }) {
       // Ignore network errors
     }
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setUser(null);
   };
 

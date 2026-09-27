@@ -28,6 +28,14 @@ const processQueue = (error) => {
   failedQueue = [];
 };
 
+api.interceptors.request.use((reqConfig) => {
+  const token = localStorage.getItem('token');
+  if (token && !reqConfig.headers.Authorization) {
+    reqConfig.headers.Authorization = `Bearer ${token}`;
+  }
+  return reqConfig;
+});
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -54,7 +62,10 @@ api.interceptors.response.use(
 
       try {
         // Must use raw axios to avoid interceptor loop
-        await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        const refreshRes = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        if (refreshRes.data?.token) {
+          localStorage.setItem('token', refreshRes.data.token);
+        }
         isRefreshing = false;
         processQueue(null);
         return api(originalRequest);
@@ -64,6 +75,7 @@ api.interceptors.response.use(
         
         // Refresh token is expired or invalid
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }

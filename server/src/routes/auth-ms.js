@@ -103,18 +103,22 @@ router.post('/ms-callback', (req, res) => {
       { expiresIn: config.jwtRefreshExpiresIn }
     );
 
+    const isSecure = config.cookieSecure !== undefined
+      ? config.cookieSecure
+      : Boolean(req.secure || req.headers?.['x-forwarded-proto'] === 'https');
+
     // Set HttpOnly cookies
     res.cookie('token', accessToken, {
       httpOnly: true,
-      secure: config.nodeEnv === 'production',
-      sameSite: 'strict',
+      secure: isSecure,
+      sameSite: 'lax',
       maxAge: 15 * 60 * 1000 // 15 mins
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: config.nodeEnv === 'production',
-      sameSite: 'strict',
+      secure: isSecure,
+      sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     });
 
@@ -128,7 +132,7 @@ router.post('/ms-callback', (req, res) => {
       team_type: user.team_type
     };
 
-    res.json({ user: userProfile });
+    res.json({ token: accessToken, user: userProfile });
   });
 });
 

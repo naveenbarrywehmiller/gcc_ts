@@ -11,6 +11,9 @@ module.exports = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-change-me',
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+  cookieSecure: process.env.COOKIE_SECURE !== undefined
+    ? process.env.COOKIE_SECURE === 'true'
+    : false, // Default to false so HTTP / LAN deployments (e.g. Raspberry Pi, DietPi) can set cookies without browser rejection
 
   // ── SQLite database ─────────────────────────────────────────
   dbPath: path.resolve(__dirname, '..', '..', process.env.DB_PATH || './data/timesheet.db'),

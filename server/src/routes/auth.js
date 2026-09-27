@@ -8,15 +8,19 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 
 /**
- * Shared cookie options. The token is HttpOnly (no JS access),
- * Secure in production (HTTPS only), and SameSite=Strict to
- * prevent cross-site request forgery.
+ * Shared cookie options. The token is HttpOnly (no JS access).
+ * Secure is dynamic: only enabled over HTTPS or when COOKIE_SECURE=true.
+ * SameSite=Lax allows smooth router transitions and prevents CSRF on cross-site POSTs.
  */
-function getCookieOptions(maxAgeMs = 15 * 60 * 1000) {
+function getCookieOptions(req, maxAgeMs = 15 * 60 * 1000) {
+  const isSecure = config.cookieSecure !== undefined
+    ? config.cookieSecure
+    : Boolean(req && (req.secure || req.headers?.['x-forwarded-proto'] === 'https'));
+
   return {
     httpOnly: true,
-    secure: config.nodeEnv === 'production',
-    sameSite: 'strict',
+    secure: isSecure,
+    sameSite: 'lax',
     maxAge: maxAgeMs,
     path: '/',
   };
@@ -60,16 +64,17 @@ router.post('/login', (req, res) => {
   });
 
   // Set JWT as an HttpOnly cookie
-  res.cookie('token', token, getCookieOptions(15 * 60 * 1000)); // 15 minutes
-  res.cookie('refreshToken', refreshToken, getCookieOptions(30 * 24 * 60 * 60 * 1000)); // 30 days
+  res.cookie('token', token, getCookieOptions(req, 15 * 60 * 1000)); // 15 minutes
+  res.cookie('refreshToken', refreshToken, getCookieOptions(req, 30 * 24 * 60 * 60 * 1000)); // 30 days
 
   // Audit log
   db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)').run(
     user.id, 'LOGIN', 'User logged in', req.ip
   );
 
-  // Return user profile only (token is in the cookie, not the body)
+  // Return user profile and token (token used as Bearer fallback if browser drops cookies)
   res.json({
+    token,
     user: {
       id: user.id,
       name: user.name,
@@ -109,8 +114,8 @@ router.post('/refresh', (req, res) => {
       expiresIn: config.jwtExpiresIn,
     });
 
-    res.cookie('token', token, getCookieOptions(15 * 60 * 1000)); // 15 minutes
-    res.json({ message: 'Token refreshed' });
+    res.cookie('token', token, getCookieOptions(req, 15 * 60 * 1000)); // 15 minutes
+    res.json({ message: 'Token refreshed', token });
   } catch (error) {
     return res.status(401).json({ error: 'Invalid or expired refresh token' });
   }
@@ -118,18 +123,8 @@ router.post('/refresh', (req, res) => {
 
 // POST /api/auth/logout — clears the session cookies
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: config.nodeEnv === 'production',
-    sameSite: 'strict',
-    path: '/',
-  });
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: config.nodeEnv === 'production',
-    sameSite: 'strict',
-    path: '/',
-  });
+  res.clearCookie('token', getCookieOptions(req, 0));
+  res.clearCookie('refreshToken', getCookieOptions(req, 0));
 
   if (req.headers.authorization) {
     // Optionally log the logout if the user is known via header (fallback)
