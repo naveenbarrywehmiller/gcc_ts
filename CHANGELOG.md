@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.6.1...v1.7.0) (2026-09-27)
+
+
+### Features
+
+* show github release version in footer and login page instead of hardcoded year ([e0a17bc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e0a17bcab1116390d3e19fb2ea7eb9dfab6058d3))
+
 ## [1.6.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.6.0...v1.6.1) (2026-09-27)
 
 
