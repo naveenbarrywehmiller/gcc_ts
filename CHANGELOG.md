@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.7.1...v1.7.2) (2026-09-27)
+
+
+### Bug Fixes
+
+* **ci:** remove single-arch docker-build from release-please and add package version tagging to multi-arch workflow ([a562058](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a56205881f62814095426f52b50c3350e97e1645))
+
 ## [1.7.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.7.0...v1.7.1) (2026-09-27)
 
 
