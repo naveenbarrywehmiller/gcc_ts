@@ -169,7 +169,7 @@ export default function Login() {
 
         <p className="text-center text-xs text-surface-600 mt-6">
           Internal use only{version && (
-            <span className="ml-2 px-1.5 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400">
+            <span className="ml-1.5 font-mono text-surface-500">
               {version}
             </span>
           )}
