@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.5.0...v1.6.0) (2026-09-27)
+
+
+### Features
+
+* **docker:** add complete docker-compose configuration and deployment guide ([1539a3f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/1539a3f7a87519df798a0f6cd106bbd16f2b03d3))
+
 ## [1.5.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.4.0...v1.5.0) (2026-09-25)
 
 
