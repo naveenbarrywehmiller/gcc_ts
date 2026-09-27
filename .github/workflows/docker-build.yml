@@ -83,6 +83,15 @@ jobs:
     permissions:
       packages: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract package version
+        id: pkg
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
@@ -111,6 +120,8 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=v${{ steps.pkg.outputs.version }},enable={{is_default_branch}}
+            type=raw,value=${{ steps.pkg.outputs.version }},enable={{is_default_branch}}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
