@@ -496,8 +496,9 @@ function migrate() {
   if (!sysAdminExists) {
     console.log('  → Creating default system admin account...');
     const sysAdminHash = bcrypt.hashSync('systemadmin', 12);
+    // Use INSERT OR IGNORE so calling migrate() multiple times (e.g. from seed.js) is safe
     db.prepare(`
-      INSERT INTO users (name, email, password_hash, role)
+      INSERT OR IGNORE INTO users (name, email, password_hash, role)
       VALUES (?, ?, ?, ?)
     `).run('System Admin', sysAdminEmail, sysAdminHash, 'system admin');
   }
