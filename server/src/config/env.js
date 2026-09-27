@@ -1,15 +1,30 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+const defaultJwtSecret = 'fallback-secret-change-me';
+const defaultJwtRefreshSecret = 'fallback-refresh-secret-change-me';
+
+if (nodeEnv === 'production') {
+  const invalidSecrets = [
+    ['JWT_SECRET', process.env.JWT_SECRET, defaultJwtSecret],
+    ['JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET, defaultJwtRefreshSecret],
+  ].filter(([, value, fallback]) => !value || value === fallback || value.length < 32);
+
+  if (invalidSecrets.length > 0) {
+    throw new Error(`Production requires strong values for: ${invalidSecrets.map(([name]) => name).join(', ')}`);
+  }
+}
+
 module.exports = {
   // ── Core server ────────────────────────────────────────────
   port: process.env.PORT || 3001,
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
 
   // ── JWT (local authentication) ──────────────────────────────
-  jwtSecret: process.env.JWT_SECRET || 'fallback-secret-change-me',
+  jwtSecret: process.env.JWT_SECRET || defaultJwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
-  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-change-me',
+  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || defaultJwtRefreshSecret,
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   cookieSecure: process.env.COOKIE_SECURE !== undefined
     ? process.env.COOKIE_SECURE === 'true'

@@ -39,7 +39,7 @@ export default function ManagerApprovals() {
       setSelectedAction({ userId: null, week: null, year: null, type: null });
       queryClient.invalidateQueries(['manager-approvals']);
     },
-    onError: (err) => {
+    onError: (err, variables) => {
       toast.error(err.response?.data?.error || `Failed to ${variables.action} timesheet`);
     }
   });

@@ -92,13 +92,13 @@ router.post('/ms-callback', (req, res) => {
 
     // Issue local session tokens
     const accessToken = jwt.sign(
-      { id: user.id, role: user.role },
+      { userId: user.id, role: user.role },
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn }
     );
 
     const refreshToken = jwt.sign(
-      { id: user.id, role: user.role, type: 'refresh' },
+      { userId: user.id, role: user.role, type: 'refresh' },
       config.jwtRefreshSecret,
       { expiresIn: config.jwtRefreshExpiresIn }
     );

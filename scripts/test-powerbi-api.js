@@ -390,7 +390,7 @@ async function runTests() {
 
     // 7.2 Regular login API continues to work
     const loginRes = await request('POST', '/api/auth/login', {
-      body: { email: 'admin@company.com', password: 'admin123' },
+      body: { email: 'systemadmin@barry-wehmiller.com', password: 'systemadmin' },
     });
     assert(loginRes.status === 200, 'Standard authentication /api/auth/login succeeds for admin');
 

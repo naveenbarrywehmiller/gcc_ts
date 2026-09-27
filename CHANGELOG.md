@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.11.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.1...v1.11.2) (2026-09-27)
+
+
+### Bug Fixes
+
+* reject weak or missing production JWT secrets
+* align Microsoft Entra session claims with local authentication
+* fix manager approval error handling
+* make root build, lint, test, and start commands available
+* make the authentication smoke-test fixture deterministic
+
 ## [1.11.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.0...v1.11.1) (2026-09-27)
 
 
