@@ -9,13 +9,55 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const db = new Database(config.dbPath, {
-  verbose: config.nodeEnv === 'development' ? null : null,
-});
+let dbInstance = null;
 
-// Enable WAL mode for better concurrent read performance
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-db.pragma('busy_timeout = 5000');
+function createInstance(filePath = config.dbPath) {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  const inst = new Database(filePath, {
+    verbose: config.nodeEnv === 'development' ? null : null,
+  });
+
+  // Enable WAL mode for better concurrent read performance
+  inst.pragma('journal_mode = WAL');
+  inst.pragma('foreign_keys = ON');
+  inst.pragma('busy_timeout = 5000');
+  return inst;
+}
+
+dbInstance = createInstance();
+
+const db = new Proxy({}, {
+  get(target, prop) {
+    if (prop === '_reopen') {
+      return (filePath) => {
+        try {
+          if (dbInstance && dbInstance.open) {
+            dbInstance.close();
+          }
+        } catch (err) {
+          console.error('[DB] Error closing previous instance on reopen:', err);
+        }
+        dbInstance = createInstance(filePath);
+        return dbInstance;
+      };
+    }
+    if (prop === '_close') {
+      return () => {
+        if (dbInstance && dbInstance.open) {
+          dbInstance.close();
+        }
+      };
+    }
+    if (prop === '_instance') {
+      return dbInstance;
+    }
+    const val = dbInstance[prop];
+    return typeof val === 'function' ? val.bind(dbInstance) : val;
+  }
+});
 
 module.exports = db;
