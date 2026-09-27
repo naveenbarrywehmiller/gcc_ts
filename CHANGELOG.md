@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.7.0...v1.7.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* correctly expose release version in /api/health — copy root package.json into Docker image ([ce5602d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/ce5602d616b4142d6edc4a53adb9c7f0d95dd79b))
+
 ## [1.7.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.6.1...v1.7.0) (2026-09-27)
 
 
