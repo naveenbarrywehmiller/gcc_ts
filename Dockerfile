@@ -20,6 +20,7 @@ WORKDIR /app
 
 # Copy built server node_modules and server source
 COPY --from=builder /app/server/node_modules ./server/node_modules
+COPY package.json ./
 COPY server/package*.json ./server/
 COPY server/src ./server/src
 COPY server/ecosystem.config.js ./server/
