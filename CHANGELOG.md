@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.11.5](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.4...v1.11.5) (2026-09-28)
+
+### Security
+
+* allow only active system administrators to sign in during maintenance mode
+* automatically disable maintenance mode after a successful system-admin login
+
+### User Interface
+
+* add a dedicated system-admin login form to the maintenance page
+
+### Tests
+
+* cover maintenance access restrictions, failed logins, recovery failures, and restored access
+
 ## [1.11.4](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.3...v1.11.4) (2026-09-28)
 
 ### Security

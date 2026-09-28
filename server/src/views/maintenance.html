@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System Under Maintenance</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 64px 20px; background: #f7f9fc; color: #17223b; font-family: system-ui, sans-serif; }
+    main { max-width: 660px; margin: auto; text-align: center; }
+    h1 { font-size: clamp(26px, 5vw, 36px); margin: 16px 0; }
+    p { color: #526078; line-height: 1.6; }
+    .icon { font-size: 40px; }
+    form { max-width: 400px; margin: 32px auto 0; padding: 28px; text-align: left; background: white; border: 1px solid #dce3ee; border-radius: 16px; box-shadow: 0 8px 30px #17223b08; }
+    h2 { font-size: 21px; margin: 0; }
+    form p { font-size: 14px; }
+    label { display: block; margin-top: 18px; font-size: 14px; font-weight: 600; }
+    input, button { width: 100%; padding: 12px; font: inherit; border-radius: 8px; }
+    input { margin-top: 6px; border: 1px solid #b8c4d6; }
+    button { margin-top: 22px; border: 0; background: #245bd6; color: white; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: .65; cursor: wait; }
+    input:focus-visible, button:focus-visible { outline: 3px solid #8bb4ff; outline-offset: 2px; }
+    #error { color: #b42318; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="icon" aria-hidden="true">🚧</div>
+    <h1>System Under Maintenance</h1>
+    <p>We are currently performing database backups or restoration.<br>Please check back in a few minutes.</p>
+    <form id="login">
+      <h2>System admin login</h2>
+      <p>Only system administrators can sign in here. Signing in will automatically disable maintenance mode for everyone.</p>
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Sign in &amp; disable maintenance</button>
+      <p id="error" role="alert" hidden></p>
+    </form>
+  </main>
+  <script>
+    document.getElementById('login').addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const button = this.querySelector('button');
+      const error = document.getElementById('error');
+      button.disabled = true;
+      button.textContent = 'Signing in…';
+      error.hidden = true;
+      try {
+        const response = await fetch('/api/auth/maintenance-login', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: this.email.value, password: this.password.value })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Unable to sign in. Please try again.');
+        // Match the application's session fallback; HttpOnly cookies are also set.
+        try {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        } catch (_) { /* Cookies still allow login when browser storage is unavailable. */ }
+        window.location.replace('/admin/system');
+      } catch (failure) {
+        error.textContent = failure.message || 'Unable to connect. Please try again.';
+        error.hidden = false;
+        button.disabled = false;
+        button.textContent = 'Sign in & disable maintenance';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -5,6 +5,8 @@ const db = require('../config/db');
 const config = require('../config/env');
 const { authenticate } = require('../middleware/auth');
 
+const maintenance = require('../middleware/maintenance');
+
 const router = express.Router();
 
 /**
@@ -27,10 +29,11 @@ function getCookieOptions(req, maxAgeMs = 15 * 60 * 1000) {
 }
 
 // POST /api/auth/login
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
+router.post(['/login', '/maintenance-login'], (req, res) => {
+  const { email, password } = req.body || {};
+  res.set('Cache-Control', 'no-store');
 
-  if (!email || !password) {
+  if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
@@ -55,6 +58,11 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
+  const maintenanceEnabled = maintenance.isEnabled();
+  if ((maintenanceEnabled || /^\/maintenance-login\/?$/i.test(req.path)) && user.role !== 'system admin') {
+    return res.status(403).json({ error: 'Only system administrators can sign in during maintenance.' });
+  }
+
   const token = jwt.sign({ userId: user.id, role: user.role }, config.jwtSecret, {
     expiresIn: config.jwtExpiresIn,
   });
@@ -62,6 +70,14 @@ router.post('/login', (req, res) => {
   const refreshToken = jwt.sign({ userId: user.id }, config.jwtRefreshSecret, {
     expiresIn: config.jwtRefreshExpiresIn,
   });
+
+  // Do not issue a session if maintenance cannot be disabled.
+  if (maintenanceEnabled) {
+    maintenance.disable();
+    db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)').run(
+      user.id, 'MAINTENANCE_DISABLED', 'Maintenance disabled by system admin login', req.ip
+    );
+  }
 
   // Set JWT as an HttpOnly cookie
   res.cookie('token', token, getCookieOptions(req, 15 * 60 * 1000)); // 15 minutes

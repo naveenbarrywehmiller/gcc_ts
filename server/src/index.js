@@ -14,30 +14,6 @@ migrate();
 
 const app = express();
 
-// 🚧 Maintenance Mode Middleware
-// Create a empty ".maintenance" file in the server directory to enable instantly without restarting
-app.use((req, res, next) => {
-  const fs = require('fs');
-  if (fs.existsSync(path.join(__dirname, '..', '.maintenance'))) {
-    // Allow system routes so admins can disable maintenance mode
-    if (req.path.startsWith('/api/system')) {
-      return next();
-    }
-    
-    if (req.path.startsWith('/api')) {
-      return res.status(503).json({ error: 'System is currently down for maintenance (Database operations in progress).' });
-    }
-    return res.status(503).send(`
-      <div style="text-align:center; padding:50px; font-family:system-ui, sans-serif;">
-        <h1>🚧 System Under Maintenance 🚧</h1>
-        <p>We are currently performing database backups or restoration.</p>
-        <p>Please check back in a few minutes.</p>
-      </div>
-    `);
-  }
-  next();
-});
-
 // Security
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -63,7 +39,7 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again later' },
   keyGenerator: (req) => {
     // Login attempts stay IP-limited even when a caller supplies a valid session.
-    if (!/^\/auth\/(login|ms-callback)\/?$/i.test(req.path)) {
+    if (!/^\/auth\/(login|maintenance-login|ms-callback)\/?$/i.test(req.path)) {
       const token = req.cookies?.token || req.headers.authorization?.replace(/^Bearer /, '');
       if (token) {
         try {
@@ -82,6 +58,9 @@ app.use('/api/', limiter);
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Maintenance responses also receive security headers and API rate limiting.
+app.use(require('./middleware/maintenance').maintenance);
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
