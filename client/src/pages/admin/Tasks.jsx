@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import { Plus, Search, Edit2, Trash2, Check, X as XIcon } from 'lucide-react';
@@ -14,11 +14,10 @@ export default function AdminTasks() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ classification: '', task_category: '', task_description: '', requires_project: true });
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     api.get('/tasks').then(res => setTasks(res.data.tasks)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, []);
+  }, [toast]);
+  useEffect(() => { load(); }, [load]);
 
   const filtered = tasks.filter(t =>
     t.task_category.toLowerCase().includes(search.toLowerCase()) ||

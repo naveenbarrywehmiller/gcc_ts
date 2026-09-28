@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
@@ -11,7 +11,7 @@ export default function AdminProjects() {
   const [divisions, setDivisions] = useState([]);
   const [subdivisions, setSubdivisions] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filters
   const [search, setSearch] = useState('');
   const [filterDivisionId, setFilterDivisionId] = useState('');
@@ -21,8 +21,7 @@ export default function AdminProjects() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ project_code: '', project_name: '', customer_name: '', activity: '', division_id: '', subdivision_id: '' });
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     Promise.all([
       api.get('/projects'),
       api.get('/divisions'),
@@ -32,9 +31,9 @@ export default function AdminProjects() {
       setDivisions(dRes.data.divisions);
       setSubdivisions(sRes.data.subdivisions);
     }).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
-  };
-  
-  useEffect(() => { load(); }, []);
+  }, [toast]);
+
+  useEffect(() => { load(); }, [load]);
 
   const filtered = projects.filter(p => {
     const matchesSearch = 
@@ -60,27 +59,12 @@ export default function AdminProjects() {
     return subdivisions.filter(s => s.division_id === parseInt(form.division_id));
   }, [subdivisions, form.division_id]);
 
-  // When form division changes, reset subdivision if it's no longer valid
-  useEffect(() => {
-    if (form.subdivision_id) {
-      const isValid = formSubdivisionOptions.some(s => s.id === parseInt(form.subdivision_id));
-      if (!isValid) {
-        setForm(prev => ({ ...prev, subdivision_id: '' }));
-      }
-    }
-  }, [form.division_id, formSubdivisionOptions, form.subdivision_id]);
-
-  // When filter division changes, reset filter subdivision
-  useEffect(() => {
-    setFilterSubdivisionId('');
-  }, [filterDivisionId]);
-
   const openCreate = () => { 
     setEditing(null); 
     setForm({ project_code: '', project_name: '', customer_name: '', activity: '', division_id: '', subdivision_id: '' }); 
     setShowModal(true); 
   };
-  
+
   const openEdit = (p) => { 
     setEditing(p); 
     setForm({ 
@@ -116,7 +100,7 @@ export default function AdminProjects() {
       await api.delete(`/projects/${id}`); 
       toast.success('Project deactivated'); 
       load(); 
-    } catch (err) { 
+    } catch {
       toast.error('Failed'); 
     }
   };
@@ -145,7 +129,7 @@ export default function AdminProjects() {
           <select 
             className="input" 
             value={filterDivisionId} 
-            onChange={e => setFilterDivisionId(e.target.value)}
+            onChange={e => { setFilterDivisionId(e.target.value); setFilterSubdivisionId(''); }}
           >
             <option value="">All Divisions</option>
             {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -221,7 +205,7 @@ export default function AdminProjects() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division</label>
-              <select className="input" value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
+              <select className="input" value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value, subdivision_id: '' })}>
                 <option value="">— Select —</option>
                 {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>

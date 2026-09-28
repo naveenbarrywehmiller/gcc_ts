@@ -7,6 +7,8 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
+const { validateRoleAssignment } = require('../utils/userRoles');
+
 const router = express.Router();
 
 // Configure multer for file uploads
@@ -163,6 +165,10 @@ router.post('/users', authenticate, authorize('admin'), upload.single('file'), a
           continue;
         }
 
+        const role = row['Role'] || row['role'] || 'employee';
+        const roleError = validateRoleAssignment(req.user, role);
+        if (roleError) { skipped++; errors.push(roleError.error); continue; }
+
         const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(String(email).toLowerCase().trim());
         if (existing) {
           skipped++;
@@ -176,7 +182,7 @@ router.post('/users', authenticate, authorize('admin'), upload.single('file'), a
           String(name).trim(),
           String(email).toLowerCase().trim(),
           defaultPassword,
-          row['Role'] || row['role'] || 'employee',
+          role,
           row['Division'] || row['division'] || null,
           row['Core'] || row['core'] || null,
           row['Team Type'] || row['team_type'] || null

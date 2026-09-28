@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.11.4](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.3...v1.11.4) (2026-09-28)
+
+### Security
+
+* require explicit one-time system-admin provisioning and block role escalation
+* enforce approval scope and prevent rate-limit bypass with unverified cookies
+
+### Bug Fixes
+
+* preserve the latest timesheet edits during autosave and delete cleared cells
+* allow managers to review their division while blocking cross-division actions
+* validate daily totals atomically and restore SharePoint self-post syncing
+
+### Maintenance
+
+* add isolated regression coverage, fix client lint failures, and document local checks
+
 ## [1.11.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.2...v1.11.3) (2026-09-27)
 
 

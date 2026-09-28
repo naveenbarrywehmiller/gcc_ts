@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 
-export default function SimpleListManager({ endpoint, title, fieldName = 'name', idLabel }) {
+export default function SimpleListManager({ endpoint, title, fieldName = 'name' }) {
   const toast = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,14 +12,13 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState('');
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     api.get(endpoint).then(res => {
       const key = Object.keys(res.data)[0];
       setItems(res.data[key] || []);
     }).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, []);
+  }, [toast, endpoint]);
+  useEffect(() => { load(); }, [load]);
 
   const handleSave = async () => {
     if (!name.trim()) { toast.error(`${fieldName} is required`); return; }

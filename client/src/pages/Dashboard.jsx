@@ -1,11 +1,11 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import {
-  Clock, Users, FolderKanban, ClipboardCheck, TrendingUp,
-  BarChart3, AlertTriangle, RotateCcw, Calendar, Wifi, UserCheck, Hash
+  Clock, FolderKanban, ClipboardCheck, TrendingUp,
+  BarChart3, RotateCcw, Calendar, UserCheck, Hash
 } from 'lucide-react';
 
 function getISOWeekInfo(date) {

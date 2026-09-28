@@ -490,18 +490,7 @@ function migrate() {
     CREATE INDEX IF NOT EXISTS idx_users_division ON users(division_id);
   `);
 
-  // --- Migration: ensure systemadmin exists ---
-  const sysAdminEmail = 'systemadmin@barry-wehmiller.com';
-  const sysAdminExists = db.prepare('SELECT id FROM users WHERE email = ?').get(sysAdminEmail);
-  if (!sysAdminExists) {
-    console.log('  → Creating default system admin account...');
-    const sysAdminHash = bcrypt.hashSync('systemadmin', 12);
-    // Use INSERT OR IGNORE so calling migrate() multiple times (e.g. from seed.js) is safe
-    db.prepare(`
-      INSERT OR IGNORE INTO users (name, email, password_hash, role)
-      VALUES (?, ?, ?, ?)
-    `).run('System Admin', sysAdminEmail, sysAdminHash, 'system admin');
-  }
+  require('./bootstrapAdmin').bootstrapAdmin(db);
 
   console.log('✅ Database migrations complete.');
 }

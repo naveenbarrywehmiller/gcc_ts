@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/toast';
 import Modal from './ui/Modal';
-import { Calendar, Filter, Clock, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Calendar, RotateCcw } from 'lucide-react';
 
-export default function TimesheetHistoryModal({
+export default function TimesheetHistoryModal(props) {
+  return props.isOpen ? <TimesheetHistoryContent key={props.initialUser?.id || 'assigned'} {...props} /> : null;
+}
+
+function TimesheetHistoryContent({
   isOpen,
   onClose,
   initialUser = null,
@@ -13,7 +17,7 @@ export default function TimesheetHistoryModal({
 }) {
   const toast = useToast();
   const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(initialUser ? initialUser.id : '');
   const [selectedStatus, setSelectedStatus] = useState('');
 
@@ -23,41 +27,23 @@ export default function TimesheetHistoryModal({
   const [recalling, setRecalling] = useState(false);
 
   // Fetch entries across all weeks
-  const fetchEntries = async (userId, statusVal) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (userId) {
-        params.append('user_id', userId);
-      } else {
-        params.append('assigned_only', 'true');
-      }
-      if (statusVal) {
-        params.append('status', statusVal);
-      }
-
-      const res = await api.get(`/admin-ownership/timesheet-history?${params.toString()}`);
-      setEntries(res.data.entries || []);
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to load timesheet history');
-      setEntries([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchEntries = useCallback((userId, statusVal) => {
+    const params = new URLSearchParams();
+    if (userId) params.append('user_id', userId);
+    else params.append('assigned_only', 'true');
+    if (statusVal) params.append('status', statusVal);
+    return api.get(`/admin-ownership/timesheet-history?${params}`)
+      .then(res => setEntries(res.data.entries || []))
+      .catch(err => {
+        toast.error(err.response?.data?.error || 'Failed to load timesheet history');
+        setEntries([]);
+      })
+      .finally(() => setLoading(false));
+  }, [toast]);
 
   useEffect(() => {
-    if (isOpen) {
-      const targetUserId = initialUser ? initialUser.id : '';
-      setSelectedUser(targetUserId);
-      setSelectedStatus('');
-      fetchEntries(targetUserId, '');
-    } else {
-      setEntries([]);
-      setRecallTarget(null);
-      setRecallComment('');
-    }
-  }, [isOpen, initialUser]);
+    fetchEntries(initialUser?.id || '', '');
+  }, [initialUser?.id, fetchEntries]);
 
   const totalHours = entries.reduce((acc, curr) => acc + (Number(curr.hours) || 0), 0);
 

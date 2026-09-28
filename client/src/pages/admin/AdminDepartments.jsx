@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Tag, X } from 'lucide-react';
 
@@ -21,17 +21,16 @@ export default function AdminDepartments() {
   const [editingOwnership, setEditingOwnership] = useState(null);
   const [editOwnershipLabel, setEditOwnershipLabel] = useState('');
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     api.get('/departments')
       .then(res => {
         setDepartments(res.data.departments || []);
       })
       .catch(() => toast.error('Failed to load departments'))
       .finally(() => setLoading(false));
-  };
+  }, [toast]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const handleSaveDept = async () => {
     if (!name.trim()) { toast.error('Name is required'); return; }

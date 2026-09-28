@@ -12,6 +12,9 @@ services:
       - PORT=3001
       - JWT_SECRET=${JWT_SECRET:-change-this-to-a-secure-random-string}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET to a strong random value}
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-}
+      - BOOTSTRAP_ADMIN_PASSWORD=${BOOTSTRAP_ADMIN_PASSWORD:-}
       - DB_PATH=/app/server/data/timesheet.db
       - COOKIE_SECURE=${COOKIE_SECURE:-false}
       - APP_BASE_URL=${APP_BASE_URL:-}

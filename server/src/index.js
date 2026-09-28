@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 const path = require('path');
 const config = require('./config/env');
 const { migrate } = require('./config/migrate');
@@ -61,13 +62,20 @@ const limiter = rateLimit({
   max: config.rateLimitMax,
   message: { error: 'Too many requests, please try again later' },
   keyGenerator: (req) => {
-    // Separate rate limits per user session, falling back to IP for unauthenticated routes
-    if (req.cookies && req.cookies.token) {
-      return req.cookies.token;
+    // Login attempts stay IP-limited even when a caller supplies a valid session.
+    if (!/^\/auth\/(login|ms-callback)\/?$/i.test(req.path)) {
+      const token = req.cookies?.token || req.headers.authorization?.replace(/^Bearer /, '');
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, config.jwtSecret);
+          if (Number.isSafeInteger(decoded.userId) && decoded.userId > 0) {
+            return `user:${decoded.userId}`;
+          }
+        } catch { /* Invalid and expired tokens use the IP bucket. */ }
+      }
     }
-    // Fallback to IP (trust proxy handles reverse proxies if configured)
-    return req.ip || req.connection.remoteAddress;
-  }
+    return req.ip;
+  },
 });
 app.use('/api/', limiter);
 

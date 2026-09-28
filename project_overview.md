@@ -220,4 +220,6 @@ cd server && npm run dev
 cd client && npm run dev
 ```
 
-Default login: `admin@company.com` / `admin123`
+For a new installation, configure `BOOTSTRAP_ADMIN_EMAIL` and a unique
+`BOOTSTRAP_ADMIN_PASSWORD` of at least 12 characters before the first startup.
+No default production login is created.

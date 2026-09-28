@@ -8,8 +8,16 @@ function seed() {
   // Run migrations first
   migrate();
 
-  // Check if already seeded (check the first user we insert — systemadmin)
-  const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('systemadmin@barry-wehmiller.com');
+  if (process.env.SEED_DEMO_DATA !== 'true') {
+    seedNewTablesIfEmpty();
+    return;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Demo users cannot be seeded in production');
+  }
+
+  // Check if already seeded (check the first demo user)
+  const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@company.com');
   if (existingAdmin) {
     console.log('⚠️  Database already seeded. Skipping.');
     // Still seed new tables if they're empty
@@ -81,7 +89,6 @@ function seed() {
   `);
 
   const seedUsers = db.transaction(() => {
-    insertUser.run('System Admin', 'systemadmin@barry-wehmiller.com', bcrypt.hashSync('systemadmin', 12), 'system admin', 'IT', 'Core', 'Dedicated', getDivisionId('IT'), itDeptId, dedicatedId);
     insertUser.run('Default Admin', 'admin@company.com', adminHash, 'admin', 'IT', 'Core', 'Dedicated', getDivisionId('IT'), itDeptId, dedicatedId);
     insertUser.run('John Smith', 'john.smith@company.com', employeeHash, 'employee', 'Engineering', 'Core', 'Dedicated', getDivisionId('Engineering'), mechDeptId, dedicatedId);
     insertUser.run('Jane Doe', 'jane.doe@company.com', employeeHash, 'employee', 'Engineering', 'Support', 'Flex', getDivisionId('Engineering'), elecDeptId, flexId);
@@ -165,7 +172,6 @@ function seed() {
   seedHolidays();
 
   console.log('✅ Database seeded successfully.');
-  console.log('   System Admin: systemadmin@barry-wehmiller.com / systemadmin');
   console.log('   Admin: admin@company.com / admin123');
   console.log('   Employees: john.smith@company.com / password123');
 }

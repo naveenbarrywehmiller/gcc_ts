@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../contexts/toast';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import {
-  Shield, Search, Filter, ChevronLeft, ChevronRight, Clock,
-  User, FileText, Calendar, RefreshCw
+  Shield, Search, ChevronLeft, ChevronRight, Clock,
+  User, FileText, RefreshCw
 } from 'lucide-react';
 
 const ACTION_COLORS = {
@@ -62,8 +62,7 @@ export default function AuditLog() {
     }).catch(() => {});
   }, []);
 
-  const loadLogs = (page = 1) => {
-    setLoading(true);
+  const loadLogs = useCallback((page = 1) => {
     let params = `page=${page}&limit=${pagination.limit}`;
     if (actionFilter) params += `&action=${actionFilter}`;
     if (userFilter) params += `&user_id=${userFilter}`;
@@ -78,9 +77,9 @@ export default function AuditLog() {
       })
       .catch(() => toast.error('Failed to load audit logs'))
       .finally(() => setLoading(false));
-  };
+  }, [toast, pagination.limit, actionFilter, userFilter, searchQuery, fromDate, toDate]);
 
-  useEffect(() => { loadLogs(1); }, [actionFilter, userFilter, fromDate, toDate]);
+  useEffect(() => { loadLogs(1); }, [loadLogs]);
 
   const handleSearch = (e) => {
     e.preventDefault();

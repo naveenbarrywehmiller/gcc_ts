@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import { Plus, Trash2, Calendar as CalIcon } from 'lucide-react';
 
@@ -12,11 +12,10 @@ export default function AdminHolidays() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ date: '', name: '' });
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     api.get(`/holidays?year=${year}`).then(res => setHolidays(res.data.holidays)).catch(() => toast.error('Failed')).finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, [year]);
+  }, [toast, year]);
+  useEffect(() => { load(); }, [load]);
 
   const handleSave = async () => {
     if (!form.date || !form.name) { toast.error('Date and name are required'); return; }

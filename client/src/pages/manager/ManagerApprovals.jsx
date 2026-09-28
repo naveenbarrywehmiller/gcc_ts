@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
-import { Check, X, Search, ChevronDown, ChevronRight, Clock, AlertCircle } from 'lucide-react';
+import { useToast } from '../../contexts/toast';
+import { Check, X, Search, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 const formatDate = (dateStr) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
@@ -78,7 +78,7 @@ export default function ManagerApprovals() {
       try {
         const res = await api.get(`/manager/week-details/${userId}/${year}/${week}`);
         setExpandedUsers(prev => ({ ...prev, [key]: res.data.entries }));
-      } catch (err) {
+      } catch {
         toast.error('Failed to load details');
       }
     }

@@ -17,15 +17,27 @@
  */
 
 const http = require('http');
-const app = require('../server/src/index');
+process.env.BOOTSTRAP_ADMIN_EMAIL = '';
+process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 const config = require('../server/src/config/env');
+config.dbPath = ':memory:';
+config.enableSharepointSync = false;
+config.enablePowerAutomate = false;
+const app = require('../server/src/index');
 const db = require('../server/src/config/db');
 const jwt = require('../server/node_modules/jsonwebtoken');
 
 let server;
 let baseUrl;
-const TEST_PORT = 3999;
+const TEST_PORT = 0;
 const TEST_API_KEY = 'test-powerbi-secret-key-12345';
+
+// Deterministic fixtures prevent data-dependent checks from being silently skipped.
+const bcrypt = require('../server/node_modules/bcryptjs');
+const testPassword = 'PowerBI-test-password-only';
+const insertUser = db.prepare('INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)');
+insertUser.run('Test Admin', 'admin@test.invalid', bcrypt.hashSync(testPassword, 4), 'system admin');
+insertUser.run('Test Employee', 'employee@test.invalid', bcrypt.hashSync(testPassword, 4), 'employee');
 
 // Set test API key in config
 config.powerBiApiKey = TEST_API_KEY;
@@ -93,7 +105,7 @@ async function runTests() {
   // Start HTTP server for testing
   await new Promise((resolve) => {
     server = app.listen(TEST_PORT, () => {
-      baseUrl = `http://localhost:${TEST_PORT}`;
+      baseUrl = `http://localhost:${server.address().port}`;
       resolve();
     });
   });
@@ -390,7 +402,7 @@ async function runTests() {
 
     // 7.2 Regular login API continues to work
     const loginRes = await request('POST', '/api/auth/login', {
-      body: { email: 'systemadmin@barry-wehmiller.com', password: 'systemadmin' },
+      body: { email: 'admin@test.invalid', password: testPassword },
     });
     assert(loginRes.status === 200, 'Standard authentication /api/auth/login succeeds for admin');
 
@@ -401,6 +413,7 @@ async function runTests() {
     if (server) {
       server.close();
     }
+    db.close();
   }
 
   if (failedTests > 0) {

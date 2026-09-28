@@ -1,6 +1,6 @@
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { Sun, Moon, LogOut, User } from 'lucide-react';
+import { useAuth } from '../../contexts/auth';
+import { useTheme } from '../../contexts/theme';
+import { Sun, Moon, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 

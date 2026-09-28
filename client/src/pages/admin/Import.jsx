@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { useToast } from '../../contexts/toast';
+import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function AdminImport() {
   const toast = useToast();

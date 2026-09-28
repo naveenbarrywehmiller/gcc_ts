@@ -1,11 +1,11 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/toast';
 import { LoadingSkeleton } from '../components/ui/Skeleton';
 import {
   BarChart3, Download, ChevronDown, ChevronRight, Users, FolderKanban,
-  Calendar, Search, Filter, FileText, Clock
+  Calendar, Filter, FileText, Clock
 } from 'lucide-react';
 
 // ── Date helpers ────────────────────────────────────────────────────────────
@@ -60,14 +60,7 @@ function formatDateRange(startDate, endDate) {
   return `${s.toLocaleDateString('en-US', opts)} — ${e.toLocaleDateString('en-US', opts)}`;
 }
 
-function getISOWeekInfo(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return { week: weekNo, year: d.getUTCFullYear() };
-}
+
 
 // ── Main Reports component ──────────────────────────────────────────────────
 
@@ -75,21 +68,17 @@ export default function Reports() {
   const toast = useToast();
   const [tab, setTab] = useState('weekly');
   const [preset, setPreset] = useState('this-month');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(() => getPresetDates('this-month').startDate);
+  const [endDate, setEndDate] = useState(() => getPresetDates('this-month').endDate);
   const [divisionFilter, setDivisionFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [userFilter, setUserFilter] = useState('');
 
-  // Initialize dates from preset
-  useEffect(() => {
-    if (preset === 'custom') return;
-    const dates = getPresetDates(preset);
-    if (dates) {
-      setStartDate(dates.startDate);
-      setEndDate(dates.endDate);
-    }
-  }, [preset]);
+  const selectPreset = (value) => {
+    setPreset(value);
+    const dates = getPresetDates(value);
+    if (dates) { setStartDate(dates.startDate); setEndDate(dates.endDate); }
+  };
 
   const { data: filterData } = useQuery({
     queryKey: ['report-filters'],
@@ -231,7 +220,7 @@ export default function Reports() {
           {presets.map(p => (
             <button
               key={p.id}
-              onClick={() => setPreset(p.id)}
+              onClick={() => selectPreset(p.id)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                 preset === p.id
                   ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm'
@@ -442,7 +431,7 @@ function ProjectHoursReport({ data, startDate, endDate }) {
 
   const collapseAll = () => setExpanded({});
 
-  const anyExpanded = Object.values(expanded).some(Boolean);
+
 
   return (
     <div className="space-y-4">

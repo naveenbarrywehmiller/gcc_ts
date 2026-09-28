@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
+const { validateRoleAssignment } = require('../utils/userRoles');
+
 const router = express.Router();
 
 /**
@@ -206,6 +208,9 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
+  const roleError = validateRoleAssignment(req.user, role || 'employee');
+  if (roleError) return res.status(roleError.status).json({ error: roleError.error });
+
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
   if (existing) {
     return res.status(409).json({ error: 'Email already exists' });
@@ -258,6 +263,11 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 
   if (existing.role === 'system admin' && req.user.role !== 'system admin') {
     return res.status(403).json({ error: 'Only a system admin can modify another system admin account' });
+  }
+
+  if (role !== undefined) {
+    const roleError = validateRoleAssignment(req.user, role);
+    if (roleError) return res.status(roleError.status).json({ error: roleError.error });
   }
 
   if (email) {

@@ -1,18 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/toast';
+import { useAuth } from '../../contexts/auth';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import TimesheetHistoryModal from '../../components/TimesheetHistoryModal';
-import { Plus, Search, Edit2, Trash2, UserCheck, UserX, Dice5, Eye, EyeOff, Copy, Key, Building2, AlertTriangle, Power, UserPlus, UserMinus, History } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, UserCheck, UserX, Dice5, Eye, EyeOff, Copy, Building2, AlertTriangle, Power, UserPlus, UserMinus, History } from 'lucide-react';
 
 export default function AdminUsers() {
   const toast = useToast();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [divisions, setDivisions] = useState([]);
-  const [subdivisions, setSubdivisions] = useState([]);
+  const [, setSubdivisions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [supportingCategories, setSupportingCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,8 +59,7 @@ export default function AdminUsers() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyUser, setHistoryUser] = useState(null);
 
-  const loadData = () => {
-    setLoading(true);
+  const loadData = useCallback(() => {
     
     const params = {
       search,
@@ -86,7 +85,7 @@ export default function AdminUsers() {
       setDepartments(deptRes.data.departments);
       setSupportingCategories(scRes.data.categories);
     }).catch(() => toast.error('Failed to load data')).finally(() => setLoading(false));
-  };
+  }, [toast, search, filters, sortBy, sortDir]);
 
   useEffect(() => { 
     // Add debounce for search typing
@@ -94,7 +93,7 @@ export default function AdminUsers() {
       loadData(); 
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, filters, sortBy, sortDir]);
+  }, [loadData]);
 
   const activeCount = users.filter(u => u.active).length;
   const inactiveCount = users.length - activeCount;

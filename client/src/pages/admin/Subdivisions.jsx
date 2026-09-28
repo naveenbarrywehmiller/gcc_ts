@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
@@ -12,28 +12,22 @@ export default function AdminSubdivisions() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterDivisionId, setFilterDivisionId] = useState('');
-  
+
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', division_id: '' });
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [subRes, divRes] = await Promise.all([
-        api.get('/subdivisions'),
-        api.get('/divisions')
-      ]);
-      setSubdivisions(subRes.data.subdivisions);
-      setDivisions(divRes.data.divisions);
-    } catch (err) {
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadData = useCallback(() => {
+    return Promise.all([api.get('/subdivisions'), api.get('/divisions')])
+      .then(([subRes, divRes]) => {
+        setSubdivisions(subRes.data.subdivisions);
+        setDivisions(divRes.data.divisions);
+      })
+      .catch(() => toast.error('Failed to load data'))
+      .finally(() => setLoading(false));
+  }, [toast]);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const filtered = subdivisions.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
@@ -46,7 +40,7 @@ export default function AdminSubdivisions() {
     setForm({ name: '', division_id: filterDivisionId || '' }); 
     setShowModal(true); 
   };
-  
+
   const openEdit = (s) => { 
     setEditing(s); 
     setForm({ name: s.name, division_id: s.division_id }); 
@@ -80,7 +74,7 @@ export default function AdminSubdivisions() {
       await api.delete(`/subdivisions/${id}`); 
       toast.success('Subdivision deactivated'); 
       loadData(); 
-    } catch (err) { 
+    } catch {
       toast.error('Failed to deactivate'); 
     }
   };

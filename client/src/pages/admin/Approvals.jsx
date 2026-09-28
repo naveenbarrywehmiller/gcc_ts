@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/toast';
+import { useAuth } from '../../contexts/auth';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import TimesheetHistoryModal from '../../components/TimesheetHistoryModal';
@@ -77,14 +77,13 @@ export default function AdminApprovals() {
     setShowHistoryModal(true);
   };
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     api.get(`/timesheets/summary?week=${week}&year=${year}`)
       .then(res => setSummaries(res.data.summaries))
       .catch(() => toast.error('Failed to load'))
       .finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, [week, year]);
+  }, [toast, week, year]);
+  useEffect(() => { load(); }, [load]);
 
   // Load user detail entries when expanded
   const toggleExpand = async (userId) => {

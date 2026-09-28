@@ -1,12 +1,15 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { loginRequest } from '../services/msal';
 import api from '../services/api';
 
-const AuthContext = createContext(null);
+import { AuthContext } from './auth';
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('user') || 'null'); }
+    catch { return null; }
+  });
   const [loading, setLoading] = useState(true);
   const [msalConfig, setMsalConfig] = useState({ enabled: false });
   
@@ -18,12 +21,6 @@ export function AuthProvider({ children }) {
     api.get('/auth/ms-config')
       .then(res => setMsalConfig(res.data))
       .catch(() => setMsalConfig({ enabled: false }));
-
-    // Restore cached user profile for instant render
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try { setUser(JSON.parse(savedUser)); } catch {}
-    }
 
     // Validate session cookie with the server
     api.get('/auth/me')
@@ -100,9 +97,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
-};

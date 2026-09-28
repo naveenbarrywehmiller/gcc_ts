@@ -210,8 +210,28 @@ cd client && npm run dev
 
 Open **http://localhost:5173**
 
-### Default Admin Credentials
-> Set in `server/src/config/seed.js` — change immediately after first login.
+### First System Admin
+
+Before the first `npm run setup` or server startup, set `BOOTSTRAP_ADMIN_EMAIL`
+and `BOOTSTRAP_ADMIN_PASSWORD` in `server/.env`. Use a unique password of at least
+12 characters. For Docker, supply these variables through the container environment.
+Startup provisions this account only when no system admin exists; there are no
+default login credentials. Remove the bootstrap variables after provisioning.
+
+Existing accounts and passwords are preserved. If an older installation still
+uses the former default system-admin password, change it before exposing the app.
+Renaming an existing system admin does not create another account on restart.
+
+`npm run setup` seeds reference data. Demo users require `SEED_DEMO_DATA=true`
+and are refused in production.
+
+### Local Checks
+
+Run `npm run lint`, `npm run build`, and `npm test` from the repository root.
+Tests use isolated in-memory databases and explicit test users; they do not use
+or alter the configured application database. The regression suite covers role
+assignment, approval scope, rate limits, daily totals, bootstrap provisioning,
+SharePoint status dispatch, and client save behavior.
 
 ---
 
@@ -345,6 +365,8 @@ services:
       - CORS_ORIGIN=*
       - JWT_SECRET=replace_with_a_secure_random_key_64_characters
       - JWT_REFRESH_SECRET=replace_with_another_secure_random_key_64_characters
+      - BOOTSTRAP_ADMIN_EMAIL=admin@example.com
+      - BOOTSTRAP_ADMIN_PASSWORD=replace_with_a_unique_password_12_chars_or_longer
     volumes:
       - /opt/gcc_ts/data:/app/server/data
       - /opt/gcc_ts/uploads:/app/server/uploads

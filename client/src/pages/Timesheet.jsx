@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import { useToast } from '../contexts/ToastContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/toast';
+import { useAuth } from '../contexts/auth';
 import { TimesheetSkeleton } from '../components/ui/Skeleton';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import Modal from '../components/ui/Modal';
@@ -52,7 +52,7 @@ export default function Timesheet() {
   const hasAssignedAdmin = !!adminData?.admin;
   const canSelfPost = (isAdmin || user?.role === 'admin') && !hasAssignedAdmin;
   const [currentWeekInfo, setCurrentWeekInfo] = useState(() => getISOWeekInfo(new Date()));
-  const [entries, setEntries] = useState([]);
+  const [loadedData, setLoadedData] = useState(null);
   
   // Masters
   const [projects, setProjects] = useState([]);
@@ -83,6 +83,8 @@ export default function Timesheet() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const calendarRef = useRef(null);
   const saveTimerRef = useRef(null);
+  const saveCallbackRef = useRef(null);
+  const saveQueueRef = useRef(Promise.resolve());
   const dirtyRef = useRef(new Set()); // tracks changed (rowIndex,date) pairs for delta auto-save
 
   const { week, year } = currentWeekInfo;
@@ -145,9 +147,8 @@ export default function Timesheet() {
     }
   }, [isError, toast]);
 
-  useEffect(() => {
-    if (fetchedData) {
-      setEntries(fetchedData.entries);
+  if (fetchedData && fetchedData !== loadedData) {
+      setLoadedData(fetchedData);
       setProjects(fetchedData.projects);
       setTasks(fetchedData.tasks);
       setDivisions(fetchedData.divisions);
@@ -191,17 +192,18 @@ export default function Timesheet() {
         }
       });
       setRows(Object.values(rowMap));
-    }
-  }, [fetchedData]);
+  }
 
   // Auto-save debounce (60s — delta-only for 500+ employee scale)
-  const scheduleAutoSave = useCallback(() => {
+  const scheduleAutoSave = useCallback((delay = 60000) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       if (dirtyRef.current.size === 0) return;
-      handleSave(true);
-    }, 60000);
-  }, [rows]);
+      saveCallbackRef.current?.(true).catch(() => {});
+    }, delay);
+  }, []);
+
+  useEffect(() => () => clearTimeout(saveTimerRef.current), []);
 
   // Weekend/holiday warning tracking (per date, shown once per session)
   const warnedDatesRef = useRef(new Set());
@@ -271,26 +273,6 @@ export default function Timesheet() {
     return task ? task.requires_project === 1 : true;
   }, [newRowTask, tasks]);
 
-  // Reset cascades
-  useEffect(() => {
-    setNewRowSubdivision(null);
-    setNewRowProject(null);
-  }, [newRowDivision]);
-
-  useEffect(() => {
-    setNewRowProject(null);
-  }, [newRowSubdivision]);
-
-  // When task category changes, reset project fields if not needed
-  useEffect(() => {
-    if (!selectedTaskRequiresProject) {
-      setNewRowDivision(null);
-      setNewRowSubdivision(null);
-      setNewRowProject(null);
-      setNewRowProjectDesc('');
-    }
-  }, [newRowTask, selectedTaskRequiresProject]);
-
   // Cumulative hours for selected project (client-side calculation)
   const cumulativeHoursForProject = useMemo(() => {
     if (!newRowProject) return 0;
@@ -356,7 +338,7 @@ export default function Timesheet() {
       if (isChangedKey && Object.keys(oldRow.hours || {}).length > 0) {
         // Remove old entries from DB by sending hours: 0
         const deleteOldEntries = Object.entries(oldRow.hours)
-          .filter(([_, h]) => h > 0)
+          .filter(([, h]) => h > 0)
           .map(([date]) => ({
             project_id: oldRow.project_id,
             task_id: oldRow.task_id,
@@ -398,7 +380,7 @@ export default function Timesheet() {
       resetRowForm();
       setShowAddRow(false);
       toast.success('Row updated');
-      setTimeout(() => handleSave(true), 150);
+      scheduleAutoSave(150);
       return;
     }
 
@@ -434,7 +416,7 @@ export default function Timesheet() {
     if (rows[index].status === 'submitted') { toast.error('Cannot remove submitted entries'); return; }
     const row = rows[index];
     const deleteEntries = Object.entries(row.hours || {})
-      .filter(([_, h]) => h > 0)
+      .filter(([, h]) => h > 0)
       .map(([date]) => ({
         project_id: row.project_id,
         task_id: row.task_id,
@@ -477,16 +459,18 @@ export default function Timesheet() {
     setSaving(true);
     try {
       const isAutoSave = silent && !forceAll; // only delta if auto-save AND not forced
-      const dirtyKeys = isAutoSave ? dirtyRef.current : null;
+      const pendingKeys = dirtyRef.current;
+      const dirtyKeys = isAutoSave ? pendingKeys : null;
       const allEntries = [];
 
       rows.forEach((row, rowIndex) => {
+        if (row.status === 'submitted' || row.status === 'approved') return;
         Object.entries(row.hours || {}).forEach(([date, hours]) => {
           const cellKey = `${rowIndex}:${date}`;
           // Auto-save: only send cells that changed
           if (isAutoSave && !dirtyKeys.has(cellKey)) return;
           const numHours = parseFloat(hours) || 0;
-          if (numHours > 0) {
+          if (numHours >= 0) {
             allEntries.push({
               project_id: row.project_id,
               task_id: row.task_id,
@@ -502,10 +486,20 @@ export default function Timesheet() {
         });
       });
 
-      if (allEntries.length > 0) {
-        await api.post('/timesheets/batch', { entries: allEntries });
+      // Edits made during the request go into a new set and remain dirty.
+      dirtyRef.current = new Set();
+      const saveRequest = saveQueueRef.current.catch(() => {}).then(async () => {
+        if (allEntries.length > 0) {
+          await api.post('/timesheets/batch', { entries: allEntries });
+        }
+      });
+      saveQueueRef.current = saveRequest;
+      try {
+        await saveRequest;
+      } catch (error) {
+        pendingKeys.forEach(key => dirtyRef.current.add(key));
+        throw error;
       }
-      dirtyRef.current.clear();
       if (!silent) toast.success('Timesheet saved');
     } catch (err) {
       if (err.response?.data?.error) {
@@ -518,6 +512,11 @@ export default function Timesheet() {
       setSaving(false);
     }
   };
+
+  // Timers must call the callback from the latest committed render.
+  useEffect(() => {
+    saveCallbackRef.current = handleSave;
+  });
 
   // Admin self-post timesheet (allowed if no other admin assigned)
   const handlePost = async () => {
@@ -1208,7 +1207,12 @@ export default function Timesheet() {
             label="Task Category *"
             options={tasks.map(t => ({ value: t.id, label: `${t.task_category}${t.classification ? ` (${t.classification})` : ''}` }))}
             value={newRowTask}
-            onChange={setNewRowTask}
+            onChange={value => {
+              setNewRowTask(value);
+              if (tasks.find(task => task.id === value)?.requires_project === 0) {
+                setNewRowDivision(null); setNewRowSubdivision(null); setNewRowProject(null); setNewRowProjectDesc('');
+              }
+            }}
             placeholder="Select a task category..."
             id="add-row-task-category"
           />
@@ -1228,7 +1232,7 @@ export default function Timesheet() {
                 label="Division"
                 options={divisions.map(d => ({ value: d.id, label: d.name }))}
                 value={newRowDivision}
-                onChange={setNewRowDivision}
+                onChange={value => { setNewRowDivision(value); setNewRowSubdivision(null); setNewRowProject(null); }}
                 placeholder="Search and select a division..."
                 clearable
                 id="add-row-division"
@@ -1237,7 +1241,7 @@ export default function Timesheet() {
                 label="Subdivision (optional)"
                 options={modalSubdivisionOptions.map(s => ({ value: s.id, label: s.name }))}
                 value={newRowSubdivision}
-                onChange={setNewRowSubdivision}
+                onChange={value => { setNewRowSubdivision(value); setNewRowProject(null); }}
                 placeholder={!newRowDivision ? "Select a division first..." : "Search and select a subdivision..."}
                 disabled={!newRowDivision || modalSubdivisionOptions.length === 0}
                 clearable

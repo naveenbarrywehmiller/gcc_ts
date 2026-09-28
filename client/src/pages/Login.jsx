@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
-import { Timer, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/auth';
+import { useToast } from '../contexts/toast';
+import {  Eye, EyeOff, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 
 export default function Login() {

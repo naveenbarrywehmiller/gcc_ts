@@ -5,7 +5,19 @@ const { authenticate, authorize } = require('../middleware/auth');
 const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
 const timesheetRepo = require('../repositories/TimesheetRepository');
 
+const sp = require('../services/sharepoint');
+const { canReviewTimesheet } = require('../utils/timesheetPermissions');
+
 const router = express.Router();
+
+function assertDailyHours(userId, dates) {
+  const total = db.prepare('SELECT COALESCE(SUM(hours), 0) AS hours FROM timesheets WHERE user_id = ? AND work_date = ?');
+  for (const date of new Set(dates)) {
+    if (total.get(userId, date).hours > 24) {
+      throw Object.assign(new Error('Total hours for ' + date + ' would exceed 24'), { status: 400 });
+    }
+  }
+}
 
 /**
  * Check if a user is allowed to log time against a given division.
@@ -58,7 +70,7 @@ router.get('/', authenticate, (req, res) => {
   const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
 
   const entries = db.prepare(`
-    SELECT t.*, 
+    SELECT t.*,
            p.project_code, p.project_name, p.customer_name, p.activity as project_activity,
            p.division_id as project_division_id, p.subdivision_id as project_subdivision_id,
            tk.classification, tk.task_category, tk.task_description as task_desc, tk.requires_project,
@@ -83,7 +95,7 @@ router.get('/all', authenticate, authorize('admin'), (req, res) => {
   const { week, year, month, user_id, status, division } = req.query;
 
   let query = `
-    SELECT t.*, 
+    SELECT t.*,
            u.name as user_name, u.email as user_email, u.division as user_division,
            p.project_code, p.project_name,
            tk.task_category,
@@ -131,7 +143,7 @@ router.get('/summary', authenticate, authorize('admin'), (req, res) => {
   const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
 
   let query = `
-    SELECT 
+    SELECT
       u.id as user_id, u.name as user_name, u.email, u.division,
       u.employee_id,
       uaa.admin_id as assigned_admin_id,
@@ -179,7 +191,7 @@ router.post('/', authenticate, (req, res) => {
     return res.status(400).json({ error: 'Either project or task category is required' });
   }
 
-  if (hours < 0 || hours > 24) {
+  if (typeof hours !== 'number' || !Number.isFinite(hours) || hours < 0 || hours > 24) {
     return res.status(400).json({ error: 'Hours must be between 0 and 24' });
   }
 
@@ -199,8 +211,8 @@ router.post('/', authenticate, (req, res) => {
 
   // Check total hours for the day won't exceed 24
   const dayTotalQuery = project_id
-    ? 'SELECT COALESCE(SUM(hours), 0) as total FROM timesheets WHERE user_id = ? AND work_date = ? AND NOT (project_id = ? AND COALESCE(task_id, 0) = ?)'
-    : 'SELECT COALESCE(SUM(hours), 0) as total FROM timesheets WHERE user_id = ? AND work_date = ? AND NOT (project_id IS NULL AND task_id = ?)';
+    ? 'SELECT COALESCE(SUM(hours), 0) as total FROM timesheets WHERE user_id = ? AND work_date = ? AND NOT (COALESCE(project_id, 0) = ? AND COALESCE(task_id, 0) = ?)'
+    : 'SELECT COALESCE(SUM(hours), 0) as total FROM timesheets WHERE user_id = ? AND work_date = ? AND NOT (project_id IS NULL AND COALESCE(task_id, 0) = ?)';
   const dayTotalParams = project_id
     ? [userId, work_date, project_id, task_id || 0]
     : [userId, work_date, task_id];
@@ -239,11 +251,11 @@ router.post('/', authenticate, (req, res) => {
 
     // Update existing
     db.prepare(`
-      UPDATE timesheets SET task_id = ?, hours = ?, description = ?, 
+      UPDATE timesheets SET task_id = ?, hours = ?, description = ?,
         week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
         ownership_id = ?, billable = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(task_id || null, hours, description || null, week, weekYear, 
+    `).run(task_id || null, hours, description || null, week, weekYear,
            effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, existing.id);
 
     const entry = db.prepare(`
@@ -264,7 +276,7 @@ router.post('/', authenticate, (req, res) => {
 
   // Create new
   const result = db.prepare(`
-    INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year, 
+    INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year,
                             division_id, subdivision_id, project_description, ownership_id, billable, status)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
   `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
@@ -297,9 +309,9 @@ router.post('/batch', authenticate, (req, res) => {
     const results = [];
     for (const entry of entries) {
       const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = entry;
-      if (!work_date || hours === undefined) continue;
-      if (!project_id && !task_id) continue; // Need at least one identifier
-      if (hours < 0 || hours > 24) continue;
+      if (!work_date || (!project_id && !task_id) || typeof hours !== 'number' || !Number.isFinite(hours) || hours < 0 || hours > 24) {
+        throw Object.assign(new Error('Each entry requires a date, project or task, and numeric hours between 0 and 24'), { status: 400 });
+      }
 
       // Enforce Flex/Dedicated team logic (only when project is specified)
       let effectiveDivisionId = null;
@@ -307,7 +319,7 @@ router.post('/batch', authenticate, (req, res) => {
         effectiveDivisionId = division_id || db.prepare('SELECT division_id FROM projects WHERE id = ?').get(project_id)?.division_id;
         if (effectiveDivisionId) {
           const access = checkDivisionAccess(userId, effectiveDivisionId);
-          if (!access.allowed) continue; // Skip entries that violate division access
+          if (!access.allowed) throw Object.assign(new Error(access.reason), { status: 403 });
         }
       }
 
@@ -326,7 +338,9 @@ router.post('/batch', authenticate, (req, res) => {
       }
 
       if (existing) {
-        if (existing.status === 'approved' || existing.status === 'submitted') continue;
+        if (existing.status === 'approved' || existing.status === 'submitted') {
+          throw Object.assign(new Error('Cannot edit approved or submitted entries'), { status: 400 });
+        }
         if (hours === 0) {
           // Delete zero-hour entries
           db.prepare('DELETE FROM timesheets WHERE id = ?').run(existing.id);
@@ -335,7 +349,7 @@ router.post('/batch', authenticate, (req, res) => {
           const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
 
           db.prepare(`
-            UPDATE timesheets SET task_id = ?, hours = ?, description = ?, 
+            UPDATE timesheets SET task_id = ?, hours = ?, description = ?,
               week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
               ownership_id = ?, billable = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
@@ -347,7 +361,7 @@ router.post('/batch', authenticate, (req, res) => {
         const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
 
         db.prepare(`
-          INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year, 
+          INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year,
                                   division_id, subdivision_id, project_description, ownership_id, billable, status)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
         `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
@@ -355,6 +369,7 @@ router.post('/batch', authenticate, (req, res) => {
       }
       results.push({ project_id, task_id, work_date, hours, status: 'saved' });
     }
+    assertDailyHours(userId, entries.map(entry => entry.work_date));
     return results;
   });
 
@@ -395,7 +410,7 @@ router.post('/submit', authenticate, async (req, res) => {
   const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
 
   const drafts = db.prepare(`
-    SELECT COUNT(*) as count, SUM(hours) as total_hours FROM timesheets 
+    SELECT COUNT(*) as count, SUM(hours) as total_hours FROM timesheets
     WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('draft', 'rejected', 'recalled')
   `).get(userId, startDate, endDate);
 
@@ -413,7 +428,7 @@ router.post('/submit', authenticate, async (req, res) => {
   // Trigger Power Automate Webhook if enabled
   if (config.enablePowerAutomate && config.powerAutomateWebhookUrl) {
     const user = db.prepare('SELECT name, email FROM users WHERE id = ?').get(userId);
-    
+
     // Fire and forget
     fetch(config.powerAutomateWebhookUrl, {
       method: 'POST',
@@ -437,7 +452,7 @@ router.post('/submit', authenticate, async (req, res) => {
 });
 
 // POST /api/timesheets/post - Admin: Self-post timesheet directly (if no other admin assigned)
-router.post('/post', authenticate, authorize('admin'), async (req, res) => {
+router.post('/post', authenticate, authorize('admin'), (req, res) => {
   const { week, year, comment, entries: incomingEntries } = req.body;
   const userId = req.user.id;
 
@@ -447,9 +462,9 @@ router.post('/post', authenticate, authorize('admin'), async (req, res) => {
 
   // Check if another admin is assigned to this admin
   const assignment = db.prepare(`
-    SELECT uaa.admin_id, u.name as admin_name 
-    FROM user_admin_assignments uaa 
-    JOIN users u ON uaa.admin_id = u.id 
+    SELECT uaa.admin_id, u.name as admin_name
+    FROM user_admin_assignments uaa
+    JOIN users u ON uaa.admin_id = u.id
     WHERE uaa.user_id = ?
   `).get(userId);
 
@@ -461,65 +476,72 @@ router.post('/post', authenticate, authorize('admin'), async (req, res) => {
 
   const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
 
-  // If client provided entries directly in body, save and approve them
-  if (incomingEntries && Array.isArray(incomingEntries) && incomingEntries.length > 0) {
-    for (const entry of incomingEntries) {
-      const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = entry;
-      if (!work_date || hours === undefined) continue;
-      const numHours = parseFloat(hours) || 0;
-      if (numHours < 0 || numHours > 24) continue;
-      if (numHours === 0) continue;
+  const approved = db.transaction(() => {
+    // If client provided entries directly in body, save and approve them
+    if (incomingEntries && Array.isArray(incomingEntries) && incomingEntries.length > 0) {
+      for (const entry of incomingEntries) {
+        const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = entry;
+        if (!work_date || work_date < startDate || work_date > endDate || (!project_id && !task_id) || typeof hours !== 'number' || !Number.isFinite(hours) || hours < 0 || hours > 24) {
+          throw Object.assign(new Error('Invalid entry or entry outside the requested week'), { status: 400 });
+        }
+        const numHours = hours;
+        if (numHours === 0) continue;
 
-      const { week: w, year: y } = getISOWeekNumber(work_date);
-      let existing;
-      if (project_id) {
-        existing = db.prepare(
-          'SELECT id, status FROM timesheets WHERE user_id = ? AND project_id = ? AND work_date = ? AND COALESCE(task_id, 0) = ?'
-        ).get(userId, project_id, work_date, task_id || 0);
-      } else {
-        existing = db.prepare(
-          'SELECT id, status FROM timesheets WHERE user_id = ? AND project_id IS NULL AND task_id = ? AND work_date = ?'
-        ).get(userId, task_id, work_date);
-      }
+        const { week: w, year: y } = getISOWeekNumber(work_date);
+        let existing;
+        if (project_id) {
+          existing = db.prepare(
+            'SELECT id, status FROM timesheets WHERE user_id = ? AND project_id = ? AND work_date = ? AND COALESCE(task_id, 0) = ?'
+          ).get(userId, project_id, work_date, task_id || 0);
+        } else {
+          existing = db.prepare(
+            'SELECT id, status FROM timesheets WHERE user_id = ? AND project_id IS NULL AND task_id = ? AND work_date = ?'
+          ).get(userId, task_id, work_date);
+        }
 
-      const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
-      const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+        const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
+        const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
 
-      if (existing) {
-        db.prepare(`
-          UPDATE timesheets SET task_id = ?, hours = ?, description = ?, 
-            week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-            ownership_id = ?, billable = ?, status = 'approved', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
-          WHERE id = ?
-        `).run(task_id || null, numHours, description || null, w, y,
-               division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, comment || 'Self-posted by admin', existing.id);
-      } else {
-        db.prepare(`
-          INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year, 
-                                  division_id, subdivision_id, project_description, ownership_id, billable, status, admin_comment)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
-        `).run(userId, project_id || null, task_id || null, work_date, numHours, description || null, w, y,
-               division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, comment || 'Self-posted by admin');
+        if (existing) {
+          db.prepare(`
+            UPDATE timesheets SET task_id = ?, hours = ?, description = ?,
+              week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
+              ownership_id = ?, billable = ?, status = 'approved', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).run(task_id || null, numHours, description || null, w, y,
+                 division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, comment || 'Self-posted by admin', existing.id);
+        } else {
+          db.prepare(`
+            INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year,
+                                    division_id, subdivision_id, project_description, ownership_id, billable, status, admin_comment)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
+          `).run(userId, project_id || null, task_id || null, work_date, numHours, description || null, w, y,
+                 division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, comment || 'Self-posted by admin');
+        }
       }
     }
-  }
 
-  // Also approve any existing draft, submitted, rejected, or recalled entries for this week in DB
-  db.prepare(`
-    UPDATE timesheets 
-    SET status = 'approved', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('draft', 'submitted', 'rejected', 'recalled')
-  `).run(comment || 'Self-posted by admin', userId, startDate, endDate);
+    // Also approve any existing draft, submitted, rejected, or recalled entries for this week in DB
+    db.prepare(`
+      UPDATE timesheets
+      SET status = 'approved', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('draft', 'submitted', 'rejected', 'recalled')
+    `).run(comment || 'Self-posted by admin', userId, startDate, endDate);
 
-  // Check that we have at least one approved entry for this week
-  const approved = db.prepare(`
-    SELECT COUNT(*) as count, SUM(hours) as total_hours FROM timesheets 
-    WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status = 'approved'
-  `).get(userId, startDate, endDate);
+    assertDailyHours(userId, db.prepare('SELECT DISTINCT work_date FROM timesheets WHERE user_id = ? AND work_date BETWEEN ? AND ?').all(userId, startDate, endDate).map(entry => entry.work_date));
 
-  if (approved.count === 0) {
-    return res.status(400).json({ error: 'No timesheet entries found to post for this week' });
-  }
+    // Check that we have at least one approved entry for this week
+    const approved = db.prepare(`
+      SELECT COUNT(*) as count, SUM(hours) as total_hours FROM timesheets
+      WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status = 'approved'
+    `).get(userId, startDate, endDate);
+
+    if (approved.count === 0) {
+      throw Object.assign(new Error('No timesheet entries found to post for this week'), { status: 400 });
+    }
+
+    return approved;
+  })();
 
   // Sync to SharePoint if enabled
   if (config.enableSharepointSync) {
@@ -538,21 +560,24 @@ router.post('/post', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // POST /api/timesheets/approve - Admin: Approve weekly timesheets
-router.post('/approve', authenticate, authorize('admin'), (req, res) => {
+router.post('/approve', authenticate, authorize('admin', 'manager'), (req, res) => {
   const { user_id, week, year, comment } = req.body;
 
   if (!user_id || !week || !year) {
     return res.status(400).json({ error: 'User ID, week, and year are required' });
   }
 
-  const targetUserId = parseInt(user_id);
+  const targetUserId = Number(user_id);
+  if (!Number.isInteger(targetUserId) || !canReviewTimesheet(req.user, targetUserId)) {
+    return res.status(403).json({ error: 'Not authorized to review this user' });
+  }
 
   // If approving their own timesheet, ensure no other admin is assigned to them
   if (targetUserId === req.user.id) {
     const assignment = db.prepare(`
-      SELECT uaa.admin_id, u.name as admin_name 
-      FROM user_admin_assignments uaa 
-      JOIN users u ON uaa.admin_id = u.id 
+      SELECT uaa.admin_id, u.name as admin_name
+      FROM user_admin_assignments uaa
+      JOIN users u ON uaa.admin_id = u.id
       WHERE uaa.user_id = ?
     `).get(req.user.id);
 
@@ -577,12 +602,16 @@ router.post('/approve', authenticate, authorize('admin'), (req, res) => {
   res.json({ message: 'Timesheet approved', updated: result.changes });
 });
 
-// POST /api/timesheets/reject - Admin: Reject weekly timesheets
-router.post('/reject', authenticate, authorize('admin'), (req, res) => {
+// POST /api/timesheets/reject - Reject weekly timesheets
+router.post('/reject', authenticate, authorize('admin', 'manager'), (req, res) => {
   const { user_id, week, year, comment } = req.body;
 
   if (!user_id || !week || !year) {
     return res.status(400).json({ error: 'User ID, week, and year are required' });
+  }
+
+  if (!Number.isInteger(Number(user_id)) || !canReviewTimesheet(req.user, Number(user_id))) {
+    return res.status(403).json({ error: 'Not authorized to review this user' });
   }
 
   const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
@@ -631,7 +660,7 @@ router.post('/recall', authenticate, async (req, res) => {
       isAdmin ? req.user.id : null,
       comment || null
     );
-    
+
     if (changed === 0) {
       return res.status(400).json({ error: 'No recallable timesheet entries found for this week' });
     }

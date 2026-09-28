@@ -1,5 +1,5 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../contexts/auth';
 import {
   LayoutDashboard, Clock, Users, FolderKanban, ListTodo, Building2,
   Activity, Calendar, FileUp, ClipboardCheck, BarChart3, Settings,
@@ -10,7 +10,7 @@ import { useState } from 'react';
 export default function Sidebar() {
   const { isAdmin, isSystemAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const location = useLocation();
+
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -36,7 +36,7 @@ export default function Sidebar() {
   ];
 
   const allItems = isAdmin ? [...navItems, ...adminItems] : navItems;
-  
+
   if (isSystemAdmin) {
     allItems.push({ type: 'divider', label: 'System' });
     allItems.push({ to: '/admin/system', icon: Settings, label: 'Maintenance' });
