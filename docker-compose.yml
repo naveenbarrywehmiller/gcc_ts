@@ -26,6 +26,7 @@ services:
     volumes:
       - timesheet-data:/app/server/data
       - timesheet-uploads:/app/server/uploads
+      - timesheet-logs:/app/server/logs
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health',(r)=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>process.exit(r.statusCode===200?0:1))}).on('error',()=>process.exit(1))"]
       interval: 30s
@@ -37,4 +38,7 @@ volumes:
   timesheet-data:
     driver: local
   timesheet-uploads:
+    driver: local
+
+  timesheet-logs:
     driver: local

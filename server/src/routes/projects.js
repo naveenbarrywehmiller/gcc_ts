@@ -1,165 +1,107 @@
 const express = require('express');
+const ExcelJS = require('exceljs');
 const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
-
+const { projectScope, adminDivisionIds } = require('../utils/divisionScope');
+const { columns, validateProject } = require('../utils/projectFields');
 const router = express.Router();
-
-// GET /api/projects
-router.get('/', authenticate, (req, res) => {
-  const { search, division, division_id, subdivision_id, team_type, active } = req.query;
-  let query = `
-    SELECT p.*, 
-           d.name as division_name, 
-           s.name as subdivision_name
-    FROM projects p
-    LEFT JOIN divisions d ON p.division_id = d.id
-    LEFT JOIN subdivisions s ON p.subdivision_id = s.id
-    WHERE 1=1
-  `;
-  const params = [];
-
-  if (search) {
-    query += ' AND (p.project_code LIKE ? OR p.project_name LIKE ? OR p.customer_name LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+const select = `SELECT p.*, d.name AS division_name, s.name AS subdivision_name FROM projects p
+  LEFT JOIN divisions d ON d.id = p.division_id LEFT JOIN subdivisions s ON s.id = p.subdivision_id`;
+function filter(user, query) {
+  const scope = projectScope(user);
+  let sql = ` WHERE ${scope.sql}`;
+  const params = [...scope.params];
+  for (const key of ['division_id', 'subdivision_id', 'project_status', 'team_type', 'division']) {
+    if (query[key]) { sql += ` AND p.${key} = ?`; params.push(query[key]); }
   }
-  if (division) { query += ' AND p.division = ?'; params.push(division); }
-  if (division_id) { query += ' AND p.division_id = ?'; params.push(parseInt(division_id)); }
-  if (subdivision_id) { query += ' AND p.subdivision_id = ?'; params.push(parseInt(subdivision_id)); }
-  if (team_type) { query += ' AND p.team_type = ?'; params.push(team_type); }
-  if (active !== undefined) { query += ' AND p.active = ?'; params.push(parseInt(active)); }
-  else { query += ' AND p.active = 1'; }
-
-  query += ' ORDER BY p.project_code ASC';
-  const projects = db.prepare(query).all(...params);
-  res.json({ projects });
+  if (query.active !== 'all') { sql += ' AND p.active = ?'; params.push(query.active === '0' ? 0 : 1); }
+  if (query.search) {
+    sql += ' AND (p.project_code LIKE ? OR p.project_name LIKE ? OR p.customer_name LIKE ?)';
+    params.push(...Array(3).fill(`%${query.search}%`));
+  }
+  return { sql, params };
+}
+router.get('/options', authenticate, authorize('admin'), (req, res) => {
+  const ids = adminDivisionIds(req.user);
+  const divisions = db.prepare('SELECT * FROM divisions WHERE active = 1 ORDER BY name').all()
+    .filter(d => req.user.role === 'system admin' || ids.includes(d.id));
+  const subdivisions = db.prepare('SELECT * FROM subdivisions WHERE active = 1 ORDER BY name').all()
+    .filter(s => divisions.some(d => d.id === s.division_id));
+  res.json({ divisions, subdivisions });
 });
-
-// GET /api/projects/:id
+router.get('/export', authenticate, authorize('admin'), async (req, res, next) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Projects');
+    sheet.columns = columns.map(([key, header]) => ({ key, header, width: 24 }));
+    if (req.query.template !== 'true') {
+      const { sql, params } = filter(req.user, req.query);
+      db.prepare(select + sql + ' ORDER BY p.project_code').all(...params)
+        .forEach(p => sheet.addRow({ ...p, division: p.division_name, location: p.subdivision_name }));
+    }
+    sheet.getRow(1).font = { bold: true };
+    sheet.views = [{ state: 'frozen', ySplit: 1 }];
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${req.query.template === 'true' ? 'project-template' : 'projects'}.xlsx"`);
+    await workbook.xlsx.write(res); res.end();
+  } catch (err) { next(err); }
+});
+router.get('/', authenticate, (req, res) => {
+  for (const key of ['page', 'limit']) {
+    if (req.query[key] !== undefined && (!Number.isSafeInteger(Number(req.query[key])) || Number(req.query[key]) < 1)) return res.status(400).json({ error: `${key} must be a positive integer` });
+  }
+  const { sql, params } = filter(req.user, req.query);
+  const total = db.prepare('SELECT COUNT(*) AS n FROM projects p' + sql).get(...params).n;
+  // Existing timesheet/report consumers retain their unpaginated response contract.
+  const paginated = req.query.page !== undefined;
+  const limit = Math.min(100, Math.max(1, Math.floor(Number(req.query.limit) || 25)));
+  const page = Math.max(1, Math.floor(Number(req.query.page) || 1));
+  const projects = db.prepare(select + sql + ' ORDER BY p.project_code' + (paginated ? ' LIMIT ? OFFSET ?' : ''))
+    .all(...params, ...(paginated ? [limit, (page - 1) * limit] : []));
+  res.json({ projects, total, page, limit });
+});
+function getProject(req) {
+  const { sql, params } = projectScope(req.user);
+  return db.prepare(select + ` WHERE p.id = ? AND ${sql}`).get(req.params.id, ...params);
+}
 router.get('/:id', authenticate, (req, res) => {
-  const project = db.prepare(`
-    SELECT p.*, 
-           d.name as division_name, 
-           s.name as subdivision_name
-    FROM projects p
-    LEFT JOIN divisions d ON p.division_id = d.id
-    LEFT JOIN subdivisions s ON p.subdivision_id = s.id
-    WHERE p.id = ?
-  `).get(req.params.id);
+  const project = getProject(req);
   if (!project) return res.status(404).json({ error: 'Project not found' });
   res.json({ project });
 });
-
-// POST /api/projects
+function audit(req, action, id) {
+  db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, ip_address) VALUES (?,?,?,?,?,?)')
+    .run(req.user.id, action, `Project ${id}`, 'project', id, req.ip);
+}
 router.post('/', authenticate, authorize('admin'), (req, res) => {
-  const { project_code, project_name, customer_name, activity, division, division_id, subdivision_id, team_type } = req.body;
-
-  if (!project_code || !project_name) {
-    return res.status(400).json({ error: 'Project code and name are required' });
-  }
-
-  const existing = db.prepare('SELECT id FROM projects WHERE project_code = ?').get(project_code.trim());
-  if (existing) return res.status(409).json({ error: 'Project code already exists' });
-
-  // Resolve division name from division_id if not provided
-  let divisionName = division || null;
-  if (division_id && !divisionName) {
-    const div = db.prepare('SELECT name FROM divisions WHERE id = ?').get(division_id);
-    if (div) divisionName = div.name;
-  }
-
-  const result = db.prepare(`
-    INSERT INTO projects (project_code, project_name, customer_name, activity, division, division_id, subdivision_id, team_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(project_code.trim(), project_name.trim(), customer_name || null, activity || null, divisionName, division_id || null, subdivision_id || null, team_type || null);
-
-  db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)').run(
-    req.user.id, 'CREATE_PROJECT', `Created project: ${project_code}`, req.ip
-  );
-
-  const project = db.prepare(`
-    SELECT p.*, d.name as division_name, s.name as subdivision_name
-    FROM projects p
-    LEFT JOIN divisions d ON p.division_id = d.id
-    LEFT JOIN subdivisions s ON p.subdivision_id = s.id
-    WHERE p.id = ?
-  `).get(result.lastInsertRowid);
+  const project = db.transaction(() => {
+    const data = validateProject(req.body, req.user);
+    const keys = Object.keys(data);
+    const result = db.prepare(`INSERT INTO projects (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`).run(...Object.values(data));
+    audit(req, 'CREATE_PROJECT', Number(result.lastInsertRowid));
+    return db.prepare(select + ' WHERE p.id = ?').get(result.lastInsertRowid);
+  })();
   res.status(201).json({ project });
 });
-
-// PUT /api/projects/:id
 router.put('/:id', authenticate, authorize('admin'), (req, res) => {
-  const { project_code, project_name, customer_name, activity, division, division_id, subdivision_id, team_type, active } = req.body;
-  const projectId = req.params.id;
-
-  const existing = db.prepare('SELECT id FROM projects WHERE id = ?').get(projectId);
+  const existing = getProject(req);
   if (!existing) return res.status(404).json({ error: 'Project not found' });
-
-  if (project_code) {
-    const codeExists = db.prepare('SELECT id FROM projects WHERE project_code = ? AND id != ?').get(project_code.trim(), projectId);
-    if (codeExists) return res.status(409).json({ error: 'Project code already in use' });
-  }
-
-  let updateFields = [];
-  let params = [];
-
-  if (project_code !== undefined) { updateFields.push('project_code = ?'); params.push(project_code.trim()); }
-  if (project_name !== undefined) { updateFields.push('project_name = ?'); params.push(project_name.trim()); }
-  if (customer_name !== undefined) { updateFields.push('customer_name = ?'); params.push(customer_name); }
-  if (activity !== undefined) { updateFields.push('activity = ?'); params.push(activity); }
-  if (team_type !== undefined) { updateFields.push('team_type = ?'); params.push(team_type); }
-  if (active !== undefined) { updateFields.push('active = ?'); params.push(active ? 1 : 0); }
-
-  // Handle division_id — also sync text division field
-  if (division_id !== undefined) {
-    updateFields.push('division_id = ?'); params.push(division_id || null);
-    if (division_id) {
-      const div = db.prepare('SELECT name FROM divisions WHERE id = ?').get(division_id);
-      if (div) { updateFields.push('division = ?'); params.push(div.name); }
-    } else {
-      updateFields.push('division = ?'); params.push(null);
-    }
-  } else if (division !== undefined) {
-    updateFields.push('division = ?'); params.push(division);
-  }
-
-  if (subdivision_id !== undefined) {
-    updateFields.push('subdivision_id = ?'); params.push(subdivision_id || null);
-  }
-
-  if (updateFields.length === 0) return res.status(400).json({ error: 'No fields to update' });
-
-  updateFields.push('updated_at = CURRENT_TIMESTAMP');
-  params.push(projectId);
-
-  db.prepare(`UPDATE projects SET ${updateFields.join(', ')} WHERE id = ?`).run(...params);
-
-  db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)').run(
-    req.user.id, 'UPDATE_PROJECT', `Updated project ID: ${projectId}`, req.ip
-  );
-
-  const project = db.prepare(`
-    SELECT p.*, d.name as division_name, s.name as subdivision_name
-    FROM projects p
-    LEFT JOIN divisions d ON p.division_id = d.id
-    LEFT JOIN subdivisions s ON p.subdivision_id = s.id
-    WHERE p.id = ?
-  `).get(projectId);
+  const project = db.transaction(() => {
+    const data = validateProject(req.body, req.user, existing);
+    db.prepare(`UPDATE projects SET ${Object.keys(data).map(k => `${k} = ?`).join(',')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+      .run(...Object.values(data), existing.id);
+    audit(req, 'UPDATE_PROJECT', existing.id);
+    return db.prepare(select + ' WHERE p.id = ?').get(existing.id);
+  })();
   res.json({ project });
 });
-
-// DELETE /api/projects/:id
 router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
-  const projectId = req.params.id;
-  const existing = db.prepare('SELECT id FROM projects WHERE id = ?').get(projectId);
+  const existing = getProject(req);
   if (!existing) return res.status(404).json({ error: 'Project not found' });
-
-  db.prepare('UPDATE projects SET active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
-
-  db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)').run(
-    req.user.id, 'DELETE_PROJECT', `Deactivated project ID: ${projectId}`, req.ip
-  );
-
-  res.json({ message: 'Project deactivated successfully' });
+  db.transaction(() => {
+    db.prepare('UPDATE projects SET active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(existing.id);
+    audit(req, 'DELETE_PROJECT', existing.id);
+  })();
+  res.json({ message: 'Project deactivated' });
 });
-
 module.exports = router;

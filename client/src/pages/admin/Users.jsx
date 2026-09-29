@@ -1,3 +1,5 @@
+import FieldHelp from '../../components/ui/FieldHelp';
+import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -279,6 +281,7 @@ export default function AdminUsers() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-surface-900 dark:text-white">Users</h1>
+        <Link className="btn-secondary btn-sm" to="/admin/import?type=users">Import Excel</Link>
           <p className="text-xs text-surface-500 mt-1">
             {activeCount} Active • {inactiveCount} Inactive
           </p>
@@ -462,7 +465,7 @@ export default function AdminUsers() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *</label>
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *<FieldHelp label="Team Member name" /></label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" />
           </div>
           <div>
@@ -470,7 +473,7 @@ export default function AdminUsers() {
             <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@company.com" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Employee ID</label>
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Employee ID<FieldHelp label="Employee - ID" /></label>
             <input className="input" value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. EMP-001" />
           </div>
           <div>
@@ -525,7 +528,7 @@ export default function AdminUsers() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division</label>
+              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division<FieldHelp label="Division" /></label>
               <select className="input" value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
                 <option value="">— Select —</option>
                 {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -541,7 +544,7 @@ export default function AdminUsers() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Supporting Category</label>
+              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Dedicated/Flex<FieldHelp label="Dedicated / Flex" /></label>
               <select className="input" value={form.supporting_category_id} onChange={(e) => setForm({ ...form, supporting_category_id: e.target.value })}>
                 <option value="">— Select —</option>
                 {supportingCategories.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}

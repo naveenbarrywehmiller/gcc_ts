@@ -5,6 +5,8 @@ const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
 
+const { projectScope } = require('../utils/divisionScope');
+const detailFields = require('../config/timesheetFields.json');
 const router = express.Router();
 
 
@@ -252,7 +254,9 @@ router.get('/project-hours', authenticate, authorize('admin'), (req, res) => {
   }
 
   // WHERE clause must come after all JOINs and before GROUP BY
-  query += ' WHERE p.active = 1';
+  const scope = projectScope(req.user);
+  query += ` WHERE p.active = 1 AND ${scope.sql}`;
+  params.push(...scope.params);
   if (division) {
     query += ' AND p.division = ?';
     params.push(division);
@@ -283,6 +287,7 @@ router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res)
   }
 
   // Single query: project + user aggregation, then group in JS
+  const scope = projectScope(req.user);
   const rows = db.prepare(`
     SELECT p.id as project_id, p.project_code, p.project_name, p.customer_name, p.division,
            u.id as user_id, u.name as user_name, u.email as user_email,
@@ -296,6 +301,7 @@ router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res)
       ${division ? 'AND u.division = ?' : ''}
       ${user_id ? 'AND t.user_id = ?' : ''}
       ${status ? 'AND t.status = ?' : ''}
+      AND ${scope.sql}
     GROUP BY p.id, u.id
     ORDER BY p.project_code, user_hours DESC
   `);
@@ -305,6 +311,7 @@ router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res)
   if (user_id) params.push(parseInt(user_id));
   if (status) params.push(status);
 
+  params.push(...scope.params);
   const rowsData = rows.all(...params);
 
   // Group by project
@@ -464,7 +471,8 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
   }
 
   let query = `
-    SELECT t.work_date, t.hours, t.description, t.status,
+    SELECT t.user_id, t.project_id, t.task_id, t.division_id, t.subdivision_id, t.ownership_id, t.details_json,
+           t.work_date, t.hours, t.description, t.status,
            t.week_number, t.week_year, t.project_description,
            u.name as employee_name, u.email as employee_email, u.division as employee_division,
            p.project_code, p.project_name, p.customer_name,
@@ -500,6 +508,9 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
     params.push(subdivision);
   }
 
+  const scope = projectScope(req.user);
+  query += ` AND (p.id IS NULL OR ${scope.sql})`;
+  params.push(...scope.params);
   query += ' ORDER BY u.name, t.week_number, t.work_date, p.project_code';
   const data = db.prepare(query).all(...params);
 
@@ -534,6 +545,21 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
       });
     });
 
+    const detailSheet = workbook.addWorksheet('Weekly Details');
+    detailSheet.columns = [
+      { header: 'Employee', key: 'employee_name', width: 25 },
+      { header: 'Year', key: 'week_year', width: 10 }, { header: 'Week', key: 'week_number', width: 10 },
+      { header: 'Project Code', key: 'project_code', width: 20 }, { header: 'Task Name/Number', key: 'task_category', width: 22 },
+      { header: 'Division', key: 'division_name', width: 20 }, { header: 'Location', key: 'subdivision_name', width: 20 },
+      ...detailFields.map(f => ({ header: f.label, key: f.key, width: 24 })),
+    ];
+    const seen = new Set();
+    for (const row of data) {
+      const key = JSON.stringify([row.user_id, row.week_year, row.week_number, row.project_id, row.task_id, row.division_id, row.subdivision_id, row.project_description, row.ownership_id]);
+      if (!seen.has(key)) { seen.add(key); detailSheet.addRow({ ...row, ...JSON.parse(row.details_json || '{}') }); }
+    }
+    detailSheet.getRow(1).font = { bold: true };
+    detailSheet.views = [{ state: 'frozen', ySplit: 1 }];
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=timesheet_report_${year}_${month || week}.xlsx`);
     return workbook.xlsx.write(res).then(() => res.end());

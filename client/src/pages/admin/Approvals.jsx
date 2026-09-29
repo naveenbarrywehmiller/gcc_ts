@@ -1,3 +1,4 @@
+import TimesheetDetails from '../../components/TimesheetDetails';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -312,7 +313,7 @@ export default function AdminApprovals() {
                                   </div>
                                 )}
                               </td>
-                              <td className="py-2 text-surface-500">{e.task_category || '—'}</td>
+                              <td className="py-2 text-surface-500">{e.task_category || '—'}<details className="mt-2"><summary className="cursor-pointer text-xs">Review details</summary><TimesheetDetails value={JSON.parse(e.details_json || '{}')} readOnly /></details></td>
                               <td className="py-2 text-right font-semibold text-surface-900 dark:text-white">{e.hours}h</td>
                               <td className="py-2 text-surface-400 truncate max-w-[200px]">{e.description || '—'}</td>
                             </tr>

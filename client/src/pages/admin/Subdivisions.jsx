@@ -56,10 +56,10 @@ export default function AdminSubdivisions() {
     try {
       if (editing) {
         await api.put(`/subdivisions/${editing.id}`, form);
-        toast.success('Subdivision updated');
+        toast.success('Location updated');
       } else {
         await api.post('/subdivisions', form);
-        toast.success('Subdivision created');
+        toast.success('Location created');
       }
       setShowModal(false); 
       loadData();
@@ -69,10 +69,10 @@ export default function AdminSubdivisions() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Deactivate this subdivision?')) return;
+    if (!confirm('Deactivate this location?')) return;
     try { 
       await api.delete(`/subdivisions/${id}`); 
-      toast.success('Subdivision deactivated'); 
+      toast.success('Location deactivated');
       loadData(); 
     } catch {
       toast.error('Failed to deactivate'); 
@@ -84,9 +84,9 @@ export default function AdminSubdivisions() {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-surface-900 dark:text-white">Subdivisions</h1>
+        <h1 className="text-xl font-bold text-surface-900 dark:text-white">Location</h1>
         <button onClick={openCreate} className="btn-primary btn-sm">
-          <Plus className="w-4 h-4" /> Add Subdivision
+          <Plus className="w-4 h-4" /> Add Location
         </button>
       </div>
       
@@ -97,7 +97,7 @@ export default function AdminSubdivisions() {
             type="text" 
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
-            placeholder="Search subdivisions..." 
+            placeholder="Search locations..."
             className="input pl-9" 
           />
         </div>
@@ -117,7 +117,7 @@ export default function AdminSubdivisions() {
         <table className="w-full">
           <thead>
             <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-800">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Subdivision Name</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Location Name</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Division</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -141,10 +141,10 @@ export default function AdminSubdivisions() {
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 && <div className="text-center py-8 text-sm text-surface-400">No subdivisions found</div>}
+        {filtered.length === 0 && <div className="text-center py-8 text-sm text-surface-400">No locations found</div>}
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Subdivision' : 'Create Subdivision'}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Location' : 'Create Location'}
         footer={
           <>
             <button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button>
@@ -153,7 +153,7 @@ export default function AdminSubdivisions() {
         }>
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Subdivision Name *</label>
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Location Name *</label>
             <input 
               className="input" 
               value={form.name} 

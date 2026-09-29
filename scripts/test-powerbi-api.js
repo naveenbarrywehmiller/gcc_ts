@@ -19,6 +19,7 @@
 const http = require('http');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
+process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(require('node:os').tmpdir(), `gcc-test-errors-${process.pid}.jsonl`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;

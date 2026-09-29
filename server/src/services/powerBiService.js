@@ -69,6 +69,11 @@ class PowerBiService {
     let whereClause = "WHERE u.name != '[Deleted User]'";
     const params = [];
 
+    if (filters.allowedDivisionIds) {
+      whereClause += ` AND (p.id IS NULL OR p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}))`;
+      params.push(...filters.allowedDivisionIds);
+    }
+
     if (filters.from) {
       whereClause += ' AND t.work_date >= ?';
       params.push(filters.from);
@@ -145,6 +150,8 @@ class PowerBiService {
         COALESCE(p.project_code, '') as projectCode,
         COALESCE(tk.task_category, '') as projectCategory,
         COALESCE(tk.classification, '') as taskClassification,
+        t.details_json as detailsJson,
+        p.project_status as projectStatus,
         t.hours as hours,
         t.status as status,
         CASE WHEN t.billable = 1 THEN 1 ELSE 0 END as isBillable,
@@ -195,6 +202,8 @@ class PowerBiService {
       weekYear: row.weekYear,
       project: row.project,
       projectCode: row.projectCode,
+      projectStatus: row.projectStatus,
+      weeklyDetails: JSON.parse(row.detailsJson || '{}'),
       projectCategory: row.projectCategory,
       taskClassification: row.taskClassification,
       hours: row.hours,
@@ -397,6 +406,18 @@ class PowerBiService {
         p.id as id,
         p.project_code as projectCode,
         p.project_name as projectName,
+        p.gcc_project_code as gccProjectCode,
+        p.priority as priority,
+        p.product as product,
+        p.product_module as productModule,
+        p.requested_by as requestedBy,
+        p.responsibility as responsibility,
+        p.input_received_date as inputReceivedDate,
+        p.start_date as startDate,
+        p.target_date as targetDate,
+        p.delivered_date as deliveredDate,
+        p.budget_hours as budgetHours,
+        p.project_status as projectStatus,
         COALESCE(p.customer_name, '') as customerName,
         COALESCE(p.activity, '') as activity,
         COALESCE(d.name, p.division, '') as division,
@@ -412,6 +433,11 @@ class PowerBiService {
       WHERE 1=1
     `;
     const params = [];
+
+    if (filters.allowedDivisionIds) {
+      sql += ` AND p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'})`;
+      params.push(...filters.allowedDivisionIds);
+    }
 
     if (filters.division) {
       sql += ' AND (LOWER(d.name) = LOWER(?) OR LOWER(p.division) = LOWER(?))';
@@ -431,6 +457,18 @@ class PowerBiService {
         id: p.id,
         projectCode: p.projectCode,
         projectName: p.projectName,
+        gccProjectCode: p.gccProjectCode,
+        priority: p.priority,
+        product: p.product,
+        productModule: p.productModule,
+        requestedBy: p.requestedBy,
+        responsibility: p.responsibility,
+        inputReceivedDate: p.inputReceivedDate,
+        startDate: p.startDate,
+        targetDate: p.targetDate,
+        deliveredDate: p.deliveredDate,
+        budgetHours: p.budgetHours,
+        projectStatus: p.projectStatus,
         customerName: p.customerName,
         activity: p.activity,
         division: p.division,
@@ -680,11 +718,11 @@ class PowerBiService {
   /**
    * Legacy flat star-schema export array for existing Power BI datasets.
    */
-  getLegacyExport() {
-    return cachedQuery('legacy-export', () => this._queryLegacyExport());
+  getLegacyExport(filters = {}) {
+    return cachedQuery('legacy-export:' + JSON.stringify(filters), () => this._queryLegacyExport(filters));
   }
 
-  _queryLegacyExport() {
+  _queryLegacyExport(filters) {
     const query = `
       SELECT 
         t.id as TimesheetId,
@@ -714,10 +752,11 @@ class PowerBiService {
       LEFT JOIN subdivisions s ON t.subdivision_id = s.id
       LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
       WHERE u.name != '[Deleted User]'
+      ${filters.allowedDivisionIds ? `AND (p.id IS NULL OR p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}))` : ''}
       ORDER BY t.work_date DESC
     `;
 
-    const data = db.prepare(query).all();
+    const data = db.prepare(query).all(...(filters.allowedDivisionIds || []));
     return data.map((row) => ({
       ...row,
       IsBillable: row.IsBillable === 1,

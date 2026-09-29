@@ -139,7 +139,7 @@ function authenticatePowerBi(req, res, next) {
       if (decoded && decoded.userId) {
         const user = db.prepare('SELECT id, name, email, role, active FROM users WHERE id = ? AND active = 1').get(decoded.userId);
         if (user) {
-          if (user.role === 'admin') {
+          if (user.role === 'admin' || user.role === 'system admin') {
             req.powerBiAuthIdentity = `Admin:${user.email}`;
             req.user = user;
             return next();

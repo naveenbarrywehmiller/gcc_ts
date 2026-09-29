@@ -1,3 +1,5 @@
+import DivisionUpdates from './pages/admin/DivisionUpdates';
+import ErrorLogs from './pages/admin/ErrorLogs';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MsalProvider } from '@azure/msal-react';
@@ -72,6 +74,9 @@ function AppRoutes() {
         <Route path="/admin/import" element={<AdminRoute><AdminImport /></AdminRoute>} />
         <Route path="/admin/audit" element={<AdminRoute><AdminAuditLog /></AdminRoute>} />
         
+        <Route path="/admin/travel" element={<AdminRoute><DivisionUpdates kind="travel" /></AdminRoute>} />
+        <Route path="/admin/staffing" element={<AdminRoute><DivisionUpdates kind="staffing" /></AdminRoute>} />
+        <Route path="/admin/error-logs" element={<SystemAdminRoute><ErrorLogs /></SystemAdminRoute>} />
         {/* System Admin Routes */}
         <Route path="/admin/system" element={<SystemAdminRoute><SystemMaintenance /></SystemAdminRoute>} />
       </Route>

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import FieldHelp from '../../components/ui/FieldHelp';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -6,6 +8,7 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 export default function SimpleListManager({ endpoint, title, fieldName = 'name' }) {
   const toast = useToast();
+  const itemLabel = title === 'Divisions' ? 'Division' : title;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -37,9 +40,10 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-surface-900 dark:text-white">{title}</h1>
+        <h1 className="text-xl font-bold text-surface-900 dark:text-white">{title}<FieldHelp label={itemLabel} /></h1>
+        {endpoint === "/divisions" && <Link className="btn-secondary btn-sm" to="/admin/import?type=divisions">Import Excel</Link>}
         <button onClick={() => { setEditing(null); setName(''); setShowModal(true); }} className="btn-primary btn-sm">
-          <Plus className="w-4 h-4" /> Add {title.slice(0, -1)}
+          <Plus className="w-4 h-4" /> Add {itemLabel}
         </button>
       </div>
       <div className="card overflow-hidden">
@@ -71,11 +75,11 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? `Edit ${title.slice(0,-1)}` : `Add ${title.slice(0,-1)}`}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? `Edit ${itemLabel}` : `Add ${itemLabel}`}
         footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} className="btn-primary btn-sm">{editing ? 'Update' : 'Create'}</button></>}>
         <div>
           <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *</label>
-          <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder={`${title.slice(0,-1)} name`} autoFocus
+          <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder={`${itemLabel} name`} autoFocus
             onKeyDown={e => { if (e.key === 'Enter') handleSave(); }} />
         </div>
       </Modal>
@@ -89,9 +93,9 @@ export function AdminDivisions() {
 }
 
 export function AdminActivities() {
-  return <SimpleListManager endpoint="/activities" title="Activities" fieldName="name" />;
+  return <SimpleListManager endpoint="/activities" title="Work Type" fieldName="name" />;
 }
 
 export function AdminSupportingCategories() {
-  return <SimpleListManager endpoint="/supporting-categories" title="Supporting Categories" fieldName="name" />;
+  return <SimpleListManager endpoint="/supporting-categories" title="Dedicated/Flex" fieldName="name" />;
 }

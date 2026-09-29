@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.12.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.5...v1.12.0) (2026-09-28)
+
+### Features
+
+* expand projects with planning fields, status indicators, filtering, pagination, and Excel template import/export
+* add optional weekly timesheet review and improvement details with accessible field help
+* add division-month Travel & VISA and Open Position / New Joiners records
+* add bounded System Admin error-log viewing outside the main database
+
+### Security
+
+* enforce division scope across project administration, exports, timesheet project use, and administrator Power BI reads
+* validate project imports atomically and reject case-insensitive duplicate project codes
+
+### Reporting and Integrations
+
+* add deduplicated weekly details to Excel reports and expose new project/timesheet data to Power BI
+* preserve Power Automate callbacks and provide opt-in SharePoint detail-field synchronization
+
+### Tests
+
+* cover repeatable migrations, scoped access, import rollback, Excel dates, optional details, monthly records, error-log retention, reporting, and browser save/reload behavior
+
 ## [1.11.5](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.4...v1.11.5) (2026-09-28)
 
 ### Security

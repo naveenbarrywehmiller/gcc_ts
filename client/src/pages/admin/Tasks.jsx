@@ -1,3 +1,5 @@
+import FieldHelp from '../../components/ui/FieldHelp';
+import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -46,7 +48,8 @@ export default function AdminTasks() {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-surface-900 dark:text-white">Tasks</h1>
+        <h1 className="text-xl font-bold text-surface-900 dark:text-white">Task Name/Number</h1>
+        <Link className="btn-secondary btn-sm" to="/admin/import?type=tasks">Import Excel</Link>
         <button onClick={openCreate} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Task</button>
       </div>
       <div className="relative max-w-sm">
@@ -110,11 +113,11 @@ export default function AdminTasks() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Task Category *</label>
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Task Name/Number *<FieldHelp label="Task Name/Number" /></label>
             <input className="input" value={form.task_category} onChange={e => setForm({ ...form, task_category: e.target.value })} placeholder="e.g. Development" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Description</label>
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Description<FieldHelp label="Task Description" /></label>
             <textarea className="input" rows={3} value={form.task_description} onChange={e => setForm({ ...form, task_description: e.target.value })} placeholder="Task description" />
           </div>
           <div className="flex items-center justify-between p-3 rounded-lg bg-surface-50 dark:bg-surface-800/30 border border-surface-200 dark:border-surface-700">

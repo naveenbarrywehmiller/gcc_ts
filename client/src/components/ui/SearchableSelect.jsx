@@ -1,3 +1,4 @@
+import FieldHelp from './FieldHelp';
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Search, Check, X } from 'lucide-react';
 
@@ -53,7 +54,7 @@ export default function SearchableSelect({
 
   return (
     <div className="w-full" ref={containerRef}>
-      {label && <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">{label}</label>}
+      {label && <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">{label}<FieldHelp label={typeof label === 'string' ? label.replace(/ \(optional\)| \*/g, '') : ''} /></label>}
       <div className="relative">
         <button
           type="button"

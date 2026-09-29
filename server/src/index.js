@@ -88,6 +88,8 @@ app.use('/api/audit', require('./routes/audit'));
 app.use('/api/admin-ownership', require('./routes/admin-ownership'));
 app.use('/api/sharepoint-sync', require('./routes/sharepoint-sync'));
 app.use('/api/system', require('./routes/system'));
+app.use('/api/division-updates', require('./routes/division-updates'));
+app.use('/api/error-logs', require('./routes/error-logs'));
 // Health check
 app.get('/api/health', (req, res) => {
   const { version } = require('./config/version');
@@ -109,6 +111,7 @@ app.use(errorHandler);
 
 // Start server
 if (require.main === module) {
+  process.on('uncaughtExceptionMonitor', err => require('./utils/systemLog').recordSystemError(err, 'runtime'));
   app.listen(config.port, '0.0.0.0', () => {
     console.log(`
 ╔═══════════════════════════════════════════════════╗

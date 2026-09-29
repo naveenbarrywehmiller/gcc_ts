@@ -490,6 +490,7 @@ function migrate() {
     CREATE INDEX IF NOT EXISTS idx_users_division ON users(division_id);
   `);
 
+  require('./workbookMigration')(db);
   require('./bootstrapAdmin').bootstrapAdmin(db);
 
   console.log('✅ Database migrations complete.');

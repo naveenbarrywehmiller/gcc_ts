@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -5,14 +6,14 @@ import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function AdminImport() {
   const toast = useToast();
+  const [params] = useSearchParams();
   const [importing, setImporting] = useState(false);
   const [results, setResults] = useState(null);
   const [dragOver, setDragOver] = useState(false);
-  const [selectedType, setSelectedType] = useState('projects');
+  const [selectedType, setSelectedType] = useState(params.get('type') || 'users');
   const fileRef = useRef(null);
 
   const importTypes = [
-    { value: 'projects', label: 'Projects', desc: 'Import project codes, names, customers, activities' },
     { value: 'users', label: 'Users', desc: 'Import employee names, emails, divisions' },
     { value: 'tasks', label: 'Tasks', desc: 'Import task categories and classifications' },
     { value: 'divisions', label: 'Divisions', desc: 'Import division list' },
@@ -21,8 +22,8 @@ export default function AdminImport() {
   const handleFile = async (file) => {
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['xlsx', 'xls', 'csv'].includes(ext)) {
-      toast.error('Please upload an Excel file (.xlsx, .xls, .csv)');
+    if (!['xlsx', 'csv'].includes(ext)) {
+      toast.error('Please upload an Excel file (.xlsx, .csv)');
       return;
     }
 
@@ -109,7 +110,7 @@ export default function AdminImport() {
                 Drop your Excel file here or click to browse
               </p>
               <p className="text-xs text-surface-400 mt-1">
-                Supports .xlsx, .xls, .csv • Max 10MB
+                Supports .xlsx, .csv • Max 10MB
               </p>
             </div>
           </div>

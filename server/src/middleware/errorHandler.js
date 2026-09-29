@@ -6,7 +6,7 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: 'Invalid JSON payload' });
   }
 
-  if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+  if (err.code === 'SQLITE_CONSTRAINT_UNIQUE' || (err.code === 'SQLITE_CONSTRAINT_TRIGGER' && err.message === 'Project code already exists')) {
     return res.status(409).json({ error: 'Record already exists' });
   }
 
@@ -15,6 +15,7 @@ function errorHandler(err, req, res, next) {
   }
 
   const status = err.status || 500;
+  if (status >= 500) require('../utils/systemLog').recordSystemError(err, `${req.method} ${req.route?.path || 'server'}`);
   const message = status === 500 ? 'Internal server error' : err.message;
 
   res.status(status).json({ error: message });

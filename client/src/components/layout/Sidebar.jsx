@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/auth';
 import {
   LayoutDashboard, Clock, Users, FolderKanban, ListTodo, Building2,
-  Activity, Calendar, FileUp, ClipboardCheck, BarChart3, Settings,
+  Activity, Calendar, ClipboardCheck, BarChart3, Settings,
   ChevronLeft, ChevronRight, Timer, Shield
 } from 'lucide-react';
 import { useState } from 'react';
@@ -22,15 +22,16 @@ export default function Sidebar() {
     { to: '/admin/approvals', icon: ClipboardCheck, label: 'Approvals' },
     { to: '/admin/users', icon: Users, label: 'Users' },
     { to: '/admin/projects', icon: FolderKanban, label: 'Projects' },
-    { to: '/admin/tasks', icon: ListTodo, label: 'Tasks' },
-    { to: '/admin/divisions', icon: Building2, label: 'Divisions' },
-    { to: '/admin/subdivisions', icon: Building2, label: 'Subdivisions' },
+    { to: '/admin/tasks', icon: ListTodo, label: 'Task Name/Number' },
+    { to: '/admin/divisions', icon: Building2, label: 'Division' },
+    { to: '/admin/subdivisions', icon: Building2, label: 'Location' },
     { to: '/admin/departments', icon: Users, label: 'Departments' },
-    { to: '/admin/supporting-categories', icon: Users, label: 'Supp. Categories' },
-    { to: '/admin/activities', icon: Activity, label: 'Activities' },
+    { to: '/admin/supporting-categories', icon: Users, label: 'Dedicated/Flex' },
+    { to: '/admin/activities', icon: Activity, label: 'Work Type' },
+    { to: '/admin/travel', icon: Activity, label: 'Travel & VISA' },
+    { to: '/admin/staffing', icon: Users, label: 'Open Position / New Joiners' },
     { to: '/admin/holidays', icon: Calendar, label: 'Holidays' },
     { type: 'divider', label: 'Tools' },
-    { to: '/admin/import', icon: FileUp, label: 'Import' },
     { to: '/reports', icon: BarChart3, label: 'Reports' },
     { to: '/admin/audit', icon: Shield, label: 'Audit Log' },
   ];
@@ -40,6 +41,7 @@ export default function Sidebar() {
   if (isSystemAdmin) {
     allItems.push({ type: 'divider', label: 'System' });
     allItems.push({ to: '/admin/system', icon: Settings, label: 'Maintenance' });
+    allItems.push({ to: '/admin/error-logs', icon: Shield, label: 'Error Logs' });
   }
 
   return (
@@ -95,10 +97,10 @@ export default function Sidebar() {
                 }
                 ${collapsed ? 'justify-center' : ''}`
               }
-              title={collapsed ? item.label : undefined}
+              title={item.label}
             >
               <Icon className="w-[18px] h-[18px] shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
+              {!collapsed && <span className="whitespace-normal leading-tight">{item.label}</span>}
             </NavLink>
           );
         })}

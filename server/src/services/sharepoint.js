@@ -220,6 +220,12 @@ async function syncTimesheetEntry(entry) {
     Status: capitalizeStatus(entry.status),
   };
 
+  // Optional multiline-text column, configured only after it exists in SharePoint.
+  const detailsField = process.env.SHAREPOINT_TIMESHEET_DETAILS_FIELD;
+  if (detailsField && /^[A-Za-z][A-Za-z0-9_]*$/.test(detailsField)) {
+    fields[detailsField] = entry.details_json || '{}';
+  }
+
   if (entry.submitted_at) fields.SubmittedDate = entry.submitted_at;
   if (entry.approved_at) fields.ApprovedDate = entry.approved_at;
   if (entry.rejected_at) fields.RejectedDate = entry.rejected_at;

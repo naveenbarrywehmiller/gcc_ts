@@ -1,0 +1,127 @@
+[
+  {
+    "key": "fundamental_error_count",
+    "label": "Fundamental Error count",
+    "type": "number"
+  },
+  {
+    "key": "review_by",
+    "label": "Review by",
+    "type": "text"
+  },
+  {
+    "key": "review_date",
+    "label": "Review date",
+    "type": "date"
+  },
+  {
+    "key": "improvement_count",
+    "label": "Imp. Log",
+    "type": "number"
+  },
+  {
+    "key": "designed",
+    "label": "Designed",
+    "type": "number"
+  },
+  {
+    "key": "developed",
+    "label": "Developed",
+    "type": "number"
+  },
+  {
+    "key": "item_number",
+    "label": "Item Number",
+    "type": "text"
+  },
+  {
+    "key": "item_description",
+    "label": "Item Description",
+    "type": "text"
+  },
+  {
+    "key": "rd_temp",
+    "label": "RD / Temp #",
+    "type": "text"
+  },
+  {
+    "key": "next_assembly",
+    "label": "Where used / Next Assy",
+    "type": "text"
+  },
+  {
+    "key": "reference_number",
+    "label": "Reference #",
+    "type": "text"
+  },
+  {
+    "key": "slide_number",
+    "label": "Slide.No",
+    "type": "text"
+  },
+  {
+    "key": "milestone",
+    "label": "Mile Stone",
+    "type": "text"
+  },
+  {
+    "key": "improvement_location",
+    "label": "Imp. Log Location",
+    "type": "text"
+  },
+  {
+    "key": "error_type",
+    "label": "Type",
+    "type": "text"
+  },
+  {
+    "key": "query_from",
+    "label": "From",
+    "type": "text"
+  },
+  {
+    "key": "query_description",
+    "label": "Description",
+    "type": "textarea"
+  },
+  {
+    "key": "query_to",
+    "label": "To",
+    "type": "text"
+  },
+  {
+    "key": "query_date",
+    "label": "Date",
+    "type": "date"
+  },
+  {
+    "key": "comments",
+    "label": "Comments",
+    "type": "textarea"
+  },
+  {
+    "key": "feedback_date",
+    "label": "Feedback Date",
+    "type": "date"
+  },
+  {
+    "key": "action_by",
+    "label": "Action By",
+    "type": "text"
+  },
+  {
+    "key": "action_date",
+    "label": "Action Date",
+    "type": "date"
+  },
+  {
+    "key": "query_status",
+    "label": "Query Status",
+    "type": "text"
+  },
+  {
+    "key": "remarks",
+    "label": "Remarks",
+    "type": "textarea"
+  }
+]

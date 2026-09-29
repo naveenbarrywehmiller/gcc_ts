@@ -76,6 +76,7 @@ async function readExcelAsJson(filePath) {
       }
       // Only add rows that have at least one non-empty value (skip blank rows)
       if (Object.values(obj).some(v => v !== undefined && v !== null && v !== '')) {
+        Object.defineProperty(obj, "sourceRow", { value: rowNumber });
         rows.push(obj);
       }
     }
@@ -91,53 +92,43 @@ router.post('/projects', authenticate, authorize('admin'), upload.single('file')
   try {
     const data = await readExcelAsJson(req.file.path);
 
-    let imported = 0;
-    let skipped = 0;
+    const { columns, validateProject } = require('../utils/projectFields');
+    if (!data.length) return res.status(400).json({ error: 'No project rows found' });
     const errors = [];
-
-    const insertProject = db.prepare(`
-      INSERT OR IGNORE INTO projects (project_code, project_name, customer_name, activity, division, team_type)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    const importTransaction = db.transaction(() => {
-      for (const row of data) {
-        const code = row['Project Code'] || row['project_code'] || row['Code'];
-        const name = row['Project Name'] || row['project_name'] || row['Name'];
-
-        if (!code || !name) {
-          skipped++;
-          errors.push(`Row missing project code or name: ${JSON.stringify(row).substring(0, 100)}`);
-          continue;
+    const seen = new Set();
+    const projects = [];
+    db.transaction(() => {
+      data.forEach((row, index) => {
+        const input = { division_id: req.body.division_id || null };
+        for (const [key, header] of columns) {
+          let value = row[header] ?? row[key];
+          if (value instanceof Date) value = value.toISOString().slice(0, 10);
+          if (value !== undefined) input[key] = value;
         }
-
-        const result = insertProject.run(
-          String(code).trim(),
-          String(name).trim(),
-          row['Customer Name'] || row['customer_name'] || row['Customer'] || null,
-          row['Activity'] || row['activity'] || null,
-          row['Division'] || row['division'] || null,
-          row['Team Type'] || row['team_type'] || row['Heart'] || null
-        );
-
-        if (result.changes > 0) imported++;
-        else skipped++;
+        if (input.division) input.division_id = null;
+        try {
+          const project = validateProject(input, req.user);
+          const code = project.project_code.toLowerCase();
+          if (seen.has(code)) throw new Error(`Duplicate Project Code in file: ${project.project_code}`);
+          seen.add(code);
+          projects.push(project);
+        } catch (err) { errors.push(`Row ${row.sourceRow || index + 2}: ${err.message}`); }
+      });
+      if (errors.length) return;
+      for (const project of projects) {
+        const keys = Object.keys(project);
+        db.prepare(`INSERT INTO projects (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`).run(...Object.values(project));
       }
-    });
-
-    importTransaction();
-
-    // Clean up file
-    fs.unlinkSync(req.file.path);
-
-    db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)').run(
-      req.user.id, 'IMPORT_PROJECTS', `Imported ${imported} projects, skipped ${skipped}`, req.ip
-    );
-
-    res.json({ imported, skipped, total: data.length, errors: errors.slice(0, 10) });
+      db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)')
+        .run(req.user.id, 'IMPORT_PROJECTS', `Imported ${projects.length} projects`, req.ip);
+    })();
+    if (errors.length) return res.status(400).json({ error: 'No projects imported. Correct the errors and try again.', errors });
+    res.json({ imported: projects.length, skipped: 0, total: data.length, errors: [] });
   } catch (err) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(400).json({ error: `Import failed: ${err.message}` });
+  } finally {
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
   }
 });
 

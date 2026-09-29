@@ -44,3 +44,6 @@ server/src/data/*.db-shm
 # Power BI (large binaries — use GitHub Releases or Git LFS)
 *.pbix
 *.pbit
+
+# Bounded system diagnostics
+server/logs/

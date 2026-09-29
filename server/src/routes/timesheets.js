@@ -8,7 +8,27 @@ const timesheetRepo = require('../repositories/TimesheetRepository');
 const sp = require('../services/sharepoint');
 const { canReviewTimesheet } = require('../utils/timesheetPermissions');
 
+const { serializeDetails } = require('../utils/timesheetDetails');
+const { projectScope } = require('../utils/divisionScope');
 const router = express.Router();
+
+// Normalize once before writes, including self-post and single-entry callers.
+function normalizeDetails(req, res, next) {
+  if (req.method === 'POST' && ['/', '/batch', '/post'].includes(req.path)) {
+    const entries = req.body.entries || (req.path === '/' ? [req.body] : []);
+    if (Array.isArray(entries)) for (const entry of entries) {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return res.status(400).json({ error: 'Invalid timesheet entry' });
+      entry.details_json = serializeDetails(entry.details);
+      if (entry.project_id && req.user.role === 'admin') {
+        const scope = projectScope(req.user);
+        if (!db.prepare(`SELECT id FROM projects p WHERE p.id = ? AND ${scope.sql}`).get(entry.project_id, ...scope.params)) {
+          return res.status(403).json({ error: 'Project is outside your assigned divisions' });
+        }
+      }
+    }
+  }
+  next();
+}
 
 function assertDailyHours(userId, dates) {
   const total = db.prepare('SELECT COALESCE(SUM(hours), 0) AS hours FROM timesheets WHERE user_id = ? AND work_date = ?');
@@ -71,7 +91,7 @@ router.get('/', authenticate, (req, res) => {
 
   const entries = db.prepare(`
     SELECT t.*,
-           p.project_code, p.project_name, p.customer_name, p.activity as project_activity,
+           p.project_code, p.project_name, p.project_status, p.customer_name, p.activity as project_activity,
            p.division_id as project_division_id, p.subdivision_id as project_subdivision_id,
            tk.classification, tk.task_category, tk.task_description as task_desc, tk.requires_project,
            d.name as division_name,
@@ -180,8 +200,8 @@ router.get('/summary', authenticate, authorize('admin'), (req, res) => {
 });
 
 // POST /api/timesheets - Create or update a single entry (upsert)
-router.post('/', authenticate, (req, res) => {
-  const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = req.body;
+router.post('/', authenticate, normalizeDetails, (req, res) => {
+  const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id, details_json } = req.body;
   const userId = req.user.id;
 
   if (!work_date || hours === undefined) {
@@ -253,10 +273,10 @@ router.post('/', authenticate, (req, res) => {
     db.prepare(`
       UPDATE timesheets SET task_id = ?, hours = ?, description = ?,
         week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-        ownership_id = ?, billable = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
+        ownership_id = ?, billable = ?, details_json = COALESCE(?, details_json), status = 'draft', updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(task_id || null, hours, description || null, week, weekYear,
-           effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, existing.id);
+           effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? null, existing.id);
 
     const entry = db.prepare(`
       SELECT t.*, p.project_code, p.project_name, tk.task_category, tk.requires_project,
@@ -277,10 +297,10 @@ router.post('/', authenticate, (req, res) => {
   // Create new
   const result = db.prepare(`
     INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year,
-                            division_id, subdivision_id, project_description, ownership_id, billable, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
+                            division_id, subdivision_id, project_description, ownership_id, billable, details_json, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
   `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
-         effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable);
+         effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? '{}');
 
   const entry = db.prepare(`
     SELECT t.*, p.project_code, p.project_name, tk.task_category, tk.requires_project,
@@ -297,7 +317,7 @@ router.post('/', authenticate, (req, res) => {
 });
 
 // POST /api/timesheets/batch - Save multiple entries at once (auto-save)
-router.post('/batch', authenticate, (req, res) => {
+router.post('/batch', authenticate, normalizeDetails, (req, res) => {
   const { entries } = req.body;
   const userId = req.user.id;
 
@@ -308,7 +328,7 @@ router.post('/batch', authenticate, (req, res) => {
   const upsertEntry = db.transaction((entries) => {
     const results = [];
     for (const entry of entries) {
-      const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = entry;
+      const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id, details_json } = entry;
       if (!work_date || (!project_id && !task_id) || typeof hours !== 'number' || !Number.isFinite(hours) || hours < 0 || hours > 24) {
         throw Object.assign(new Error('Each entry requires a date, project or task, and numeric hours between 0 and 24'), { status: 400 });
       }
@@ -351,10 +371,10 @@ router.post('/batch', authenticate, (req, res) => {
           db.prepare(`
             UPDATE timesheets SET task_id = ?, hours = ?, description = ?,
               week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-              ownership_id = ?, billable = ?, status = 'draft', updated_at = CURRENT_TIMESTAMP
+              ownership_id = ?, billable = ?, details_json = COALESCE(?, details_json), status = 'draft', updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
           `).run(task_id || null, hours, description || null, week, weekYear,
-                 division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, existing.id);
+                 division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? null, existing.id);
         }
       } else if (hours > 0) {
         const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
@@ -362,10 +382,10 @@ router.post('/batch', authenticate, (req, res) => {
 
         db.prepare(`
           INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year,
-                                  division_id, subdivision_id, project_description, ownership_id, billable, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
+                                  division_id, subdivision_id, project_description, ownership_id, billable, details_json, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
         `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
-               division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable);
+               division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? '{}');
       }
       results.push({ project_id, task_id, work_date, hours, status: 'saved' });
     }
@@ -452,7 +472,7 @@ router.post('/submit', authenticate, async (req, res) => {
 });
 
 // POST /api/timesheets/post - Admin: Self-post timesheet directly (if no other admin assigned)
-router.post('/post', authenticate, authorize('admin'), (req, res) => {
+router.post('/post', authenticate, authorize('admin'), normalizeDetails, (req, res) => {
   const { week, year, comment, entries: incomingEntries } = req.body;
   const userId = req.user.id;
 
@@ -480,7 +500,7 @@ router.post('/post', authenticate, authorize('admin'), (req, res) => {
     // If client provided entries directly in body, save and approve them
     if (incomingEntries && Array.isArray(incomingEntries) && incomingEntries.length > 0) {
       for (const entry of incomingEntries) {
-        const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id } = entry;
+        const { project_id, task_id, work_date, hours, description, division_id, subdivision_id, project_description, ownership_id, details_json } = entry;
         if (!work_date || work_date < startDate || work_date > endDate || (!project_id && !task_id) || typeof hours !== 'number' || !Number.isFinite(hours) || hours < 0 || hours > 24) {
           throw Object.assign(new Error('Invalid entry or entry outside the requested week'), { status: 400 });
         }
@@ -506,17 +526,17 @@ router.post('/post', authenticate, authorize('admin'), (req, res) => {
           db.prepare(`
             UPDATE timesheets SET task_id = ?, hours = ?, description = ?,
               week_number = ?, week_year = ?, division_id = ?, subdivision_id = ?, project_description = ?,
-              ownership_id = ?, billable = ?, status = 'approved', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
+              ownership_id = ?, billable = ?, details_json = COALESCE(?, details_json), status = 'approved', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
           `).run(task_id || null, numHours, description || null, w, y,
-                 division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, comment || 'Self-posted by admin', existing.id);
+                 division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? null, comment || 'Self-posted by admin', existing.id);
         } else {
           db.prepare(`
             INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year,
-                                    division_id, subdivision_id, project_description, ownership_id, billable, status, admin_comment)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
+                                    division_id, subdivision_id, project_description, ownership_id, billable, details_json, status, admin_comment)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
           `).run(userId, project_id || null, task_id || null, work_date, numHours, description || null, w, y,
-                 division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, comment || 'Self-posted by admin');
+                 division_id || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? '{}', comment || 'Self-posted by admin');
         }
       }
     }

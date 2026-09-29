@@ -25,6 +25,8 @@
  */
 
 const express = require('express');
+const { adminDivisionIds } = require('../utils/divisionScope');
+const projectAccess = req => req.user?.role === 'admin' ? { allowedDivisionIds: adminDivisionIds(req.user) } : {};
 const powerBiService = require('../services/powerBiService');
 const {
   enforceReadOnly,
@@ -66,6 +68,7 @@ router.get('/version', (req, res) => {
     const result = powerBiService.getVersion();
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching version:', err);
     res.status(500).json({ error: 'Failed to retrieve version information' });
   }
@@ -156,9 +159,10 @@ router.get('/timesheets', (req, res) => {
       limit: parsedLimit,
     };
 
-    const result = powerBiService.getTimesheets(filters, pagination);
+    const result = powerBiService.getTimesheets({ ...filters, ...projectAccess(req) }, pagination);
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching timesheets:', err);
     res.status(500).json({ error: 'Failed to retrieve timesheet reporting data' });
   }
@@ -193,6 +197,7 @@ router.get('/users', (req, res) => {
     const result = powerBiService.getUsers(filters);
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching users:', err);
     res.status(500).json({ error: 'Failed to retrieve user reporting data' });
   }
@@ -212,6 +217,7 @@ router.get('/divisions', (req, res) => {
     const result = powerBiService.getDivisions(filters);
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching divisions:', err);
     res.status(500).json({ error: 'Failed to retrieve division reporting data' });
   }
@@ -231,6 +237,7 @@ router.get('/departments', (req, res) => {
     const result = powerBiService.getDepartments(filters);
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching departments:', err);
     res.status(500).json({ error: 'Failed to retrieve department reporting data' });
   }
@@ -248,9 +255,10 @@ router.get('/projects', (req, res) => {
       active: active !== undefined ? active : undefined,
     };
 
-    const result = powerBiService.getProjects(filters);
+    const result = powerBiService.getProjects({ ...filters, ...projectAccess(req) });
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching projects:', err);
     res.status(500).json({ error: 'Failed to retrieve project reporting data' });
   }
@@ -280,6 +288,7 @@ router.get('/holidays', (req, res) => {
     const result = powerBiService.getHolidays(filters);
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching holidays:', err);
     res.status(500).json({ error: 'Failed to retrieve holiday reporting data' });
   }
@@ -304,6 +313,7 @@ router.get('/tasks', (req, res) => {
     const result = powerBiService.getTasks(filters);
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching tasks:', err);
     res.status(500).json({ error: 'Failed to retrieve task reporting data' });
   }
@@ -318,6 +328,7 @@ router.get('/assignments', (req, res) => {
     const result = powerBiService.getAssignments();
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching assignments:', err);
     res.status(500).json({ error: 'Failed to retrieve assignment reporting data' });
   }
@@ -352,6 +363,7 @@ router.get('/status-summary', (req, res) => {
     const result = powerBiService.getStatusSummary(filters);
     res.json(result);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error fetching status summary:', err);
     res.status(500).json({ error: 'Failed to retrieve status summary data' });
   }
@@ -363,9 +375,10 @@ router.get('/status-summary', (req, res) => {
  */
 router.get('/export', (req, res) => {
   try {
-    const data = powerBiService.getLegacyExport();
+    const data = powerBiService.getLegacyExport(projectAccess(req));
     res.json(data);
   } catch (err) {
+    require('../utils/systemLog').recordSystemError(err, 'Power BI');
     console.error('[PowerBI API] Error generating legacy export:', err);
     res.status(500).json({ error: 'Failed to generate export' });
   }

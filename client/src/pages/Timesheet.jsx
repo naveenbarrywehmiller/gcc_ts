@@ -1,3 +1,6 @@
+import TimesheetDetails from '../components/TimesheetDetails';
+import ProjectStatus from '../components/ProjectStatus';
+import fields from '../data/timesheetFields.json';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
@@ -74,6 +77,8 @@ export default function Timesheet() {
   const [newRowTask, setNewRowTask] = useState(null);
   const [newRowOwnership, setNewRowOwnership] = useState(null);
   
+  const [newRowDetails, setNewRowDetails] = useState({});
+  const [viewDetails, setViewDetails] = useState(null);
   // UI State
   const [showRecallModal, setShowRecallModal] = useState(false);
   const [recallComment, setRecallComment] = useState('');
@@ -161,6 +166,8 @@ export default function Timesheet() {
         const key = `${e.project_id || 'null'}-${e.task_id || 0}-${e.division_id || 0}-${e.subdivision_id || 0}-${e.project_description || ''}-${e.ownership_id || 0}`;
         if (!rowMap[key]) {
           rowMap[key] = {
+            details: JSON.parse(e.details_json || '{}'),
+            project_status: e.project_status,
             project_id: e.project_id,
             task_id: e.task_id,
             division_id: e.division_id,
@@ -283,6 +290,7 @@ export default function Timesheet() {
 
   // Reset row modal form fields
   const resetRowForm = () => {
+    setNewRowDetails({});
     setEditingRowIdx(null);
     setNewRowProject(null);
     setNewRowTask(null);
@@ -294,6 +302,7 @@ export default function Timesheet() {
 
   // Open edit row modal
   const openEditRow = (row, index) => {
+    setNewRowDetails(row.details || {});
     setEditingRowIdx(index);
     setNewRowTask(row.task_id);
     setNewRowDivision(row.division_id);
@@ -306,6 +315,12 @@ export default function Timesheet() {
 
   // Add or update a project row
   const handleAddRow = () => {
+    for (const { key, label, type } of fields) {
+      const value = newRowDetails[key];
+      if (type === 'number' && value !== undefined && value !== '' && (!Number.isSafeInteger(Number(value)) || Number(value) < 0)) {
+        toast.warning(`${label} must be a nonnegative whole number`); return;
+      }
+    }
     if (!newRowTask) { toast.warning('Please select a task category'); return; }
     if (selectedTaskRequiresProject && !newRowProject) { toast.warning('Please select a project category'); return; }
 
@@ -361,6 +376,8 @@ export default function Timesheet() {
           project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
           ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
           ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
+          details: { ...newRowDetails },
+          project_status: project?.project_status,
           project_code: project?.project_code || null,
           project_name: project?.project_name || null,
           division_name: selectedTaskRequiresProject ? division?.name : null,
@@ -392,6 +409,8 @@ export default function Timesheet() {
       project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
       ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
       ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
+      details: { ...newRowDetails },
+      project_status: project?.project_status,
       project_code: project?.project_code || null,
       project_name: project?.project_name || null,
       division_name: selectedTaskRequiresProject ? division?.name : null,
@@ -447,6 +466,7 @@ export default function Timesheet() {
             work_date: date,
             hours: numHours,
             description: row.descriptions?.[date] || null,
+              details: row.details || {},
           });
         }
       });
@@ -481,6 +501,7 @@ export default function Timesheet() {
               work_date: date,
               hours: numHours,
               description: row.descriptions?.[date] || null,
+              details: row.details || {},
             });
           }
         });
@@ -1039,7 +1060,7 @@ export default function Timesheet() {
                               {row.project_id ? (
                                 <>
                                   <p className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate">
-                                    {row.project_code} - {row.project_name}
+                                    {row.project_code} - {row.project_name} <ProjectStatus status={row.project_status} />
                                   </p>
                                   {row.project_description && (
                                     <p className="text-[11px] text-surface-600 dark:text-surface-400 truncate" title={row.project_description}>
@@ -1057,7 +1078,8 @@ export default function Timesheet() {
                                   {row.task_category}{row.task_desc ? ` — ${row.task_desc}` : ''}
                                 </p>
                               )}
-                              {row.task_category && (
+                              <button type="button" className="text-xs text-brand-600 underline" onClick={() => setViewDetails(row)}>View details</button>
+                          {row.task_category && (
                                 <p className="text-[10px] text-surface-400 truncate">
                                   Task: {row.task_category}
                                 </p>
@@ -1183,6 +1205,9 @@ export default function Timesheet() {
         </div>
       )}
 
+      <Modal isOpen={viewDetails !== null} onClose={() => setViewDetails(null)} title="Timesheet details" size="lg">
+        {viewDetails && <TimesheetDetails value={viewDetails.details || {}} readOnly />}
+      </Modal>
       {/* Add/Edit project row modal */}
       <Modal
         isOpen={showAddRow}
@@ -1204,7 +1229,7 @@ export default function Timesheet() {
       >
         <div className="space-y-4">
           <SearchableSelect
-            label="Task Category *"
+            label="Task Name/Number *"
             options={tasks.map(t => ({ value: t.id, label: `${t.task_category}${t.classification ? ` (${t.classification})` : ''}` }))}
             value={newRowTask}
             onChange={value => {
@@ -1213,7 +1238,7 @@ export default function Timesheet() {
                 setNewRowDivision(null); setNewRowSubdivision(null); setNewRowProject(null); setNewRowProjectDesc('');
               }
             }}
-            placeholder="Select a task category..."
+            placeholder="Select a task name/number..."
             id="add-row-task-category"
           />
 
@@ -1238,17 +1263,17 @@ export default function Timesheet() {
                 id="add-row-division"
               />
               <SearchableSelect
-                label="Subdivision (optional)"
+                label="Location (optional)"
                 options={modalSubdivisionOptions.map(s => ({ value: s.id, label: s.name }))}
                 value={newRowSubdivision}
                 onChange={value => { setNewRowSubdivision(value); setNewRowProject(null); }}
-                placeholder={!newRowDivision ? "Select a division first..." : "Search and select a subdivision..."}
+                placeholder={!newRowDivision ? "Select a division first..." : "Search and select a location..."}
                 disabled={!newRowDivision || modalSubdivisionOptions.length === 0}
                 clearable
                 id="add-row-subdivision"
               />
               <SearchableSelect
-                label="Project Category *"
+                label="Project Code *"
                 options={modalProjectOptions.map(p => ({ value: p.id, label: `${p.project_code} — ${p.project_name}` }))}
                 value={newRowProject}
                 onChange={setNewRowProject}
@@ -1292,6 +1317,8 @@ export default function Timesheet() {
               )}
             </>
           )}
+          <ProjectStatus status={projects.find(p => p.id === newRowProject)?.project_status} />
+          <TimesheetDetails value={newRowDetails} onChange={setNewRowDetails} />
         </div>
       </Modal>
 
