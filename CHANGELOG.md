@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.5...v1.12.0) (2026-09-29)
+
+
+### Features
+
+* expand project and timesheet workflows ([72dd903](https://github.com/naveenbarrywehmiller/gcc_ts/commit/72dd903e6cab6135902bfd87d9345c650f9ce143))
+
 ## [1.12.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.5...v1.12.0) (2026-09-28)
 
 ### Features
