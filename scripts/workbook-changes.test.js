@@ -142,3 +142,43 @@ test('Power Automate callback still authenticates with its callback secret', asy
   });
   assert.equal(result.status, 200);
 });
+
+test('Excel project import validates active sidebar values with row errors and no partial inserts', async () => {
+  db.exec("INSERT INTO activities(name,active) VALUES ('Import Work',1),('Inactive Work',0)");
+  db.exec("INSERT INTO supporting_categories(name,active) VALUES ('Import Team',1),('Inactive Team',0)");
+  async function upload(rows) {
+    const book = new ExcelJS.Workbook();
+    const sheet = book.addWorksheet('Projects');
+    sheet.addRow(['Project Code', 'Project Name', 'Work Type', 'Dedicated/Flex']);
+    rows.forEach(row => sheet.addRow(row));
+    const form = new FormData();
+    form.append('file', new Blob([await book.xlsx.writeBuffer()]), 'projects.xlsx');
+    return request(admin, '/import/projects', form);
+  }
+  for (const [work, team, label] of [
+    ['Unknown Work', 'Import Team', 'Work Type'],
+    ['Inactive Work', 'Import Team', 'Work Type'],
+    ['Import Work', 'Unknown Team', 'Dedicated/Flex'],
+    ['Import Work', 'Inactive Team', 'Dedicated/Flex'],
+  ]) {
+    const result = await upload([
+      ['SIDEBAR-VALID', 'Valid row', 'Import Work', 'Import Team'],
+      ['SIDEBAR-INVALID', 'Invalid row', work, team],
+    ]);
+    assert.equal(result.status, 400);
+    assert(result.body.errors.some(error => error.startsWith(`Row 3: ${label}`)), JSON.stringify(result.body));
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM projects WHERE project_code LIKE 'SIDEBAR-%'").get().n, 0);
+  }
+  const good = await upload([
+    ['SIDEBAR-VALID', 'Normalized', ' import work ', ' IMPORT TEAM '],
+    ['SIDEBAR-BLANK', 'Optional fields', '', ''],
+  ]);
+  assert.equal(good.status, 200);
+  assert.equal(good.body.imported, 2);
+  assert.deepEqual(db.prepare("SELECT activity, team_type FROM projects WHERE project_code = 'SIDEBAR-VALID'").get(), {
+    activity: 'Import Work', team_type: 'Import Team',
+  });
+  assert.deepEqual(db.prepare("SELECT activity, team_type FROM projects WHERE project_code = 'SIDEBAR-BLANK'").get(), {
+    activity: null, team_type: null,
+  });
+});

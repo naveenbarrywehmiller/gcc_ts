@@ -108,6 +108,16 @@ router.post('/projects', authenticate, authorize('admin'), upload.single('file')
         if (input.division) input.division_id = null;
         try {
           const project = validateProject(input, req.user);
+          for (const [key, label, table] of [
+            ['activity', 'Work Type', 'activities'],
+            ['team_type', 'Dedicated/Flex', 'supporting_categories'],
+          ]) {
+            if (!project[key]) continue;
+            const option = db.prepare(`SELECT name FROM ${table} WHERE active = 1 AND LOWER(TRIM(name)) = LOWER(?)`)
+              .get(project[key]);
+            if (!option) throw new Error(`${label} "${project[key]}" is not in the active sidebar list. Add it there or use an existing value.`);
+            project[key] = option.name;
+          }
           const code = project.project_code.toLowerCase();
           if (seen.has(code)) throw new Error(`Duplicate Project Code in file: ${project.project_code}`);
           seen.add(code);

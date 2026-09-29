@@ -433,49 +433,38 @@ router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => 
   const hasTimesheets = db.prepare('SELECT COUNT(*) as count FROM timesheets WHERE user_id = ?').get(userId);
 
   const permanentDelete = db.transaction(() => {
-    if (hasTimesheets.count > 0) {
-      // User has timesheet history — anonymize instead of hard delete
-      // This preserves all JOIN relationships in reports
-      const anonEmail = `deleted_${userId}_${Date.now()}@removed.local`;
-      db.prepare(`
-        UPDATE users SET 
-          name = '[Deleted User]',
-          email = ?,
-          password_hash = '',
-          role = 'employee',
-          division = NULL,
-          core = NULL,
-          team_type = NULL,
-          division_id = NULL,
-          department_id = NULL,
-          supporting_category_id = NULL,
-          active = 0,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `).run(anonEmail, userId);
-    } else {
-      // No timesheet history — safe to hard delete
-      db.prepare('DELETE FROM users WHERE id = ?').run(userId);
-    }
+    // Always retain the user ID: records beyond timesheets also reference it.
+    // Anonymize and disable the account without deleting any linked history.
+    const anonEmail = `deleted_${userId}_${Date.now()}@removed.local`;
+    db.prepare(`
+      UPDATE users SET
+        name = '[Deleted User]',
+        email = ?,
+        password_hash = '',
+        role = 'employee',
+        division = NULL,
+        core = NULL,
+        team_type = NULL,
+        division_id = NULL,
+        department_id = NULL,
+        supporting_category_id = NULL,
+        employee_id = NULL,
+        active = 0,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(anonEmail, userId);
 
-    // Clean up admin division assignments
-    db.prepare('DELETE FROM admin_divisions WHERE user_id = ?').run(userId);
-    // Clean up admin-user ownership assignments (as admin or as user)
-    db.prepare('DELETE FROM user_admin_assignments WHERE user_id = ? OR admin_id = ?').run(userId, userId);
+    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
+      req.user.id, 'PERMANENT_DELETE_USER',
+      `Permanently deleted user: ${existing.name} (${existing.email}, ID: ${userId}) — anonymized; all linked records preserved (${hasTimesheets.count} timesheet entries)`,
+      'user', userId, req.ip
+    );
   });
 
   permanentDelete();
 
-  db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
-    req.user.id, 'PERMANENT_DELETE_USER',
-    `Permanently deleted user: ${existing.name} (${existing.email}, ID: ${userId})${hasTimesheets.count > 0 ? ' — anonymized (had ' + hasTimesheets.count + ' timesheet entries)' : ' — hard deleted (no timesheet data)'}`,
-    'user', userId, req.ip
-  );
-
   res.json({
-    message: hasTimesheets.count > 0
-      ? 'User permanently deleted. Historical timesheet data has been preserved with anonymized user info.'
-      : 'User permanently deleted.',
+    message: 'User permanently deleted. All historical records have been preserved with anonymized user info.',
     had_timesheets: hasTimesheets.count > 0,
     timesheet_count: hasTimesheets.count
   });

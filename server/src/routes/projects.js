@@ -27,7 +27,9 @@ router.get('/options', authenticate, authorize('admin'), (req, res) => {
     .filter(d => req.user.role === 'system admin' || ids.includes(d.id));
   const subdivisions = db.prepare('SELECT * FROM subdivisions WHERE active = 1 ORDER BY name').all()
     .filter(s => divisions.some(d => d.id === s.division_id));
-  res.json({ divisions, subdivisions });
+  const activities = db.prepare('SELECT id, name FROM activities WHERE active = 1 ORDER BY name').all();
+  const supporting_categories = db.prepare('SELECT id, name FROM supporting_categories WHERE active = 1 ORDER BY name').all();
+  res.json({ divisions, subdivisions, activities, supporting_categories });
 });
 router.get('/export', authenticate, authorize('admin'), async (req, res, next) => {
   try {

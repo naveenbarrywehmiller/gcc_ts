@@ -13,7 +13,6 @@ const fields = [
   ['input_received_date', 'Input Received Date', 'date'], ['start_date', 'Start Date', 'date'],
   ['target_date', 'Target Date', 'date'], ['delivered_date', 'Delivered Date', 'date'],
   ['budget_hours', 'Budget Hours', 'number'], ['customer_name', 'Customer Name'],
-  ['activity', 'Work Type'], ['team_type', 'Dedicated/Flex'],
 ];
 export default function AdminProjects() {
   const toast = useToast();
@@ -28,6 +27,10 @@ export default function AdminProjects() {
   const { data, isLoading, isError } = useQuery({ queryKey: ['admin-projects', filters, page], queryFn: () => api.get('/projects', { params: { ...filters, page, limit: 25 } }).then(r => r.data) });
   const divisions = options.data?.divisions || [];
   const locations = options.data?.subdivisions || [];
+  const dropdowns = [
+    ['activity', 'Work Type', options.data?.activities || []],
+    ['team_type', 'Dedicated/Flex', options.data?.supporting_categories || []],
+  ];
   const updateFilter = (key, value) => { setFilters(f => ({ ...f, [key]: value, ...(key === 'division_id' ? { subdivision_id: '' } : {}) })); setPage(1); };
   const refresh = () => { cache.invalidateQueries({ queryKey: ['admin-projects'] }); cache.invalidateQueries({ queryKey: ['timesheet'] }); };
   const save = async e => {
@@ -96,6 +99,14 @@ export default function AdminProjects() {
     <Modal isOpen={!!form} onClose={() => !busy && setForm(null)} title={form?.id ? 'Edit Project' : 'Add Project'} size="xl">
       {form && <form onSubmit={save} className="space-y-4"><div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {fields.map(([key, label, type = 'text']) => <div key={key}><label htmlFor={`project-${key}`} className="block text-xs font-medium mb-1">{label}{['project_code', 'project_name'].includes(key) ? ' *' : ''}<FieldHelp label={label} /></label><input id={`project-${key}`} className="input" type={type} min={type === 'number' ? 0 : undefined} step={type === 'number' ? 'any' : undefined} maxLength={1000} required={['project_code', 'project_name'].includes(key)} value={form[key] ?? ''} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}
+        {dropdowns.map(([key, label, items]) => <div key={key}>
+          <label htmlFor={`project-${key}`} className="block text-xs font-medium mb-1">{label}<FieldHelp label={label} /></label>
+          <select id={`project-${key}`} className="input" disabled={options.isLoading || options.isError} value={form[key] || ''} onChange={e => setForm({ ...form, [key]: e.target.value })}>
+            <option value="">Select {label}</option>
+            {form[key] && !items.some(item => item.name === form[key]) && <option value={form[key]}>{form[key]} (current value)</option>}
+            {items.map(item => <option key={item.id} value={item.name}>{item.name}</option>)}
+          </select>
+        </div>)}
         <div><label className="block text-xs mb-1" htmlFor="project-status">Status<FieldHelp label="Status" /></label><select id="project-status" className="input" value={form.project_status} onChange={e => setForm({ ...form, project_status: e.target.value })}>{['Inprogress', 'Hold', 'Completed'].map(s => <option key={s}>{s}</option>)}</select></div>
         <div><label className="block text-xs mb-1" htmlFor="project-division">Division<FieldHelp label="Division" /></label><select id="project-division" className="input" value={form.division_id || ''} onChange={e => setForm({ ...form, division_id: e.target.value, division: '', subdivision_id: '' })}><option value="">Select division</option>{divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
         <div><label className="block text-xs mb-1" htmlFor="project-location">Location<FieldHelp label="Location" /></label><select id="project-location" className="input" value={form.subdivision_id || ''} onChange={e => setForm({ ...form, subdivision_id: e.target.value })}><option value="">No location</option>{locations.filter(s => s.division_id === Number(form.division_id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>

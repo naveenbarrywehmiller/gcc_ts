@@ -678,8 +678,8 @@ export default function AdminUsers() {
               <strong>What happens:</strong>
             </p>
             <ul className="text-xs text-surface-500 dark:text-surface-400 mt-1.5 space-y-1 list-disc list-inside">
-              <li>The user will be permanently removed from the system</li>
-              <li>Their timesheet data will no longer appear in any reports or dashboards</li>
+              <li>The account will be anonymized and removed from the user list</li>
+              <li>All historical records will be preserved under [Deleted User]</li>
               <li>The user will no longer be able to log in</li>
             </ul>
           </div>

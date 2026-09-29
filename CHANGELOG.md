@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.12.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.12.0...v1.12.1) (2026-09-29)
+
+### Features
+
+* use sidebar-managed Work Type and Dedicated/Flex options in the project form
+* import and export holidays as iCalendar (`.ics`) files, including recurring and multi-day all-day events
+
+### Bug Fixes
+
+* preserve every historical record when removing a user by anonymizing and disabling the account
+* validate Excel project imports against active Work Type and Dedicated/Flex sidebar values with row-specific errors
+
+### Tests
+
+* cover user deletion rollback and record preservation, iCalendar parsing and endpoints, and project master-data validation
+
 ## [1.12.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.11.5...v1.12.0) (2026-09-28)
 
 ### Features

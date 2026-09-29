@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
@@ -11,6 +11,8 @@ export default function AdminHolidays() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ date: '', name: '' });
+  const fileRef = useRef(null);
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
     api.get(`/holidays?year=${year}`).then(res => setHolidays(res.data.holidays)).catch(() => toast.error('Failed')).finally(() => setLoading(false));
@@ -31,6 +33,34 @@ export default function AdminHolidays() {
     try { await api.delete(`/holidays/${id}`); toast.success('Holiday removed'); load(); } catch { toast.error('Failed'); }
   };
 
+  const importCalendar = async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!/\.ics$/i.test(file.name) || file.size > 2 * 1024 * 1024) {
+      toast.error('Choose an .ics file under 2 MB'); return;
+    }
+    setBusy(true);
+    const body = new FormData(); body.append('file', file); body.append('year', year);
+    try {
+      const { data } = await api.post('/holidays/import', body, { headers: { 'Content-Type': 'multipart/form-data' } });
+      toast.success(`Imported ${data.imported} holiday dates for ${year}; ${data.duplicates} existing/duplicate dates and ${data.skipped} timed/cancelled events skipped`);
+      load();
+    } catch (err) { toast.error(err.response?.data?.error || 'Calendar import failed'); }
+    finally { setBusy(false); }
+  };
+
+  const exportCalendar = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.get('/holidays/export', { params: { year }, responseType: 'blob' });
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a'); link.href = url; link.download = `holidays-${year}.ics`; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch { toast.error('Calendar export failed'); }
+    finally { setBusy(false); }
+  };
+
   const months = {};
   holidays.forEach(h => {
     const m = new Date(h.date + 'T00:00:00').toLocaleString('default', { month: 'long' });
@@ -40,15 +70,21 @@ export default function AdminHolidays() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-surface-900 dark:text-white">Holidays</h1>
-          <select className="input-sm w-24" value={year} onChange={e => setYear(parseInt(e.target.value))}>
+          <select aria-label="Holiday year" disabled={busy} className="input-sm w-24" value={year} onChange={e => setYear(parseInt(e.target.value))}>
             {[2024, 2025, 2026, 2027, 2028].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Holiday</button>
+        <div className="flex flex-wrap gap-2">
+          <input ref={fileRef} type="file" accept=".ics,text/calendar" hidden onChange={importCalendar} />
+          <button disabled={busy} onClick={() => fileRef.current.click()} className="btn-secondary btn-sm">Import .ics</button>
+          <button disabled={busy || loading} onClick={exportCalendar} className="btn-secondary btn-sm">Export .ics</button>
+          <button onClick={() => setShowModal(true)} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Holiday</button>
+        </div>
       </div>
+      <p className="text-xs text-surface-500">Import and export use the selected year. Import includes all-day and recurring holidays, skips timed events, and keeps existing dates unchanged.</p>
 
       {loading ? (
         <div className="card p-4"><div className="skeleton h-40 rounded-lg" /></div>
