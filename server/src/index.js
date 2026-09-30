@@ -76,6 +76,7 @@ app.use('/api/supporting-categories', require('./routes/supporting-categories'))
 app.use('/api/activities', require('./routes/activities'));
 app.use('/api/holidays', require('./routes/holidays'));
 app.use('/api/timesheets', require('./routes/timesheets'));
+app.use('/api/planned-vacations', require('./routes/planned-vacations'));
 app.use('/api/manager', require('./routes/manager'));
 const powerBiBasePath = config.powerBiApiBasePath || '/api/powerbi';
 app.use(powerBiBasePath, require('./routes/powerbi'));

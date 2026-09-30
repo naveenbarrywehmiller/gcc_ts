@@ -15,6 +15,7 @@ export default function Sidebar() {
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/timesheet', icon: Clock, label: 'Timesheet' },
+    { to: '/planned-vacation', icon: Calendar, label: 'Planned Vacation' },
   ];
 
   const adminItems = [

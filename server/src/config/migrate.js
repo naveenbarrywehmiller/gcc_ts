@@ -80,6 +80,16 @@ function migrate() {
       FOREIGN KEY (task_id) REFERENCES tasks(id)
     );
 
+    CREATE TABLE IF NOT EXISTS planned_vacations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      vacation_date TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, vacation_date),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_planned_vacations_date ON planned_vacations(vacation_date);
+
     CREATE TABLE IF NOT EXISTS holidays (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       date TEXT UNIQUE NOT NULL,

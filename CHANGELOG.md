@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.13.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.12.2...v1.13.0) (2026-09-30)
+
+### Features
+
+* add Planned Vacation below Timesheet for every user, opening on the current Monday–Sunday week with ISO week numbers and dates
+* provide a large month calendar, individual-day and date-range selection, and explicit save, removal, and discard controls
+* add an admin team calendar and employee filter, scoped to assigned divisions; system admins can view all divisions
+* store vacation plans separately from timesheets, without changing hours, approval workflows, reports, or integrations
+
+### Upgrade
+
+* create the planned-vacation table and index automatically on server startup
+
+### Validation
+
+* 45 regression tests and 55 Power BI API checks passed
+* client lint and production build passed
+* browser checks passed for selection, saving, removal, failed-save retry, current-week reset, admin access, employee filters, and calendar layouts
+
 ## [1.12.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.12.1...v1.12.2) (2026-09-30)
 
 ### Bug Fixes

@@ -12,6 +12,7 @@ import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
+import PlannedVacation from './pages/PlannedVacation';
 import Reports from './pages/Reports';
 import AdminUsers from './pages/admin/Users';
 import AdminProjects from './pages/admin/Projects';
@@ -55,6 +56,7 @@ function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/timesheet" element={<Timesheet />} />
+        <Route path="/planned-vacation" element={<PlannedVacation />} />
         
         {/* Manager Routes */}
         <Route path="/manager/approvals" element={<ManagerRoute><ManagerApprovals /></ManagerRoute>} />
