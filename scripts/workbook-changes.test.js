@@ -46,19 +46,36 @@ test('migration preserves legacy data and is repeatable', () => {
   assert.equal(db.prepare('SELECT project_name FROM projects WHERE id = ?').get(projectB).project_name, 'Other Division');
   assert.equal(db.prepare('SELECT project_status FROM projects WHERE id = ?').get(projectB).project_status, 'Inprogress');
 });
-test('project scope covers list, direct reads, edits, deletion and exports', async () => {
-  assert.equal((await request(admin, `/projects/${projectB}`, undefined, 'GET')).status, 404);
-  assert.equal((await request(admin, `/projects/${projectB}`, { project_name: 'Overwrite' }, 'PUT')).status, 404);
-  assert.equal((await request(admin, `/projects/${projectB}`, undefined, 'DELETE')).status, 404);
-  assert.equal((await request(admin, `/projects?division_id=${divB}`, undefined, 'GET')).body.projects.length, 0);
+test('admins read and export all projects but only modify their own divisions', async () => {
+  const foreign = await request(admin, `/projects/${projectB}`, undefined, 'GET');
+  assert.equal(foreign.status, 200);
+  assert.equal(foreign.body.project.can_edit, false);
+  assert.equal((await request(admin, `/projects/${projectB}`, { project_name: 'Overwrite' }, 'PUT')).status, 403);
+  assert.equal((await request(admin, `/projects/${projectB}`, { division_id: divA, project_name: 'Take over' }, 'PUT')).status, 403);
+  assert.equal((await request(admin, `/projects/${projectB}`, undefined, 'DELETE')).status, 403);
+  const list = await request(admin, `/projects?division_id=${divB}&page=1&limit=1`, undefined, 'GET');
+  assert.equal(list.body.projects.length, 1);
+  assert.equal(list.body.total, 1);
+  assert.equal(list.body.projects[0].can_edit, false);
   assert.equal((await request(system, `/projects/${projectB}`, undefined, 'GET')).status, 200);
   const result = await request(admin, '/projects', { project_code: 'A-ONE', project_name: 'Own', budget_hours: 0, project_status: 'Hold' });
   assert.equal(result.status, 201); assert.equal(result.body.project.division_id, divA); assert.equal(result.body.project.budget_hours, 0);
+  assert.equal((await request(admin, `/projects/${result.body.project.id}`, { project_name: 'Updated own project' }, 'PUT')).status, 200);
+  assert.equal((await request(admin, `/projects/${result.body.project.id}`, undefined, 'GET')).body.project.can_edit, true);
+  assert.equal((await request(admin, '/projects', { project_code: 'FORBIDDEN', project_name: 'Other', division_id: divB })).status, 403);
   assert.equal((await request(admin, `/projects/${result.body.project.id}`, { division_id: divB }, 'PUT')).status, 403);
   assert.equal((await request(employee, '/projects', { project_code:'NO', project_name:'No' })).status, 403);
   const exported = await request(admin, '/projects/export', undefined, 'GET');
   const book = new ExcelJS.Workbook(); await book.xlsx.load(exported.bytes);
-  assert.equal(book.worksheets[0].rowCount, 2); assert.equal(book.worksheets[0].getCell('A2').value, 'A-ONE');
+  assert.equal(book.worksheets[0].rowCount, 3); assert.equal(book.worksheets[0].getCell('A2').value, 'A-ONE');
+  assert.equal(book.worksheets[0].getCell('A3').value, 'B-SECRET');
+  const filtered = await request(admin, `/projects/export?division_id=${divB}`, undefined, 'GET');
+  const filteredBook = new ExcelJS.Workbook(); await filteredBook.xlsx.load(filtered.bytes);
+  assert.equal(filteredBook.worksheets[0].rowCount, 2);
+  assert.equal(filteredBook.worksheets[0].getCell('A2').value, 'B-SECRET');
+  assert.deepEqual(db.prepare('SELECT project_name, division_id, active FROM projects WHERE id = ?').get(projectB), {
+    project_name: 'Other Division', division_id: divB, active: 1,
+  });
 });
 test('project import rejects whole file on duplicate, missing fields, invalid date or foreign division', async () => {
   for (const text of ['Project Code,Project Name\nNEW,New\na-one,Duplicate', 'Project Code,Project Name\nNEW,New\nnew,Again', 'Project Code,Project Name\nNEW,New\nMISSING,', 'Project Code,Project Name,Start Date\nNEW,New,2026-02-31', 'Project Code,Project Name,Division\nNEW,New,Division B']) {
@@ -80,7 +97,7 @@ test('template headers round-trip with native Excel dates and project pagination
   assert.equal((await request(admin, '/import/projects', form)).status, 200);
   assert.equal(db.prepare("SELECT input_received_date FROM projects WHERE project_code = 'EXCEL'").get().input_received_date, '2026-09-28');
   const page = await request(admin, '/projects?page=2&limit=1', undefined, 'GET');
-  assert.equal(page.body.projects.length, 1); assert.equal(page.body.total, 3);
+  assert.equal(page.body.projects.length, 1); assert.equal(page.body.total, 4);
 });
 test('optional details survive batch, legacy saves and self-post; invalid values roll back', async () => {
   const entry = { task_id: task, work_date: '2026-09-28', hours: 8, details: { fundamental_error_count: 0, review_by: 'Reviewer', review_date: '2026-09-29', remarks: 'Keep me' } };
@@ -181,4 +198,64 @@ test('Excel project import validates active sidebar values with row errors and n
   assert.deepEqual(db.prepare("SELECT activity, team_type FROM projects WHERE project_code = 'SIDEBAR-BLANK'").get(), {
     activity: null, team_type: null,
   });
+});
+
+test('project options use profile division as fallback and distinguish view filters from editable master data', async () => {
+  const user = (name, divisionId) => Number(db.prepare('INSERT INTO users(name,email,password_hash,role,division_id) VALUES (?,?,?,\'admin\',?)')
+    .run(name, name + '@test.invalid', 'unused', divisionId).lastInsertRowid);
+  const profileAdmin = user('ProfileAdmin', divA);
+  const unassignedAdmin = user('UnassignedAdmin', null);
+  const delegatedAdmin = user('DelegatedAdmin', divA);
+  db.prepare('INSERT INTO admin_divisions(user_id,division_id) VALUES (?,?)').run(delegatedAdmin, divB);
+  const location = (name, divisionId, active = 1) => Number(db.prepare('INSERT INTO subdivisions(name,division_id,active) VALUES (?,?,?)')
+    .run(name, divisionId, active).lastInsertRowid);
+  const locationA = location('Location A', divA), locationB = location('Location B', divB);
+  const inactiveLocation = location('Retired location', divA, 0);
+  const inactiveDivision = Number(db.prepare('INSERT INTO divisions(name,active) VALUES (?,0)').run('Retired division').lastInsertRowid);
+  for (const actor of [admin, profileAdmin]) {
+    const options = (await request(actor, '/projects/options', undefined, 'GET')).body;
+    assert.deepEqual(options.divisions.map(d => d.id), [divA]);
+    assert.deepEqual(options.subdivisions.map(s => s.id), [locationA]);
+    assert.deepEqual(options.filter_divisions.map(d => d.id), [divA, divB]);
+    assert.deepEqual(options.filter_subdivisions.map(s => s.id), [locationA, locationB]);
+    assert(!options.divisions.some(d => d.id === inactiveDivision));
+    assert(!options.subdivisions.some(s => s.id === inactiveLocation));
+  }
+  const options = (await request(profileAdmin, '/projects/options', undefined, 'GET')).body;
+  assert.deepEqual(options.division_update_divisions.map(d => d.id), [divA], 'monthly updates use the same profile fallback');
+  const created = await request(profileAdmin, '/projects', { project_code: 'PROFILE', project_name: 'Profile division', subdivision_id: locationA });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.project.division_id, divA);
+  assert.equal(created.body.project.subdivision_id, locationA);
+  assert.equal((await request(profileAdmin, `/projects/${created.body.project.id}`, { project_name: 'Updated' }, 'PUT')).status, 200);
+  assert.equal((await request(profileAdmin, `/projects/${created.body.project.id}`, { subdivision_id: locationB }, 'PUT')).status, 400);
+  assert.equal((await request(profileAdmin, `/projects/${created.body.project.id}`, { division_id: divB }, 'PUT')).status, 403);
+  assert.equal((await request(profileAdmin, `/projects/${projectB}`, { division_id: divA }, 'PUT')).status, 403);
+  assert.equal((await request(profileAdmin, `/projects/${projectB}`, undefined, 'DELETE')).status, 403);
+  assert.equal((await request(profileAdmin, '/import/projects', csv('Project Code,Project Name\nPROFILE-IMPORT,Imported', null))).status, 200);
+  assert.equal((await request(profileAdmin, '/import/projects', csv('Project Code,Project Name,Division\nPROFILE-FOREIGN,Other,Division B', null))).status, 400);
+  assert.equal((await request(profileAdmin, `/projects/${created.body.project.id}`, undefined, 'DELETE')).status, 200);
+
+  const noOptions = (await request(unassignedAdmin, '/projects/options', undefined, 'GET')).body;
+  assert.deepEqual(noOptions.divisions, []);
+  assert.deepEqual(noOptions.subdivisions, []);
+  assert.equal(noOptions.filter_divisions.length, 2);
+  assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, undefined, 'GET')).body.project.can_edit, false);
+  assert.equal((await request(unassignedAdmin, '/projects', { project_code: 'UNASSIGNED', project_name: 'No access', division_id: divA })).status, 403);
+  assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, { project_name: 'No access' }, 'PUT')).status, 403);
+  assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, undefined, 'DELETE')).status, 403);
+
+  const assignedOptions = (await request(delegatedAdmin, '/projects/options', undefined, 'GET')).body;
+  assert.deepEqual(assignedOptions.divisions.map(d => d.id), [divB], 'explicit management assignments take precedence');
+  assert.equal((await request(delegatedAdmin, `/projects/${projectB}`, undefined, 'GET')).body.project.can_edit, true);
+  assert.equal((await request(delegatedAdmin, `/projects/${created.body.project.id}`, undefined, 'GET')).body.project.can_edit, false);
+  db.prepare('INSERT INTO admin_divisions(user_id,division_id) VALUES (?,?)').run(delegatedAdmin, divA);
+  assert.equal((await request(delegatedAdmin, `/projects/${created.body.project.id}`, undefined, 'GET')).body.project.can_edit, true);
+
+  const systemOptions = (await request(system, '/projects/options', undefined, 'GET')).body;
+  assert.deepEqual(systemOptions.divisions.map(d => d.id), [divA, divB]);
+  assert.deepEqual(systemOptions.subdivisions.map(s => s.id), [locationA, locationB]);
+  assert.equal((await request(system, `/projects/${projectB}`, undefined, 'GET')).body.project.can_edit, true);
+  assert.equal((await request(system, `/projects/${projectB}`, { project_name: 'System update' }, 'PUT')).status, 200);
+  assert.equal((await request(system, `/projects/${projectB}`, undefined, 'DELETE')).status, 200);
 });

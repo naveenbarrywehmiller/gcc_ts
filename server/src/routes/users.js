@@ -5,8 +5,32 @@ const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
 const { validateRoleAssignment } = require('../utils/userRoles');
+const { normalizeUserReferences } = require('../utils/userReferences');
+const { canManageUser, canManageDivision } = require('../utils/divisionScope');
 
 const router = express.Router();
+
+// Admin account credentials and division grants control access across the app.
+router.use('/:id', authenticate, (req, res, next) => {
+  if (req.method === 'GET' || req.user.role === 'system admin') return next();
+  const target = db.prepare('SELECT id, role, division_id, division FROM users WHERE id = ?').get(req.params.id);
+  if (!target) return next();
+  if (!canManageUser(req.user, target)) return res.status(403).json({ error: 'You can only manage non-admin accounts in your assigned divisions' });
+  const input = req.body || {};
+  if (!['admin', 'system admin'].includes(target.role)) {
+    if (Object.hasOwn(input, 'division_id') || Object.hasOwn(input, 'division')) {
+      const updated = normalizeUserReferences(input);
+      if (!canManageDivision(req.user, updated.division_id)) return res.status(403).json({ error: 'Select a division assigned to you' });
+    }
+    return next();
+  }
+  if ((input.role !== undefined && input.role !== target.role) ||
+      (input.division_id !== undefined && (Number(input.division_id) || null) !== target.division_id) ||
+      (input.division !== undefined && input.division !== target.division)) {
+    return res.status(403).json({ error: 'Only a system admin can change an administrator role or division' });
+  }
+  next();
+});
 
 /**
  * Generate a random secure password.
@@ -122,7 +146,7 @@ router.get('/', authenticate, authorize('admin'), (req, res) => {
   query += ` ORDER BY ${sortColumn} ${sortDirection}`;
 
   const users = db.prepare(query).all(...params);
-  res.json({ users });
+  res.json({ users: users.map(user => ({ ...user, can_manage: canManageUser(req.user, user) })) });
 });
 
 // GET /api/users/:id
@@ -160,7 +184,7 @@ router.get('/:id/divisions', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/users/:id/divisions - Assign divisions to an admin user
-router.put('/:id/divisions', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id/divisions', authenticate, authorize('system admin'), (req, res) => {
   const userId = req.params.id;
   const { division_ids } = req.body;
 
@@ -170,13 +194,18 @@ router.put('/:id/divisions', authenticate, authorize('admin'), (req, res) => {
 
   const user = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.role !== 'admin') return res.status(400).json({ error: 'Division assignments require an admin account' });
+  if (division_ids.some(id => !Number.isSafeInteger(Number(id)) || Number(id) <= 0 ||
+      !db.prepare('SELECT id FROM divisions WHERE id = ? AND active = 1').get(Number(id)))) {
+    return res.status(400).json({ error: 'Select valid active divisions' });
+  }
 
   const assignDivisions = db.transaction(() => {
     // Remove existing assignments
     db.prepare('DELETE FROM admin_divisions WHERE user_id = ?').run(userId);
     // Insert new assignments
     const insert = db.prepare('INSERT INTO admin_divisions (user_id, division_id) VALUES (?, ?)');
-    for (const divId of division_ids) {
+    for (const divId of new Set(division_ids.map(Number))) {
       insert.run(userId, divId);
     }
   });
@@ -198,6 +227,7 @@ router.put('/:id/divisions', authenticate, authorize('admin'), (req, res) => {
 
 // POST /api/users - Create user
 router.post('/', authenticate, authorize('admin'), (req, res) => {
+  req.body = normalizeUserReferences(req.body);
   const { name, email, password, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id } = req.body;
 
   if (!name || !email || !password) {
@@ -210,6 +240,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 
   const roleError = validateRoleAssignment(req.user, role || 'employee');
   if (roleError) return res.status(roleError.status).json({ error: roleError.error });
+  if (!canManageDivision(req.user, division_id)) return res.status(403).json({ error: 'Select a division assigned to you' });
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
   if (existing) {
@@ -255,17 +286,22 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 
 // PUT /api/users/:id - Update user
 router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+  req.body = normalizeUserReferences(req.body);
   const { name, email, password, role, division, core, team_type, active, division_id, department_id, supporting_category_id, employee_id } = req.body;
   const userId = req.params.id;
 
   const existing = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
+  if (active !== undefined && !active && (existing.id === req.user.id || existing.role === 'system admin')) {
+    return res.status(400).json({ error: 'Cannot deactivate your own account or a system admin account' });
+  }
+  if (password && (typeof password !== 'string' || password.length < 6)) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
   if (existing.role === 'system admin' && req.user.role !== 'system admin') {
     return res.status(403).json({ error: 'Only a system admin can modify another system admin account' });
   }
 
-  if (role !== undefined) {
+  if (role !== undefined && role !== existing.role) {
     const roleError = validateRoleAssignment(req.user, role);
     if (roleError) return res.status(roleError.status).json({ error: roleError.error });
   }

@@ -8,6 +8,8 @@ const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
 const { validateRoleAssignment } = require('../utils/userRoles');
+const { normalizeUserReferences } = require('../utils/userReferences');
+const { canManageDivision } = require('../utils/divisionScope');
 
 const router = express.Router();
 
@@ -176,17 +178,24 @@ router.post('/users', authenticate, authorize('admin'), upload.single('file'), a
           continue;
         }
 
+        let references;
+        try {
+          references = normalizeUserReferences({ division: row['Division'] || row['division'] || null, team_type: row['Team Type'] || row['team_type'] || null });
+          if (!canManageDivision(req.user, references.division_id)) throw new Error('Select a division assigned to you');
+        } catch (err) { skipped++; errors.push(`Row ${row.sourceRow}: ${err.message}`); continue; }
         db.prepare(`
-          INSERT INTO users (name, email, password_hash, role, division, core, team_type)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, supporting_category_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
           String(name).trim(),
           String(email).toLowerCase().trim(),
           defaultPassword,
           role,
-          row['Division'] || row['division'] || null,
+          references.division,
           row['Core'] || row['core'] || null,
-          row['Team Type'] || row['team_type'] || null
+          references.team_type,
+          references.division_id,
+          references.supporting_category_id
         );
         imported++;
       }

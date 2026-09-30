@@ -9,7 +9,7 @@ const sp = require('../services/sharepoint');
 const { canReviewTimesheet } = require('../utils/timesheetPermissions');
 
 const { serializeDetails } = require('../utils/timesheetDetails');
-const { projectScope } = require('../utils/divisionScope');
+const { projectScope, adminDivisionIds } = require('../utils/divisionScope');
 const router = express.Router();
 
 // Normalize once before writes, including self-post and single-entry callers.
@@ -131,7 +131,9 @@ router.get('/all', authenticate, authorize('admin'), (req, res) => {
     LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
     WHERE u.name != '[Deleted User]'
   `;
-  const params = [];
+  const scope = projectScope(req.user, 'u');
+  query += ` AND ${scope.sql}`;
+  const params = [...scope.params];
 
   if (week && year) {
     const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
@@ -183,6 +185,9 @@ router.get('/summary', authenticate, authorize('admin'), (req, res) => {
     WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
   `;
   const params = [startDate, endDate];
+  const scope = projectScope(req.user, 'u');
+  query += ` AND ${scope.sql}`;
+  params.push(...scope.params);
 
   if (assigned_to_me === 'true') {
     query += ' AND uaa.admin_id = ?';
@@ -196,7 +201,7 @@ router.get('/summary', authenticate, authorize('admin'), (req, res) => {
 
   query += ' GROUP BY u.id, t.status ORDER BY u.name ASC';
   const summaries = db.prepare(query).all(...params);
-  res.json({ summaries, weekRange: { startDate, endDate } });
+  res.json({ summaries: summaries.map(summary => ({ ...summary, can_review: canReviewTimesheet(req.user, summary.user_id) })), weekRange: { startDate, endDate } });
 });
 
 // POST /api/timesheets - Create or update a single entry (upsert)
@@ -404,7 +409,7 @@ router.delete('/:id', authenticate, (req, res) => {
 
   if (!entry) return res.status(404).json({ error: 'Entry not found' });
   const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
-  if (entry.user_id !== req.user.id && !isAdmin) {
+  if (entry.user_id !== req.user.id && (!isAdmin || !canReviewTimesheet(req.user, entry.user_id))) {
     return res.status(403).json({ error: 'Not authorized' });
   }
   if (entry.status === 'approved') {
@@ -665,7 +670,7 @@ router.post('/recall', authenticate, async (req, res) => {
 
   // If division admin (not system admin) is recalling another user's timesheet, verify division scope
   if (req.user.role === 'admin' && targetUserId !== req.user.id) {
-    const adminDivisions = db.prepare('SELECT division_id FROM admin_divisions WHERE user_id = ?').all(req.user.id).map(d => d.division_id);
+    const adminDivisions = adminDivisionIds(req.user);
     const targetUser = db.prepare('SELECT division_id FROM users WHERE id = ?').get(targetUserId);
     if (!targetUser || !adminDivisions.includes(targetUser.division_id)) {
       return res.status(403).json({ error: 'You are not authorized to manage timesheets for this user.' });

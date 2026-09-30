@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { canManageDivision, adminDivisionIds } = require('./divisionScope');
+const { canManageProjectDivision, projectDivisionIds } = require('./projectPermissions');
 
 // These headers are shared by import and export so a downloaded file is reusable.
 const columns = [
@@ -44,11 +44,11 @@ function validateProject(input, user, existing = {}) {
     if (!divisionId) fail(`Unknown division: ${data.division}`);
   }
   if (!divisionId && user.role === 'admin') {
-    const ids = adminDivisionIds(user);
+    const ids = projectDivisionIds(user);
     if (ids.length === 1) divisionId = ids[0];
   }
   if (divisionId !== null && (!Number.isSafeInteger(divisionId) || divisionId <= 0)) fail('Invalid division');
-  if (!canManageDivision(user, divisionId)) fail('Select a division assigned to you', 403);
+  if (!canManageProjectDivision(user, divisionId)) fail('Select a division assigned to you', 403);
   const division = divisionId ? db.prepare('SELECT * FROM divisions WHERE id = ? AND active = 1').get(divisionId) : null;
   if (divisionId && !division) fail('Invalid division');
   result.division_id = divisionId;

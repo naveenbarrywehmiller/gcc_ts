@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { loginRequest } from '../services/msal';
 import api from '../services/api';
 
 import { AuthContext } from './auth';
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('user') || 'null'); }
     catch { return null; }
@@ -29,16 +31,18 @@ export function AuthProvider({ children }) {
         localStorage.setItem('user', JSON.stringify(res.data.user));
       })
       .catch(() => {
+        queryClient.clear();
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [queryClient]);
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
     const { user, token } = res.data;
+    queryClient.clear();
     if (token) {
       localStorage.setItem('token', token);
     }
@@ -54,6 +58,7 @@ export function AuthProvider({ children }) {
         // Send the MSAL ID token to our backend to establish a local session
         const res = await api.post('/auth/ms-callback', { idToken: response.idToken });
         const { user, token } = res.data;
+        queryClient.clear();
         if (token) {
           localStorage.setItem('token', token);
         }
@@ -79,6 +84,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUser(null);
+    queryClient.clear();
   };
 
   return (

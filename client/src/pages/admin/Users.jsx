@@ -1,6 +1,7 @@
 import FieldHelp from '../../components/ui/FieldHelp';
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
@@ -11,7 +12,11 @@ import { Plus, Search, Edit2, Trash2, UserCheck, UserX, Dice5, Eye, EyeOff, Copy
 
 export default function AdminUsers() {
   const toast = useToast();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isSystemAdmin } = useAuth();
+  const cache = useQueryClient();
+  const [managedDivisions, setManagedDivisions] = useState([]);
+  const canEditAccount = user => user.can_manage;
+  const canViewHistory = user => isSystemAdmin || managedDivisions.some(d => d.id === user.division_id);
   const [users, setUsers] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [, setSubdivisions] = useState([]);
@@ -79,13 +84,15 @@ export default function AdminUsers() {
       api.get('/divisions'),
       api.get('/subdivisions'),
       api.get('/departments'),
-      api.get('/supporting-categories')
-    ]).then(([uRes, divRes, subRes, deptRes, scRes]) => {
+      api.get('/supporting-categories'),
+      api.get('/projects/options')
+    ]).then(([uRes, divRes, subRes, deptRes, scRes, optionsRes]) => {
       setUsers(uRes.data.users);
       setDivisions(divRes.data.divisions);
       setSubdivisions(subRes.data.subdivisions);
       setDepartments(deptRes.data.departments);
       setSupportingCategories(scRes.data.categories);
+      setManagedDivisions(optionsRes.data.divisions);
     }).catch(() => toast.error('Failed to load data')).finally(() => setLoading(false));
   }, [toast, search, filters, sortBy, sortDir]);
 
@@ -104,7 +111,7 @@ export default function AdminUsers() {
     setEditing(null);
     setForm({ 
       name: '', email: '', password: '', role: 'employee', 
-      division_id: '', department_id: '', supporting_category_id: '', employee_id: '' 
+      division_id: !isSystemAdmin && managedDivisions.length === 1 ? managedDivisions[0].id : '', department_id: '', supporting_category_id: '', employee_id: ''
     });
     setShowPassword(false);
     setShowModal(true);
@@ -157,6 +164,7 @@ export default function AdminUsers() {
         toast.success('User created');
       }
       setShowModal(false);
+      cache.invalidateQueries();
       loadData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to save user');
@@ -205,7 +213,8 @@ export default function AdminUsers() {
       const res = await api.get(`/users/${user.id}/divisions`);
       setSelectedDivisions(res.data.divisions.map(d => d.id));
     } catch {
-      setSelectedDivisions([]);
+      toast.error('Unable to load division assignments');
+      return;
     }
     setShowDivModal(true);
   };
@@ -221,6 +230,8 @@ export default function AdminUsers() {
       await api.put(`/users/${divEditUser.id}/divisions`, { division_ids: selectedDivisions });
       toast.success('Divisions updated');
       setShowDivModal(false);
+      cache.invalidateQueries();
+      loadData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to update divisions');
     }
@@ -290,7 +301,7 @@ export default function AdminUsers() {
           <button onClick={openAllAssignedHistory} className="btn-secondary btn-sm" id="view-assigned-history-btn" title="View timesheets for all your assigned users across all weeks">
             <History className="w-4 h-4" /> Assigned Timesheets (All Weeks)
           </button>
-          <button onClick={openCreate} className="btn-primary btn-sm" id="create-user-btn">
+          <button disabled={!isSystemAdmin && managedDivisions.length === 0} onClick={openCreate} className="btn-primary btn-sm" id="create-user-btn">
             <Plus className="w-4 h-4" /> Add User
           </button>
         </div>
@@ -324,7 +335,9 @@ export default function AdminUsers() {
           <select value={filters.role} onChange={(e) => setFilters({...filters, role: e.target.value})} className="input">
             <option value="">All Roles</option>
             <option value="employee">Employee</option>
+            <option value="manager">Manager</option>
             <option value="admin">Admin</option>
+            <option value="system admin">System Admin</option>
           </select>
           <select value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})} className="input">
             <option value="all">All Statuses</option>
@@ -397,7 +410,7 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {/* Admin ownership actions — for other active users */}
-                      {user.id !== currentUser?.id && user.active && (
+                      {user.id !== currentUser?.id && user.active && canViewHistory(user) && (
                         <>
                           {!user.admin_id && (
                             <button onClick={() => openAssignConfirm(user, 'assign')} className="btn-ghost btn-xs p-1.5 text-emerald-500 hover:text-emerald-600" title="Assign to me">
@@ -412,19 +425,20 @@ export default function AdminUsers() {
                         </>
                       )}
                       {/* Timesheet history */}
-                      <button onClick={() => openHistoryModal(user)} className="btn-ghost btn-xs p-1.5" title="Timesheet History">
+                      <button disabled={!canViewHistory(user)} onClick={() => openHistoryModal(user)} className="btn-ghost btn-xs p-1.5" title="Timesheet History">
                         <History className="w-3.5 h-3.5" />
                       </button>
-                      {user.role === 'admin' && (
+                      {isSystemAdmin && user.role === 'admin' && (
                         <button onClick={() => openDivisionModal(user)} className="btn-ghost btn-xs p-1.5" title="Manage Divisions">
                           <Building2 className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      <button onClick={() => openEdit(user)} className="btn-ghost btn-xs p-1.5" title="Edit">
+                      <button disabled={!canEditAccount(user)} onClick={() => openEdit(user)} className="btn-ghost btn-xs p-1.5" title="Edit">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleToggleActive(user)}
+                        disabled={!canEditAccount(user) || user.id === currentUser.id || user.role === 'system admin'}
                         className={`btn-ghost btn-xs p-1.5 ${user.active ? 'text-amber-500 hover:text-amber-600' : 'text-emerald-500 hover:text-emerald-600'}`}
                         title={user.active ? 'Deactivate User' : 'Activate User'}
                       >
@@ -432,6 +446,7 @@ export default function AdminUsers() {
                       </button>
                       <button
                         onClick={() => openDeleteModal(user)}
+                        disabled={!canEditAccount(user) || user.id === currentUser.id || user.role === 'system admin'}
                         className="btn-ghost btn-xs p-1.5 text-red-500 hover:text-red-600"
                         title="Permanently Delete User"
                       >
@@ -521,17 +536,19 @@ export default function AdminUsers() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Role</label>
-              <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <select className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="employee">Employee</option>
-                <option value="admin">Admin</option>
-                {form.role === 'system admin' && <option value="system admin">System Admin</option>}
+                <option value="manager">Manager</option>
+                {(isSystemAdmin || form.role === 'admin') && <option value="admin">Admin</option>}
+                {isSystemAdmin && <option value="system admin">System Admin</option>}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division<FieldHelp label="Division" /></label>
-              <select className="input" value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
+              <select className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
                 <option value="">— Select —</option>
-                {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                {form.division_id && !(isSystemAdmin ? divisions : managedDivisions).some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{editing?.division_name || editing?.division} (current)</option>}
+                {(isSystemAdmin ? divisions : managedDivisions).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
           </div>
@@ -540,6 +557,7 @@ export default function AdminUsers() {
               <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Department</label>
               <select className="input" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
                 <option value="">— Select —</option>
+                {form.department_id && !departments.some(d => d.id === Number(form.department_id)) && <option value={form.department_id}>{editing?.department_name} (inactive)</option>}
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
@@ -547,6 +565,7 @@ export default function AdminUsers() {
               <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Dedicated/Flex<FieldHelp label="Dedicated / Flex" /></label>
               <select className="input" value={form.supporting_category_id} onChange={(e) => setForm({ ...form, supporting_category_id: e.target.value })}>
                 <option value="">— Select —</option>
+                {form.supporting_category_id && !supportingCategories.some(d => d.id === Number(form.supporting_category_id)) && <option value={form.supporting_category_id}>{editing?.supporting_category_name} (inactive)</option>}
                 {supportingCategories.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
               </select>
             </div>

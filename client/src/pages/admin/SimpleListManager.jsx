@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import FieldHelp from '../../components/ui/FieldHelp';
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
@@ -8,6 +9,7 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 export default function SimpleListManager({ endpoint, title, fieldName = 'name' }) {
   const toast = useToast();
+  const cache = useQueryClient();
   const itemLabel = title === 'Divisions' ? 'Division' : title;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,13 +30,13 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
     try {
       if (editing) { await api.put(`${endpoint}/${editing.id}`, { [fieldName]: name }); toast.success('Updated'); }
       else { await api.post(endpoint, { [fieldName]: name }); toast.success('Created'); }
-      setShowModal(false); setName(''); load();
+      setShowModal(false); setName(''); load(); cache.invalidateQueries();
     } catch (err) { toast.error(err.response?.data?.error || 'Failed'); }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Deactivate this item?')) return;
-    try { await api.delete(`${endpoint}/${id}`); toast.success('Deactivated'); load(); } catch { toast.error('Failed'); }
+    try { await api.delete(`${endpoint}/${id}`); toast.success('Deactivated'); load(); cache.invalidateQueries(); } catch { toast.error('Failed'); }
   };
 
   return (

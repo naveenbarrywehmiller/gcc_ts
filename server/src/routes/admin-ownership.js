@@ -12,26 +12,9 @@
 const express = require('express');
 const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
+const { projectScope, canManageDivision } = require('../utils/divisionScope');
 
 const router = express.Router();
-
-/**
- * Helper: Get the division IDs assigned to an admin.
- */
-function getAdminDivisionIds(adminId) {
-  return db.prepare(
-    'SELECT division_id FROM admin_divisions WHERE user_id = ?'
-  ).all(adminId).map(r => r.division_id);
-}
-
-/**
- * Helper: Check if admin has access to a user's division.
- */
-function adminHasDivisionAccess(adminId, userDivisionId) {
-  if (!userDivisionId) return false; // User has no division — cannot be managed
-  const divIds = getAdminDivisionIds(adminId);
-  return divIds.includes(userDivisionId);
-}
 
 // ============================================================
 // GET /api/admin-ownership/my-users
@@ -39,13 +22,7 @@ function adminHasDivisionAccess(adminId, userDivisionId) {
 // ============================================================
 router.get('/my-users', authenticate, authorize('admin'), (req, res) => {
   const adminId = req.user.id;
-  const divIds = getAdminDivisionIds(adminId);
-
-  if (divIds.length === 0) {
-    return res.json({ users: [] });
-  }
-
-  const placeholders = divIds.map(() => '?').join(',');
+  const scope = projectScope(req.user, 'u');
   const users = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.active, u.employee_id,
            u.division_id, u.department_id,
@@ -58,11 +35,11 @@ router.get('/my-users', authenticate, authorize('admin'), (req, res) => {
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN user_admin_assignments uaa ON uaa.user_id = u.id
     LEFT JOIN users admin_user ON uaa.admin_id = admin_user.id
-    WHERE u.division_id IN (${placeholders})
+    WHERE ${scope.sql}
       AND u.name != '[Deleted User]'
       AND u.id != ?
     ORDER BY u.name ASC
-  `).all(...divIds, adminId);
+  `).all(...scope.params, adminId);
 
   res.json({ users });
 });
@@ -150,7 +127,7 @@ router.post('/assign/:userId', authenticate, authorize('admin'), (req, res) => {
   }
 
   // 3. Check admin has access to user's division
-  if (!adminHasDivisionAccess(adminId, targetUser.division_id)) {
+  if (!canManageDivision(req.user, targetUser.division_id)) {
     return res.status(403).json({ error: 'You can only manage users in your assigned divisions.' });
   }
 
@@ -246,15 +223,12 @@ router.get('/timesheet-history', authenticate, authorize('admin'), (req, res) =>
   const adminId = req.user.id;
   const { user_id, week, year, month, status, division_id, assigned_only } = req.query;
 
-  const divIds = getAdminDivisionIds(adminId);
-  if (divIds.length === 0) {
-    return res.json({ entries: [] });
-  }
+  const scope = projectScope(req.user, 'u');
 
   // If specific user requested, verify admin has access
   if (user_id) {
     const targetUser = db.prepare('SELECT division_id FROM users WHERE id = ?').get(user_id);
-    if (!targetUser || !divIds.includes(targetUser.division_id)) {
+    if (!targetUser || !canManageDivision(req.user, targetUser.division_id)) {
       return res.status(403).json({ error: 'You are not authorized to view this user\'s timesheets.' });
     }
   }
@@ -282,9 +256,8 @@ router.get('/timesheet-history', authenticate, authorize('admin'), (req, res) =>
   const params = [];
 
   // Enforce division scope
-  const placeholders = divIds.map(() => '?').join(',');
-  query += ` AND u.division_id IN (${placeholders})`;
-  params.push(...divIds);
+  query += ` AND ${scope.sql}`;
+  params.push(...scope.params);
 
   if (assigned_only === 'true') {
     query += ' AND uaa.admin_id = ?';
@@ -331,24 +304,17 @@ router.get('/timesheet-history', authenticate, authorize('admin'), (req, res) =>
 // Get all users the current admin can see (for dropdowns/filters)
 // ============================================================
 router.get('/authorized-users', authenticate, authorize('admin'), (req, res) => {
-  const adminId = req.user.id;
-  const divIds = getAdminDivisionIds(adminId);
-
-  if (divIds.length === 0) {
-    return res.json({ users: [] });
-  }
-
-  const placeholders = divIds.map(() => '?').join(',');
+  const scope = projectScope(req.user, 'u');
   const users = db.prepare(`
     SELECT u.id, u.name, u.email, u.employee_id, u.division_id,
            d.name as division_name
     FROM users u
     LEFT JOIN divisions d ON u.division_id = d.id
-    WHERE u.division_id IN (${placeholders})
+    WHERE ${scope.sql}
       AND u.active = 1
       AND u.name != '[Deleted User]'
     ORDER BY u.name ASC
-  `).all(...divIds);
+  `).all(...scope.params);
 
   res.json({ users });
 });

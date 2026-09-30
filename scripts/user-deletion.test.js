@@ -23,7 +23,7 @@ async function request(id, path, method = 'GET') {
   return { status: response.status, body: await response.json() };
 }
 before(async () => {
-  admin = user('Admin', 'admin');
+  admin = user('Admin', 'system admin');
   division = Number(db.prepare("INSERT INTO divisions(name) VALUES ('Test')").run().lastInsertRowid);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));

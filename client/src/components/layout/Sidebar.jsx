@@ -8,7 +8,7 @@ import {
 import { useState } from 'react';
 
 export default function Sidebar() {
-  const { isAdmin, isSystemAdmin } = useAuth();
+  const { isAdmin, isSystemAdmin, isManager } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
 
@@ -37,6 +37,7 @@ export default function Sidebar() {
   ];
 
   const allItems = isAdmin ? [...navItems, ...adminItems] : navItems;
+  if (isManager) allItems.push({ to: '/manager/approvals', icon: ClipboardCheck, label: 'Approvals' });
 
   if (isSystemAdmin) {
     allItems.push({ type: 'divider', label: 'System' });

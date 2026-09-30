@@ -42,15 +42,18 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Skip refresh attempt on auth endpoints to prevent loops
-    if (originalRequest.url === '/auth/login' || originalRequest.url === '/auth/refresh') {
+    if (!originalRequest || ['/auth/login', '/auth/maintenance-login', '/auth/ms-callback', '/auth/refresh', '/auth/logout'].includes(originalRequest.url)) {
       return Promise.reject(error);
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
+        originalRequest._retry = true;
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
         }).then(() => {
+          const token = localStorage.getItem('token');
+          if (token) originalRequest.headers.Authorization = `Bearer ${token}`;
           return api(originalRequest);
         }).catch(err => {
           return Promise.reject(err);
@@ -65,6 +68,7 @@ api.interceptors.response.use(
         const refreshRes = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
         if (refreshRes.data?.token) {
           localStorage.setItem('token', refreshRes.data.token);
+          originalRequest.headers.Authorization = `Bearer ${refreshRes.data.token}`;
         }
         isRefreshing = false;
         processQueue(null);

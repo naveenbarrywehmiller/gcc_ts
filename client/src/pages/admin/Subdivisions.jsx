@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
@@ -7,6 +8,7 @@ import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 
 export default function AdminSubdivisions() {
   const toast = useToast();
+  const cache = useQueryClient();
   const [subdivisions, setSubdivisions] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,7 @@ export default function AdminSubdivisions() {
         toast.success('Location created');
       }
       setShowModal(false); 
+      cache.invalidateQueries();
       loadData();
     } catch (err) { 
       toast.error(err.response?.data?.error || 'Failed to save'); 
@@ -73,6 +76,7 @@ export default function AdminSubdivisions() {
     try { 
       await api.delete(`/subdivisions/${id}`); 
       toast.success('Location deactivated');
+      cache.invalidateQueries();
       loadData(); 
     } catch {
       toast.error('Failed to deactivate'); 

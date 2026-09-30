@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.12.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.12.1...v1.12.2) (2026-09-30)
+
+### Bug Fixes
+
+* let admins view and export projects across divisions while restricting project changes and imports to their managed divisions
+* use explicit division assignments, falling back to the profile division, consistently across project options, monthly updates, approvals, history, and scoped reporting
+* restore system-admin history access without separate division assignments and add missing Manager role and approval navigation
+* link imported user divisions and supporting categories to sidebar master-data IDs and refresh cached dropdowns after master-data changes
+* clear cached account data on session changes, key approval details by week, and retry expired requests with the refreshed token
+
+### Security
+
+* enforce division permissions on user creation, updates, imports, password resets, deactivation, deletion, and draft timesheet deletion
+* reserve administrator role grants, administrator account management, and division grants for system admins; prevent admins from expanding their own access
+* align approval lists and user-management controls with server-enforced permissions
+
+### Validation
+
+* 39 regression tests and 55 Power BI API checks passed
+* client lint and production build passed
+
 ## [1.12.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.12.0...v1.12.1) (2026-09-29)
 
 ### Features

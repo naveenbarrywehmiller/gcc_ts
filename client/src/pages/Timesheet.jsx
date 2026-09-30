@@ -118,7 +118,7 @@ export default function Timesheet() {
   holidays.forEach(h => { holidayNames[h.date] = h.name; });
 
   const { data: fetchedData, isLoading: loading, isError } = useQuery({
-    queryKey: ['timesheet', week, year, refreshTrigger],
+    queryKey: ['timesheet', user?.id, week, year, refreshTrigger],
     queryFn: async () => {
       const fetches = [
         api.get(`/timesheets?week=${week}&year=${year}`),
@@ -136,7 +136,7 @@ export default function Timesheet() {
       const [tsRes, pRes, tkRes, divRes, subRes, hRes] = results;
       return {
         entries: tsRes.data.entries,
-        projects: pRes.data.projects,
+        projects: user?.role === 'admin' ? pRes.data.projects.filter(project => project.can_edit) : pRes.data.projects,
         tasks: tkRes.data.tasks,
         divisions: divRes.data.divisions,
         subdivisions: subRes.data.subdivisions,

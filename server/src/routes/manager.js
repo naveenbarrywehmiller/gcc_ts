@@ -8,7 +8,8 @@
 const express = require('express');
 const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
-const timesheetRepo = require('../repositories/TimesheetRepository');
+const { canReviewTimesheet } = require('../utils/timesheetPermissions');
+const { projectScope } = require('../utils/divisionScope');
 
 const router = express.Router();
 
@@ -39,8 +40,12 @@ router.get('/pending-approvals', authenticate, authorize('manager', 'admin'), (r
   // If not admin, restrict to manager's organization
   const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
   if (!isAdmin) {
-    query += ` AND u.division_id = ? `;
-    params.push(manager?.division_id);
+    query += ` AND u.division_id = ? AND u.id != ? `;
+    params.push(manager?.division_id, req.user.id);
+  } else {
+    const scope = projectScope(req.user, 'u');
+    query += ` AND ${scope.sql}`;
+    params.push(...scope.params);
   }
 
   query += `
@@ -49,21 +54,15 @@ router.get('/pending-approvals', authenticate, authorize('manager', 'admin'), (r
   `;
 
   const weeks = db.prepare(query).all(...params);
-  res.json({ weeks });
+  res.json({ weeks: weeks.filter(row => canReviewTimesheet(req.user, row.user_id)) });
 });
 
 // Get details for a specific week for a specific user
 router.get('/week-details/:userId/:year/:week', authenticate, authorize('manager', 'admin'), (req, res) => {
   const { userId, year, week } = req.params;
 
-  // Basic security: if manager, ensure user is in their org
-  const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
-  if (!isAdmin) {
-    const manager = db.prepare('SELECT division_id FROM users WHERE id = ?').get(req.user.id);
-    const target = db.prepare('SELECT division_id FROM users WHERE id = ?').get(userId);
-    if (!manager || !target || manager.division_id !== target.division_id) {
-      return res.status(403).json({ error: 'Not authorized to view this user' });
-    }
+  if (!canReviewTimesheet(req.user, Number(userId))) {
+    return res.status(403).json({ error: 'Not authorized to view this user' });
   }
 
   // Reuse the repository logic for reads (but it gets one user's week)

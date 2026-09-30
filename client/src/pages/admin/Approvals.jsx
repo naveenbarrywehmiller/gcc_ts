@@ -93,10 +93,11 @@ export default function AdminApprovals() {
       return;
     }
     setExpandedUser(userId);
-    if (!userDetails[userId]) {
+    const detailKey = `${year}:${week}:${userId}`;
+    if (!userDetails[detailKey]) {
       try {
         const res = await api.get(`/timesheets/all?week=${week}&year=${year}&user_id=${userId}`);
-        setUserDetails(prev => ({ ...prev, [userId]: res.data.entries }));
+        setUserDetails(prev => ({ ...prev, [detailKey]: res.data.entries }));
       } catch {
         toast.error('Failed to load details');
       }
@@ -277,17 +278,17 @@ export default function AdminApprovals() {
                         <p className="text-lg font-bold text-surface-900 dark:text-white">{s.total_hours?.toFixed(1)}h</p>
                         <p className="text-xs text-surface-400">{s.days_worked} days</p>
                       </div>
-                      <button onClick={() => openActionModal('approve', s.user_id, s.user_name)} className="btn-primary btn-sm" title="Approve">
+                      <button disabled={!s.can_review} onClick={() => openActionModal('approve', s.user_id, s.user_name)} className="btn-primary btn-sm" title="Approve">
                         <Check className="w-4 h-4" /> Approve
                       </button>
-                      <button onClick={() => openActionModal('reject', s.user_id, s.user_name)} className="btn-danger btn-sm" title="Reject">
+                      <button disabled={!s.can_review} onClick={() => openActionModal('reject', s.user_id, s.user_name)} className="btn-danger btn-sm" title="Reject">
                         <X className="w-4 h-4" /> Reject
                       </button>
                     </div>
                   </div>
 
                   {/* Expanded details */}
-                  {expandedUser === s.user_id && userDetails[s.user_id] && (
+                  {expandedUser === s.user_id && userDetails[`${year}:${week}:${s.user_id}`] && (
                     <div className="mt-4 pt-4 border-t border-surface-200 dark:border-surface-800">
                       <table className="w-full text-sm">
                         <thead>
@@ -300,7 +301,7 @@ export default function AdminApprovals() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
-                          {userDetails[s.user_id].map((e, i) => (
+                          {userDetails[`${year}:${week}:${s.user_id}`].map((e, i) => (
                             <tr key={i} className="hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
                               <td className="py-2 text-surface-600 dark:text-surface-400">
                                 {new Date(e.work_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}

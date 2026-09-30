@@ -1,7 +1,15 @@
 const db = require('../config/db');
 
+function userDivisionId(user) {
+  return user.division_id || (user.division && db.prepare('SELECT id FROM divisions WHERE LOWER(TRIM(name)) = LOWER(?) AND active = 1').get(String(user.division).trim())?.id) || null;
+}
+
 function adminDivisionIds(user) {
-  return db.prepare('SELECT division_id FROM admin_divisions WHERE user_id = ?').all(user.id).map(r => r.division_id);
+  if (user.role !== 'admin') return [];
+  const assigned = db.prepare('SELECT division_id FROM admin_divisions WHERE user_id = ?').all(user.id).map(r => r.division_id);
+  if (assigned.length) return assigned;
+  const profileId = userDivisionId(user);
+  return profileId ? [Number(profileId)] : [];
 }
 
 function canManageDivision(user, divisionId) {
@@ -10,7 +18,13 @@ function canManageDivision(user, divisionId) {
 
 function projectScope(user, alias = 'p') {
   if (user.role !== 'admin') return { sql: '1=1', params: [] };
-  return { sql: `${alias}.division_id IN (SELECT division_id FROM admin_divisions WHERE user_id = ?)`, params: [user.id] };
+  const ids = adminDivisionIds(user);
+  return { sql: ids.length ? `${alias}.division_id IN (${ids.map(() => '?').join(',')})` : '0=1', params: ids };
 }
 
-module.exports = { adminDivisionIds, canManageDivision, projectScope };
+function canManageUser(actor, target) {
+  return actor.role === 'system admin' || (actor.role === 'admin' &&
+    (actor.id === target.id || (!['admin', 'system admin'].includes(target.role) && canManageDivision(actor, userDivisionId(target)))));
+}
+
+module.exports = { adminDivisionIds, canManageDivision, projectScope, userDivisionId, canManageUser };
