@@ -11,6 +11,16 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const sizes = {
@@ -22,7 +32,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   };
 
   return (
-    // Dismiss only through explicit buttons; selection drags can end on the backdrop.
+    // Keep backdrop clicks inert; selection drags can end outside the popup.
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop"
     >
