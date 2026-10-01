@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.13.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.0...v1.13.1) (2026-09-30)
+
+### Bug Fixes
+
+* prevent Create User and all other shared popups from closing when text selection ends outside the popup, the background is clicked, or Escape is pressed
+* retain explicit Close and Cancel buttons and existing successful form actions; prevent the Close button from submitting an enclosing form
+
+### Validation
+
+* client lint and production build passed
+* browser interaction checks passed for all five popup sizes, including drag selection, copying, background clicks, Escape, Close, Cancel, and scroll locking
+
 ## [1.13.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.12.2...v1.13.0) (2026-09-30)
 
 ### Features

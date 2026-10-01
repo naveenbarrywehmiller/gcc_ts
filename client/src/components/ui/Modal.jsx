@@ -1,20 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }) {
-  const overlayRef = useRef(null);
-
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
-      document.addEventListener('keydown', handleEsc);
       return () => {
         document.body.style.overflow = '';
-        document.removeEventListener('keydown', handleEsc);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -27,10 +22,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   };
 
   return (
+    // Dismiss only through explicit buttons; selection drags can end on the backdrop.
     <div
-      ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop"
-      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
       <div className="fixed inset-0 bg-black/50 dark:bg-black/70" />
       <div className={`relative w-full ${sizes[size]} bg-white dark:bg-surface-900 rounded-xl 
@@ -40,6 +34,8 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200 dark:border-surface-800 shrink-0">
           <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100">{title}</h2>
           <button
+            type="button"
+            aria-label="Close popup"
             onClick={onClose}
             className="p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 
               dark:hover:text-surface-300 dark:hover:bg-surface-800 transition-colors"
