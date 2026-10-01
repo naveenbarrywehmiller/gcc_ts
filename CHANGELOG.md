@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.2...v1.14.0) (2026-10-01)
+
+
+### Features
+
+* improve dashboard actions, status accuracy, and weekly progress ([26332fb](https://github.com/naveenbarrywehmiller/gcc_ts/commit/26332fb2174039cc8e55d2b7901c2b6134490a0e))
+
 ## [1.13.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.1...v1.13.2) (2026-10-01)
 
 
