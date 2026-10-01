@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.0...v1.13.1) (2026-10-01)
+
+
+### Bug Fixes
+
+* release v1.13.1 with explicit popup dismissal ([86fc11c](https://github.com/naveenbarrywehmiller/gcc_ts/commit/86fc11c6f36c4433bada99c31eadf59140ea84fc))
+
 ## [1.13.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.0...v1.13.1) (2026-09-30)
 
 ### Bug Fixes
