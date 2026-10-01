@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.1...v1.13.2) (2026-10-01)
+
+
+### Bug Fixes
+
+* restore Escape key dismissal for popups ([cb404f5](https://github.com/naveenbarrywehmiller/gcc_ts/commit/cb404f5d766cfaa6eb682076473c166048f7d2a5))
+
 ## [1.13.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.0...v1.13.1) (2026-10-01)
 
 
