@@ -6,6 +6,8 @@ const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
 
 const { projectScope } = require('../utils/divisionScope');
+const { getPendingApprovals } = require('../utils/pendingApprovals');
+const { expectedWeekHours } = require('../utils/workingHours');
 const detailFields = require('../config/timesheetFields.json');
 const router = express.Router();
 
@@ -24,6 +26,8 @@ router.get('/dashboard', authenticate, (req, res) => {
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const { week: currentWeek, year: currentWeekYear } = getISOWeekNumber(todayStr);
   const { startDate: weekStartDate, endDate: weekEndDate } = getWeekDateRange(currentWeek, currentWeekYear);
+  const pendingWeeks = getPendingApprovals(req.user);
+  const period = { month: currentMonth, weekStartDate, weekEndDate };
 
   if (isAdmin) {
     const totalRegistered = db.prepare('SELECT COUNT(*) as count FROM users WHERE active = 1').get();
@@ -42,11 +46,6 @@ router.get('/dashboard', authenticate, (req, res) => {
       SELECT COUNT(*) as count FROM users
       WHERE active = 1 AND last_seen_at > datetime('now', '-5 minutes')
     `).get();
-    const pendingApprovals = db.prepare(`
-      SELECT COUNT(DISTINCT t.user_id) as count FROM timesheets t
-      JOIN users u ON t.user_id = u.id
-      WHERE u.name != '[Deleted User]' AND t.status = 'submitted' AND t.work_date BETWEEN ? AND ?
-    `).get(weekStartDate, weekEndDate);
     const monthlyHours = db.prepare(`
       SELECT COALESCE(SUM(t.hours), 0) as total FROM timesheets t
       JOIN users u ON t.user_id = u.id
@@ -58,17 +57,7 @@ router.get('/dashboard', authenticate, (req, res) => {
       WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
     `).get(weekStartDate, weekEndDate);
 
-    const recentSubmissions = db.prepare(`
-      SELECT u.name, u.division, SUM(t.hours) as total_hours, t.status,
-             t.week_number, t.week_year,
-             MAX(t.updated_at) as last_updated
-      FROM timesheets t
-      JOIN users u ON t.user_id = u.id
-      WHERE u.name != '[Deleted User]' AND t.status = 'submitted'
-      GROUP BY t.user_id, t.week_year, t.week_number
-      ORDER BY last_updated DESC
-      LIMIT 10
-    `).all();
+    const recentSubmissions = pendingWeeks.slice(0, 10).map(row => ({ ...row, name: row.user_name }));
 
     const hoursByDivision = db.prepare(`
       SELECT u.division, COALESCE(SUM(t.hours), 0) as total_hours
@@ -86,7 +75,7 @@ router.get('/dashboard', authenticate, (req, res) => {
         activeThisWeek: activeThisWeek.count,
         onlineNow: onlineNow.count,
         totalProjects: totalProjects.count,
-        pendingApprovals: pendingApprovals.count,
+        pendingApprovals: pendingWeeks.length,
         monthlyHours: monthlyHours.total,
         weeklyHours: weeklyHours.total,
         currentWeek,
@@ -94,6 +83,7 @@ router.get('/dashboard', authenticate, (req, res) => {
       },
       recentSubmissions,
       hoursByDivision,
+      period,
     });
   } else {
     const myMonthlyHours = db.prepare(`
@@ -132,13 +122,16 @@ router.get('/dashboard', authenticate, (req, res) => {
     `).all(userId);
 
     const hoursByProject = db.prepare(`
-      SELECT p.project_code, p.project_name, COALESCE(SUM(t.hours), 0) as total_hours
+      SELECT COALESCE(p.project_code, 'Non-project') AS project_code,
+             COALESCE(p.project_name, 'Leave, meetings, training and other tasks') AS project_name,
+             COALESCE(SUM(t.hours), 0) as total_hours
       FROM timesheets t
-      JOIN projects p ON t.project_id = p.id
+      LEFT JOIN projects p ON t.project_id = p.id
       WHERE t.user_id = ? AND t.work_date BETWEEN ? AND ?
       GROUP BY t.project_id
       ORDER BY total_hours DESC
     `).all(userId, monthStartDate, monthEndDate);
+    const holidays = db.prepare('SELECT date FROM holidays WHERE date BETWEEN ? AND ?').all(weekStartDate, weekEndDate);
 
     res.json({
       stats: {
@@ -148,10 +141,13 @@ router.get('/dashboard', authenticate, (req, res) => {
         statusBreakdown: myStatus,
         currentWeek,
         currentWeekYear,
+        expectedWeeklyHours: expectedWeekHours(weekStartDate, holidays.map(h => h.date)),
       },
       recalledWeeks,
       recentEntries,
       hoursByProject,
+      period,
+      ...(req.user.role === 'manager' ? { teamPendingApprovals: pendingWeeks.length } : {}),
     });
   }
 });

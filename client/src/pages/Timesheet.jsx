@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { useToast } from '../contexts/toast';
 import { useAuth } from '../contexts/auth';
+import { useLocation } from 'react-router-dom';
+import { weekFromSearch } from '../utils/weekLink';
 import { TimesheetSkeleton } from '../components/ui/Skeleton';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import Modal from '../components/ui/Modal';
@@ -40,6 +42,7 @@ function getWeekMonday(weekNum, year) {
 }
 
 export default function Timesheet() {
+  const { search } = useLocation();
   const toast = useToast();
   const { user, isAdmin } = useAuth();
   const [saving, setSaving] = useState(false);
@@ -54,7 +57,7 @@ export default function Timesheet() {
   });
   const hasAssignedAdmin = !!adminData?.admin;
   const canSelfPost = (isAdmin || user?.role === 'admin') && !hasAssignedAdmin;
-  const [currentWeekInfo, setCurrentWeekInfo] = useState(() => getISOWeekInfo(new Date()));
+  const [currentWeekInfo, setCurrentWeekInfo] = useState(() => weekFromSearch(search, getISOWeekInfo(new Date())));
   const [loadedData, setLoadedData] = useState(null);
   
   // Masters

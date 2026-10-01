@@ -5,11 +5,9 @@ import {
   Activity, Calendar, ClipboardCheck, BarChart3, Settings,
   ChevronLeft, ChevronRight, Timer, Shield
 } from 'lucide-react';
-import { useState } from 'react';
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, onToggle }) {
   const { isAdmin, isSystemAdmin, isManager } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
 
 
   const navItems = [
@@ -51,7 +49,7 @@ export default function Sidebar() {
       className={`fixed left-0 top-0 h-full z-30 flex flex-col
         bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800
         transition-all duration-300 ease-in-out
-        ${collapsed ? 'w-[68px]' : 'w-[240px]'}`}
+        w-[68px] ${collapsed ? '' : 'md:w-[240px]'}`}
       id="main-sidebar"
     >
       {/* Logo */}
@@ -61,7 +59,7 @@ export default function Sidebar() {
             <Timer className="w-4.5 h-4.5 text-white" />
           </div>
           {!collapsed && (
-            <div className="animate-fade-in">
+            <div className="hidden md:block animate-fade-in">
               <h1 className="text-sm font-bold text-surface-900 dark:text-white tracking-tight">TimeSheet</h1>
               <p className="text-xxs text-surface-400 -mt-0.5">Employee Portal</p>
             </div>
@@ -76,7 +74,7 @@ export default function Sidebar() {
             return (
               <div key={i} className="pt-4 pb-2">
                 {!collapsed && (
-                  <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-surface-400 dark:text-surface-600">
+                  <p className="hidden md:block px-3 text-[10px] font-semibold uppercase tracking-widest text-surface-400 dark:text-surface-600">
                     {item.label}
                   </p>
                 )}
@@ -100,18 +98,21 @@ export default function Sidebar() {
                 ${collapsed ? 'justify-center' : ''}`
               }
               title={item.label}
+              aria-label={item.label}
             >
               <Icon className="w-[18px] h-[18px] shrink-0" />
-              {!collapsed && <span className="whitespace-normal leading-tight">{item.label}</span>}
+              {!collapsed && <span className="hidden md:inline whitespace-normal leading-tight">{item.label}</span>}
             </NavLink>
           );
         })}
       </nav>
 
       {/* Collapse toggle */}
-      <div className="p-3 border-t border-surface-200 dark:border-surface-800 shrink-0">
+      <div className="hidden md:block p-3 border-t border-surface-200 dark:border-surface-800 shrink-0">
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={onToggle}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium
             text-surface-500 dark:text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
           id="sidebar-toggle"

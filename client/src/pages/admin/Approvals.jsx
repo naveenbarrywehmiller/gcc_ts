@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
+import { useLocation } from 'react-router-dom';
+import { weekFromSearch } from '../../utils/weekLink';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import TimesheetHistoryModal from '../../components/TimesheetHistoryModal';
@@ -40,11 +42,12 @@ function getWeekLabel(weekNum, year) {
 }
 
 export default function AdminApprovals() {
+  const { search } = useLocation();
   const toast = useToast();
   const { user: currentUser } = useAuth();
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentWeekInfo, setCurrentWeekInfo] = useState(() => getISOWeekInfo(new Date()));
+  const [currentWeekInfo, setCurrentWeekInfo] = useState(() => weekFromSearch(search, getISOWeekInfo(new Date())));
   const [divisionFilter, setDivisionFilter] = useState('');
   const [assignedOnlyFilter, setAssignedOnlyFilter] = useState(false);
   const [divisions, setDivisions] = useState([]);

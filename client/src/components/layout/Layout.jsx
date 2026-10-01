@@ -3,9 +3,11 @@ import { useAuth } from '../../contexts/auth';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
+import { useState } from 'react';
 
 export default function Layout() {
   const { user, loading } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (loading) {
     return (
@@ -24,10 +26,10 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
-      <Sidebar />
-      <div className="transition-all duration-300 ml-[240px] min-h-screen flex flex-col" id="main-content-area">
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />
+      <div className={`transition-all duration-300 ml-[68px] ${sidebarCollapsed ? '' : 'md:ml-[240px]'} min-h-screen flex flex-col`} id="main-content-area">
         <Header />
-        <main className="p-6 flex-1">
+        <main className="p-3 md:p-6 flex-1 min-w-0">
           <Outlet />
         </main>
         <Footer />

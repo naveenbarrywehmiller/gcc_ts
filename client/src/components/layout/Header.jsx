@@ -25,12 +25,12 @@ export default function Header() {
   };
 
   return (
-    <header className="h-[60px] flex items-center justify-between px-6 border-b border-surface-200 dark:border-surface-800 bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl sticky top-0 z-20" id="main-header">
-      <div className="flex items-center h-full py-2">
-        <img src="/logo.png" alt="Barry Wehmiller Logo" className="h-full object-contain" />
+    <header className="h-[60px] flex items-center justify-between gap-2 px-3 md:px-6 border-b border-surface-200 dark:border-surface-800 bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl sticky top-0 z-20" id="main-header">
+      <div className="flex items-center h-full py-2 min-w-0">
+        <img src="/logo.png" alt="Barry Wehmiller Logo" className="max-h-full max-w-full object-contain" />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
