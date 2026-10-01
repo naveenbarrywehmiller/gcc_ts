@@ -82,6 +82,9 @@ jobs:
     if: github.event_name != 'pull_request'
     permissions:
       packages: write
+    outputs:
+      digest: ${{ steps.manifest.outputs.digest }}
+      tags: ${{ steps.meta.outputs.tags }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -124,7 +127,74 @@ jobs:
             type=raw,value=${{ steps.pkg.outputs.version }},enable={{is_default_branch}}
 
       - name: Create manifest list and push
+        id: manifest
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+          docker buildx imagetools create --metadata-file "$RUNNER_TEMP/manifest.json" \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+          digest=$(jq -er '."containerimage.descriptor".digest' "$RUNNER_TEMP/manifest.json")
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+  dockerhub:
+    name: Publish to Docker Hub
+    needs: merge
+    if: github.event_name != 'pull_request' && vars.DOCKERHUB_USERNAME != ''
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    env:
+      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+      DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE || format('{0}/gcc_ts', vars.DOCKERHUB_USERNAME) }}
+      SOURCE_DIGEST: ${{ needs.merge.outputs.digest }}
+      SOURCE_TAGS: ${{ needs.merge.outputs.tags }}
+    steps:
+      - name: Validate Docker Hub configuration
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [[ -z "$DOCKERHUB_TOKEN" ]]; then
+            echo "::error::Add the DOCKERHUB_TOKEN Actions secret with Docker Hub Read and Write permissions."
+            exit 1
+          fi
+          if [[ ! "$DOCKERHUB_IMAGE" =~ ^[a-z0-9][a-z0-9_-]*/[a-z0-9][a-z0-9._-]*$ ]]; then
+            echo "::error::DOCKERHUB_IMAGE must be a lowercase namespace/repository name."
+            exit 1
+          fi
+          if [[ ! "$SOURCE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ || -z "$SOURCE_TAGS" ]]; then
+            echo "::error::The GitHub image digest or tags are missing."
+            exit 1
+          fi
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Install image copy tool
+        run: |
+          if ! command -v skopeo >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y skopeo
+          fi
+
+      - name: Copy all platforms and tags to Docker Hub
+        run: |
+          set -euo pipefail
+          source="docker://${REGISTRY}/${IMAGE_NAME}@${SOURCE_DIGEST}"
+          while IFS= read -r source_tag; do
+            [[ -n "$source_tag" ]] || continue
+            tag="${source_tag##*:}"
+            skopeo copy --all --preserve-digests --retry-times 3 \
+              --authfile "$HOME/.docker/config.json" \
+              "$source" "docker://${DOCKERHUB_IMAGE}:${tag}"
+            echo "Published ${DOCKERHUB_IMAGE}:${tag}" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$SOURCE_TAGS"

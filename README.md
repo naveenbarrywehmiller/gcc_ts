@@ -474,6 +474,32 @@ Your app is now accessible securely at `https://<your-tailscale-node>.ts.net`!
 
 ## ⚙️ CI/CD
 
+### Optional Docker Hub publishing
+
+The Docker workflow can also copy each successfully published multi-platform image
+from GHCR to Docker Hub, preserving AMD64, ARM64, image digests, and the same tags.
+It copies the image produced by that workflow run without rebuilding it.
+
+1. Create the `gcc_ts` repository in your Docker Hub account (or organization),
+   choosing public or private visibility before enabling publishing.
+2. Create a Docker Hub personal access token with **Read and Write** permissions.
+3. In GitHub **Settings → Secrets and variables → Actions**, add the repository
+   secret `DOCKERHUB_TOKEN`. Never commit the token to the repository.
+4. Add the repository variable `DOCKERHUB_USERNAME` with the Docker account used
+   to authenticate. This enables Docker Hub publishing.
+5. For an organization or a different repository name, also set the repository
+   variable `DOCKERHUB_IMAGE` to the full `namespace/repository` name. Otherwise,
+   the destination defaults to `DOCKERHUB_USERNAME/gcc_ts`.
+6. Run **Actions → Build & Publish Docker Image → Run workflow** on `main` to
+   publish the current version. Later pushes and release builds publish automatically.
+
+Without `DOCKERHUB_USERNAME`, the Docker Hub job is skipped and GHCR publishing
+continues normally. A configured account with a missing or invalid token fails the
+Docker Hub job visibly; the already-published GHCR image remains available.
+Pull-request builds never publish to either registry.
+
+### GitHub Container Registry
+
 GitHub Actions workflow (`.github/workflows/docker-build.yml`) automatically:
 1. Builds the Docker image on every push to `main`
 2. Publishes to GHCR with tags:
