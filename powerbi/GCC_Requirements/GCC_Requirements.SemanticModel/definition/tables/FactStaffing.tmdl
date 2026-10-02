@@ -1,0 +1,55 @@
+/// One division/month. Open positions are a snapshot, new joiners a monthly flow. Blank differs from zero.
+table FactStaffing
+	lineageTag: 4ba30aae-1c82-563f-aba2-f2f75b8b3f51
+
+	column id
+		dataType: int64
+		lineageTag: 700a3e22-16f1-5bf2-b346-0f99ed8d9607
+		summarizeBy: none
+		sourceColumn: id
+
+	column divisionId
+		dataType: int64
+		lineageTag: 723e0baa-3448-5513-876f-0a02abf538bf
+		summarizeBy: none
+		sourceColumn: divisionId
+
+	column division
+		dataType: string
+		lineageTag: 0491c115-1772-5263-bfaf-4ce84c3705e3
+		summarizeBy: none
+		sourceColumn: division
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 506a29a7-926c-517f-9a71-c305eee4ffe3
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column openPositions
+		dataType: int64
+		lineageTag: 27e66f1a-b33f-58c4-86bf-fffef09b6c24
+		summarizeBy: none
+		sourceColumn: openPositions
+
+	column newJoiners
+		dataType: int64
+		lineageTag: 91a1ae62-0132-517f-b51c-1284b166e73d
+		summarizeBy: none
+		sourceColumn: newJoiners
+
+	partition FactStaffing = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("staffing"),
+				    Raw = Table.FromRecords(Rows, {"id", "divisionId", "division", "date", "openPositions", "newJoiners"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"divisionId", Int64.Type}, {"division", type text}, {"date", type date}, {"openPositions", Int64.Type}, {"newJoiners", Int64.Type}}, "en-US"),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing FactStaffing key." else Typed
+				in Checked
+
+	annotation PBI_ResultType = Exception
+

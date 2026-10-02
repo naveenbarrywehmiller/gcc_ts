@@ -1,0 +1,27 @@
+table DimDivision
+	lineageTag: eeaf819f-5870-55d2-b59c-ac2a2600bdb4
+
+	column id
+		dataType: int64
+		lineageTag: 35405d53-5ffc-5312-a861-053a62f6cf84
+		summarizeBy: none
+		sourceColumn: id
+
+	column divisionName
+		dataType: string
+		lineageTag: b354d0ab-238d-50bd-89a2-fc596c2b5dad
+		summarizeBy: none
+		sourceColumn: divisionName
+
+	partition DimDivision = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("divisions"),
+				    Raw = Table.FromRecords(Rows, {"id", "divisionName"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"divisionName", type text}}, "en-US"),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimDivision key." else Typed
+				in Checked
+
+	annotation PBI_ResultType = Exception
+

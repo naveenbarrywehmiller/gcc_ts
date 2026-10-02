@@ -1,0 +1,44 @@
+table Settings
+	lineageTag: 9070a2cb-79fe-5acc-8ffc-3f4d27370198
+
+	column FiscalStartMonth
+		dataType: int64
+		lineageTag: 2fb5f75b-98ea-540c-aa18-8bb6fefd2048
+		summarizeBy: none
+		sourceColumn: FiscalStartMonth
+
+	column DailyHours
+		dataType: double
+		lineageTag: 26461ddd-e6aa-55b8-8902-65ad8a689fce
+		summarizeBy: none
+		sourceColumn: DailyHours
+
+	column DefectTarget
+		dataType: double
+		lineageTag: 5300ea60-b5eb-5b9c-b962-4dd9bc540245
+		summarizeBy: none
+		sourceColumn: DefectTarget
+
+	column AsOfDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 24f6c29f-167f-5581-9302-4cb204712d7d
+		summarizeBy: none
+		sourceColumn: AsOfDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column RefreshUTC
+		dataType: string
+		lineageTag: d3bc5b50-d4e3-55fe-a557-5d7796b42b65
+		summarizeBy: none
+		sourceColumn: RefreshUTC
+
+	partition Settings = m
+		mode: import
+		source =
+				let
+				    Valid=if FiscalStartMonth<1 or FiscalStartMonth>12 or Number.RoundDown(FiscalStartMonth)<>FiscalStartMonth or DailyHours<=0 or DailyHours>24 then error "Invalid capacity settings." else true
+				in if Valid then #table(type table [FiscalStartMonth=Int64.Type,DailyHours=number,DefectTarget=number,AsOfDate=date,RefreshUTC=text],
+				    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(RefreshClock),DateTimeZone.ToText(RefreshClock,"yyyy-MM-dd HH:mm 'UTC'")}}) else error "Invalid settings"
+

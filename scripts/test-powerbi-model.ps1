@@ -5,8 +5,13 @@ Add-Type -Path (Join-Path $taskBin 'Microsoft.PowerBI.Tabular.dll')
 Add-Type -Path (Join-Path $taskBin 'Microsoft.PowerBI.AdomdClient.dll')
 $taskRoot = Split-Path -Parent $PSScriptRoot
 $taskFixture = Get-Content (Join-Path $PSScriptRoot 'powerbi-fixture.json') -Raw
-$taskModelPath = Join-Path $taskRoot 'powerbi/GCC_Requirements/GCC_Requirements.SemanticModel/model.bim'
-$taskDb = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase((Get-Content $taskModelPath -Raw))
+$taskModelPath = Join-Path $taskRoot 'powerbi/GCC_Requirements/GCC_Requirements.SemanticModel'
+$taskDefinition = Join-Path $taskModelPath 'definition'
+if (Test-Path -LiteralPath $taskDefinition) {
+    $taskDb = [Microsoft.AnalysisServices.Tabular.TmdlSerializer]::DeserializeDatabaseFromFolder($taskDefinition)
+} else {
+    $taskDb = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase((Get-Content (Join-Path $taskModelPath 'model.bim') -Raw))
+}
 $taskDb.Name = 'GCC requirements isolated validation'
 $taskDb.ID = 'gcc_requirements_validation_' + [Guid]::NewGuid().ToString('N')
 $taskBytes = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($taskFixture))

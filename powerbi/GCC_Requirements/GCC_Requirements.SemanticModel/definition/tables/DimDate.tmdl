@@ -1,0 +1,87 @@
+/// FiscalYear is labeled by its start year. Continuous dates covering source data and the next year.
+table DimDate
+	lineageTag: 0c132238-ba25-556e-9cfb-ef279b8856e6
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: babec7a0-fdda-55c0-a7c8-6993d6e1d196
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		lineageTag: fc2b3a73-29bd-5617-b71b-7ffafb43f2bf
+		summarizeBy: none
+		sourceColumn: Year
+
+	column Month
+		dataType: string
+		lineageTag: d3be102d-b20b-5d0e-8b6b-7b0aa61854e6
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: MonthNumber
+
+	column MonthNumber
+		dataType: int64
+		lineageTag: 14158482-15f0-5f9b-a3ab-6be1479d815c
+		summarizeBy: none
+		sourceColumn: MonthNumber
+
+	column YearMonth
+		dataType: string
+		lineageTag: b42c70b7-f7af-562a-9d64-936c20c1ad92
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+	column WeekStart
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 4388fac3-dc82-5594-99d4-82a09d9f67b4
+		summarizeBy: none
+		sourceColumn: WeekStart
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column FiscalYear
+		dataType: string
+		lineageTag: d603f867-3b02-5cfb-b6a6-7ed0d4b2eb79
+		summarizeBy: none
+		sourceColumn: FiscalYear
+
+	column IsWeekday
+		dataType: boolean
+		lineageTag: dc5a7065-897d-522a-bb08-cd93fad747ae
+		summarizeBy: none
+		sourceColumn: IsWeekday
+
+	column IsHoliday
+		dataType: boolean
+		lineageTag: 76476dbb-1589-5eca-8cb6-67529f8381be
+		summarizeBy: none
+		sourceColumn: IsHoliday
+
+	partition DimDate = m
+		mode: import
+		source =
+				let
+				    Today=Date.From(RefreshClock),
+				    Dates=List.RemoveNulls(List.Combine({FactTimesheet[date],DimProject[startDate],DimProject[targetDate],DimProject[deliveredDate],FactStaffing[date],FactVacation[date],{Date.AddYears(Today,-1),Date.AddYears(Today,1)}})),
+				    Start=Date.StartOfYear(List.Min(Dates)), End=Date.EndOfYear(List.Max(Dates)),
+				    Source=Table.FromList(List.Dates(Start,Duration.Days(End-Start)+1,#duration(1,0,0,0)),Splitter.SplitByNothing(),{"Date"}),
+				    Typed=Table.TransformColumnTypes(Source,{{"Date",type date}}),
+				    Y=Table.AddColumn(Typed,"Year",each Date.Year([Date]),Int64.Type),
+				    M=Table.AddColumn(Y,"Month",each Date.ToText([Date],"MMM","en-US"),type text),
+				    MN=Table.AddColumn(M,"MonthNumber",each Date.Month([Date]),Int64.Type),
+				    YM=Table.AddColumn(MN,"YearMonth",each Date.ToText([Date],"yyyy-MM"),type text),
+				    W=Table.AddColumn(YM,"WeekStart",each Date.StartOfWeek([Date],Day.Monday),type date),
+				    FY=Table.AddColumn(W,"FiscalYear",each "FY " & Text.From(Date.Year(Date.AddMonths([Date],1-FiscalStartMonth))),type text),
+				    WD=Table.AddColumn(FY,"IsWeekday",each Date.DayOfWeek([Date],Day.Monday)<5,type logical),
+				    H=Table.AddColumn(WD,"IsHoliday",each List.Contains(DimHoliday[date],[Date]),type logical)
+				in H
+
+	annotation __PBI_LocalDateTable = false
+

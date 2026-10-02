@@ -1,0 +1,115 @@
+/// One project/task master record. A project is not assumed to equal a deliverable.
+table DimProject
+	lineageTag: eb8f2ef3-f06e-5eae-88ec-fcb4d2987862
+
+	column id
+		dataType: int64
+		lineageTag: 332593b2-f9e5-57de-aa0a-74cf1cd983ee
+		summarizeBy: none
+		sourceColumn: id
+
+	column projectCode
+		dataType: string
+		lineageTag: 53db928e-125d-5154-9c4d-43df9655b0f5
+		summarizeBy: none
+		sourceColumn: projectCode
+
+	column projectName
+		dataType: string
+		lineageTag: 5b0f2345-271a-5515-b1b1-98e5726cdf19
+		summarizeBy: none
+		sourceColumn: projectName
+
+	column division
+		dataType: string
+		lineageTag: 21facf74-b241-5a67-8cca-b19b5d1abf73
+		summarizeBy: none
+		sourceColumn: division
+
+	column subdivision
+		dataType: string
+		lineageTag: 21b1ab05-a616-5acc-9bfb-deba18650dcd
+		summarizeBy: none
+		sourceColumn: subdivision
+
+	column teamType
+		dataType: string
+		lineageTag: 35c347e7-8605-5562-8f81-6faf22756cd4
+		summarizeBy: none
+		sourceColumn: teamType
+
+	column product
+		dataType: string
+		lineageTag: 1242fe17-13e2-5492-82b5-a3a210866782
+		summarizeBy: none
+		sourceColumn: product
+
+	column productModule
+		dataType: string
+		lineageTag: a2fbc537-1413-5d93-9793-4ca0f5faba05
+		summarizeBy: none
+		sourceColumn: productModule
+
+	column activity
+		dataType: string
+		lineageTag: 1c852814-b24a-5e38-9b33-65a134c510fc
+		summarizeBy: none
+		sourceColumn: activity
+
+	column startDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 364b036d-1d63-5c08-9bcb-6aef3e6e82ae
+		summarizeBy: none
+		sourceColumn: startDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column targetDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 2c8e0253-47e1-5539-9061-34726c1a8d41
+		summarizeBy: none
+		sourceColumn: targetDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column deliveredDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 4a7245b2-0434-5d90-b84e-8034e4c18e7b
+		summarizeBy: none
+		sourceColumn: deliveredDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column budgetHours
+		dataType: double
+		lineageTag: c68ecefc-c090-5701-af5c-364681b9d977
+		summarizeBy: none
+		sourceColumn: budgetHours
+
+	column projectStatus
+		dataType: string
+		lineageTag: 4296e567-7633-5d93-9440-7a58f9589e54
+		summarizeBy: none
+		sourceColumn: projectStatus
+
+	column isActive
+		dataType: boolean
+		lineageTag: ec3e641e-d3e9-59b2-ad18-a250539f1059
+		summarizeBy: none
+		sourceColumn: isActive
+
+	partition DimProject = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("projects"),
+				    Raw = Table.FromRecords(Rows, {"id", "projectCode", "projectName", "division", "subdivision", "teamType", "product", "productModule", "activity", "startDate", "targetDate", "deliveredDate", "budgetHours", "projectStatus", "isActive"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"projectCode", type text}, {"projectName", type text}, {"division", type text}, {"subdivision", type text}, {"teamType", type text}, {"product", type text}, {"productModule", type text}, {"activity", type text}, {"startDate", type date}, {"targetDate", type date}, {"deliveredDate", type date}, {"budgetHours", type number}, {"projectStatus", type text}, {"isActive", type logical}}, "en-US"),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimProject key." else Typed
+				in Checked
+
+	annotation PBI_ResultType = Table
+

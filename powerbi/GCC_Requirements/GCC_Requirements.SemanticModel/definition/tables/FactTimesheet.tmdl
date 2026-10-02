@@ -1,0 +1,73 @@
+/// One daily entry. Actual hours include submitted and approved entries only; raw hours retain all statuses.
+table FactTimesheet
+	lineageTag: 5613fd66-9345-585c-b6dc-fbd0548a903b
+
+	column id
+		dataType: int64
+		lineageTag: 33087f64-39cb-5be7-ae86-98ddf0d6e7e2
+		summarizeBy: none
+		sourceColumn: id
+
+	column userId
+		dataType: int64
+		lineageTag: 6f8c3ba3-71ec-556d-b402-218e672aafa4
+		summarizeBy: none
+		sourceColumn: userId
+
+	column projectId
+		dataType: int64
+		lineageTag: 9f33a84f-2868-5037-8b34-d1925d790533
+		summarizeBy: none
+		sourceColumn: projectId
+
+	column taskId
+		dataType: int64
+		lineageTag: 58bb1e92-c7f4-5023-a2d6-48e29b8c919c
+		summarizeBy: none
+		sourceColumn: taskId
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 1bdaae65-3f27-5395-9047-23da18db92ed
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column hours
+		dataType: double
+		lineageTag: 3b94d7be-8f1f-58cf-b49f-a6f44fa8be1e
+		summarizeBy: none
+		sourceColumn: hours
+
+	column status
+		dataType: string
+		lineageTag: a2535212-f0f7-51b0-8f86-dde7b6f30d66
+		summarizeBy: none
+		sourceColumn: status
+
+	column division
+		dataType: string
+		lineageTag: 67e66000-6ef2-588a-ba0c-5bb26dcb9e15
+		summarizeBy: none
+		sourceColumn: division
+
+	column department
+		dataType: string
+		lineageTag: 121049d7-090f-54d4-ad49-db2cac90aca4
+		summarizeBy: none
+		sourceColumn: department
+
+	column hourCategory
+		dataType: string
+		lineageTag: f2875fff-4a73-5e71-8414-f34ec2a1ca62
+		summarizeBy: none
+		sourceColumn: hourCategory
+
+	partition FactTimesheet = m
+		mode: import
+		source = Table.SelectColumns(TimesheetRows,{"id","userId","projectId","taskId","date","hours","status","division","department","hourCategory"})
+
+	annotation PBI_ResultType = Table
+

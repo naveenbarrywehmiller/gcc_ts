@@ -1,12 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "01_overview_11",
   "position": {
     "x": 728,
     "y": 350,
-    "width": 688,
-    "height": 244,
     "z": 11,
+    "height": 244,
+    "width": 688,
     "tabOrder": 11
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "DimDivision.divisionName",
-              "nativeQueryRef": "divisionName"
+              "nativeQueryRef": "divisionName",
+              "active": true
             }
           ]
         },

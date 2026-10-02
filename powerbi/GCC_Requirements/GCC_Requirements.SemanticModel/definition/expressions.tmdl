@@ -1,0 +1,96 @@
+/// Server origin. Store the reporting API key in Web Basic credentials: username powerbi, password reporting key.
+expression ApiBaseUrl = "https://dietpi.tail4f2b8f.ts.net" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: af310993-0879-43cc-86cd-a9fa0a3c5ef1
+
+	annotation PBI_ResultType = Text
+
+/// REST reporting namespace, without leading or trailing slash.
+expression ApiPath = "api/powerbi" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: f790a403-bebf-44e8-b611-bd4a9fa50e59
+
+	annotation PBI_ResultType = Text
+
+/// Provisional: January. Set 1–12 before refresh.
+expression FiscalStartMonth = 1 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]
+	lineageTag: 02a8ea10-e13a-42f9-8d24-f272b1109a78
+
+	annotation PBI_ResultType = Number
+
+/// Standard Monday–Friday hours per employee. Provisional 8.
+expression DailyHours = 8 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]
+	lineageTag: 1b8c1085-72dc-4571-bf86-a23baec1d734
+
+	annotation PBI_ResultType = Number
+
+/// Provisional target ratio; confirm with KPI owner. Red beyond target ± 0.05.
+expression DefectTarget = 0 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]
+	lineageTag: 33bcfcfb-d4c1-4c15-b2d3-5b9d1b091111
+
+	annotation PBI_ResultType = Number
+
+/// One refresh-time UTC clock; dates and freshness use the same instant.
+expression RefreshClock = DateTimeZone.FixedUtcNow()
+	lineageTag: 9e8c599f-f860-4909-b608-d0b1c0fb4114
+
+expression fnApi =
+		(endpoint as text) as list =>
+		let
+		    Fetch = (page as number) as record =>
+		        let
+		            Payload = Json.Document(Web.Contents(ApiBaseUrl, [
+		                RelativePath = Text.Trim(ApiPath, "/") & "/" & endpoint,
+		                Query = if endpoint = "timesheets" then [page=Text.From(page), limit="1000"] else [],
+		                Headers = [Accept="application/json"], Timeout=#duration(0,0,5,0)])),
+		            Checked = if Value.Is(Payload, type record) and Record.HasFields(Payload, "data")
+		                and Value.Is(Payload[data], type list) then Payload
+		                else error "The reporting API must return a record containing a data list."
+		        in Checked,
+		    First = Fetch(1),
+		    Pages = if endpoint = "timesheets" then
+		        (if Record.HasFields(First, "pagination") and Record.HasFields(First[pagination], "totalPages")
+		            then Number.From(First[pagination][totalPages]) else error "Missing timesheet pagination metadata.") else 1,
+		    ValidPages = if Pages >= 1 and Number.RoundDown(Pages) = Pages then Pages else error "Invalid page count.",
+		    Rows = List.Combine({First[data]} & (if ValidPages > 1 then List.Transform({2..ValidPages}, each Fetch(_)[data]) else {})),
+		    CheckedCount = if endpoint = "timesheets" and List.Count(Rows) <> First[pagination][total]
+		        then error "Timesheet total changed during pagination. Retry refresh." else Rows
+		in CheckedCount
+	lineageTag: 8c30bd63-c531-438f-9000-a973306ee92b
+
+/// Explicit editable classification. Unmapped categories block utilization so they cannot silently inflate it.
+expression HourCategoryMap =
+		#table(type table [taskCategory=text, hourCategory=text], {
+		    {"development","Productive"}, {"bug fix","Productive"}, {"code review","Productive"},
+		    {"testing","Productive"}, {"design","Productive"}, {"documentation","Productive"},
+		    {"training","Training"}, {"meeting","Internal"}, {"admin","Admin"},
+		    {"leave","Vacation"}, {"vacation","Vacation"}, {"holiday","Holiday"}
+		})
+	lineageTag: e96760c9-fcd2-4a12-8def-0b8bc1c9007a
+
+expression TimesheetRows =
+		let
+		    Rows=fnApi("timesheets"),
+		    Required={"id","userId","projectId","taskId","date","hours","status","weeklyRowKey","weeklyDetails"},
+		    Checked=if List.AllTrue(List.Transform(Rows, each Record.HasFields(_, Required))) then Rows
+		        else error "Deploy the requirements API update: stable IDs and weeklyRowKey are required.",
+		    T=Table.FromRecords(Checked, {"id","userId","projectId","taskId","date","hours","status","division","department","projectCategory","weeklyRowKey","weeklyDetails","updatedDate"}, MissingField.UseNull),
+		    Typed=Table.TransformColumnTypes(T, {{"id",Int64.Type},{"userId",Int64.Type},{"projectId",Int64.Type},{"taskId",Int64.Type},{"date",type date},{"hours",type number},{"status",type text},{"division",type text},{"department",type text},{"projectCategory",type text},{"weeklyRowKey",type text},{"updatedDate",type datetime}}),
+		    Unique=if Table.RowCount(Typed)=List.Count(List.Distinct(Typed[id])) then Typed else error "Duplicate timesheet IDs.",
+		    CategoryKey=Table.AddColumn(Unique,"categoryKey",each Text.Lower(Text.Trim([projectCategory] ?? "")),type text),
+		    Joined=Table.NestedJoin(CategoryKey,{"categoryKey"},HourCategoryMap,{"taskCategory"},"Map",JoinKind.LeftOuter),
+		    Expanded=Table.ExpandTableColumn(Joined,"Map",{"hourCategory"}),
+		    Categorized=Table.ReplaceValue(Expanded,null,"Unmapped",Replacer.ReplaceValue,{"hourCategory"})
+		in Categorized
+	lineageTag: 5ba05034-448f-4783-8141-76504373701e
+
+/// Optional endpoint name within ApiPath, returning one unique deliverable record per ID. Empty until an approved source exists.
+expression DeliverablesEndpoint = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 4bca3457-28da-4900-a75a-96d6765f371b
+
+	annotation PBI_ResultType = Text
+
+/// Optional endpoint name within ApiPath, returning one unique improvement record per ID. Empty until an approved source exists.
+expression ImprovementsEndpoint = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: fbacb43a-8e58-4625-bfa1-d7faf34c7919
+
+	annotation PBI_ResultType = Text
+

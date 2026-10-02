@@ -2,6 +2,8 @@
 
 This guide explains how authorized users can connect Microsoft Power BI Desktop and Power BI Service to the **GCC Timesheet Read-Only REST API** for corporate reporting, business intelligence, and timesheet analytics.
 
+For the saved **GCC_Requirements** project, use the **[complete project reference](../powerbi/POWERBI.md)**. It includes every DAX formula and Power Query definition, the full table/relationship/visual inventory, current Basic-credential connection steps, missing inputs and TMDL maintenance instructions. This API integration guide also covers earlier, separately maintained models; follow the project's own connection instructions when opening its PBIP.
+
 ---
 
 ## 1. Overview & Purpose

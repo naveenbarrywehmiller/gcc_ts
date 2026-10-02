@@ -1,0 +1,33 @@
+table DimTask
+	lineageTag: c2f99e3f-7531-5a35-89ad-12c229409cbe
+
+	column id
+		dataType: int64
+		lineageTag: 2a9472d9-32e2-5233-a8ed-3d09954ea65c
+		summarizeBy: none
+		sourceColumn: id
+
+	column taskCategory
+		dataType: string
+		lineageTag: 2fafd542-d0ec-5bb9-9ecf-db789e873b99
+		summarizeBy: none
+		sourceColumn: taskCategory
+
+	column classification
+		dataType: string
+		lineageTag: 1dc452b7-fbd9-5cec-a10e-df6224d37106
+		summarizeBy: none
+		sourceColumn: classification
+
+	partition DimTask = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("tasks"),
+				    Raw = Table.FromRecords(Rows, {"id", "taskCategory", "classification"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"taskCategory", type text}, {"classification", type text}}, "en-US"),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimTask key." else Typed
+				in Checked
+
+	annotation PBI_ResultType = Table
+

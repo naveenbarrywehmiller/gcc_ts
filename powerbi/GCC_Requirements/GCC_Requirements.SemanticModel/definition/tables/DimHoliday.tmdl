@@ -1,0 +1,36 @@
+table DimHoliday
+	lineageTag: f316df7a-e3b6-5dee-bab0-9b7be684d293
+
+	column id
+		dataType: int64
+		lineageTag: ed9e4979-f1b1-5f13-a6c2-e455aee95642
+		summarizeBy: none
+		sourceColumn: id
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 2b788455-d308-5e45-9e21-aa649a1f1ce0
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column holidayName
+		dataType: string
+		lineageTag: ee98d6e9-bdb9-5315-afb6-3ddfa9ea5f1a
+		summarizeBy: none
+		sourceColumn: holidayName
+
+	partition DimHoliday = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("holidays"),
+				    Raw = Table.FromRecords(Rows, {"id", "date", "holidayName"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"date", type date}, {"holidayName", type text}}, "en-US"),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimHoliday key." else Typed
+				in Checked
+
+	annotation PBI_ResultType = Table
+

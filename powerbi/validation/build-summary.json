@@ -5,5 +5,9 @@
   "pages": 9,
   "visuals": 98,
   "source": "PowerPi Requirments.xlsx / Sheet1",
-  "liveRefresh": "Not completed; URL and reporting credentials required."
+  "semanticModelFormat": "TMDL",
+  "reportingApiVersion": "1.1.0",
+  "liveApiCheck": "Authorized read-only GETs passed on 2026-10-02; 4 daily entries, 32 approved hours.",
+  "liveNativeCheck": "Authorized API snapshot processed in an isolated native model; 72 measures evaluated without errors. Canonical report cache not verified.",
+  "liveRefresh": "DietPi origin configured in source; canonical Desktop refresh and reconciliation require verification. No Power BI Service publication."
 }

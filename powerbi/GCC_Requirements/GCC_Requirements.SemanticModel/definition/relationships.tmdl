@@ -1,0 +1,72 @@
+relationship 4b07da44-929b-5fe0-97f6-16c452521450
+	fromColumn: FactTimesheet.userId
+	toColumn: DimEmployee.id
+
+relationship 74a30386-ea91-5ff2-843d-4961e64e68fa
+	fromColumn: FactTimesheet.projectId
+	toColumn: DimProject.id
+
+relationship 1e2dfc00-887a-510c-9216-d146cf752cd2
+	fromColumn: FactTimesheet.taskId
+	toColumn: DimTask.id
+
+relationship cbcee8cb-6571-5355-b188-b1fff242d3aa
+	fromColumn: FactTimesheet.date
+	toColumn: DimDate.Date
+
+relationship b87ce0e0-5307-5694-92e9-6546df8e4d9d
+	fromColumn: FactWeeklyDetails.userId
+	toColumn: DimEmployee.id
+
+relationship 32c76977-a2b8-55e8-bb91-e085eddece88
+	fromColumn: FactWeeklyDetails.projectId
+	toColumn: DimProject.id
+
+relationship 5336c645-400f-5aa6-bb8f-f72e393b2637
+	fromColumn: FactWeeklyDetails.taskId
+	toColumn: DimTask.id
+
+relationship ba876769-a2d0-55bc-a180-99a07b00633a
+	fromColumn: FactWeeklyDetails.date
+	toColumn: DimDate.Date
+
+relationship 2f0fbbde-a755-5be6-9b37-a9542f72f0a2
+	fromColumn: FactVacation.userId
+	toColumn: DimEmployee.id
+
+relationship 94f62489-b253-5b8e-a952-d6c566f6d537
+	fromColumn: FactVacation.date
+	toColumn: DimDate.Date
+
+relationship 737e3cd6-2d98-58c0-a28b-36da700ff2a1
+	fromColumn: FactStaffing.divisionId
+	toColumn: DimDivision.id
+
+relationship 111ab0fb-b17d-54f7-a24f-05482d7d440e
+	fromColumn: FactStaffing.date
+	toColumn: DimDate.Date
+
+relationship 0f3bd45d-74ee-5f2d-be39-22a3bfcd0b2d
+	fromColumn: FactDeliverable.projectId
+	toColumn: DimProject.id
+
+relationship cb7bf597-50fd-55a3-ae63-a0d2494ed3b0
+	fromColumn: FactDeliverable.deliveredDate
+	toColumn: DimDate.Date
+
+relationship c3641cb4-5d39-55e6-84db-4024a0ad97ee
+	fromColumn: FactImprovement.projectId
+	toColumn: DimProject.id
+
+relationship 6820ba4c-92f0-5c2c-9f4d-17cd5f43bae7
+	fromColumn: FactImprovement.date
+	toColumn: DimDate.Date
+
+relationship 72f67e0d-0213-5363-a876-212f7444d783
+	fromColumn: FactPlan.projectId
+	toColumn: DimProject.id
+
+relationship 559d7162-a8ee-5384-96a8-1b8a7c12f1db
+	fromColumn: FactPlan.date
+	toColumn: DimDate.Date
+

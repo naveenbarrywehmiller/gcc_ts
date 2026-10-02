@@ -1,0 +1,51 @@
+/// Planning estimate: budget spread evenly over project weekdays excluding holidays. Remaining Inprogress budget spread from refresh date through target; Hold and Completed receive no future forecast. Past-due remaining effort is surfaced separately.
+table FactPlan
+	lineageTag: 1aacd2cd-b2d3-55ed-aad7-824383d339be
+
+	column projectId
+		dataType: int64
+		lineageTag: 11225511-8f7b-5b55-9d22-90970a25ec1d
+		summarizeBy: none
+		sourceColumn: projectId
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: fe131bf1-8b00-5cd3-a16b-92c56324f3fd
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column scheduledHours
+		dataType: double
+		lineageTag: da626b8f-34e2-5577-ad68-c7a4767a00f9
+		summarizeBy: none
+		sourceColumn: scheduledHours
+
+	column remainingForecastHours
+		dataType: double
+		lineageTag: 17d0f45d-b5b3-5934-9a47-b53fa126a6f6
+		summarizeBy: none
+		sourceColumn: remainingForecastHours
+
+	partition FactPlan = m
+		mode: import
+		source =
+				let
+				    Today=Date.From(RefreshClock),
+				    Actuals=Table.Group(Table.SelectRows(FactTimesheet,each List.Contains({"approved","submitted"},[status]) and [date]<Today),{"projectId"},{{"Actual",each List.Sum([hours]),type number}}),
+				    Joined=Table.NestedJoin(DimProject,{"id"},Actuals,{"projectId"},"Actuals",JoinKind.LeftOuter),
+				    Expanded=Table.ExpandTableColumn(Joined,"Actuals",{"Actual"}),
+				    Valid=Table.SelectRows(Expanded,each [startDate]<>null and [targetDate]<>null and [targetDate]>=[startDate] and [budgetHours]<>null),
+				    Daily=Table.AddColumn(Valid,"Days",each let
+				        P=_, Days=List.Select(List.Dates(P[startDate],Duration.Days(P[targetDate]-P[startDate])+1,#duration(1,0,0,0)),each Date.DayOfWeek(_,Day.Monday)<5 and not List.Contains(DimHoliday[date],_)),
+				        Future=List.Select(Days,each _>=Today),
+				        Remaining=if P[projectStatus]="Inprogress" then List.Max({0,P[budgetHours]-(P[Actual] ?? 0)}) else 0
+				        in List.Transform(Days,each [projectId=P[id],date=_,scheduledHours=P[budgetHours]/List.Count(Days),
+				            remainingForecastHours=if _>=Today and List.Count(Future)>0 then Remaining/List.Count(Future) else 0])),
+				    Records=List.Combine(Daily[Days]),
+				    T=Table.FromRecords(Records,{"projectId","date","scheduledHours","remainingForecastHours"},MissingField.UseNull),
+				    Typed=Table.TransformColumnTypes(T,{{"projectId",Int64.Type},{"date",type date},{"scheduledHours",type number},{"remainingForecastHours",type number}})
+				in Typed
+

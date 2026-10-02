@@ -41,7 +41,7 @@ Power BI connects **exclusively** via the REST API — never directly to the dat
 
 ## Quick Start
 
-The requirements-driven report is now available at **[GCC_Requirements/GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip)**. Read its [connection instructions and KPI definitions](GCC_Requirements/README.md) before refreshing. It adds nine native report pages and uses the expanded reporting API. The original model and PBIX below remain available for compatibility.
+The requirements-driven report is available at **[GCC_Requirements/GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip)**. Read the **[complete POWERBI.md guide](POWERBI.md)** for connection steps, every DAX formula and Power Query function, table/relationship definitions, every visual, missing inputs and troubleshooting. Its saved TMDL model has 16 tables and 72 measures, with nine native PBIR pages. It requires reporting API v1.1.0, included in application v1.15.0. The original model and PBIX described below remain separate compatibility artifacts; their header version and setup steps do not describe the new requirements project.
 
 1. **Generate API Key** on the server:
    ```bash

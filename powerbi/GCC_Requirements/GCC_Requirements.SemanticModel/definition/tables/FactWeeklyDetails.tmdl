@@ -1,0 +1,221 @@
+/// One employee/week/project/task/row-dimension record, using the latest daily copy. Counts attributed to Monday. Conflicting copies block quality totals.
+table FactWeeklyDetails
+	lineageTag: 6a07da9a-62be-5bcd-911f-891db2841056
+
+	column weeklyRowKey
+		dataType: string
+		lineageTag: c0e2fb79-464a-53e2-8d9a-e5ad519d7907
+		summarizeBy: none
+		sourceColumn: weeklyRowKey
+
+	column userId
+		dataType: int64
+		lineageTag: 3ac7abb3-5bb5-58e4-bed5-f95f3bd24176
+		summarizeBy: none
+		sourceColumn: userId
+
+	column projectId
+		dataType: int64
+		lineageTag: 41c4deab-b8bd-5be5-b4f4-ad417e688a20
+		summarizeBy: none
+		sourceColumn: projectId
+
+	column taskId
+		dataType: int64
+		lineageTag: 12a01879-327f-578e-bc6e-c47906581ef0
+		summarizeBy: none
+		sourceColumn: taskId
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: e356130b-b822-5959-978b-3699751d8832
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column detailConflict
+		dataType: boolean
+		lineageTag: 3692169e-8bd3-524f-b50e-10c66dd7cd9f
+		summarizeBy: none
+		sourceColumn: detailConflict
+
+	column fundamental_error_count
+		dataType: int64
+		lineageTag: 1f44059f-cf15-5ca4-934c-78e6bd603f98
+		summarizeBy: none
+		sourceColumn: fundamental_error_count
+
+	column review_by
+		dataType: string
+		lineageTag: f3703584-d9ef-5396-b323-37b756fc2bdc
+		summarizeBy: none
+		sourceColumn: review_by
+
+	column review_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 4a6808c3-4133-5c05-821a-86f8672e6fde
+		summarizeBy: none
+		sourceColumn: review_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column improvement_count
+		dataType: int64
+		lineageTag: 2f3c3623-96b8-5a5d-b840-44d3734a2514
+		summarizeBy: none
+		sourceColumn: improvement_count
+
+	column designed
+		dataType: int64
+		lineageTag: fd2cec2b-93eb-5436-bb5f-d125849f9713
+		summarizeBy: none
+		sourceColumn: designed
+
+	column developed
+		dataType: int64
+		lineageTag: 753db2d6-9cfd-5ccc-a880-adbe3a324979
+		summarizeBy: none
+		sourceColumn: developed
+
+	column item_number
+		dataType: string
+		lineageTag: 5585fd9c-1943-56e1-88c8-960f1354b3c7
+		summarizeBy: none
+		sourceColumn: item_number
+
+	column item_description
+		dataType: string
+		lineageTag: 29d269a1-2272-5fad-9842-a07179a16546
+		summarizeBy: none
+		sourceColumn: item_description
+
+	column rd_temp
+		dataType: string
+		lineageTag: 4445bcc5-dc0b-57d3-8788-65589d0cc6e4
+		summarizeBy: none
+		sourceColumn: rd_temp
+
+	column next_assembly
+		dataType: string
+		lineageTag: 2912f7a6-6c52-50c3-92cb-a2b016235893
+		summarizeBy: none
+		sourceColumn: next_assembly
+
+	column reference_number
+		dataType: string
+		lineageTag: eaf5a6ee-95fe-55e4-aa1a-d6225dbc04d8
+		summarizeBy: none
+		sourceColumn: reference_number
+
+	column slide_number
+		dataType: string
+		lineageTag: c5359efd-2982-5e68-b717-c36029e0c075
+		summarizeBy: none
+		sourceColumn: slide_number
+
+	column milestone
+		dataType: string
+		lineageTag: 6e78d7d0-18ab-51da-8860-7b2271feee14
+		summarizeBy: none
+		sourceColumn: milestone
+
+	column improvement_location
+		dataType: string
+		lineageTag: e56f1407-d6ef-5534-9150-cea6b699d23f
+		summarizeBy: none
+		sourceColumn: improvement_location
+
+	column error_type
+		dataType: string
+		lineageTag: 9fd8cba3-2109-57a6-a5d3-460ab2a85d0b
+		summarizeBy: none
+		sourceColumn: error_type
+
+	column query_from
+		dataType: string
+		lineageTag: ddec465b-9bdf-5371-b558-ba60ac6c8e45
+		summarizeBy: none
+		sourceColumn: query_from
+
+	column query_description
+		dataType: string
+		lineageTag: 911e7cea-7f20-5fce-8f19-0f9b15806571
+		summarizeBy: none
+		sourceColumn: query_description
+
+	column query_to
+		dataType: string
+		lineageTag: c9ffb1e7-d415-5e63-a40f-0465915fc3fb
+		summarizeBy: none
+		sourceColumn: query_to
+
+	column query_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: b1d0197e-6968-5531-9f4b-f4c63b56eb2b
+		summarizeBy: none
+		sourceColumn: query_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column comments
+		dataType: string
+		lineageTag: eb3e165c-4dfd-509f-91ea-a41c34ea02b2
+		summarizeBy: none
+		sourceColumn: comments
+
+	column feedback_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 716a804e-8176-5ae3-94f9-08939fec58d9
+		summarizeBy: none
+		sourceColumn: feedback_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column action_by
+		dataType: string
+		lineageTag: 073a0be1-c360-5d02-8528-d5199539789e
+		summarizeBy: none
+		sourceColumn: action_by
+
+	column action_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 4b893fcb-be2c-5cf3-ad8a-dfb1cc8136d7
+		summarizeBy: none
+		sourceColumn: action_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column query_status
+		dataType: string
+		lineageTag: 085f056b-4316-5980-8f25-7579bb61c94e
+		summarizeBy: none
+		sourceColumn: query_status
+
+	column remarks
+		dataType: string
+		lineageTag: f2f6d534-02f7-5f77-905d-0aa39b1a8ecb
+		summarizeBy: none
+		sourceColumn: remarks
+
+	partition FactWeeklyDetails = m
+		mode: import
+		source =
+				let
+				    Eligible=Table.SelectRows(TimesheetRows, each List.Contains({"submitted","approved"},[status])),
+				    Grouped=Table.Group(Eligible,{"weeklyRowKey"},{
+				        {"Latest",each Table.First(Table.Sort(_,{{"updatedDate",Order.Descending},{"id",Order.Descending}})),type record},
+				        {"detailConflict",each List.Count(List.Distinct(List.Transform([weeklyDetails], each Text.FromBinary(Json.FromValue(_)))))>1,type logical}
+				    }),
+				    Expanded=Table.ExpandRecordColumn(Grouped,"Latest",{"userId","projectId","taskId","date","weeklyDetails"}),
+				    WeekStart=Table.TransformColumns(Expanded,{{"date",each Date.StartOfWeek(_,Day.Monday),type date}}),
+				    Details=Table.TransformColumns(WeekStart,{{"weeklyDetails", each Record.SelectFields(_, {"fundamental_error_count","review_by","review_date","improvement_count","designed","developed","item_number","item_description","rd_temp","next_assembly","reference_number","slide_number","milestone","improvement_location","error_type","query_from","query_description","query_to","query_date","comments","feedback_date","action_by","action_date","query_status","remarks"}, MissingField.UseNull),type record}}),
+				    Flattened=Table.ExpandRecordColumn(Details,"weeklyDetails",{"fundamental_error_count","review_by","review_date","improvement_count","designed","developed","item_number","item_description","rd_temp","next_assembly","reference_number","slide_number","milestone","improvement_location","error_type","query_from","query_description","query_to","query_date","comments","feedback_date","action_by","action_date","query_status","remarks"}),
+				    Typed=Table.TransformColumnTypes(Flattened,{{"weeklyRowKey",type text},{"userId",Int64.Type},{"projectId",Int64.Type},{"taskId",Int64.Type},{"date",type date},{"detailConflict",type logical},{"fundamental_error_count",Int64.Type},{"review_by",type text},{"review_date",type date},{"improvement_count",Int64.Type},{"designed",Int64.Type},{"developed",Int64.Type},{"item_number",type text},{"item_description",type text},{"rd_temp",type text},{"next_assembly",type text},{"reference_number",type text},{"slide_number",type text},{"milestone",type text},{"improvement_location",type text},{"error_type",type text},{"query_from",type text},{"query_description",type text},{"query_to",type text},{"query_date",type date},{"comments",type text},{"feedback_date",type date},{"action_by",type text},{"action_date",type date},{"query_status",type text},{"remarks",type text}},"en-US")
+				in Typed
+

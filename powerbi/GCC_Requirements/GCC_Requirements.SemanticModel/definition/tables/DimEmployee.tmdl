@@ -1,0 +1,64 @@
+/// Current employee roster. No employment start/end history is available; capacity is an estimate using the current active roster.
+table DimEmployee
+	lineageTag: 3b93aa8f-d311-5e08-817d-e681124ec008
+
+	column id
+		dataType: int64
+		lineageTag: 59478cbe-b23d-5f39-99c9-3cfd1c832861
+		summarizeBy: none
+		sourceColumn: id
+
+	column employeeId
+		dataType: string
+		lineageTag: 1d70fd4d-77dd-5c84-8d11-497ddea8fabe
+		summarizeBy: none
+		sourceColumn: employeeId
+
+	column employeeName
+		dataType: string
+		lineageTag: 755f4dc2-3a60-543a-ad4d-cd5227997807
+		summarizeBy: none
+		sourceColumn: employeeName
+
+	column division
+		dataType: string
+		lineageTag: 0791688b-ddbd-5b27-a0c1-f128f919fb9c
+		summarizeBy: none
+		sourceColumn: division
+
+	column department
+		dataType: string
+		lineageTag: 83132590-69aa-535e-9f90-518ae03eeac9
+		summarizeBy: none
+		sourceColumn: department
+
+	column supportingCategory
+		dataType: string
+		lineageTag: e4cb6447-4756-5a32-a2cd-e2509111c995
+		summarizeBy: none
+		sourceColumn: supportingCategory
+
+	column role
+		dataType: string
+		lineageTag: c759b829-c4a2-5bc7-ae0f-bcd4a273f6d1
+		summarizeBy: none
+		sourceColumn: role
+
+	column isActive
+		dataType: boolean
+		lineageTag: af5cec74-842e-55f1-ba63-1da5e69a8ab4
+		summarizeBy: none
+		sourceColumn: isActive
+
+	partition DimEmployee = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("users"),
+				    Raw = Table.FromRecords(Rows, {"id", "employeeId", "employeeName", "division", "department", "supportingCategory", "role", "isActive"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"employeeId", type text}, {"employeeName", type text}, {"division", type text}, {"department", type text}, {"supportingCategory", type text}, {"role", type text}, {"isActive", type logical}}, "en-US"),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimEmployee key." else Typed
+				in Checked
+
+	annotation PBI_ResultType = Exception
+

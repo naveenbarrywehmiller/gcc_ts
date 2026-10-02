@@ -1,0 +1,68 @@
+/// Awaiting a deliverable register. One unique deliverable ID; null means unknown, zero means confirmed none. Replace this typed empty query with the approved REST source.
+table FactDeliverable
+	lineageTag: e0a7a92c-e171-55a1-a5d2-a45bcf5fe78e
+
+	column deliverableId
+		dataType: string
+		lineageTag: a95e70b6-b8f1-5cd3-8f0c-7540ecc2ecbe
+		summarizeBy: none
+		sourceColumn: deliverableId
+
+	column projectId
+		dataType: int64
+		lineageTag: f533da97-a188-57b7-b800-29d6183f9d93
+		summarizeBy: none
+		sourceColumn: projectId
+
+	column plannedDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: afbbb310-6055-5034-bcdb-7ef12e0dc7ab
+		summarizeBy: none
+		sourceColumn: plannedDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column deliveredDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: ff654533-f686-541d-8cb5-732d114eed11
+		summarizeBy: none
+		sourceColumn: deliveredDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column fundamentalErrors
+		dataType: int64
+		lineageTag: de3eb672-23ca-507b-baab-19fe4677caeb
+		summarizeBy: none
+		sourceColumn: fundamentalErrors
+
+	column informationErrors
+		dataType: int64
+		lineageTag: d7abea30-41e8-5bee-bd32-a2b38ce41a82
+		summarizeBy: none
+		sourceColumn: informationErrors
+
+	column readableErrors
+		dataType: int64
+		lineageTag: 7bd0692f-05c1-5e1c-89ed-90ec7b4cc360
+		summarizeBy: none
+		sourceColumn: readableErrors
+
+	column hadRework
+		dataType: boolean
+		lineageTag: c74f48ce-6972-5131-a369-270178860a23
+		summarizeBy: none
+		sourceColumn: hadRework
+
+	partition FactDeliverable = m
+		mode: import
+		source =
+				let
+				    Raw=if Text.Trim(DeliverablesEndpoint)="" then #table(type table [deliverableId=text,projectId=Int64.Type,plannedDate=date,deliveredDate=date,fundamentalErrors=Int64.Type,informationErrors=Int64.Type,readableErrors=Int64.Type,hadRework=logical], {}) else Table.FromRecords(fnApi(DeliverablesEndpoint),{"deliverableId","projectId","plannedDate","deliveredDate","fundamentalErrors","informationErrors","readableErrors","hadRework"},MissingField.UseNull),
+				    Typed=Table.TransformColumnTypes(Raw,{{"deliverableId",type text},{"projectId",Int64.Type},{"plannedDate",type date},{"deliveredDate",type date},{"fundamentalErrors",Int64.Type},{"informationErrors",Int64.Type},{"readableErrors",Int64.Type},{"hadRework",type logical}}),
+				    Checked=if List.Contains(Typed[deliverableId],null) or List.Contains(Typed[deliverableId],"") or List.Count(List.Distinct(Typed[deliverableId]))<>Table.RowCount(Typed)
+				        then error "Missing or duplicate deliverableId." else Typed
+				in Checked
+

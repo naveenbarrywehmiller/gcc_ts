@@ -1,6 +1,6 @@
 """Build the requirements report as a native PBIP/PBIR project (no PBIX editing).
 
-Run with Python 3. This file is the authored source for the generated project.
+Run with Python 3. This is the original BIM scaffold, not the saved TMDL project's source of truth.
 No credentials, employee records, or synthetic business data are embedded.
 """
 import json
@@ -13,6 +13,9 @@ OUT = ROOT / 'GCC_Requirements'
 MODEL = OUT / 'GCC_Requirements.SemanticModel'
 REPORT = OUT / 'GCC_Requirements.Report'
 SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/'
+
+if (MODEL / 'definition').exists():
+    raise SystemExit('The canonical project is saved as TMDL. This legacy BIM generator would overwrite Desktop edits. Use Desktop/TMDL to maintain it, or explicitly choose a separate output folder.')
 
 def write(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)

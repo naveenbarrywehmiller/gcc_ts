@@ -1,0 +1,37 @@
+/// Planned full-day absence, not approved or actual leave.
+table FactVacation
+	lineageTag: 7562e923-0aa2-57e3-a986-061e071e4f1e
+
+	column id
+		dataType: int64
+		lineageTag: 8be4b6f0-4676-50ee-922f-3ba49dd6577e
+		summarizeBy: none
+		sourceColumn: id
+
+	column userId
+		dataType: int64
+		lineageTag: 5d6c8566-60f8-5175-a2c4-4cbd09d28bfb
+		summarizeBy: none
+		sourceColumn: userId
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 7e0d11c9-c676-5f2e-8b25-4bc7b332c12e
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition FactVacation = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("planned-vacations"),
+				    Raw = Table.FromRecords(Rows, {"id", "userId", "date"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"userId", Int64.Type}, {"date", type date}}, "en-US"),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing FactVacation key." else Typed
+				in Checked
+
+	annotation PBI_ResultType = Exception
+

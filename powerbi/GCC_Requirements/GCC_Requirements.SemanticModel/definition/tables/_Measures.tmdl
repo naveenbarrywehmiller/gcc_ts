@@ -1,0 +1,394 @@
+table _Measures
+	lineageTag: 5f5fbd7b-b4e7-5fbb-8753-fb3e7461631a
+
+	/// All statuses including drafts/rejected. Use Actual Hours for reported work.
+	measure 'Raw Hours' = CALCULATE(SUM(FactTimesheet[hours]), KEEPFILTERS(FILTER(ALL(FactTimesheet[division]),NOT ISCROSSFILTERED(DimDivision) || FactTimesheet[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0.0
+		displayFolder: 01 Overview
+		lineageTag: 6b10930a-3369-5457-b8e7-d7b4ca287fa1
+
+	measure 'Actual Hours' = CALCULATE([Raw Hours], KEEPFILTERS(FactTimesheet[status] IN {"submitted", "approved"}))
+		formatString: #,##0.0
+		displayFolder: 01 Overview
+		lineageTag: f560a2a4-70b4-5879-b71d-8bf8d0716260
+
+	measure 'Approved Hours' = CALCULATE([Raw Hours], KEEPFILTERS(FactTimesheet[status] = "approved"))
+		formatString: #,##0.0
+		displayFolder: 01 Overview
+		lineageTag: eb0056f8-70ae-5108-8fbd-79d512b668f4
+
+	measure 'Contributing Employees' = CALCULATE(DISTINCTCOUNT(FactTimesheet[userId]), KEEPFILTERS(FactTimesheet[status] IN {"submitted","approved"}),KEEPFILTERS(FILTER(ALL(FactTimesheet[division]),NOT ISCROSSFILTERED(DimDivision) || FactTimesheet[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 01 Overview
+		lineageTag: 102a7b8a-ca1c-56fa-92d0-e4f28dfeb874
+
+	/// Current roster; does not change with date or project selection.
+	measure 'Active Team Strength' = CALCULATE(COUNTROWS(DimEmployee), KEEPFILTERS(DimEmployee[isActive] = TRUE()), KEEPFILTERS(DimEmployee[role] <> "system admin"), KEEPFILTERS(FILTER(ALL(DimEmployee[division]),NOT ISCROSSFILTERED(DimDivision) || DimEmployee[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 01 Overview
+		lineageTag: 8ff0b004-b0ed-5765-b2cb-b8b9aa312661
+
+	measure 'Training Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Training"))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: f706ea5a-0951-50c1-9c55-d9b8b5689c1d
+
+	measure 'Internal Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Internal"))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 61c68422-2018-58b0-b331-ef626be89a09
+
+	measure 'Admin Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Admin"))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 16a8368f-814d-5edf-9683-46ce4477035c
+
+	measure 'Vacation Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Vacation"))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 35405a06-7feb-5962-a3f0-8a1807774264
+
+	measure 'Holiday Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Holiday"))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: f5f3125c-a45d-5b92-a903-b1b0cb30d9a3
+
+	measure 'Productive Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Productive"))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 351e6010-77a6-514d-a2d6-b74c870adc7d
+
+	measure 'Unmapped Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Unmapped"))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 05be4a19-96d8-57fb-ae11-c5431e3189e5
+
+	measure 'Effective Hours' = IF(COALESCE([Unmapped Hours],0)=0,[Actual Hours]-COALESCE([Training Hours],0)-COALESCE([Internal Hours],0)-COALESCE([Admin Hours],0)-COALESCE([Vacation Hours],0)-COALESCE([Holiday Hours],0))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: e04cd92d-11bb-5f0c-b27b-76574fcebe89
+
+	measure 'Working Days' = COALESCE(CALCULATE(COUNTROWS(DimDate),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEEPFILTERS(DimDate[IsHoliday]=FALSE())),0)
+		formatString: #,##0
+		displayFolder: 02 Utilization
+		lineageTag: 033b294f-12aa-5729-85e7-0a12ce7e57e8
+
+	measure 'Holiday Days' = CALCULATE(COUNTROWS(DimDate),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEEPFILTERS(DimDate[IsHoliday]=TRUE()))
+		formatString: #,##0
+		displayFolder: 02 Utilization
+		lineageTag: 15032cb3-e0ad-5ed4-b600-04a33de136e3
+
+	/// Current roster estimate. Blank at project/task grain because allocations are unavailable.
+	measure 'Roster Capacity Hours' = IF(NOT ISCROSSFILTERED(DimProject) && NOT ISCROSSFILTERED(DimTask), [Working Days]*SELECTEDVALUE(Settings[DailyHours],8)*[Active Team Strength])
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 60f159a7-ce60-5bbf-9fd3-9760ef326d62
+
+	/// Per employee/day capped at daily hours. Future plans supersede recorded leave, preventing double subtraction. Only weekdays excluding holidays.
+	measure 'Capacity Vacation Hours' =
+			VAR H=SELECTEDVALUE(Settings[DailyHours],8)
+			VAR A=MAX(Settings[AsOfDate])
+			VAR People=CALCULATETABLE(VALUES(DimEmployee[id]),KEEPFILTERS(DimEmployee[isActive]=TRUE()),KEEPFILTERS(DimEmployee[role]<>"system admin"),KEEPFILTERS(FILTER(ALL(DimEmployee[division]),NOT ISCROSSFILTERED(DimDivision) || DimEmployee[division] IN VALUES(DimDivision[divisionName]))))
+			VAR Days=CALCULATETABLE(VALUES(DimDate[Date]),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEEPFILTERS(DimDate[IsHoliday]=FALSE()))
+			RETURN IF(NOT ISCROSSFILTERED(DimProject) && NOT ISCROSSFILTERED(DimTask),SUMX(CROSSJOIN(People,Days),
+			VAR D=DimDate[Date]
+			VAR Recorded=CALCULATE(SUM(FactTimesheet[hours]),FactTimesheet[hourCategory]="Vacation",FactTimesheet[status] IN {"submitted","approved"})
+			VAR Planned=CALCULATE(COUNTROWS(FactVacation))
+			RETURN MIN(H,IF(D>=A && Planned>0,H,COALESCE(Recorded,0)))))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 09c697c9-ffb5-5912-aaf7-c06bd70cfd7b
+
+	measure 'Vacation Days' = DIVIDE([Capacity Vacation Hours],SELECTEDVALUE(Settings[DailyHours],8))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: 2639e998-0754-5a5c-8b94-48152e2bce8c
+
+	measure 'Available Hours' = IF(NOT ISBLANK([Roster Capacity Hours]),MAX(0,[Roster Capacity Hours]-COALESCE([Capacity Vacation Hours],0)))
+		formatString: #,##0.0
+		displayFolder: 02 Utilization
+		lineageTag: ba6141fe-866c-5987-993d-b82e44532ff6
+
+	/// Selected-period utilization using current roster estimate; monthly when grouped/filtered by YearMonth.
+	measure 'Monthly Utilization %' = DIVIDE([Effective Hours],[Available Hours])
+		formatString: 0.0%
+		displayFolder: 02 Utilization
+		lineageTag: da295a52-d2bc-542c-a6de-7963367604ae
+
+	measure 'Under Utilized %' = IF(NOT ISBLANK([Monthly Utilization %]),1-[Monthly Utilization %])
+		formatString: 0.0%
+		displayFolder: 02 Utilization
+		lineageTag: 0fb4712a-ab92-55d9-9be8-014ff6ab3ce2
+
+	measure 'As Of Date' = MAX(Settings[AsOfDate])
+		formatString: yyyy-mm-dd
+		displayFolder: 09 Metadata
+		lineageTag: 105a9762-cd0e-5046-aab7-026cd871c17c
+
+	measure 'Last Completed Friday' = [As Of Date]-MOD(WEEKDAY([As Of Date],2)-5+6,7)-1
+		formatString: yyyy-mm-dd
+		displayFolder: 09 Metadata
+		lineageTag: a70f4785-5a72-5b2a-b6f6-bc6c0f76fdaf
+
+	/// Workbook annual numerator excludes training but retains internal/admin. Current-roster FY estimate; exact project-start denominator needs allocation history.
+	measure 'FY Utilization Through Friday %' =
+			VAR E=[Last Completed Friday]
+			VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1)
+			VAR S=DATE(YEAR(E)-IF(MONTH(E)<FM,1,0),FM,1)
+			RETURN CALCULATE(IF(COALESCE([Unmapped Hours],0)=0,DIVIDE([Actual Hours]-COALESCE([Training Hours],0)-COALESCE([Vacation Hours],0)-COALESCE([Holiday Hours],0),[Available Hours])),REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,E))
+		formatString: 0.0%
+		displayFolder: 02 Utilization
+		lineageTag: 9e323750-80da-5987-861e-976e540273b7
+
+	measure 'Available Hours Last Week' = VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(-7) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,S+6))
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: a22eb53c-d3e2-51b3-82ed-7e8e3e93e3a1
+
+	measure 'Available Hours Current Week' = VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(0) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,S+6))
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: d0bcf35d-fef4-58bb-af60-9394557fc726
+
+	measure 'Available Hours Next Week' = VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(7) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,S+6))
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: cad54c72-07e8-560b-9bea-22d82b01e5f1
+
+	measure 'Available Hours FY' = VAR A=[As Of Date] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1) VAR S=DATE(YEAR(A)-IF(MONTH(A)<FM,1,0),FM,1) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,EDATE(S,12)-1))
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: ff3327f2-2ff4-5eca-a67f-20481702626e
+
+	measure 'Dedicated Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],"Dedicated"))))
+		formatString: #,##0.0
+		displayFolder: 04 Teams
+		lineageTag: 48440455-bb3c-5ae9-8f44-41f698274a0e
+
+	measure 'Dedicated Strength' = CALCULATE([Active Team Strength],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],"Dedicated"))))
+		formatString: #,##0
+		displayFolder: 04 Teams
+		lineageTag: 41022d11-39ea-5060-874a-8deebf48cd6d
+
+	measure 'Dedicated Utilization %' = CALCULATE([Monthly Utilization %],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],"Dedicated"))))
+		formatString: 0.0%
+		displayFolder: 04 Teams
+		lineageTag: 901f9a72-6e48-50a8-ba3f-60880ae1d75c
+
+	measure 'Dedicated FY Hours' = VAR E=[Last Completed Friday] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1) VAR S=DATE(YEAR(E)-IF(MONTH(E)<FM,1,0),FM,1) RETURN CALCULATE([Dedicated Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,E))
+		formatString: #,##0.0
+		displayFolder: 04 Teams
+		lineageTag: 05273bdf-dbfd-562b-bb27-4420847ee2bc
+
+	measure 'Flex Hours' = CALCULATE([Actual Hours],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],"Flex"))))
+		formatString: #,##0.0
+		displayFolder: 04 Teams
+		lineageTag: d691b76c-5f59-5abc-b7b2-a684b642811c
+
+	measure 'Flex Strength' = CALCULATE([Active Team Strength],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],"Flex"))))
+		formatString: #,##0
+		displayFolder: 04 Teams
+		lineageTag: 27ebfa42-afc1-5990-9510-7811a9696dfe
+
+	measure 'Flex Utilization %' = CALCULATE([Monthly Utilization %],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],"Flex"))))
+		formatString: 0.0%
+		displayFolder: 04 Teams
+		lineageTag: 3d0898d8-4be3-5ebd-8efc-3917a73720d7
+
+	measure 'Flex FY Hours' = VAR E=[Last Completed Friday] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1) VAR S=DATE(YEAR(E)-IF(MONTH(E)<FM,1,0),FM,1) RETURN CALCULATE([Flex Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,E))
+		formatString: #,##0.0
+		displayFolder: 04 Teams
+		lineageTag: a91c8343-49dc-5d6c-960d-a8a36d644a7d
+
+	/// Unused hours converted to full-period employee equivalents; not a named cohort or staff assignment.
+	measure 'Available Employee Equivalents' = IF(NOT ISBLANK([Monthly Utilization %]),DIVIDE(MAX(0,[Available Hours]-[Effective Hours]),SELECTEDVALUE(Settings[DailyHours],8)*[Working Days]))
+		formatString: #,##0.0
+		displayFolder: 04 Teams
+		lineageTag: 13a62a5a-0777-5073-a649-4366eaa92030
+
+	measure 'Projects Delivered' = CALCULATE(COUNTROWS(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date]))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 05 Delivery
+		lineageTag: e5ae8e91-1078-52aa-b13a-1c006ba0dc72
+
+	measure 'Projects On Time' = CALCULATE(COUNTROWS(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[targetDate]) && DimProject[deliveredDate]<=DimProject[targetDate])),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 05 Delivery
+		lineageTag: 2c0098d5-4052-5500-947b-a6b1db5f9819
+
+	measure 'Project On Time %' = VAR Known=CALCULATE(COUNTROWS(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[targetDate]))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))) RETURN IF(Known=[Projects Delivered],DIVIDE([Projects On Time],Known))
+		formatString: 0.0%
+		displayFolder: 05 Delivery
+		lineageTag: 6d9f0dc3-a89b-5712-9d0c-7f5ce98579b3
+
+	measure 'Delivered Project Budget Hours' = VAR P=CALCULATETABLE(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))) RETURN IF(COUNTROWS(P)>0 && COUNTROWS(FILTER(P,ISBLANK(DimProject[budgetHours])))=0,SUMX(P,DimProject[budgetHours]))
+		formatString: #,##0.0
+		displayFolder: 05 Delivery
+		lineageTag: 4b020ed2-e675-529e-ae9f-8e46bd55f055
+
+	/// Lifetime actual hours for the same delivered-project cohort as the budget, preventing partial-period vs lifetime-budget comparisons.
+	measure 'Delivered Project Actual Hours' = VAR P=CALCULATETABLE(SELECTCOLUMNS(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),"ID",DimProject[id]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))) RETURN CALCULATE([Actual Hours],REMOVEFILTERS(DimDate),KEEPFILTERS(TREATAS(P,DimProject[id])))
+		formatString: #,##0.0
+		displayFolder: 05 Delivery
+		lineageTag: 3afcb945-1573-5501-8e4c-523ae8ef458b
+
+	measure 'Effort Deviation %' = IF(NOT ISBLANK([Delivered Project Budget Hours]) && NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),DIVIDE([Delivered Project Actual Hours]-[Delivered Project Budget Hours],[Delivered Project Budget Hours]))
+		formatString: 0.0%
+		displayFolder: 05 Delivery
+		lineageTag: 687657cb-aa77-537b-a404-b52d21f5089e
+
+	/// Mean delivered minus planned target date in calendar days. Positive is late.
+	measure 'Schedule Deviation Days' = CALCULATE(AVERAGEX(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[targetDate])),DATEDIFF(DimProject[targetDate],DimProject[deliveredDate],DAY)),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0.0
+		displayFolder: 05 Delivery
+		lineageTag: 3a3f74dd-8e33-59bb-a804-72853fd1f042
+
+	/// Provisional normalized schedule deviation: days late/early divided by planned elapsed duration.
+	measure 'Schedule Deviation %' = CALCULATE(AVERAGEX(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[startDate]) && DimProject[targetDate]>DimProject[startDate]),DIVIDE(DATEDIFF(DimProject[targetDate],DimProject[deliveredDate],DAY),DATEDIFF(DimProject[startDate],DimProject[targetDate],DAY))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: 0.0%
+		displayFolder: 05 Delivery
+		lineageTag: 6b4e61a5-14cc-5ae2-a28a-d2ece67e39cc
+
+	measure 'Effort Alert Color' = IF(ISBLANK([Effort Deviation %]),"#64748B",IF(ABS([Effort Deviation %])>0.05,"#DC2626","#0F766E"))
+		displayFolder: 05 Delivery
+		lineageTag: 9caaa3f9-e58b-5f9d-9122-bd74af395705
+
+	measure 'Schedule Alert Color' = IF(ISBLANK([Schedule Deviation %]),"#64748B",IF(ABS([Schedule Deviation %])>0.03,"#DC2626","#0F766E"))
+		displayFolder: 05 Delivery
+		lineageTag: 1e39c6dc-1e7d-5544-a404-c75c3888f2b5
+
+	measure 'Detail Conflicts' = CALCULATE(COUNTROWS(FactWeeklyDetails),FactWeeklyDetails[detailConflict]=TRUE(),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: f6fc0779-9814-53d9-9b1f-f2e62f1f8a79
+
+	measure 'Weekly Fundamental Errors' = IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[fundamental_error_count]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: c0424c54-24e8-5a81-ab90-acaaf090a254
+
+	measure 'Improvement Log Count' = IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[improvement_count]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: d8531e99-51f4-58eb-9f49-6cb699ad8207
+
+	measure Designed = IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[designed]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: de1ba278-a7dc-50dc-a976-e94fdf7094c1
+
+	measure Developed = IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[developed]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: 2103d70b-61a3-550a-b2f0-e015b9cfed56
+
+	measure 'Fundamental Errors' = VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[fundamentalErrors])))=0,SUMX(T,FactDeliverable[fundamentalErrors]))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: 78a6072b-cd88-5ff1-aee9-b76a0568ac49
+
+	measure 'Information Errors' = VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[informationErrors])))=0,SUMX(T,FactDeliverable[informationErrors]))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: 44d17bb2-0ac4-563e-80c8-8c745f3200ee
+
+	measure 'Readable Errors' = VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[readableErrors])))=0,SUMX(T,FactDeliverable[readableErrors]))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: bee7919b-d361-5784-a55c-668d579081e6
+
+	measure Deliverables = CALCULATE(DISTINCTCOUNT(FactDeliverable[deliverableId]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK()))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: bc80e957-1424-52f2-a1d4-c33461e2fb63
+
+	measure 'Defect Density %' = DIVIDE([Fundamental Errors],[Deliverables])
+		formatString: 0.0%
+		displayFolder: 08 Quality
+		lineageTag: a564dca1-39ec-59f0-a108-80724a8bb838
+
+	measure 'First Time Right %' = VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[hadRework])))=0,DIVIDE(COUNTROWS(FILTER(T,FactDeliverable[hadRework]=FALSE())),COUNTROWS(T)))
+		formatString: 0.0%
+		displayFolder: 08 Quality
+		lineageTag: a33ec9c2-d5bf-52a2-b36b-03cfcc58422e
+
+	measure 'On Time Deliverables' = CALCULATE(COUNTROWS(FILTER(FactDeliverable,NOT ISBLANK(FactDeliverable[deliveredDate]) && NOT ISBLANK(FactDeliverable[plannedDate]) && FactDeliverable[deliveredDate]<=FactDeliverable[plannedDate])),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 08 Quality
+		lineageTag: d88d8eca-faab-5902-875c-3ff5f0a5e771
+
+	measure 'Defect Alert Color' = IF(ISBLANK([Defect Density %]),"#64748B",IF(ABS([Defect Density %]-SELECTEDVALUE(Settings[DefectTarget],0))>0.05,"#DC2626","#0F766E"))
+		displayFolder: 08 Quality
+		lineageTag: e4a6fd0f-bc4d-567f-be6d-070568cb051b
+
+	measure 'Products Touched' = VAR IDs=CALCULATETABLE(VALUES(FactTimesheet[projectId]),FactTimesheet[status] IN {"submitted","approved"},KEEPFILTERS(FILTER(ALL(FactTimesheet[division]),NOT ISCROSSFILTERED(DimDivision) || FactTimesheet[division] IN VALUES(DimDivision[divisionName])))) RETURN CALCULATE(DISTINCTCOUNT(DimProject[product]),KEEPFILTERS(TREATAS(IDs,DimProject[id])),DimProject[product]<>BLANK())
+		formatString: #,##0
+		displayFolder: 06 Improvement
+		lineageTag: 2c6520e9-e788-5457-9442-02860ad1f87c
+
+	measure 'Additive Manufacturing' = CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),FactImprovement[isAdditiveManufacturing]=TRUE(),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 06 Improvement
+		lineageTag: ed37d873-59be-5306-bb19-31e9419b91d8
+
+	measure 'Improvement Initiatives' = CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 06 Improvement
+		lineageTag: 75b2d88e-f916-5d94-847d-fe3a472a06d0
+
+	/// Snapshot for last selected month. Blank if any selected division has no entry.
+	measure 'Open Positions' = VAR E=MAX(DimDate[Date]) VAR S=DATE(YEAR(E),MONTH(E),1) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),DimDate[Date]=S) RETURN IF(COUNTROWS(T)=COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[openPositions])))=0,SUMX(T,FactStaffing[openPositions]))
+		formatString: #,##0
+		displayFolder: 07 Staffing
+		lineageTag: a3c3b1c5-a3f1-51fd-bfa3-e223acadeea4
+
+	measure 'New Joiners' = VAR Months=SELECTCOLUMNS(SUMMARIZE(DimDate,DimDate[YearMonth]),"MonthStart",CALCULATE(DATE(YEAR(MIN(DimDate[Date])),MONTH(MIN(DimDate[Date])),1))) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),TREATAS(Months,DimDate[Date])) RETURN IF(COUNTROWS(T)=COUNTROWS(Months)*COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[newJoiners])))=0,SUMX(T,FactStaffing[newJoiners]))
+		formatString: #,##0
+		displayFolder: 07 Staffing
+		lineageTag: 773e3f94-2d07-5a90-b41c-03a0fb2015b1
+
+	measure 'Hours Scheduled' = IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SUM(FactPlan[scheduledHours]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: 6e5002f6-ede5-5795-9a49-6b827e2b0d53
+
+	measure 'Remaining Forecast Hours' = IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SUM(FactPlan[remainingForecastHours]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: 5b001cb4-2fe0-52de-9d18-d2dffaadc437
+
+	/// Past actuals plus future remaining budget. Past and future do not overlap.
+	measure 'Team Forecast Hours' = VAR A=[As Of Date] RETURN IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE([Actual Hours],KEEPFILTERS(DimDate[Date]<A))+[Remaining Forecast Hours])
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: dd7a6c7a-fe17-5869-8194-4668e4e3ccd2
+
+	measure 'Overdue Unscheduled Hours' = VAR A=[As Of Date] RETURN CALCULATE(SUMX(FILTER(DimProject,DimProject[projectStatus]="Inprogress" && NOT ISBLANK(DimProject[targetDate]) && DimProject[targetDate]<A && NOT ISBLANK(DimProject[budgetHours])),MAX(0,DimProject[budgetHours]-CALCULATE([Actual Hours],REMOVEFILTERS(DimDate)))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0.0
+		displayFolder: 03 Capacity
+		lineageTag: 3af7f285-60ab-59c1-ae10-cef5d55a3151
+
+	measure 'Projects Missing Plan Inputs' = CALCULATE(COUNTROWS(FILTER(DimProject,DimProject[projectStatus]="Inprogress" && (ISBLANK(DimProject[startDate]) || ISBLANK(DimProject[targetDate]) || ISBLANK(DimProject[budgetHours]) || DimProject[targetDate]<DimProject[startDate]))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))
+		formatString: #,##0
+		displayFolder: 03 Capacity
+		lineageTag: 50e5c8c0-a5e7-5f70-a972-857efd0e8a1d
+
+	measure 'Report Status' = IF(ISBLANK([Last Refresh UTC]),"API refresh required","Refreshed " & [Last Refresh UTC]) & " • see Input readiness for missing source contracts"
+		displayFolder: 09 Metadata
+		lineageTag: 5b8e757b-f003-5d90-aabc-a5d1a17eb3b9
+
+	measure 'Last Refresh UTC' = SELECTEDVALUE(Settings[RefreshUTC])
+		displayFolder: 09 Metadata
+		lineageTag: 8ee187a9-8ad9-557a-b306-b7a1860df90a
+
+	column Label
+		dataType: string
+		isHidden
+		lineageTag: 9e220a7a-ae61-5b0d-bd5c-5578c38d0bcd
+		summarizeBy: none
+		sourceColumn: Label
+
+	partition _Measures = m
+		mode: import
+		source = #table(type table [Label=text],{{"GCC requirements"}})
+

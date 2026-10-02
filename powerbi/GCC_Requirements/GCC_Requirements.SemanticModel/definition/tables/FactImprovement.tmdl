@@ -1,0 +1,53 @@
+/// Awaiting a unique improvement register for VAVE, Automation, COE, Cost optimization and additive manufacturing. Weekly improvement counts remain separately available.
+table FactImprovement
+	lineageTag: afdeadfa-2c22-55da-8c1d-a8f6c2b887a4
+
+	column improvementId
+		dataType: string
+		lineageTag: d0d6d042-580b-5ec0-93be-280db975e153
+		summarizeBy: none
+		sourceColumn: improvementId
+
+	column projectId
+		dataType: int64
+		lineageTag: 6b445d7c-a3ca-5322-8931-96c1a7831f11
+		summarizeBy: none
+		sourceColumn: projectId
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 1e0e30b9-638d-5bc0-af41-b54f41eb5388
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column category
+		dataType: string
+		lineageTag: 0f25daf6-2955-5a5b-83a3-b5f5cba629ad
+		summarizeBy: none
+		sourceColumn: category
+
+	column product
+		dataType: string
+		lineageTag: 5b18ad0a-c4d9-5bb5-a911-1caf6fbfea75
+		summarizeBy: none
+		sourceColumn: product
+
+	column isAdditiveManufacturing
+		dataType: boolean
+		lineageTag: 7b205b58-5684-5d5c-94a3-38c845c1302c
+		summarizeBy: none
+		sourceColumn: isAdditiveManufacturing
+
+	partition FactImprovement = m
+		mode: import
+		source =
+				let
+				    Raw=if Text.Trim(ImprovementsEndpoint)="" then #table(type table [improvementId=text,projectId=Int64.Type,date=date,category=text,product=text,isAdditiveManufacturing=logical], {}) else Table.FromRecords(fnApi(ImprovementsEndpoint),{"improvementId","projectId","date","category","product","isAdditiveManufacturing"},MissingField.UseNull),
+				    Typed=Table.TransformColumnTypes(Raw,{{"improvementId",type text},{"projectId",Int64.Type},{"date",type date},{"category",type text},{"product",type text},{"isAdditiveManufacturing",type logical}}),
+				    Checked=if List.Contains(Typed[improvementId],null) or List.Contains(Typed[improvementId],"") or List.Count(List.Distinct(Typed[improvementId]))<>Table.RowCount(Typed)
+				        then error "Missing or duplicate improvementId." else Typed
+				in Checked
+

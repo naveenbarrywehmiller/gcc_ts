@@ -1,0 +1,32 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		fastCombine
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DimEmployee","DimProject","DimDivision","DimHoliday","DimTask","FactTimesheet","FactWeeklyDetails","FactVacation","FactStaffing","Settings","DimDate","FactDeliverable","FactImprovement","FactPlan","InputStatus","_Measures","ApiBaseUrl","ApiPath","FiscalStartMonth","DailyHours","DefectTarget","RefreshClock","fnApi","HourCategoryMap","TimesheetRows","DeliverablesEndpoint","ImprovementsEndpoint"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table DimEmployee
+ref table DimProject
+ref table DimDivision
+ref table DimHoliday
+ref table DimTask
+ref table FactTimesheet
+ref table FactWeeklyDetails
+ref table FactVacation
+ref table FactStaffing
+ref table Settings
+ref table DimDate
+ref table FactDeliverable
+ref table FactImprovement
+ref table FactPlan
+ref table InputStatus
+ref table _Measures
+

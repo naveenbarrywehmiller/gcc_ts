@@ -142,7 +142,7 @@
 ### 📈 Reports & Exports
 - Filterable reports by user, project, date range, division
 - Export to **Excel (.xlsx)** and **PDF**
-- Power BI Read-Only REST API endpoints (`/api/powerbi/*` — see [docs/POWERBI.md](docs/POWERBI.md))
+- Power BI Read-Only REST API endpoints (`/api/powerbi/*` — see [API integration](docs/POWERBI.md)) and the [complete requirements Power BI project guide](powerbi/POWERBI.md), with all formulas, queries, tables, visuals and connection steps
 - SharePoint sync (`/api/sharepoint-sync`)
 
 ### 🔍 Audit Log
