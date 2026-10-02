@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.14.0...v1.15.0) (2026-10-02)
+
+
+### Features
+
+* add requirements-based Power BI project and reporting inputs ([e3ddccc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e3ddcccf7dbfa63341857ccc0f596db2a03e644e))
+
 ## [1.14.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.13.2...v1.14.0) (2026-10-01)
 
 
