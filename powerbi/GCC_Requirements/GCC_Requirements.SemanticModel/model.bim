@@ -1,0 +1,2058 @@
+{
+  "name": "GCC Requirements",
+  "compatibilityLevel": 1606,
+  "model": {
+    "culture": "en-US",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "DimEmployee",
+        "description": "Current employee roster. No employment start/end history is available; capacity is an estimate using the current active roster.",
+        "isHidden": false,
+        "lineageTag": "3b93aa8f-d311-5e08-817d-e681124ec008",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "59478cbe-b23d-5f39-99c9-3cfd1c832861"
+          },
+          {
+            "name": "employeeId",
+            "dataType": "string",
+            "sourceColumn": "employeeId",
+            "summarizeBy": "none",
+            "lineageTag": "1d70fd4d-77dd-5c84-8d11-497ddea8fabe"
+          },
+          {
+            "name": "employeeName",
+            "dataType": "string",
+            "sourceColumn": "employeeName",
+            "summarizeBy": "none",
+            "lineageTag": "755f4dc2-3a60-543a-ad4d-cd5227997807"
+          },
+          {
+            "name": "division",
+            "dataType": "string",
+            "sourceColumn": "division",
+            "summarizeBy": "none",
+            "lineageTag": "0791688b-ddbd-5b27-a0c1-f128f919fb9c"
+          },
+          {
+            "name": "department",
+            "dataType": "string",
+            "sourceColumn": "department",
+            "summarizeBy": "none",
+            "lineageTag": "83132590-69aa-535e-9f90-518ae03eeac9"
+          },
+          {
+            "name": "supportingCategory",
+            "dataType": "string",
+            "sourceColumn": "supportingCategory",
+            "summarizeBy": "none",
+            "lineageTag": "e4cb6447-4756-5a32-a2cd-e2509111c995"
+          },
+          {
+            "name": "role",
+            "dataType": "string",
+            "sourceColumn": "role",
+            "summarizeBy": "none",
+            "lineageTag": "c759b829-c4a2-5bc7-ae0f-bcd4a273f6d1"
+          },
+          {
+            "name": "isActive",
+            "dataType": "boolean",
+            "sourceColumn": "isActive",
+            "summarizeBy": "none",
+            "lineageTag": "af5cec74-842e-55f1-ba63-1da5e69a8ab4"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimEmployee",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Rows = fnApi(\"users\"),\n    Raw = Table.FromRecords(Rows, {\"id\", \"employeeId\", \"employeeName\", \"division\", \"department\", \"supportingCategory\", \"role\", \"isActive\"}, MissingField.UseNull),\n    Typed = Table.TransformColumnTypes(Raw, {{\"id\", Int64.Type}, {\"employeeId\", type text}, {\"employeeName\", type text}, {\"division\", type text}, {\"department\", type text}, {\"supportingCategory\", type text}, {\"role\", type text}, {\"isActive\", type logical}}, \"en-US\"),\n    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error \"Duplicate or missing DimEmployee key.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimProject",
+        "description": "One project/task master record. A project is not assumed to equal a deliverable.",
+        "isHidden": false,
+        "lineageTag": "eb8f2ef3-f06e-5eae-88ec-fcb4d2987862",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "332593b2-f9e5-57de-aa0a-74cf1cd983ee"
+          },
+          {
+            "name": "projectCode",
+            "dataType": "string",
+            "sourceColumn": "projectCode",
+            "summarizeBy": "none",
+            "lineageTag": "53db928e-125d-5154-9c4d-43df9655b0f5"
+          },
+          {
+            "name": "projectName",
+            "dataType": "string",
+            "sourceColumn": "projectName",
+            "summarizeBy": "none",
+            "lineageTag": "5b0f2345-271a-5515-b1b1-98e5726cdf19"
+          },
+          {
+            "name": "division",
+            "dataType": "string",
+            "sourceColumn": "division",
+            "summarizeBy": "none",
+            "lineageTag": "21facf74-b241-5a67-8cca-b19b5d1abf73"
+          },
+          {
+            "name": "subdivision",
+            "dataType": "string",
+            "sourceColumn": "subdivision",
+            "summarizeBy": "none",
+            "lineageTag": "21b1ab05-a616-5acc-9bfb-deba18650dcd"
+          },
+          {
+            "name": "teamType",
+            "dataType": "string",
+            "sourceColumn": "teamType",
+            "summarizeBy": "none",
+            "lineageTag": "35c347e7-8605-5562-8f81-6faf22756cd4"
+          },
+          {
+            "name": "product",
+            "dataType": "string",
+            "sourceColumn": "product",
+            "summarizeBy": "none",
+            "lineageTag": "1242fe17-13e2-5492-82b5-a3a210866782"
+          },
+          {
+            "name": "productModule",
+            "dataType": "string",
+            "sourceColumn": "productModule",
+            "summarizeBy": "none",
+            "lineageTag": "a2fbc537-1413-5d93-9793-4ca0f5faba05"
+          },
+          {
+            "name": "activity",
+            "dataType": "string",
+            "sourceColumn": "activity",
+            "summarizeBy": "none",
+            "lineageTag": "1c852814-b24a-5e38-9b33-65a134c510fc"
+          },
+          {
+            "name": "startDate",
+            "dataType": "dateTime",
+            "sourceColumn": "startDate",
+            "summarizeBy": "none",
+            "lineageTag": "364b036d-1d63-5c08-9bcb-6aef3e6e82ae",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "targetDate",
+            "dataType": "dateTime",
+            "sourceColumn": "targetDate",
+            "summarizeBy": "none",
+            "lineageTag": "2c8e0253-47e1-5539-9061-34726c1a8d41",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "deliveredDate",
+            "dataType": "dateTime",
+            "sourceColumn": "deliveredDate",
+            "summarizeBy": "none",
+            "lineageTag": "4a7245b2-0434-5d90-b84e-8034e4c18e7b",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "budgetHours",
+            "dataType": "double",
+            "sourceColumn": "budgetHours",
+            "summarizeBy": "none",
+            "lineageTag": "c68ecefc-c090-5701-af5c-364681b9d977"
+          },
+          {
+            "name": "projectStatus",
+            "dataType": "string",
+            "sourceColumn": "projectStatus",
+            "summarizeBy": "none",
+            "lineageTag": "4296e567-7633-5d93-9440-7a58f9589e54"
+          },
+          {
+            "name": "isActive",
+            "dataType": "boolean",
+            "sourceColumn": "isActive",
+            "summarizeBy": "none",
+            "lineageTag": "ec3e641e-d3e9-59b2-ad18-a250539f1059"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimProject",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Rows = fnApi(\"projects\"),\n    Raw = Table.FromRecords(Rows, {\"id\", \"projectCode\", \"projectName\", \"division\", \"subdivision\", \"teamType\", \"product\", \"productModule\", \"activity\", \"startDate\", \"targetDate\", \"deliveredDate\", \"budgetHours\", \"projectStatus\", \"isActive\"}, MissingField.UseNull),\n    Typed = Table.TransformColumnTypes(Raw, {{\"id\", Int64.Type}, {\"projectCode\", type text}, {\"projectName\", type text}, {\"division\", type text}, {\"subdivision\", type text}, {\"teamType\", type text}, {\"product\", type text}, {\"productModule\", type text}, {\"activity\", type text}, {\"startDate\", type date}, {\"targetDate\", type date}, {\"deliveredDate\", type date}, {\"budgetHours\", type number}, {\"projectStatus\", type text}, {\"isActive\", type logical}}, \"en-US\"),\n    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error \"Duplicate or missing DimProject key.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimDivision",
+        "description": "",
+        "isHidden": false,
+        "lineageTag": "eeaf819f-5870-55d2-b59c-ac2a2600bdb4",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "35405d53-5ffc-5312-a861-053a62f6cf84"
+          },
+          {
+            "name": "divisionName",
+            "dataType": "string",
+            "sourceColumn": "divisionName",
+            "summarizeBy": "none",
+            "lineageTag": "b354d0ab-238d-50bd-89a2-fc596c2b5dad"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimDivision",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Rows = fnApi(\"divisions\"),\n    Raw = Table.FromRecords(Rows, {\"id\", \"divisionName\"}, MissingField.UseNull),\n    Typed = Table.TransformColumnTypes(Raw, {{\"id\", Int64.Type}, {\"divisionName\", type text}}, \"en-US\"),\n    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error \"Duplicate or missing DimDivision key.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimHoliday",
+        "description": "",
+        "isHidden": false,
+        "lineageTag": "f316df7a-e3b6-5dee-bab0-9b7be684d293",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "ed9e4979-f1b1-5f13-a6c2-e455aee95642"
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "summarizeBy": "none",
+            "lineageTag": "2b788455-d308-5e45-9e21-aa649a1f1ce0",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "holidayName",
+            "dataType": "string",
+            "sourceColumn": "holidayName",
+            "summarizeBy": "none",
+            "lineageTag": "ee98d6e9-bdb9-5315-afb6-3ddfa9ea5f1a"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimHoliday",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Rows = fnApi(\"holidays\"),\n    Raw = Table.FromRecords(Rows, {\"id\", \"date\", \"holidayName\"}, MissingField.UseNull),\n    Typed = Table.TransformColumnTypes(Raw, {{\"id\", Int64.Type}, {\"date\", type date}, {\"holidayName\", type text}}, \"en-US\"),\n    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error \"Duplicate or missing DimHoliday key.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimTask",
+        "description": "",
+        "isHidden": false,
+        "lineageTag": "c2f99e3f-7531-5a35-89ad-12c229409cbe",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "2a9472d9-32e2-5233-a8ed-3d09954ea65c"
+          },
+          {
+            "name": "taskCategory",
+            "dataType": "string",
+            "sourceColumn": "taskCategory",
+            "summarizeBy": "none",
+            "lineageTag": "2fafd542-d0ec-5bb9-9ecf-db789e873b99"
+          },
+          {
+            "name": "classification",
+            "dataType": "string",
+            "sourceColumn": "classification",
+            "summarizeBy": "none",
+            "lineageTag": "1dc452b7-fbd9-5cec-a10e-df6224d37106"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimTask",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Rows = fnApi(\"tasks\"),\n    Raw = Table.FromRecords(Rows, {\"id\", \"taskCategory\", \"classification\"}, MissingField.UseNull),\n    Typed = Table.TransformColumnTypes(Raw, {{\"id\", Int64.Type}, {\"taskCategory\", type text}, {\"classification\", type text}}, \"en-US\"),\n    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error \"Duplicate or missing DimTask key.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "FactTimesheet",
+        "description": "One daily entry. Actual hours include submitted and approved entries only; raw hours retain all statuses.",
+        "isHidden": false,
+        "lineageTag": "5613fd66-9345-585c-b6dc-fbd0548a903b",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "33087f64-39cb-5be7-ae86-98ddf0d6e7e2"
+          },
+          {
+            "name": "userId",
+            "dataType": "int64",
+            "sourceColumn": "userId",
+            "summarizeBy": "none",
+            "lineageTag": "6f8c3ba3-71ec-556d-b402-218e672aafa4"
+          },
+          {
+            "name": "projectId",
+            "dataType": "int64",
+            "sourceColumn": "projectId",
+            "summarizeBy": "none",
+            "lineageTag": "9f33a84f-2868-5037-8b34-d1925d790533"
+          },
+          {
+            "name": "taskId",
+            "dataType": "int64",
+            "sourceColumn": "taskId",
+            "summarizeBy": "none",
+            "lineageTag": "58bb1e92-c7f4-5023-a2d6-48e29b8c919c"
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "summarizeBy": "none",
+            "lineageTag": "1bdaae65-3f27-5395-9047-23da18db92ed",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "hours",
+            "dataType": "double",
+            "sourceColumn": "hours",
+            "summarizeBy": "none",
+            "lineageTag": "3b94d7be-8f1f-58cf-b49f-a6f44fa8be1e"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "summarizeBy": "none",
+            "lineageTag": "a2535212-f0f7-51b0-8f86-dde7b6f30d66"
+          },
+          {
+            "name": "division",
+            "dataType": "string",
+            "sourceColumn": "division",
+            "summarizeBy": "none",
+            "lineageTag": "67e66000-6ef2-588a-ba0c-5bb26dcb9e15"
+          },
+          {
+            "name": "department",
+            "dataType": "string",
+            "sourceColumn": "department",
+            "summarizeBy": "none",
+            "lineageTag": "121049d7-090f-54d4-ad49-db2cac90aca4"
+          },
+          {
+            "name": "hourCategory",
+            "dataType": "string",
+            "sourceColumn": "hourCategory",
+            "summarizeBy": "none",
+            "lineageTag": "f2875fff-4a73-5e71-8414-f34ec2a1ca62"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactTimesheet",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Table.SelectColumns(TimesheetRows,{\"id\",\"userId\",\"projectId\",\"taskId\",\"date\",\"hours\",\"status\",\"division\",\"department\",\"hourCategory\"})"
+            }
+          }
+        ]
+      },
+      {
+        "name": "FactWeeklyDetails",
+        "description": "One employee/week/project/task/row-dimension record, using the latest daily copy. Counts attributed to Monday. Conflicting copies block quality totals.",
+        "isHidden": false,
+        "lineageTag": "6a07da9a-62be-5bcd-911f-891db2841056",
+        "columns": [
+          {
+            "name": "weeklyRowKey",
+            "dataType": "string",
+            "sourceColumn": "weeklyRowKey",
+            "summarizeBy": "none",
+            "lineageTag": "c0e2fb79-464a-53e2-8d9a-e5ad519d7907"
+          },
+          {
+            "name": "userId",
+            "dataType": "int64",
+            "sourceColumn": "userId",
+            "summarizeBy": "none",
+            "lineageTag": "3ac7abb3-5bb5-58e4-bed5-f95f3bd24176"
+          },
+          {
+            "name": "projectId",
+            "dataType": "int64",
+            "sourceColumn": "projectId",
+            "summarizeBy": "none",
+            "lineageTag": "41c4deab-b8bd-5be5-b4f4-ad417e688a20"
+          },
+          {
+            "name": "taskId",
+            "dataType": "int64",
+            "sourceColumn": "taskId",
+            "summarizeBy": "none",
+            "lineageTag": "12a01879-327f-578e-bc6e-c47906581ef0"
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "summarizeBy": "none",
+            "lineageTag": "e356130b-b822-5959-978b-3699751d8832",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "detailConflict",
+            "dataType": "boolean",
+            "sourceColumn": "detailConflict",
+            "summarizeBy": "none",
+            "lineageTag": "3692169e-8bd3-524f-b50e-10c66dd7cd9f"
+          },
+          {
+            "name": "fundamental_error_count",
+            "dataType": "int64",
+            "sourceColumn": "fundamental_error_count",
+            "summarizeBy": "none",
+            "lineageTag": "1f44059f-cf15-5ca4-934c-78e6bd603f98"
+          },
+          {
+            "name": "review_by",
+            "dataType": "string",
+            "sourceColumn": "review_by",
+            "summarizeBy": "none",
+            "lineageTag": "f3703584-d9ef-5396-b323-37b756fc2bdc"
+          },
+          {
+            "name": "review_date",
+            "dataType": "dateTime",
+            "sourceColumn": "review_date",
+            "summarizeBy": "none",
+            "lineageTag": "4a6808c3-4133-5c05-821a-86f8672e6fde",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "improvement_count",
+            "dataType": "int64",
+            "sourceColumn": "improvement_count",
+            "summarizeBy": "none",
+            "lineageTag": "2f3c3623-96b8-5a5d-b840-44d3734a2514"
+          },
+          {
+            "name": "designed",
+            "dataType": "int64",
+            "sourceColumn": "designed",
+            "summarizeBy": "none",
+            "lineageTag": "fd2cec2b-93eb-5436-bb5f-d125849f9713"
+          },
+          {
+            "name": "developed",
+            "dataType": "int64",
+            "sourceColumn": "developed",
+            "summarizeBy": "none",
+            "lineageTag": "753db2d6-9cfd-5ccc-a880-adbe3a324979"
+          },
+          {
+            "name": "item_number",
+            "dataType": "string",
+            "sourceColumn": "item_number",
+            "summarizeBy": "none",
+            "lineageTag": "5585fd9c-1943-56e1-88c8-960f1354b3c7"
+          },
+          {
+            "name": "item_description",
+            "dataType": "string",
+            "sourceColumn": "item_description",
+            "summarizeBy": "none",
+            "lineageTag": "29d269a1-2272-5fad-9842-a07179a16546"
+          },
+          {
+            "name": "rd_temp",
+            "dataType": "string",
+            "sourceColumn": "rd_temp",
+            "summarizeBy": "none",
+            "lineageTag": "4445bcc5-dc0b-57d3-8788-65589d0cc6e4"
+          },
+          {
+            "name": "next_assembly",
+            "dataType": "string",
+            "sourceColumn": "next_assembly",
+            "summarizeBy": "none",
+            "lineageTag": "2912f7a6-6c52-50c3-92cb-a2b016235893"
+          },
+          {
+            "name": "reference_number",
+            "dataType": "string",
+            "sourceColumn": "reference_number",
+            "summarizeBy": "none",
+            "lineageTag": "eaf5a6ee-95fe-55e4-aa1a-d6225dbc04d8"
+          },
+          {
+            "name": "slide_number",
+            "dataType": "string",
+            "sourceColumn": "slide_number",
+            "summarizeBy": "none",
+            "lineageTag": "c5359efd-2982-5e68-b717-c36029e0c075"
+          },
+          {
+            "name": "milestone",
+            "dataType": "string",
+            "sourceColumn": "milestone",
+            "summarizeBy": "none",
+            "lineageTag": "6e78d7d0-18ab-51da-8860-7b2271feee14"
+          },
+          {
+            "name": "improvement_location",
+            "dataType": "string",
+            "sourceColumn": "improvement_location",
+            "summarizeBy": "none",
+            "lineageTag": "e56f1407-d6ef-5534-9150-cea6b699d23f"
+          },
+          {
+            "name": "error_type",
+            "dataType": "string",
+            "sourceColumn": "error_type",
+            "summarizeBy": "none",
+            "lineageTag": "9fd8cba3-2109-57a6-a5d3-460ab2a85d0b"
+          },
+          {
+            "name": "query_from",
+            "dataType": "string",
+            "sourceColumn": "query_from",
+            "summarizeBy": "none",
+            "lineageTag": "ddec465b-9bdf-5371-b558-ba60ac6c8e45"
+          },
+          {
+            "name": "query_description",
+            "dataType": "string",
+            "sourceColumn": "query_description",
+            "summarizeBy": "none",
+            "lineageTag": "911e7cea-7f20-5fce-8f19-0f9b15806571"
+          },
+          {
+            "name": "query_to",
+            "dataType": "string",
+            "sourceColumn": "query_to",
+            "summarizeBy": "none",
+            "lineageTag": "c9ffb1e7-d415-5e63-a40f-0465915fc3fb"
+          },
+          {
+            "name": "query_date",
+            "dataType": "dateTime",
+            "sourceColumn": "query_date",
+            "summarizeBy": "none",
+            "lineageTag": "b1d0197e-6968-5531-9f4b-f4c63b56eb2b",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "comments",
+            "dataType": "string",
+            "sourceColumn": "comments",
+            "summarizeBy": "none",
+            "lineageTag": "eb3e165c-4dfd-509f-91ea-a41c34ea02b2"
+          },
+          {
+            "name": "feedback_date",
+            "dataType": "dateTime",
+            "sourceColumn": "feedback_date",
+            "summarizeBy": "none",
+            "lineageTag": "716a804e-8176-5ae3-94f9-08939fec58d9",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "action_by",
+            "dataType": "string",
+            "sourceColumn": "action_by",
+            "summarizeBy": "none",
+            "lineageTag": "073a0be1-c360-5d02-8528-d5199539789e"
+          },
+          {
+            "name": "action_date",
+            "dataType": "dateTime",
+            "sourceColumn": "action_date",
+            "summarizeBy": "none",
+            "lineageTag": "4b893fcb-be2c-5cf3-ad8a-dfb1cc8136d7",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "query_status",
+            "dataType": "string",
+            "sourceColumn": "query_status",
+            "summarizeBy": "none",
+            "lineageTag": "085f056b-4316-5980-8f25-7579bb61c94e"
+          },
+          {
+            "name": "remarks",
+            "dataType": "string",
+            "sourceColumn": "remarks",
+            "summarizeBy": "none",
+            "lineageTag": "f2f6d534-02f7-5f77-905d-0aa39b1a8ecb"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactWeeklyDetails",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Eligible=Table.SelectRows(TimesheetRows, each List.Contains({\"submitted\",\"approved\"},[status])),\n    Grouped=Table.Group(Eligible,{\"weeklyRowKey\"},{\n        {\"Latest\",each Table.First(Table.Sort(_,{{\"updatedDate\",Order.Descending},{\"id\",Order.Descending}})),type record},\n        {\"detailConflict\",each List.Count(List.Distinct(List.Transform([weeklyDetails], each Text.FromBinary(Json.FromValue(_)))))>1,type logical}\n    }),\n    Expanded=Table.ExpandRecordColumn(Grouped,\"Latest\",{\"userId\",\"projectId\",\"taskId\",\"date\",\"weeklyDetails\"}),\n    WeekStart=Table.TransformColumns(Expanded,{{\"date\",each Date.StartOfWeek(_,Day.Monday),type date}}),\n    Details=Table.TransformColumns(WeekStart,{{\"weeklyDetails\", each Record.SelectFields(_, {\"fundamental_error_count\",\"review_by\",\"review_date\",\"improvement_count\",\"designed\",\"developed\",\"item_number\",\"item_description\",\"rd_temp\",\"next_assembly\",\"reference_number\",\"slide_number\",\"milestone\",\"improvement_location\",\"error_type\",\"query_from\",\"query_description\",\"query_to\",\"query_date\",\"comments\",\"feedback_date\",\"action_by\",\"action_date\",\"query_status\",\"remarks\"}, MissingField.UseNull),type record}}),\n    Flattened=Table.ExpandRecordColumn(Details,\"weeklyDetails\",{\"fundamental_error_count\",\"review_by\",\"review_date\",\"improvement_count\",\"designed\",\"developed\",\"item_number\",\"item_description\",\"rd_temp\",\"next_assembly\",\"reference_number\",\"slide_number\",\"milestone\",\"improvement_location\",\"error_type\",\"query_from\",\"query_description\",\"query_to\",\"query_date\",\"comments\",\"feedback_date\",\"action_by\",\"action_date\",\"query_status\",\"remarks\"}),\n    Typed=Table.TransformColumnTypes(Flattened,{{\"weeklyRowKey\",type text},{\"userId\",Int64.Type},{\"projectId\",Int64.Type},{\"taskId\",Int64.Type},{\"date\",type date},{\"detailConflict\",type logical},{\"fundamental_error_count\",Int64.Type},{\"review_by\",type text},{\"review_date\",type date},{\"improvement_count\",Int64.Type},{\"designed\",Int64.Type},{\"developed\",Int64.Type},{\"item_number\",type text},{\"item_description\",type text},{\"rd_temp\",type text},{\"next_assembly\",type text},{\"reference_number\",type text},{\"slide_number\",type text},{\"milestone\",type text},{\"improvement_location\",type text},{\"error_type\",type text},{\"query_from\",type text},{\"query_description\",type text},{\"query_to\",type text},{\"query_date\",type date},{\"comments\",type text},{\"feedback_date\",type date},{\"action_by\",type text},{\"action_date\",type date},{\"query_status\",type text},{\"remarks\",type text}},\"en-US\")\nin Typed"
+            }
+          }
+        ]
+      },
+      {
+        "name": "FactVacation",
+        "description": "Planned full-day absence, not approved or actual leave.",
+        "isHidden": false,
+        "lineageTag": "7562e923-0aa2-57e3-a986-061e071e4f1e",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "8be4b6f0-4676-50ee-922f-3ba49dd6577e"
+          },
+          {
+            "name": "userId",
+            "dataType": "int64",
+            "sourceColumn": "userId",
+            "summarizeBy": "none",
+            "lineageTag": "5d6c8566-60f8-5175-a2c4-4cbd09d28bfb"
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "summarizeBy": "none",
+            "lineageTag": "7e0d11c9-c676-5f2e-8b25-4bc7b332c12e",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactVacation",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Rows = fnApi(\"planned-vacations\"),\n    Raw = Table.FromRecords(Rows, {\"id\", \"userId\", \"date\"}, MissingField.UseNull),\n    Typed = Table.TransformColumnTypes(Raw, {{\"id\", Int64.Type}, {\"userId\", Int64.Type}, {\"date\", type date}}, \"en-US\"),\n    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error \"Duplicate or missing FactVacation key.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "FactStaffing",
+        "description": "One division/month. Open positions are a snapshot, new joiners a monthly flow. Blank differs from zero.",
+        "isHidden": false,
+        "lineageTag": "4ba30aae-1c82-563f-aba2-f2f75b8b3f51",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none",
+            "lineageTag": "700a3e22-16f1-5bf2-b346-0f99ed8d9607"
+          },
+          {
+            "name": "divisionId",
+            "dataType": "int64",
+            "sourceColumn": "divisionId",
+            "summarizeBy": "none",
+            "lineageTag": "723e0baa-3448-5513-876f-0a02abf538bf"
+          },
+          {
+            "name": "division",
+            "dataType": "string",
+            "sourceColumn": "division",
+            "summarizeBy": "none",
+            "lineageTag": "0491c115-1772-5263-bfaf-4ce84c3705e3"
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "summarizeBy": "none",
+            "lineageTag": "506a29a7-926c-517f-9a71-c305eee4ffe3",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "openPositions",
+            "dataType": "int64",
+            "sourceColumn": "openPositions",
+            "summarizeBy": "none",
+            "lineageTag": "27e66f1a-b33f-58c4-86bf-fffef09b6c24"
+          },
+          {
+            "name": "newJoiners",
+            "dataType": "int64",
+            "sourceColumn": "newJoiners",
+            "summarizeBy": "none",
+            "lineageTag": "91a1ae62-0132-517f-b51c-1284b166e73d"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactStaffing",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Rows = fnApi(\"staffing\"),\n    Raw = Table.FromRecords(Rows, {\"id\", \"divisionId\", \"division\", \"date\", \"openPositions\", \"newJoiners\"}, MissingField.UseNull),\n    Typed = Table.TransformColumnTypes(Raw, {{\"id\", Int64.Type}, {\"divisionId\", Int64.Type}, {\"division\", type text}, {\"date\", type date}, {\"openPositions\", Int64.Type}, {\"newJoiners\", Int64.Type}}, \"en-US\"),\n    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error \"Duplicate or missing FactStaffing key.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Settings",
+        "description": "",
+        "isHidden": false,
+        "lineageTag": "9070a2cb-79fe-5acc-8ffc-3f4d27370198",
+        "columns": [
+          {
+            "name": "FiscalStartMonth",
+            "dataType": "int64",
+            "sourceColumn": "FiscalStartMonth",
+            "summarizeBy": "none",
+            "lineageTag": "2fb5f75b-98ea-540c-aa18-8bb6fefd2048"
+          },
+          {
+            "name": "DailyHours",
+            "dataType": "double",
+            "sourceColumn": "DailyHours",
+            "summarizeBy": "none",
+            "lineageTag": "26461ddd-e6aa-55b8-8902-65ad8a689fce"
+          },
+          {
+            "name": "DefectTarget",
+            "dataType": "double",
+            "sourceColumn": "DefectTarget",
+            "summarizeBy": "none",
+            "lineageTag": "5300ea60-b5eb-5b9c-b962-4dd9bc540245"
+          },
+          {
+            "name": "AsOfDate",
+            "dataType": "dateTime",
+            "sourceColumn": "AsOfDate",
+            "summarizeBy": "none",
+            "lineageTag": "24f6c29f-167f-5581-9302-4cb204712d7d",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "RefreshUTC",
+            "dataType": "string",
+            "sourceColumn": "RefreshUTC",
+            "summarizeBy": "none",
+            "lineageTag": "d3bc5b50-d4e3-55fe-a557-5d7796b42b65"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Settings",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Valid=if FiscalStartMonth<1 or FiscalStartMonth>12 or Number.RoundDown(FiscalStartMonth)<>FiscalStartMonth or DailyHours<=0 or DailyHours>24 then error \"Invalid capacity settings.\" else true\nin if Valid then #table(type table [FiscalStartMonth=Int64.Type,DailyHours=number,DefectTarget=number,AsOfDate=date,RefreshUTC=text],\n    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(RefreshClock),DateTimeZone.ToText(RefreshClock,\"yyyy-MM-dd HH:mm 'UTC'\")}}) else error \"Invalid settings\""
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimDate",
+        "description": "FiscalYear is labeled by its start year. Continuous dates covering source data and the next year.",
+        "isHidden": false,
+        "lineageTag": "0c132238-ba25-556e-9cfb-ef279b8856e6",
+        "columns": [
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "summarizeBy": "none",
+            "lineageTag": "babec7a0-fdda-55c0-a7c8-6993d6e1d196",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "isKey": true
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "summarizeBy": "none",
+            "lineageTag": "fc2b3a73-29bd-5617-b71b-7ffafb43f2bf"
+          },
+          {
+            "name": "Month",
+            "dataType": "string",
+            "sourceColumn": "Month",
+            "summarizeBy": "none",
+            "lineageTag": "d3be102d-b20b-5d0e-8b6b-7b0aa61854e6",
+            "sortByColumn": "MonthNumber"
+          },
+          {
+            "name": "MonthNumber",
+            "dataType": "int64",
+            "sourceColumn": "MonthNumber",
+            "summarizeBy": "none",
+            "lineageTag": "14158482-15f0-5f9b-a3ab-6be1479d815c"
+          },
+          {
+            "name": "YearMonth",
+            "dataType": "string",
+            "sourceColumn": "YearMonth",
+            "summarizeBy": "none",
+            "lineageTag": "b42c70b7-f7af-562a-9d64-936c20c1ad92"
+          },
+          {
+            "name": "WeekStart",
+            "dataType": "dateTime",
+            "sourceColumn": "WeekStart",
+            "summarizeBy": "none",
+            "lineageTag": "4388fac3-dc82-5594-99d4-82a09d9f67b4",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "FiscalYear",
+            "dataType": "string",
+            "sourceColumn": "FiscalYear",
+            "summarizeBy": "none",
+            "lineageTag": "d603f867-3b02-5cfb-b6a6-7ed0d4b2eb79"
+          },
+          {
+            "name": "IsWeekday",
+            "dataType": "boolean",
+            "sourceColumn": "IsWeekday",
+            "summarizeBy": "none",
+            "lineageTag": "dc5a7065-897d-522a-bb08-cd93fad747ae"
+          },
+          {
+            "name": "IsHoliday",
+            "dataType": "boolean",
+            "sourceColumn": "IsHoliday",
+            "summarizeBy": "none",
+            "lineageTag": "76476dbb-1589-5eca-8cb6-67529f8381be"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimDate",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Today=Date.From(RefreshClock),\n    Dates=List.RemoveNulls(List.Combine({FactTimesheet[date],DimProject[startDate],DimProject[targetDate],DimProject[deliveredDate],FactStaffing[date],FactVacation[date],{Date.AddYears(Today,-1),Date.AddYears(Today,1)}})),\n    Start=Date.StartOfYear(List.Min(Dates)), End=Date.EndOfYear(List.Max(Dates)),\n    Source=Table.FromList(List.Dates(Start,Duration.Days(End-Start)+1,#duration(1,0,0,0)),Splitter.SplitByNothing(),{\"Date\"}),\n    Typed=Table.TransformColumnTypes(Source,{{\"Date\",type date}}),\n    Y=Table.AddColumn(Typed,\"Year\",each Date.Year([Date]),Int64.Type),\n    M=Table.AddColumn(Y,\"Month\",each Date.ToText([Date],\"MMM\",\"en-US\"),type text),\n    MN=Table.AddColumn(M,\"MonthNumber\",each Date.Month([Date]),Int64.Type),\n    YM=Table.AddColumn(MN,\"YearMonth\",each Date.ToText([Date],\"yyyy-MM\"),type text),\n    W=Table.AddColumn(YM,\"WeekStart\",each Date.StartOfWeek([Date],Day.Monday),type date),\n    FY=Table.AddColumn(W,\"FiscalYear\",each \"FY \" & Text.From(Date.Year(Date.AddMonths([Date],1-FiscalStartMonth))),type text),\n    WD=Table.AddColumn(FY,\"IsWeekday\",each Date.DayOfWeek([Date],Day.Monday)<5,type logical),\n    H=Table.AddColumn(WD,\"IsHoliday\",each List.Contains(DimHoliday[date],[Date]),type logical)\nin H"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "__PBI_LocalDateTable",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "name": "FactDeliverable",
+        "description": "Awaiting a deliverable register. One unique deliverable ID; null means unknown, zero means confirmed none. Replace this typed empty query with the approved REST source.",
+        "isHidden": false,
+        "lineageTag": "e0a7a92c-e171-55a1-a5d2-a45bcf5fe78e",
+        "columns": [
+          {
+            "name": "deliverableId",
+            "dataType": "string",
+            "sourceColumn": "deliverableId",
+            "summarizeBy": "none",
+            "lineageTag": "a95e70b6-b8f1-5cd3-8f0c-7540ecc2ecbe"
+          },
+          {
+            "name": "projectId",
+            "dataType": "int64",
+            "sourceColumn": "projectId",
+            "summarizeBy": "none",
+            "lineageTag": "f533da97-a188-57b7-b800-29d6183f9d93"
+          },
+          {
+            "name": "plannedDate",
+            "dataType": "dateTime",
+            "sourceColumn": "plannedDate",
+            "summarizeBy": "none",
+            "lineageTag": "afbbb310-6055-5034-bcdb-7ef12e0dc7ab",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "deliveredDate",
+            "dataType": "dateTime",
+            "sourceColumn": "deliveredDate",
+            "summarizeBy": "none",
+            "lineageTag": "ff654533-f686-541d-8cb5-732d114eed11",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "fundamentalErrors",
+            "dataType": "int64",
+            "sourceColumn": "fundamentalErrors",
+            "summarizeBy": "none",
+            "lineageTag": "de3eb672-23ca-507b-baab-19fe4677caeb"
+          },
+          {
+            "name": "informationErrors",
+            "dataType": "int64",
+            "sourceColumn": "informationErrors",
+            "summarizeBy": "none",
+            "lineageTag": "d7abea30-41e8-5bee-bd32-a2b38ce41a82"
+          },
+          {
+            "name": "readableErrors",
+            "dataType": "int64",
+            "sourceColumn": "readableErrors",
+            "summarizeBy": "none",
+            "lineageTag": "7bd0692f-05c1-5e1c-89ed-90ec7b4cc360"
+          },
+          {
+            "name": "hadRework",
+            "dataType": "boolean",
+            "sourceColumn": "hadRework",
+            "summarizeBy": "none",
+            "lineageTag": "c74f48ce-6972-5131-a369-270178860a23"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactDeliverable",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Raw=if Text.Trim(DeliverablesEndpoint)=\"\" then #table(type table [deliverableId=text,projectId=Int64.Type,plannedDate=date,deliveredDate=date,fundamentalErrors=Int64.Type,informationErrors=Int64.Type,readableErrors=Int64.Type,hadRework=logical], {}) else Table.FromRecords(fnApi(DeliverablesEndpoint),{\"deliverableId\",\"projectId\",\"plannedDate\",\"deliveredDate\",\"fundamentalErrors\",\"informationErrors\",\"readableErrors\",\"hadRework\"},MissingField.UseNull),\n    Typed=Table.TransformColumnTypes(Raw,{{\"deliverableId\",type text},{\"projectId\",Int64.Type},{\"plannedDate\",type date},{\"deliveredDate\",type date},{\"fundamentalErrors\",Int64.Type},{\"informationErrors\",Int64.Type},{\"readableErrors\",Int64.Type},{\"hadRework\",type logical}}),\n    Checked=if List.Contains(Typed[deliverableId],null) or List.Contains(Typed[deliverableId],\"\") or List.Count(List.Distinct(Typed[deliverableId]))<>Table.RowCount(Typed)\n        then error \"Missing or duplicate deliverableId.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "FactImprovement",
+        "description": "Awaiting a unique improvement register for VAVE, Automation, COE, Cost optimization and additive manufacturing. Weekly improvement counts remain separately available.",
+        "isHidden": false,
+        "lineageTag": "afdeadfa-2c22-55da-8c1d-a8f6c2b887a4",
+        "columns": [
+          {
+            "name": "improvementId",
+            "dataType": "string",
+            "sourceColumn": "improvementId",
+            "summarizeBy": "none",
+            "lineageTag": "d0d6d042-580b-5ec0-93be-280db975e153"
+          },
+          {
+            "name": "projectId",
+            "dataType": "int64",
+            "sourceColumn": "projectId",
+            "summarizeBy": "none",
+            "lineageTag": "6b445d7c-a3ca-5322-8931-96c1a7831f11"
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "summarizeBy": "none",
+            "lineageTag": "1e0e30b9-638d-5bc0-af41-b54f41eb5388",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "category",
+            "summarizeBy": "none",
+            "lineageTag": "0f25daf6-2955-5a5b-83a3-b5f5cba629ad"
+          },
+          {
+            "name": "product",
+            "dataType": "string",
+            "sourceColumn": "product",
+            "summarizeBy": "none",
+            "lineageTag": "5b18ad0a-c4d9-5bb5-a911-1caf6fbfea75"
+          },
+          {
+            "name": "isAdditiveManufacturing",
+            "dataType": "boolean",
+            "sourceColumn": "isAdditiveManufacturing",
+            "summarizeBy": "none",
+            "lineageTag": "7b205b58-5684-5d5c-94a3-38c845c1302c"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactImprovement",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Raw=if Text.Trim(ImprovementsEndpoint)=\"\" then #table(type table [improvementId=text,projectId=Int64.Type,date=date,category=text,product=text,isAdditiveManufacturing=logical], {}) else Table.FromRecords(fnApi(ImprovementsEndpoint),{\"improvementId\",\"projectId\",\"date\",\"category\",\"product\",\"isAdditiveManufacturing\"},MissingField.UseNull),\n    Typed=Table.TransformColumnTypes(Raw,{{\"improvementId\",type text},{\"projectId\",Int64.Type},{\"date\",type date},{\"category\",type text},{\"product\",type text},{\"isAdditiveManufacturing\",type logical}}),\n    Checked=if List.Contains(Typed[improvementId],null) or List.Contains(Typed[improvementId],\"\") or List.Count(List.Distinct(Typed[improvementId]))<>Table.RowCount(Typed)\n        then error \"Missing or duplicate improvementId.\" else Typed\nin Checked"
+            }
+          }
+        ]
+      },
+      {
+        "name": "FactPlan",
+        "description": "Planning estimate: budget spread evenly over project weekdays excluding holidays. Remaining Inprogress budget spread from refresh date through target; Hold and Completed receive no future forecast. Past-due remaining effort is surfaced separately.",
+        "isHidden": false,
+        "lineageTag": "1aacd2cd-b2d3-55ed-aad7-824383d339be",
+        "columns": [
+          {
+            "name": "projectId",
+            "dataType": "int64",
+            "sourceColumn": "projectId",
+            "summarizeBy": "none",
+            "lineageTag": "11225511-8f7b-5b55-9d22-90970a25ec1d"
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "summarizeBy": "none",
+            "lineageTag": "fe131bf1-8b00-5cd3-a16b-92c56324f3fd",
+            "formatString": "yyyy-mm-dd",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "scheduledHours",
+            "dataType": "double",
+            "sourceColumn": "scheduledHours",
+            "summarizeBy": "none",
+            "lineageTag": "da626b8f-34e2-5577-ad68-c7a4767a00f9"
+          },
+          {
+            "name": "remainingForecastHours",
+            "dataType": "double",
+            "sourceColumn": "remainingForecastHours",
+            "summarizeBy": "none",
+            "lineageTag": "17d0f45d-b5b3-5934-9a47-b53fa126a6f6"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "FactPlan",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Today=Date.From(RefreshClock),\n    Actuals=Table.Group(Table.SelectRows(FactTimesheet,each List.Contains({\"approved\",\"submitted\"},[status]) and [date]<Today),{\"projectId\"},{{\"Actual\",each List.Sum([hours]),type number}}),\n    Joined=Table.NestedJoin(DimProject,{\"id\"},Actuals,{\"projectId\"},\"Actuals\",JoinKind.LeftOuter),\n    Expanded=Table.ExpandTableColumn(Joined,\"Actuals\",{\"Actual\"}),\n    Valid=Table.SelectRows(Expanded,each [startDate]<>null and [targetDate]<>null and [targetDate]>=[startDate] and [budgetHours]<>null),\n    Daily=Table.AddColumn(Valid,\"Days\",each let\n        P=_, Days=List.Select(List.Dates(P[startDate],Duration.Days(P[targetDate]-P[startDate])+1,#duration(1,0,0,0)),each Date.DayOfWeek(_,Day.Monday)<5 and not List.Contains(DimHoliday[date],_)),\n        Future=List.Select(Days,each _>=Today),\n        Remaining=if P[projectStatus]=\"Inprogress\" then List.Max({0,P[budgetHours]-(P[Actual] ?? 0)}) else 0\n        in List.Transform(Days,each [projectId=P[id],date=_,scheduledHours=P[budgetHours]/List.Count(Days),\n            remainingForecastHours=if _>=Today and List.Count(Future)>0 then Remaining/List.Count(Future) else 0])),\n    Records=List.Combine(Daily[Days]),\n    T=Table.FromRecords(Records,{\"projectId\",\"date\",\"scheduledHours\",\"remainingForecastHours\"},MissingField.UseNull),\n    Typed=Table.TransformColumnTypes(T,{{\"projectId\",Int64.Type},{\"date\",type date},{\"scheduledHours\",type number},{\"remainingForecastHours\",type number}})\nin Typed"
+            }
+          }
+        ]
+      },
+      {
+        "name": "InputStatus",
+        "description": "",
+        "isHidden": false,
+        "lineageTag": "3cf3bbb1-3a0c-50cc-9e5a-1c46f9055b5e",
+        "columns": [
+          {
+            "name": "Requirement",
+            "dataType": "string",
+            "sourceColumn": "Requirement",
+            "summarizeBy": "none",
+            "lineageTag": "89c8f0ca-9c32-53be-9dc2-aaf71392ed62"
+          },
+          {
+            "name": "Status",
+            "dataType": "string",
+            "sourceColumn": "Status",
+            "summarizeBy": "none",
+            "lineageTag": "89ba92b3-f968-5446-a732-775e71161992"
+          },
+          {
+            "name": "Definition",
+            "dataType": "string",
+            "sourceColumn": "Definition",
+            "summarizeBy": "none",
+            "lineageTag": "ca336b53-c8f1-5e4a-abf8-279904601d56"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "InputStatus",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "#table(type table [Requirement=text,Status=text,Definition=text], {{\"Monthly utilization\",\"Available with assumptions\",\"Submitted + approved work; training/internal/admin/leave/holiday excluded. Current active roster capacity, Mon\\u2013Fri. Unmapped task categories block result.\"},{\"Yearly utilization from project start\",\"Needs allocation history\",\"Roster FY utilization is provided separately. Exact project-start utilization needs employee project allocations and employment start/end dates.\"},{\"Defect density / FTR / F I R\",\"Needs deliverable register\",\"FactDeliverable requires unique IDs, delivered dates, error counts and rework flags. Weekly error counts are available separately.\"},{\"Effort / schedule / on-time\",\"Available at project grain\",\"Budget vs project lifetime actuals for projects delivered in selected dates. Project delivery is not treated as a deliverable count.\"},{\"Team strength / dedicated / flex\",\"Available\",\"Current active roster and distinct contributing employees are separate. Employee supportingCategory defines Dedicated/Flex.\"},{\"Vacation / holidays / capacity\",\"Available with assumptions\",\"Historical recorded leave; future planned vacation. Capacity is a current-roster estimate, not historical contracted capacity.\"},{\"Training / internal / admin hours\",\"Available\",\"Explicit HourCategoryMap. Edit mappings to match production task categories; do not infer from billable flag.\"},{\"Forecast / scheduled hours\",\"Available as estimate\",\"Budget spread evenly across working dates. No resource assignment exists; department-specific demand is blank.\"},{\"Products touched\",\"Available\",\"Distinct project products with submitted/approved work in selected dates; blank products excluded.\"},{\"Improvement / designed / developed\",\"Available at weekly grain\",\"Deduplicated weekly row details, attributed to Monday. Conflicting copies block counts.\"},{\"VAVE / Automation / COE / cost / additive\",\"Needs improvement register\",\"FactImprovement is an empty typed source contract; no fabricated classification or counts.\"},{\"Open positions / new joiners\",\"Available\",\"Read-only staffing endpoint. Open positions at last selected month, joiners summed over selected months. Null stays unknown.\"},{\"Schedule alert \\u00b13%\",\"Provisional definition\",\"Schedule days divided by planned project duration. Workbook mixes days and percent; definition needs owner confirmation.\"},{\"Defect alert \\u00b15%\",\"Provisional target\",\"DefectTarget defaults to 0; red at >5 percentage points away. Confirm target and whether tolerance means relative percent.\"},{\"Platform / cohorts\",\"Needs business mapping\",\"Division is available; no separate platform master or cohort definition exists. Do not silently rename division as platform.\"}})"
+            }
+          }
+        ]
+      },
+      {
+        "name": "_Measures",
+        "description": "",
+        "isHidden": false,
+        "lineageTag": "5f5fbd7b-b4e7-5fbb-8753-fb3e7461631a",
+        "columns": [
+          {
+            "name": "Label",
+            "dataType": "string",
+            "sourceColumn": "Label",
+            "summarizeBy": "none",
+            "lineageTag": "9e220a7a-ae61-5b0d-bd5c-5578c38d0bcd",
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "_Measures",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "#table(type table [Label=text],{{\"GCC requirements\"}})"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Raw Hours",
+            "expression": "CALCULATE(SUM(FactTimesheet[hours]), KEEPFILTERS(FILTER(ALL(FactTimesheet[division]),NOT ISCROSSFILTERED(DimDivision) || FactTimesheet[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "01 Overview",
+            "formatString": "#,##0.0",
+            "description": "All statuses including drafts/rejected. Use Actual Hours for reported work.",
+            "lineageTag": "6b10930a-3369-5457-b8e7-d7b4ca287fa1"
+          },
+          {
+            "name": "Actual Hours",
+            "expression": "CALCULATE([Raw Hours], KEEPFILTERS(FactTimesheet[status] IN {\"submitted\", \"approved\"}))",
+            "displayFolder": "01 Overview",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "f560a2a4-70b4-5879-b71d-8bf8d0716260"
+          },
+          {
+            "name": "Approved Hours",
+            "expression": "CALCULATE([Raw Hours], KEEPFILTERS(FactTimesheet[status] = \"approved\"))",
+            "displayFolder": "01 Overview",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "eb0056f8-70ae-5108-8fbd-79d512b668f4"
+          },
+          {
+            "name": "Contributing Employees",
+            "expression": "CALCULATE(DISTINCTCOUNT(FactTimesheet[userId]), KEEPFILTERS(FactTimesheet[status] IN {\"submitted\",\"approved\"}),KEEPFILTERS(FILTER(ALL(FactTimesheet[division]),NOT ISCROSSFILTERED(DimDivision) || FactTimesheet[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "01 Overview",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "102a7b8a-ca1c-56fa-92d0-e4f28dfeb874"
+          },
+          {
+            "name": "Active Team Strength",
+            "expression": "CALCULATE(COUNTROWS(DimEmployee), KEEPFILTERS(DimEmployee[isActive] = TRUE()), KEEPFILTERS(DimEmployee[role] <> \"system admin\"), KEEPFILTERS(FILTER(ALL(DimEmployee[division]),NOT ISCROSSFILTERED(DimDivision) || DimEmployee[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "01 Overview",
+            "formatString": "#,##0",
+            "description": "Current roster; does not change with date or project selection.",
+            "lineageTag": "8ff0b004-b0ed-5765-b2cb-b8b9aa312661"
+          },
+          {
+            "name": "Training Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]=\"Training\"))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "f706ea5a-0951-50c1-9c55-d9b8b5689c1d"
+          },
+          {
+            "name": "Internal Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]=\"Internal\"))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "61c68422-2018-58b0-b331-ef626be89a09"
+          },
+          {
+            "name": "Admin Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]=\"Admin\"))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "16a8368f-814d-5edf-9683-46ce4477035c"
+          },
+          {
+            "name": "Vacation Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]=\"Vacation\"))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "35405a06-7feb-5962-a3f0-8a1807774264"
+          },
+          {
+            "name": "Holiday Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]=\"Holiday\"))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "f5f3125c-a45d-5b92-a903-b1b0cb30d9a3"
+          },
+          {
+            "name": "Productive Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]=\"Productive\"))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "351e6010-77a6-514d-a2d6-b74c870adc7d"
+          },
+          {
+            "name": "Unmapped Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]=\"Unmapped\"))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "05be4a19-96d8-57fb-ae11-c5431e3189e5"
+          },
+          {
+            "name": "Effective Hours",
+            "expression": "IF(COALESCE([Unmapped Hours],0)=0,[Actual Hours]-COALESCE([Training Hours],0)-COALESCE([Internal Hours],0)-COALESCE([Admin Hours],0)-COALESCE([Vacation Hours],0)-COALESCE([Holiday Hours],0))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "e04cd92d-11bb-5f0c-b27b-76574fcebe89"
+          },
+          {
+            "name": "Working Days",
+            "expression": "COALESCE(CALCULATE(COUNTROWS(DimDate),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEEPFILTERS(DimDate[IsHoliday]=FALSE())),0)",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "033b294f-12aa-5729-85e7-0a12ce7e57e8"
+          },
+          {
+            "name": "Holiday Days",
+            "expression": "CALCULATE(COUNTROWS(DimDate),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEEPFILTERS(DimDate[IsHoliday]=TRUE()))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "15032cb3-e0ad-5ed4-b600-04a33de136e3"
+          },
+          {
+            "name": "Roster Capacity Hours",
+            "expression": "IF(NOT ISCROSSFILTERED(DimProject) && NOT ISCROSSFILTERED(DimTask), [Working Days]*SELECTEDVALUE(Settings[DailyHours],8)*[Active Team Strength])",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "Current roster estimate. Blank at project/task grain because allocations are unavailable.",
+            "lineageTag": "60f159a7-ce60-5bbf-9fd3-9760ef326d62"
+          },
+          {
+            "name": "Capacity Vacation Hours",
+            "expression": "VAR H=SELECTEDVALUE(Settings[DailyHours],8)\nVAR A=MAX(Settings[AsOfDate])\nVAR People=CALCULATETABLE(VALUES(DimEmployee[id]),KEEPFILTERS(DimEmployee[isActive]=TRUE()),KEEPFILTERS(DimEmployee[role]<>\"system admin\"),KEEPFILTERS(FILTER(ALL(DimEmployee[division]),NOT ISCROSSFILTERED(DimDivision) || DimEmployee[division] IN VALUES(DimDivision[divisionName]))))\nVAR Days=CALCULATETABLE(VALUES(DimDate[Date]),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEEPFILTERS(DimDate[IsHoliday]=FALSE()))\nRETURN IF(NOT ISCROSSFILTERED(DimProject) && NOT ISCROSSFILTERED(DimTask),SUMX(CROSSJOIN(People,Days),\nVAR D=DimDate[Date]\nVAR Recorded=CALCULATE(SUM(FactTimesheet[hours]),FactTimesheet[hourCategory]=\"Vacation\",FactTimesheet[status] IN {\"submitted\",\"approved\"})\nVAR Planned=CALCULATE(COUNTROWS(FactVacation))\nRETURN MIN(H,IF(D>=A && Planned>0,H,COALESCE(Recorded,0)))))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "Per employee/day capped at daily hours. Future plans supersede recorded leave, preventing double subtraction. Only weekdays excluding holidays.",
+            "lineageTag": "09c697c9-ffb5-5912-aaf7-c06bd70cfd7b"
+          },
+          {
+            "name": "Vacation Days",
+            "expression": "DIVIDE([Capacity Vacation Hours],SELECTEDVALUE(Settings[DailyHours],8))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "2639e998-0754-5a5c-8b94-48152e2bce8c"
+          },
+          {
+            "name": "Available Hours",
+            "expression": "IF(NOT ISBLANK([Roster Capacity Hours]),MAX(0,[Roster Capacity Hours]-COALESCE([Capacity Vacation Hours],0)))",
+            "displayFolder": "02 Utilization",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "ba6141fe-866c-5987-993d-b82e44532ff6"
+          },
+          {
+            "name": "Monthly Utilization %",
+            "expression": "DIVIDE([Effective Hours],[Available Hours])",
+            "displayFolder": "02 Utilization",
+            "formatString": "0.0%",
+            "description": "Selected-period utilization using current roster estimate; monthly when grouped/filtered by YearMonth.",
+            "lineageTag": "da295a52-d2bc-542c-a6de-7963367604ae"
+          },
+          {
+            "name": "Under Utilized %",
+            "expression": "IF(NOT ISBLANK([Monthly Utilization %]),1-[Monthly Utilization %])",
+            "displayFolder": "02 Utilization",
+            "formatString": "0.0%",
+            "description": "",
+            "lineageTag": "0fb4712a-ab92-55d9-9be8-014ff6ab3ce2"
+          },
+          {
+            "name": "As Of Date",
+            "expression": "MAX(Settings[AsOfDate])",
+            "displayFolder": "09 Metadata",
+            "formatString": "yyyy-mm-dd",
+            "description": "",
+            "lineageTag": "105a9762-cd0e-5046-aab7-026cd871c17c"
+          },
+          {
+            "name": "Last Completed Friday",
+            "expression": "[As Of Date]-MOD(WEEKDAY([As Of Date],2)-5+6,7)-1",
+            "displayFolder": "09 Metadata",
+            "formatString": "yyyy-mm-dd",
+            "description": "",
+            "lineageTag": "a70f4785-5a72-5b2a-b6f6-bc6c0f76fdaf"
+          },
+          {
+            "name": "FY Utilization Through Friday %",
+            "expression": "VAR E=[Last Completed Friday]\nVAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1)\nVAR S=DATE(YEAR(E)-IF(MONTH(E)<FM,1,0),FM,1)\nRETURN CALCULATE(IF(COALESCE([Unmapped Hours],0)=0,DIVIDE([Actual Hours]-COALESCE([Training Hours],0)-COALESCE([Vacation Hours],0)-COALESCE([Holiday Hours],0),[Available Hours])),REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,E))",
+            "displayFolder": "02 Utilization",
+            "formatString": "0.0%",
+            "description": "Workbook annual numerator excludes training but retains internal/admin. Current-roster FY estimate; exact project-start denominator needs allocation history.",
+            "lineageTag": "9e323750-80da-5987-861e-976e540273b7"
+          },
+          {
+            "name": "Available Hours Last Week",
+            "expression": "VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(-7) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,S+6))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "a22eb53c-d3e2-51b3-82ed-7e8e3e93e3a1"
+          },
+          {
+            "name": "Available Hours Current Week",
+            "expression": "VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(0) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,S+6))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "d0bcf35d-fef4-58bb-af60-9394557fc726"
+          },
+          {
+            "name": "Available Hours Next Week",
+            "expression": "VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(7) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,S+6))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "cad54c72-07e8-560b-9bea-22d82b01e5f1"
+          },
+          {
+            "name": "Available Hours FY",
+            "expression": "VAR A=[As Of Date] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1) VAR S=DATE(YEAR(A)-IF(MONTH(A)<FM,1,0),FM,1) RETURN CALCULATE([Available Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,EDATE(S,12)-1))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "ff3327f2-2ff4-5eca-a67f-20481702626e"
+          },
+          {
+            "name": "Dedicated Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],\"Dedicated\"))))",
+            "displayFolder": "04 Teams",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "48440455-bb3c-5ae9-8f44-41f698274a0e"
+          },
+          {
+            "name": "Dedicated Strength",
+            "expression": "CALCULATE([Active Team Strength],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],\"Dedicated\"))))",
+            "displayFolder": "04 Teams",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "41022d11-39ea-5060-874a-8deebf48cd6d"
+          },
+          {
+            "name": "Dedicated Utilization %",
+            "expression": "CALCULATE([Monthly Utilization %],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],\"Dedicated\"))))",
+            "displayFolder": "04 Teams",
+            "formatString": "0.0%",
+            "description": "",
+            "lineageTag": "901f9a72-6e48-50a8-ba3f-60880ae1d75c"
+          },
+          {
+            "name": "Dedicated FY Hours",
+            "expression": "VAR E=[Last Completed Friday] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1) VAR S=DATE(YEAR(E)-IF(MONTH(E)<FM,1,0),FM,1) RETURN CALCULATE([Dedicated Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,E))",
+            "displayFolder": "04 Teams",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "05273bdf-dbfd-562b-bb27-4420847ee2bc"
+          },
+          {
+            "name": "Flex Hours",
+            "expression": "CALCULATE([Actual Hours],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],\"Flex\"))))",
+            "displayFolder": "04 Teams",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "d691b76c-5f59-5abc-b7b2-a684b642811c"
+          },
+          {
+            "name": "Flex Strength",
+            "expression": "CALCULATE([Active Team Strength],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],\"Flex\"))))",
+            "displayFolder": "04 Teams",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "27ebfa42-afc1-5990-9510-7811a9696dfe"
+          },
+          {
+            "name": "Flex Utilization %",
+            "expression": "CALCULATE([Monthly Utilization %],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategory]),CONTAINSSTRING(DimEmployee[supportingCategory],\"Flex\"))))",
+            "displayFolder": "04 Teams",
+            "formatString": "0.0%",
+            "description": "",
+            "lineageTag": "3d0898d8-4be3-5ebd-8efc-3917a73720d7"
+          },
+          {
+            "name": "Flex FY Hours",
+            "expression": "VAR E=[Last Completed Friday] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1) VAR S=DATE(YEAR(E)-IF(MONTH(E)<FM,1,0),FM,1) RETURN CALCULATE([Flex Hours],REMOVEFILTERS(DimDate),DATESBETWEEN(DimDate[Date],S,E))",
+            "displayFolder": "04 Teams",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "a91c8343-49dc-5d6c-960d-a8a36d644a7d"
+          },
+          {
+            "name": "Available Employee Equivalents",
+            "expression": "IF(NOT ISBLANK([Monthly Utilization %]),DIVIDE(MAX(0,[Available Hours]-[Effective Hours]),SELECTEDVALUE(Settings[DailyHours],8)*[Working Days]))",
+            "displayFolder": "04 Teams",
+            "formatString": "#,##0.0",
+            "description": "Unused hours converted to full-period employee equivalents; not a named cohort or staff assignment.",
+            "lineageTag": "13a62a5a-0777-5073-a649-4366eaa92030"
+          },
+          {
+            "name": "Projects Delivered",
+            "expression": "CALCULATE(COUNTROWS(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date]))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "05 Delivery",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "e5ae8e91-1078-52aa-b13a-1c006ba0dc72"
+          },
+          {
+            "name": "Projects On Time",
+            "expression": "CALCULATE(COUNTROWS(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[targetDate]) && DimProject[deliveredDate]<=DimProject[targetDate])),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "05 Delivery",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "2c0098d5-4052-5500-947b-a6b1db5f9819"
+          },
+          {
+            "name": "Project On Time %",
+            "expression": "VAR Known=CALCULATE(COUNTROWS(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[targetDate]))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))) RETURN IF(Known=[Projects Delivered],DIVIDE([Projects On Time],Known))",
+            "displayFolder": "05 Delivery",
+            "formatString": "0.0%",
+            "description": "",
+            "lineageTag": "6d9f0dc3-a89b-5712-9d0c-7f5ce98579b3"
+          },
+          {
+            "name": "Delivered Project Budget Hours",
+            "expression": "VAR P=CALCULATETABLE(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))) RETURN IF(COUNTROWS(P)>0 && COUNTROWS(FILTER(P,ISBLANK(DimProject[budgetHours])))=0,SUMX(P,DimProject[budgetHours]))",
+            "displayFolder": "05 Delivery",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "4b020ed2-e675-529e-ae9f-8e46bd55f055"
+          },
+          {
+            "name": "Delivered Project Actual Hours",
+            "expression": "VAR P=CALCULATETABLE(SELECTCOLUMNS(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),\"ID\",DimProject[id]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))) RETURN CALCULATE([Actual Hours],REMOVEFILTERS(DimDate),KEEPFILTERS(TREATAS(P,DimProject[id])))",
+            "displayFolder": "05 Delivery",
+            "formatString": "#,##0.0",
+            "description": "Lifetime actual hours for the same delivered-project cohort as the budget, preventing partial-period vs lifetime-budget comparisons.",
+            "lineageTag": "3afcb945-1573-5501-8e4c-523ae8ef458b"
+          },
+          {
+            "name": "Effort Deviation %",
+            "expression": "IF(NOT ISBLANK([Delivered Project Budget Hours]) && NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),DIVIDE([Delivered Project Actual Hours]-[Delivered Project Budget Hours],[Delivered Project Budget Hours]))",
+            "displayFolder": "05 Delivery",
+            "formatString": "0.0%",
+            "description": "",
+            "lineageTag": "687657cb-aa77-537b-a404-b52d21f5089e"
+          },
+          {
+            "name": "Schedule Deviation Days",
+            "expression": "CALCULATE(AVERAGEX(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[targetDate])),DATEDIFF(DimProject[targetDate],DimProject[deliveredDate],DAY)),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "05 Delivery",
+            "formatString": "#,##0.0",
+            "description": "Mean delivered minus planned target date in calendar days. Positive is late.",
+            "lineageTag": "3a3f74dd-8e33-59bb-a804-72853fd1f042"
+          },
+          {
+            "name": "Schedule Deviation %",
+            "expression": "CALCULATE(AVERAGEX(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && DimProject[deliveredDate] IN VALUES(DimDate[Date])),NOT ISBLANK(DimProject[startDate]) && DimProject[targetDate]>DimProject[startDate]),DIVIDE(DATEDIFF(DimProject[targetDate],DimProject[deliveredDate],DAY),DATEDIFF(DimProject[startDate],DimProject[targetDate],DAY))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "05 Delivery",
+            "formatString": "0.0%",
+            "description": "Provisional normalized schedule deviation: days late/early divided by planned elapsed duration.",
+            "lineageTag": "6b4e61a5-14cc-5ae2-a28a-d2ece67e39cc"
+          },
+          {
+            "name": "Effort Alert Color",
+            "expression": "IF(ISBLANK([Effort Deviation %]),\"#64748B\",IF(ABS([Effort Deviation %])>0.05,\"#DC2626\",\"#0F766E\"))",
+            "displayFolder": "05 Delivery",
+            "formatString": "",
+            "description": "",
+            "lineageTag": "9caaa3f9-e58b-5f9d-9122-bd74af395705"
+          },
+          {
+            "name": "Schedule Alert Color",
+            "expression": "IF(ISBLANK([Schedule Deviation %]),\"#64748B\",IF(ABS([Schedule Deviation %])>0.03,\"#DC2626\",\"#0F766E\"))",
+            "displayFolder": "05 Delivery",
+            "formatString": "",
+            "description": "",
+            "lineageTag": "1e39c6dc-1e7d-5544-a404-c75c3888f2b5"
+          },
+          {
+            "name": "Detail Conflicts",
+            "expression": "CALCULATE(COUNTROWS(FactWeeklyDetails),FactWeeklyDetails[detailConflict]=TRUE(),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "f6fc0779-9814-53d9-9b1f-f2e62f1f8a79"
+          },
+          {
+            "name": "Weekly Fundamental Errors",
+            "expression": "IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[fundamental_error_count]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "c0424c54-24e8-5a81-ab90-acaaf090a254"
+          },
+          {
+            "name": "Improvement Log Count",
+            "expression": "IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[improvement_count]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "d8531e99-51f4-58eb-9f49-6cb699ad8207"
+          },
+          {
+            "name": "Designed",
+            "expression": "IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[designed]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "de1ba278-a7dc-50dc-a976-e94fdf7094c1"
+          },
+          {
+            "name": "Developed",
+            "expression": "IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[developed]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "2103d70b-61a3-550a-b2f0-e015b9cfed56"
+          },
+          {
+            "name": "Fundamental Errors",
+            "expression": "VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[fundamentalErrors])))=0,SUMX(T,FactDeliverable[fundamentalErrors]))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "78a6072b-cd88-5ff1-aee9-b76a0568ac49"
+          },
+          {
+            "name": "Information Errors",
+            "expression": "VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[informationErrors])))=0,SUMX(T,FactDeliverable[informationErrors]))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "44d17bb2-0ac4-563e-80c8-8c745f3200ee"
+          },
+          {
+            "name": "Readable Errors",
+            "expression": "VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[readableErrors])))=0,SUMX(T,FactDeliverable[readableErrors]))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "bee7919b-d361-5784-a55c-668d579081e6"
+          },
+          {
+            "name": "Deliverables",
+            "expression": "CALCULATE(DISTINCTCOUNT(FactDeliverable[deliverableId]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK()))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "bc80e957-1424-52f2-a1d4-c33461e2fb63"
+          },
+          {
+            "name": "Defect Density %",
+            "expression": "DIVIDE([Fundamental Errors],[Deliverables])",
+            "displayFolder": "08 Quality",
+            "formatString": "0.0%",
+            "description": "",
+            "lineageTag": "a564dca1-39ec-59f0-a108-80724a8bb838"
+          },
+          {
+            "name": "First Time Right %",
+            "expression": "VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))),KEEPFILTERS(FactDeliverable[deliveredDate]<>BLANK())) RETURN IF(COUNTROWS(T)>0 && COUNTROWS(FILTER(T,ISBLANK(FactDeliverable[hadRework])))=0,DIVIDE(COUNTROWS(FILTER(T,FactDeliverable[hadRework]=FALSE())),COUNTROWS(T)))",
+            "displayFolder": "08 Quality",
+            "formatString": "0.0%",
+            "description": "",
+            "lineageTag": "a33ec9c2-d5bf-52a2-b36b-03cfcc58422e"
+          },
+          {
+            "name": "On Time Deliverables",
+            "expression": "CALCULATE(COUNTROWS(FILTER(FactDeliverable,NOT ISBLANK(FactDeliverable[deliveredDate]) && NOT ISBLANK(FactDeliverable[plannedDate]) && FactDeliverable[deliveredDate]<=FactDeliverable[plannedDate])),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "08 Quality",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "d88d8eca-faab-5902-875c-3ff5f0a5e771"
+          },
+          {
+            "name": "Defect Alert Color",
+            "expression": "IF(ISBLANK([Defect Density %]),\"#64748B\",IF(ABS([Defect Density %]-SELECTEDVALUE(Settings[DefectTarget],0))>0.05,\"#DC2626\",\"#0F766E\"))",
+            "displayFolder": "08 Quality",
+            "formatString": "",
+            "description": "",
+            "lineageTag": "e4a6fd0f-bc4d-567f-be6d-070568cb051b"
+          },
+          {
+            "name": "Products Touched",
+            "expression": "VAR IDs=CALCULATETABLE(VALUES(FactTimesheet[projectId]),FactTimesheet[status] IN {\"submitted\",\"approved\"},KEEPFILTERS(FILTER(ALL(FactTimesheet[division]),NOT ISCROSSFILTERED(DimDivision) || FactTimesheet[division] IN VALUES(DimDivision[divisionName])))) RETURN CALCULATE(DISTINCTCOUNT(DimProject[product]),KEEPFILTERS(TREATAS(IDs,DimProject[id])),DimProject[product]<>BLANK())",
+            "displayFolder": "06 Improvement",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "2c6520e9-e788-5457-9442-02860ad1f87c"
+          },
+          {
+            "name": "Additive Manufacturing",
+            "expression": "CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),FactImprovement[isAdditiveManufacturing]=TRUE(),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "06 Improvement",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "ed37d873-59be-5306-bb19-31e9419b91d8"
+          },
+          {
+            "name": "Improvement Initiatives",
+            "expression": "CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "06 Improvement",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "75b2d88e-f916-5d94-847d-fe3a472a06d0"
+          },
+          {
+            "name": "Open Positions",
+            "expression": "VAR E=MAX(DimDate[Date]) VAR S=DATE(YEAR(E),MONTH(E),1) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),DimDate[Date]=S) RETURN IF(COUNTROWS(T)=COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[openPositions])))=0,SUMX(T,FactStaffing[openPositions]))",
+            "displayFolder": "07 Staffing",
+            "formatString": "#,##0",
+            "description": "Snapshot for last selected month. Blank if any selected division has no entry.",
+            "lineageTag": "a3c3b1c5-a3f1-51fd-bfa3-e223acadeea4"
+          },
+          {
+            "name": "New Joiners",
+            "expression": "VAR Months=SELECTCOLUMNS(SUMMARIZE(DimDate,DimDate[YearMonth]),\"MonthStart\",CALCULATE(DATE(YEAR(MIN(DimDate[Date])),MONTH(MIN(DimDate[Date])),1))) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),TREATAS(Months,DimDate[Date])) RETURN IF(COUNTROWS(T)=COUNTROWS(Months)*COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[newJoiners])))=0,SUMX(T,FactStaffing[newJoiners]))",
+            "displayFolder": "07 Staffing",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "773e3f94-2d07-5a90-b41c-03a0fb2015b1"
+          },
+          {
+            "name": "Hours Scheduled",
+            "expression": "IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SUM(FactPlan[scheduledHours]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "6e5002f6-ede5-5795-9a49-6b827e2b0d53"
+          },
+          {
+            "name": "Remaining Forecast Hours",
+            "expression": "IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SUM(FactPlan[remainingForecastHours]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "5b001cb4-2fe0-52de-9d18-d2dffaadc437"
+          },
+          {
+            "name": "Team Forecast Hours",
+            "expression": "VAR A=[As Of Date] RETURN IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE([Actual Hours],KEEPFILTERS(DimDate[Date]<A))+[Remaining Forecast Hours])",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "Past actuals plus future remaining budget. Past and future do not overlap.",
+            "lineageTag": "dd7a6c7a-fe17-5869-8194-4668e4e3ccd2"
+          },
+          {
+            "name": "Overdue Unscheduled Hours",
+            "expression": "VAR A=[As Of Date] RETURN CALCULATE(SUMX(FILTER(DimProject,DimProject[projectStatus]=\"Inprogress\" && NOT ISBLANK(DimProject[targetDate]) && DimProject[targetDate]<A && NOT ISBLANK(DimProject[budgetHours])),MAX(0,DimProject[budgetHours]-CALCULATE([Actual Hours],REMOVEFILTERS(DimDate)))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0.0",
+            "description": "",
+            "lineageTag": "3af7f285-60ab-59c1-ae10-cef5d55a3151"
+          },
+          {
+            "name": "Projects Missing Plan Inputs",
+            "expression": "CALCULATE(COUNTROWS(FILTER(DimProject,DimProject[projectStatus]=\"Inprogress\" && (ISBLANK(DimProject[startDate]) || ISBLANK(DimProject[targetDate]) || ISBLANK(DimProject[budgetHours]) || DimProject[targetDate]<DimProject[startDate]))),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName]))))",
+            "displayFolder": "03 Capacity",
+            "formatString": "#,##0",
+            "description": "",
+            "lineageTag": "50e5c8c0-a5e7-5f70-a972-857efd0e8a1d"
+          },
+          {
+            "name": "Report Status",
+            "expression": "IF(ISBLANK([Last Refresh UTC]),\"API refresh required\",\"Refreshed \" & [Last Refresh UTC]) & \" \u2022 see Input readiness for missing source contracts\"",
+            "displayFolder": "09 Metadata",
+            "formatString": "",
+            "description": "",
+            "lineageTag": "5b8e757b-f003-5d90-aabc-a5d1a17eb3b9"
+          },
+          {
+            "name": "Last Refresh UTC",
+            "expression": "SELECTEDVALUE(Settings[RefreshUTC])",
+            "displayFolder": "09 Metadata",
+            "formatString": "",
+            "description": "",
+            "lineageTag": "8ee187a9-8ad9-557a-b306-b7a1860df90a"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "4b07da44-929b-5fe0-97f6-16c452521450",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "userId",
+        "toTable": "DimEmployee",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "74a30386-ea91-5ff2-843d-4961e64e68fa",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "projectId",
+        "toTable": "DimProject",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "1e2dfc00-887a-510c-9216-d146cf752cd2",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "taskId",
+        "toTable": "DimTask",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "cbcee8cb-6571-5355-b188-b1fff242d3aa",
+        "fromTable": "FactTimesheet",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "b87ce0e0-5307-5694-92e9-6546df8e4d9d",
+        "fromTable": "FactWeeklyDetails",
+        "fromColumn": "userId",
+        "toTable": "DimEmployee",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "32c76977-a2b8-55e8-bb91-e085eddece88",
+        "fromTable": "FactWeeklyDetails",
+        "fromColumn": "projectId",
+        "toTable": "DimProject",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "5336c645-400f-5aa6-bb8f-f72e393b2637",
+        "fromTable": "FactWeeklyDetails",
+        "fromColumn": "taskId",
+        "toTable": "DimTask",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "ba876769-a2d0-55bc-a180-99a07b00633a",
+        "fromTable": "FactWeeklyDetails",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "2f0fbbde-a755-5be6-9b37-a9542f72f0a2",
+        "fromTable": "FactVacation",
+        "fromColumn": "userId",
+        "toTable": "DimEmployee",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "94f62489-b253-5b8e-a952-d6c566f6d537",
+        "fromTable": "FactVacation",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "737e3cd6-2d98-58c0-a28b-36da700ff2a1",
+        "fromTable": "FactStaffing",
+        "fromColumn": "divisionId",
+        "toTable": "DimDivision",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "111ab0fb-b17d-54f7-a24f-05482d7d440e",
+        "fromTable": "FactStaffing",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "0f3bd45d-74ee-5f2d-be39-22a3bfcd0b2d",
+        "fromTable": "FactDeliverable",
+        "fromColumn": "projectId",
+        "toTable": "DimProject",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "cb7bf597-50fd-55a3-ae63-a0d2494ed3b0",
+        "fromTable": "FactDeliverable",
+        "fromColumn": "deliveredDate",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "c3641cb4-5d39-55e6-84db-4024a0ad97ee",
+        "fromTable": "FactImprovement",
+        "fromColumn": "projectId",
+        "toTable": "DimProject",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "6820ba4c-92f0-5c2c-9f4d-17cd5f43bae7",
+        "fromTable": "FactImprovement",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "72f67e0d-0213-5363-a876-212f7444d783",
+        "fromTable": "FactPlan",
+        "fromColumn": "projectId",
+        "toTable": "DimProject",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "559d7162-a8ee-5384-96a8-1b8a7c12f1db",
+        "fromTable": "FactPlan",
+        "fromColumn": "date",
+        "toTable": "DimDate",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "ApiBaseUrl",
+        "kind": "m",
+        "expression": "\"https://dietpi.tail4f2b8f.ts.net\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "Server origin. Store the reporting API key in Web Basic credentials: username powerbi, password reporting key."
+      },
+      {
+        "name": "ApiPath",
+        "kind": "m",
+        "expression": "\"api/powerbi\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "REST reporting namespace, without leading or trailing slash."
+      },
+      {
+        "name": "FiscalStartMonth",
+        "kind": "m",
+        "expression": "1 meta [IsParameterQuery=true, Type=\"Number\", IsParameterQueryRequired=true]",
+        "description": "Provisional: January. Set 1\u201312 before refresh."
+      },
+      {
+        "name": "DailyHours",
+        "kind": "m",
+        "expression": "8 meta [IsParameterQuery=true, Type=\"Number\", IsParameterQueryRequired=true]",
+        "description": "Standard Monday\u2013Friday hours per employee. Provisional 8."
+      },
+      {
+        "name": "DefectTarget",
+        "kind": "m",
+        "expression": "0 meta [IsParameterQuery=true, Type=\"Number\", IsParameterQueryRequired=true]",
+        "description": "Provisional target ratio; confirm with KPI owner. Red beyond target \u00b1 0.05."
+      },
+      {
+        "name": "DeliverablesEndpoint",
+        "kind": "m",
+        "expression": "\"\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "Optional endpoint name within ApiPath, returning one unique deliverable record per ID. Empty until an approved source exists."
+      },
+      {
+        "name": "ImprovementsEndpoint",
+        "kind": "m",
+        "expression": "\"\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "Optional endpoint name within ApiPath, returning one unique improvement record per ID. Empty until an approved source exists."
+      },
+      {
+        "name": "RefreshClock",
+        "kind": "m",
+        "expression": "DateTimeZone.FixedUtcNow()",
+        "description": "One refresh-time UTC clock; dates and freshness use the same instant."
+      },
+      {
+        "name": "fnApi",
+        "kind": "m",
+        "expression": "(endpoint as text) as list =>\nlet\n    Fetch = (page as number) as record =>\n        let\n            Payload = Json.Document(Web.Contents(ApiBaseUrl, [\n                RelativePath = Text.Trim(ApiPath, \"/\") & \"/\" & endpoint,\n                Query = if endpoint = \"timesheets\" then [page=Text.From(page), limit=\"1000\"] else [],\n                Headers = [Accept=\"application/json\"], Timeout=#duration(0,0,5,0)])),\n            Checked = if Value.Is(Payload, type record) and Record.HasFields(Payload, \"data\")\n                and Value.Is(Payload[data], type list) then Payload\n                else error \"The reporting API must return a record containing a data list.\"\n        in Checked,\n    First = Fetch(1),\n    Pages = if endpoint = \"timesheets\" then\n        (if Record.HasFields(First, \"pagination\") and Record.HasFields(First[pagination], \"totalPages\")\n            then Number.From(First[pagination][totalPages]) else error \"Missing timesheet pagination metadata.\") else 1,\n    ValidPages = if Pages >= 1 and Number.RoundDown(Pages) = Pages then Pages else error \"Invalid page count.\",\n    Rows = List.Combine({First[data]} & (if ValidPages > 1 then List.Transform({2..ValidPages}, each Fetch(_)[data]) else {})),\n    CheckedCount = if endpoint = \"timesheets\" and List.Count(Rows) <> First[pagination][total]\n        then error \"Timesheet total changed during pagination. Retry refresh.\" else Rows\nin CheckedCount",
+        "description": ""
+      },
+      {
+        "name": "HourCategoryMap",
+        "kind": "m",
+        "expression": "#table(type table [taskCategory=text, hourCategory=text], {\n    {\"development\",\"Productive\"}, {\"bug fix\",\"Productive\"}, {\"code review\",\"Productive\"},\n    {\"testing\",\"Productive\"}, {\"design\",\"Productive\"}, {\"documentation\",\"Productive\"},\n    {\"training\",\"Training\"}, {\"meeting\",\"Internal\"}, {\"admin\",\"Admin\"},\n    {\"leave\",\"Vacation\"}, {\"vacation\",\"Vacation\"}, {\"holiday\",\"Holiday\"}\n})",
+        "description": "Explicit editable classification. Unmapped categories block utilization so they cannot silently inflate it."
+      },
+      {
+        "name": "TimesheetRows",
+        "kind": "m",
+        "expression": "let\n    Rows=fnApi(\"timesheets\"),\n    Required={\"id\",\"userId\",\"projectId\",\"taskId\",\"date\",\"hours\",\"status\",\"weeklyRowKey\",\"weeklyDetails\"},\n    Checked=if List.AllTrue(List.Transform(Rows, each Record.HasFields(_, Required))) then Rows\n        else error \"Deploy the requirements API update: stable IDs and weeklyRowKey are required.\",\n    T=Table.FromRecords(Checked, {\"id\",\"userId\",\"projectId\",\"taskId\",\"date\",\"hours\",\"status\",\"division\",\"department\",\"projectCategory\",\"weeklyRowKey\",\"weeklyDetails\",\"updatedDate\"}, MissingField.UseNull),\n    Typed=Table.TransformColumnTypes(T, {{\"id\",Int64.Type},{\"userId\",Int64.Type},{\"projectId\",Int64.Type},{\"taskId\",Int64.Type},{\"date\",type date},{\"hours\",type number},{\"status\",type text},{\"division\",type text},{\"department\",type text},{\"projectCategory\",type text},{\"weeklyRowKey\",type text},{\"updatedDate\",type datetime}}),\n    Unique=if Table.RowCount(Typed)=List.Count(List.Distinct(Typed[id])) then Typed else error \"Duplicate timesheet IDs.\",\n    CategoryKey=Table.AddColumn(Unique,\"categoryKey\",each Text.Lower(Text.Trim([projectCategory] ?? \"\")),type text),\n    Joined=Table.NestedJoin(CategoryKey,{\"categoryKey\"},HourCategoryMap,{\"taskCategory\"},\"Map\",JoinKind.LeftOuter),\n    Expanded=Table.ExpandTableColumn(Joined,\"Map\",{\"hourCategory\"}),\n    Categorized=Table.ReplaceValue(Expanded,null,\"Unmapped\",Replacer.ReplaceValue,{\"hourCategory\"})\nin Categorized",
+        "description": ""
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      }
+    ]
+  }
+}

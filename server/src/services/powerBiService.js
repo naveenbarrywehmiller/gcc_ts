@@ -137,6 +137,13 @@ class PowerBiService {
     const dataSql = `
       SELECT 
         t.id as id,
+        t.user_id as userId,
+        t.project_id as projectId,
+        t.task_id as taskId,
+        t.division_id as divisionId,
+        t.subdivision_id as subdivisionId,
+        t.ownership_id as ownershipId,
+        t.project_description as projectDescription,
         COALESCE(u.employee_id, CAST(u.id AS TEXT)) as employeeId,
         u.name as employeeName,
         u.email as email,
@@ -191,6 +198,15 @@ class PowerBiService {
 
     const formattedData = rows.map((row) => ({
       id: row.id,
+      userId: row.userId,
+      projectId: row.projectId,
+      taskId: row.taskId,
+      divisionId: row.divisionId,
+      subdivisionId: row.subdivisionId,
+      ownershipId: row.ownershipId,
+      // Mirrors the weekly row identity in Timesheet.jsx; JSON avoids delimiter collisions.
+      weeklyRowKey: JSON.stringify([row.userId, row.weekYear, row.week, row.projectId,
+        row.taskId, row.divisionId, row.subdivisionId, row.projectDescription || '', row.ownershipId]),
       employeeId: row.employeeId,
       employeeName: row.employeeName,
       email: row.email,
@@ -693,7 +709,7 @@ class PowerBiService {
    */
   getVersion() {
     return {
-      apiVersion: '1.0.0',
+      apiVersion: '1.1.0',
       dashboardVersion: '1.0.0',
       apiNamespace: '/api/powerbi',
       serverTime: new Date().toISOString(),
@@ -708,11 +724,35 @@ class PowerBiService {
         'holidays',
         'tasks',
         'assignments',
+        'planned-vacations',
+        'staffing',
         'status-summary',
         'version',
         'export',
       ],
     };
+  }
+
+  getPlannedVacations(filters = {}) {
+    const ids = filters.allowedDivisionIds;
+    const scope = ids ? `AND COALESCE(u.division_id, (SELECT d.id FROM divisions d
+      WHERE LOWER(TRIM(d.name)) = LOWER(TRIM(u.division)) AND d.active = 1))
+      IN (${ids.map(() => '?').join(',') || 'NULL'})` : '';
+    return { data: db.prepare(`SELECT v.id, v.user_id AS userId, v.vacation_date AS date
+      FROM planned_vacations v JOIN users u ON u.id = v.user_id
+      WHERE u.name != '[Deleted User]' ${scope}
+      ORDER BY v.vacation_date, v.id`).all(...(ids || [])) };
+  }
+
+  getStaffing(filters = {}) {
+    const ids = filters.allowedDivisionIds;
+    const scope = ids ? `WHERE du.division_id IN (${ids.map(() => '?').join(',') || 'NULL'})` : '';
+    return { data: db.prepare(`SELECT du.id, du.division_id AS divisionId,
+      d.name AS division, du.month || '-01' AS date,
+      du.open_positions AS openPositions, du.new_joiners AS newJoiners,
+      du.updated_at AS updatedDate
+      FROM division_updates du JOIN divisions d ON d.id = du.division_id
+      ${scope} ORDER BY du.month, du.division_id`).all(...(ids || [])) };
   }
 
   /**

@@ -41,6 +41,8 @@ Power BI connects **exclusively** via the REST API — never directly to the dat
 
 ## Quick Start
 
+The requirements-driven report is now available at **[GCC_Requirements/GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip)**. Read its [connection instructions and KPI definitions](GCC_Requirements/README.md) before refreshing. It adds nine native report pages and uses the expanded reporting API. The original model and PBIX below remain available for compatibility.
+
 1. **Generate API Key** on the server:
    ```bash
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"

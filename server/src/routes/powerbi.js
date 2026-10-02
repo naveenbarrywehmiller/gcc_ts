@@ -49,6 +49,18 @@ router.use(powerBiRateLimiter);
 // Authentication & authorization middleware
 router.use(authenticatePowerBi);
 
+// Capacity and staffing inputs use the same read-only reporting authentication.
+for (const [path, method] of [['planned-vacations', 'getPlannedVacations'], ['staffing', 'getStaffing']]) {
+  router.get('/' + path, (req, res) => {
+    try {
+      res.json(powerBiService[method](projectAccess(req)));
+    } catch (err) {
+      require('../utils/systemLog').recordSystemError(err, 'Power BI');
+      res.status(500).json({ error: 'Failed to retrieve reporting data' });
+    }
+  });
+}
+
 // Helper: validate YYYY-MM-DD date format and calendar validity
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 function isValidDateString(str) {

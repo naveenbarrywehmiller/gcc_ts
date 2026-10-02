@@ -1,0 +1,17 @@
+{
+  "users": [
+    {"id": 1, "employeeId": "TEST-A", "employeeName": "Synthetic A", "division": "North", "department": "Engineering", "supportingCategory": "Dedicated Team", "role": "employee", "isActive": true},
+    {"id": 2, "employeeId": "TEST-B", "employeeName": "Synthetic B", "division": "North", "department": "Engineering", "supportingCategory": "Flex Team", "role": "employee", "isActive": true}
+  ],
+  "divisions": [{"id":1,"divisionName":"North"},{"id":2,"divisionName":"South"}],
+  "projects": [{"id":1,"projectCode":"TEST-1","projectName":"Synthetic validation project","division":"North","subdivision":"Test","teamType":"Dedicated","product":"Test product","productModule":"Test","activity":"Design","startDate":"2026-09-28","targetDate":"2026-10-09","deliveredDate":null,"budgetHours":80,"projectStatus":"Inprogress","isActive":true}],
+  "tasks": [{"id":1,"taskCategory":"Development","classification":"Billable"},{"id":2,"taskCategory":"Training","classification":"Non-Billable"}],
+  "holidays": [{"id":1,"date":"2026-10-01","holidayName":"Synthetic holiday"}],
+  "timesheets": [
+    {"id":1,"userId":1,"projectId":1,"taskId":1,"date":"2026-09-28","hours":8,"status":"approved","division":"North","department":"Engineering","projectCategory":"Development","weeklyRowKey":"weekly-test-1","weeklyDetails":{"fundamental_error_count":2,"improvement_count":1,"designed":1,"developed":0},"updatedDate":"2026-09-29T12:00:00"},
+    {"id":2,"userId":1,"projectId":1,"taskId":1,"date":"2026-09-29","hours":8,"status":"approved","division":"North","department":"Engineering","projectCategory":"Development","weeklyRowKey":"weekly-test-1","weeklyDetails":{"fundamental_error_count":2,"improvement_count":1,"designed":1,"developed":0},"updatedDate":"2026-09-29T12:00:00"},
+    {"id":3,"userId":2,"projectId":null,"taskId":2,"date":"2026-09-30","hours":8,"status":"submitted","division":"North","department":"Engineering","projectCategory":"Training","weeklyRowKey":"weekly-test-2","weeklyDetails":{},"updatedDate":"2026-09-30T12:00:00"}
+  ],
+  "planned-vacations": [{"id":1,"userId":1,"date":"2026-10-01"}],
+  "staffing": [{"id":1,"divisionId":1,"division":"North","date":"2026-10-01","openPositions":0,"newJoiners":1}]
+}
