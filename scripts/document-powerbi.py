@@ -26,11 +26,16 @@ measures = [(t, m) for t in tables for m in t.get('measures', [])]
 expressions = model.get('expressions', [])
 page_order = json.loads((REPORT / 'pages/pages.json').read_text())['pageOrder']
 pages = []
+phone_layouts = {}
 for name in page_order:
     folder = REPORT / 'pages' / name
     page = json.loads((folder / 'page.json').read_text(encoding='utf-8'))
     visuals = [json.loads(p.read_text(encoding='utf-8')) for p in sorted((folder / 'visuals').glob('*/visual.json'))]
     pages.append((page, visuals))
+    phone_layouts[name] = {
+        p.parent.name: json.loads(p.read_text(encoding='utf-8'))
+        for p in sorted((folder / 'visuals').glob('*/mobile.json'))
+    }
 total_visuals = sum(len(v) for _, v in pages)
 version = json.loads((ROOT / 'package.json').read_text())['version']
 parser = argparse.ArgumentParser(description=__doc__)
@@ -184,11 +189,12 @@ The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the p
 3. [KPI rules and filters](#kpi-rules-and-filters)
 4. [Missing inputs and decisions](#missing-inputs-and-decisions)
 5. [Report pages and every visual](#report-pages-and-every-visual)
-6. [Tables, columns and relationships](#tables-columns-and-relationships)
-7. [Every DAX measure](#every-dax-measure)
-8. [Power Query functions and parameters](#power-query-functions-and-parameters)
-9. [Every table Power Query](#every-table-power-query)
-10. [Maintenance, checks and troubleshooting](#maintenance-checks-and-troubleshooting)
+6. [Phone layouts](#phone-layouts)
+7. [Tables, columns and relationships](#tables-columns-and-relationships)
+8. [Every DAX measure](#every-dax-measure)
+9. [Power Query functions and parameters](#power-query-functions-and-parameters)
+10. [Every table Power Query](#every-table-power-query)
+11. [Maintenance, checks and troubleshooting](#maintenance-checks-and-troubleshooting)
 
 ## Connection and refresh
 
@@ -337,7 +343,7 @@ lines = [INTRO, '\n## Saved project inventory\n',
          f'Inventory: **{len(tables)} tables, {len(measures)} DAX measures, {len(model["relationships"])} relationships, {len(expressions)} shared M expressions, {len(pages)} pages and {total_visuals} visual containers**. '
          'Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.\n',
          '```text\npowerbi/\n  POWERBI.md\n  GCC_Requirements/\n    GCC_Requirements.pbip\n    .gitignore                       # excludes local .pbi cache/settings\n    GCC_Requirements.Report/\n      definition.pbir               # local semantic-model reference\n      definition/\n        report.json, version.json\n        pages/<page>/page.json\n        pages/<page>/visuals/<id>/visual.json\n    GCC_Requirements.SemanticModel/\n      definition.pbism\n      definition/\n        database.tmdl, model.tmdl\n        expressions.tmdl, relationships.tmdl\n        tables/*.tmdl\n      diagramLayout.json, .platform\n  validation/                       # schema/native-fixture evidence\n```\n',
-         'The saved canonical semantic model is **definition/*.tmdl**. Desktop converted the original BIM scaffold on save; `model.bim` is intentionally absent. Preserve the PBIP, report folder and semantic-model folder together. Local `.pbi` cache and credentials are excluded from Git.\n',
+         'The saved canonical semantic model is **definition/*.tmdl**. Desktop converted the original BIM scaffold on save; `model.bim` is intentionally absent. Preserve the PBIP, report folder and semantic-model folder together. Local `.pbi` cache and credentials are excluded from Git. Every visual folder also contains `mobile.json` with independent native phone geometry/formatting.\n',
          '\n## Report pages and every visual\n',
          'All pages are **1440 × 1040**, FitToPage, with Segoe UI text, pale-gray canvas, white visual backgrounds and dark headings. Heading boxes are 76 units tall at 24 pt; explanatory boxes are 66 units tall to fit wrapped text. Each page has a separate 76-unit refresh-time card and 50-unit manual-refresh instruction strip. Native visuals used are textboxes, legacy cards, slicers, clustered column charts, line charts and tables. No external/custom visual package is required. Red (`#DC2626`) means a defined alert exceeded; green (`#0F766E`) means within tolerance; gray (`#64748B`) means unknown. Alert-color measures bind through native conditional formatting on the relevant cards.\n',
          'The inventory below lists every visual ID, type, title and bound query role. `Values` is the legacy-card/table role, `Category` is the category axis/slicer role and `Y` is a chart value role. Textboxes have no model fields. Any additional model-bound conditional formatting is listed with the visual. IDs match the PBIR paths for maintenance.\n']
@@ -345,7 +351,7 @@ friendly_types = {'textbox':'Text', 'card':'Card', 'slicer':'Slicer', 'clustered
 for page, visuals in pages:
     lines.extend([f'\n### {page["displayName"]}\n',
                   f'Page ID: `{page["name"]}`. Visuals: **{len(visuals)}**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/{page["name"]}/page.json).\n',
-                  '| Visual ID | Type | Title / text | Query bindings and formatting |\n|---|---|---|---|'])
+                  '| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |\n|---|---|---|---|---|'])
     for visual in visuals:
         v = visual.get('visual', {})
         bindings = []
@@ -360,10 +366,23 @@ for page, visuals in pages:
         if extra:
             bindings.append('Formatting/other: ' + ', '.join('`' + f + '`' for f in extra))
         kind = v.get('visualType', '')
-        lines.append('| ' + cell(visual['name']) + ' | ' + friendly_types.get(kind, kind) + ' | ' + cell(title(visual)) + ' | ' + cell('; '.join(bindings) or 'Static text') + ' |')
+        pos = phone_layouts[page['name']].get(visual['name'], {}).get('position')
+        placement = f'{pos["x"]}, {pos["y"]} / {pos["width"]} × {pos["height"]}' if pos else 'Not placed'
+        lines.append('| ' + cell(visual['name']) + ' | ' + friendly_types.get(kind, kind) + ' | ' + cell(title(visual)) + ' | ' + cell('; '.join(bindings) or 'Static text') + ' | ' + placement + ' |')
     lines.append('')
 
-lines.extend(['\n## Tables, columns and relationships\n',
+lines.extend(['\n## Phone layouts\n',
+              f'All **{sum(bool(v) for v in phone_layouts.values())} pages** have native portrait phone layouts; **{sum(len(v) for v in phone_layouts.values())} existing visuals** are placed. The canvas is 324 units wide, with 8-unit side margins and gaps. Pages scroll vertically. The desktop report and the phone view share the same model, queries, filters and conditional alert colors. Phone formatting overrides do not change desktop typography or geometry.\n',
+              'Open **View → Mobile layout** in Desktop, then choose a page tab to inspect/edit its phone view. The bottom phone icon also switches views. The last-refresh card spans the phone width and shows the complete imported UTC timestamp at 13 pt. Headings use 17 pt in a 64-unit box; filters are full-width 104-unit dropdowns with 12 pt items; KPI cards use two columns, wrapped 10 pt titles and 22 pt values. A remaining odd KPI occupies the full width. Explanatory text uses 10.5 pt in a 104-unit box. Charts span the width with 10 pt axis/legend labels.\n',
+              'Tables retain every query column at 10 pt with wrapped headers/values and narrower fixed column widths. Wide detail tables scroll horizontally inside the visual; swipe sideways for remaining columns. Input-readiness columns use 62/50/150 units so their long definitions wrap on the phone. Tables also scroll vertically through their rows. The phone instruction strip describes snapshot freshness and table gestures; the Desktop owner still imports new data using Home → Refresh → Data. Phone layout does not enable automatic refresh.\n',
+              'For access on an actual phone, publish the report to an approved Power BI workspace and share it with the appropriate team members. **Power BI iOS/Android apps show this layout in portrait**; landscape and ordinary web-browser viewing use the standard report layout. No Service publication or phone-device test is claimed by this update. See [Microsoft mobile layout overview](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-create-mobile-optimized-report-about) and [mobile visual formatting](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-create-mobile-optimized-report-format-visuals).\n',
+              '| Phone page | Native visuals | Width | Scroll content height |\n|---|---|---|---|'])
+for page, visuals in pages:
+    states = phone_layouts[page['name']]
+    height = max((s['position']['y'] + s['position']['height'] + 8 for s in states.values()), default=0)
+    lines.append(f'| {cell(page["displayName"])} | {len(states)} | 324 | {height} |')
+lines.extend(['\nThese are native PBIR `visuals/<id>/mobile.json` files using the documented [public report-project structure](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report). The per-visual geometry above is extracted from the saved files. `scripts/build-powerbi-mobile.py` authors the layout; close Desktop before regenerating it, because generation replaces custom phone formatting. `--check` only checks saved geometry and writes aggregate layout evidence.\n',
+              '\n## Tables, columns and relationships\n',
               'All table partitions use Power Query **Import**. TOM `dateTime` columns with date formatting originate from M `type date`; IDs/counts use 64-bit integers, hours/ratios use double, flags use boolean and labels use string. Date/month ordering and summary behavior are recorded below.\n',
               '| Table | Source and grain | Columns |\n|---|---|---|'])
 for table in tables:
@@ -438,6 +457,7 @@ Maintain the canonical `.pbip`, native report JSON and **TMDL definition folder*
 # From the repository root, after installing the application's dependencies:
 python scripts/document-powerbi.py
 node scripts/validate-powerbi.js
+python scripts/build-powerbi-mobile.py --check
 node --test scripts/powerbi-requirements.test.js
 
 # Native synthetic scenarios need a running Desktop local engine:
@@ -447,14 +467,15 @@ powershell.exe -NoProfile -File scripts/test-powerbi-model.ps1 -Port <DesktopEng
 python scripts/preview-powerbi-fixture.py
 ```
 
-The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries; the native test no longer requires PowerShell 7. The validator fetches/caches Microsoft schemas and resolves each visual field against the actual model. Visual JSON editor schema links use the published compatible 2.12.0 schema because the Store build's emitted 2.13.0 schema URL was unavailable during verification; visual content and native formatting are retained. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
+The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries; the native test no longer requires PowerShell 7. The validator fetches/caches Microsoft schemas and resolves each visual field against the actual model. Visual JSON editor schema links use the published compatible 2.12.0 schema because the Store build's emitted 2.13.0 schema URL was unavailable during verification; visual content and native formatting are retained. Phone files use the compatible published visualContainerMobileState 2.7.0 schema; Desktop emitted 2.8.0, whose public schema URL returned HTTP 404. Both compatible formats passed Microsoft schema validation and opened in native Desktop. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
 
 ### Evidence and limits
 
 | Check | Evidence | Scope |
 |---|---|---|
 | Current saved TMDL | Deserialized through installed Desktop TOM | Metadata syntax and saved format; no claim of successful production Desktop refresh |
-| Current report schema/fields | `validation/schema-validation.json`: 128 schema documents, zero errors | PBIR definitions and model field references after the header/refresh display update |
+| Current report schema/fields | `validation/schema-validation.json`: 244 schema documents, zero errors | PBIR definitions including 116 native phone visual files and model field references |
+| Phone layout geometry | `validation/mobile-layout-validation.json`: 9 pages, 116 phone visuals, no overlaps or width violations | Native preview inspected overview, utilization and delivery, plus initial input-readiness rendering; the remaining visual checks await Windows unlock. Actual phone app requires publication |
 | Native calculation fixtures | `validation/engine-validation.json`: 72 measures evaluated, 25 cases passed | Isolated synthetic Power Query processing and DAX, including second-precision UTC timestamp and the header's imported refresh value |
 | Layout/refresh update | Larger text/header areas, timestamp cards on all 9 pages, 116 visual containers, no overlapping/out-of-bounds visuals | Manual Desktop refresh selected; no unsupported canvas scheduler |
 | Canonical Desktop refresh on 2026-10-05 local date | Ribbon Data refresh completed; UTC header `2026-10-06 06:25:03 UTC`; 10 daily rows, 72 raw hours, 32 actual/approved hours | Read-only aggregate query and native overview/input-readiness inspection; wrapped descriptions and Unicode symbols verified; project saved |

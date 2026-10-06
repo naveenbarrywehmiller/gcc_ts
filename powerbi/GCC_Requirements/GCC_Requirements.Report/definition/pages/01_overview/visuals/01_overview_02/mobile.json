@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.7.0/schema.json",
+  "objects": {
+    "general": [
+      {
+        "properties": {
+          "paragraphs": [
+            {
+              "textRuns": [
+                {
+                  "value": "Select a reporting month. Capacity uses the current roster. Delivery cards count projects; quality cards require a deliverable register.",
+                  "textStyle": {
+                    "fontFamily": "Segoe UI",
+                    "fontSize": "10.5pt",
+                    "color": "#475569"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "position": {
+    "x": 8,
+    "y": 740,
+    "width": 308,
+    "height": 104,
+    "z": 10,
+    "tabOrder": 10
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.7.0/schema.json",
+  "objects": {
+    "general": [
+      {
+        "properties": {
+          "paragraphs": [
+            {
+              "textRuns": [
+                {
+                  "value": "Data is a saved snapshot. Desktop owner: Home > Refresh > Data. Auto-refresh is off. Swipe wide tables sideways for all columns.",
+                  "textStyle": {
+                    "fontFamily": "Segoe UI",
+                    "fontSize": "10.5pt",
+                    "color": "#0F766E"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "position": {
+    "x": 8,
+    "y": 1444,
+    "width": 308,
+    "height": 104,
+    "z": 13,
+    "tabOrder": 13
+  }
+}

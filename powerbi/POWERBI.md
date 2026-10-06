@@ -13,11 +13,12 @@ The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the p
 3. [KPI rules and filters](#kpi-rules-and-filters)
 4. [Missing inputs and decisions](#missing-inputs-and-decisions)
 5. [Report pages and every visual](#report-pages-and-every-visual)
-6. [Tables, columns and relationships](#tables-columns-and-relationships)
-7. [Every DAX measure](#every-dax-measure)
-8. [Power Query functions and parameters](#power-query-functions-and-parameters)
-9. [Every table Power Query](#every-table-power-query)
-10. [Maintenance, checks and troubleshooting](#maintenance-checks-and-troubleshooting)
+6. [Phone layouts](#phone-layouts)
+7. [Tables, columns and relationships](#tables-columns-and-relationships)
+8. [Every DAX measure](#every-dax-measure)
+9. [Power Query functions and parameters](#power-query-functions-and-parameters)
+10. [Every table Power Query](#every-table-power-query)
+11. [Maintenance, checks and troubleshooting](#maintenance-checks-and-troubleshooting)
 
 ## Connection and refresh
 
@@ -163,7 +164,7 @@ M checks unique/nonempty register IDs and converts types. Full validation of for
 
 ## Saved project inventory
 
-Reference generated **2026-10-05** from the saved model/PBIR sources. Application version: **1.15.0**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
+Reference generated **2026-10-06** from the saved model/PBIR sources. Application version: **1.15.0**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
 
 ```text
 powerbi/
@@ -187,7 +188,7 @@ powerbi/
   validation/                       # schema/native-fixture evidence
 ```
 
-The saved canonical semantic model is **definition/*.tmdl**. Desktop converted the original BIM scaffold on save; `model.bim` is intentionally absent. Preserve the PBIP, report folder and semantic-model folder together. Local `.pbi` cache and credentials are excluded from Git.
+The saved canonical semantic model is **definition/*.tmdl**. Desktop converted the original BIM scaffold on save; `model.bim` is intentionally absent. Preserve the PBIP, report folder and semantic-model folder together. Local `.pbi` cache and credentials are excluded from Git. Every visual folder also contains `mobile.json` with independent native phone geometry/formatting.
 
 
 ## Report pages and every visual
@@ -201,188 +202,213 @@ The inventory below lists every visual ID, type, title and bound query role. `Va
 
 Page ID: `01_overview`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/01_overview/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 01_overview_01 | Text | GCC \| Performance overview | Static text |
-| 01_overview_02 | Text | Select a reporting month. Capacity uses the current roster. Delivery cards count projects; quality cards require a deliverable register. | Static text |
-| 01_overview_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 01_overview_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 01_overview_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` |
-| 01_overview_06 | Card | Actual Hours | Values: `_Measures[Actual Hours]` |
-| 01_overview_07 | Card | Monthly Utilization % | Values: `_Measures[Monthly Utilization %]` |
-| 01_overview_08 | Card | Active Team Strength | Values: `_Measures[Active Team Strength]` |
-| 01_overview_09 | Card | Project On Time % | Values: `_Measures[Project On Time %]` |
-| 01_overview_10 | Clustered column chart | Actual hours by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Actual Hours]`, `_Measures[Training Hours]` |
-| 01_overview_11 | Clustered column chart | Delivery and workload by division | Category: `DimDivision[divisionName]`; Y: `_Measures[Actual Hours]` |
-| 01_overview_12 | Table | Performance by division | Values: `DimDivision[divisionName]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]`, `_Measures[Projects Delivered]`, `_Measures[Products Touched]` |
-| 01_overview_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 01_overview_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 01_overview_01 | Text | GCC \| Performance overview | Static text | 8, 8 / 308 × 64 |
+| 01_overview_02 | Text | Select a reporting month. Capacity uses the current roster. Delivery cards count projects; quality cards require a deliverable register. | Static text | 8, 740 / 308 × 104 |
+| 01_overview_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 01_overview_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 01_overview_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` | 8, 388 / 308 × 104 |
+| 01_overview_06 | Card | Actual Hours | Values: `_Measures[Actual Hours]` | 8, 500 / 150 × 112 |
+| 01_overview_07 | Card | Monthly Utilization % | Values: `_Measures[Monthly Utilization %]` | 166, 500 / 150 × 112 |
+| 01_overview_08 | Card | Active Team Strength | Values: `_Measures[Active Team Strength]` | 8, 620 / 150 × 112 |
+| 01_overview_09 | Card | Project On Time % | Values: `_Measures[Project On Time %]` | 166, 620 / 150 × 112 |
+| 01_overview_10 | Clustered column chart | Actual hours by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Actual Hours]`, `_Measures[Training Hours]` | 8, 852 / 308 × 288 |
+| 01_overview_11 | Clustered column chart | Delivery and workload by division | Category: `DimDivision[divisionName]`; Y: `_Measures[Actual Hours]` | 8, 1148 / 308 × 288 |
+| 01_overview_12 | Table | Performance by division | Values: `DimDivision[divisionName]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]`, `_Measures[Projects Delivered]`, `_Measures[Products Touched]` | 8, 1556 / 308 × 400 |
+| 01_overview_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1444 / 308 × 104 |
+| 01_overview_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Utilization
 
 Page ID: `02_utilization`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/02_utilization/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 02_utilization_01 | Text | GCC \| Utilization | Static text |
-| 02_utilization_02 | Text | Monthly: effective work / available hours. Annual: work less training and leave through last completed Friday. Both use current-roster estimates. | Static text |
-| 02_utilization_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 02_utilization_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 02_utilization_05 | Slicer | Dedicated / Flex | Values: `DimEmployee[supportingCategory]` |
-| 02_utilization_06 | Card | Monthly Utilization % | Values: `_Measures[Monthly Utilization %]` |
-| 02_utilization_07 | Card | FY Utilization Through Friday % | Values: `_Measures[FY Utilization Through Friday %]` |
-| 02_utilization_08 | Card | Under Utilized % | Values: `_Measures[Under Utilized %]` |
-| 02_utilization_09 | Card | Unmapped Hours | Values: `_Measures[Unmapped Hours]` |
-| 02_utilization_10 | Line chart | Monthly utilization | Category: `DimDate[YearMonth]`; Y: `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]` |
-| 02_utilization_11 | Clustered column chart | Hours by task category | Category: `DimTask[taskCategory]`; Y: `_Measures[Actual Hours]` |
-| 02_utilization_12 | Table | Capacity and exclusions | Values: `DimEmployee[department]`, `_Measures[Active Team Strength]`, `_Measures[Working Days]`, `_Measures[Holiday Days]`, `_Measures[Vacation Days]`, `_Measures[Available Hours]`, `_Measures[Training Hours]`, `_Measures[Internal Hours]`, `_Measures[Admin Hours]` |
-| 02_utilization_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 02_utilization_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 02_utilization_01 | Text | GCC \| Utilization | Static text | 8, 8 / 308 × 64 |
+| 02_utilization_02 | Text | Monthly: effective work / available hours. Annual: work less training and leave through last completed Friday. Both use current-roster estimates. | Static text | 8, 740 / 308 × 104 |
+| 02_utilization_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 02_utilization_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 02_utilization_05 | Slicer | Dedicated / Flex | Values: `DimEmployee[supportingCategory]` | 8, 388 / 308 × 104 |
+| 02_utilization_06 | Card | Monthly Utilization % | Values: `_Measures[Monthly Utilization %]` | 8, 500 / 150 × 112 |
+| 02_utilization_07 | Card | FY Utilization Through Friday % | Values: `_Measures[FY Utilization Through Friday %]` | 166, 500 / 150 × 112 |
+| 02_utilization_08 | Card | Under Utilized % | Values: `_Measures[Under Utilized %]` | 8, 620 / 150 × 112 |
+| 02_utilization_09 | Card | Unmapped Hours | Values: `_Measures[Unmapped Hours]` | 166, 620 / 150 × 112 |
+| 02_utilization_10 | Line chart | Monthly utilization | Category: `DimDate[YearMonth]`; Y: `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]` | 8, 852 / 308 × 288 |
+| 02_utilization_11 | Clustered column chart | Hours by task category | Category: `DimTask[taskCategory]`; Y: `_Measures[Actual Hours]` | 8, 1148 / 308 × 288 |
+| 02_utilization_12 | Table | Capacity and exclusions | Values: `DimEmployee[department]`, `_Measures[Active Team Strength]`, `_Measures[Working Days]`, `_Measures[Holiday Days]`, `_Measures[Vacation Days]`, `_Measures[Available Hours]`, `_Measures[Training Hours]`, `_Measures[Internal Hours]`, `_Measures[Admin Hours]` | 8, 1556 / 308 × 400 |
+| 02_utilization_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1444 / 308 × 104 |
+| 02_utilization_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Delivery & quality
 
 Page ID: `03_delivery`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/03_delivery/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 03_delivery_01 | Text | GCC \| Delivery & quality | Static text |
-| 03_delivery_02 | Text | Effort compares lifetime work with lifetime budget for projects delivered in the selected period. Gray quality cards mean the deliverable source is missing. | Static text |
-| 03_delivery_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 03_delivery_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 03_delivery_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` |
-| 03_delivery_06 | Card | Effort deviation | Values: `_Measures[Effort Deviation %]`; Formatting/other: `_Measures[Effort Alert Color]` |
-| 03_delivery_07 | Card | Schedule deviation | Values: `_Measures[Schedule Deviation %]`; Formatting/other: `_Measures[Schedule Alert Color]` |
-| 03_delivery_08 | Card | Defect density | Values: `_Measures[Defect Density %]`; Formatting/other: `_Measures[Defect Alert Color]` |
-| 03_delivery_09 | Card | First time right | Values: `_Measures[First Time Right %]` |
-| 03_delivery_10 | Clustered column chart | Project deliveries by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Projects Delivered]`, `_Measures[Projects On Time]` |
-| 03_delivery_11 | Clustered column chart | Weekly quality and improvements | Category: `DimDate[WeekStart]`; Y: `_Measures[Weekly Fundamental Errors]`, `_Measures[Improvement Log Count]` |
-| 03_delivery_12 | Table | Project delivery detail | Values: `DimProject[projectCode]`, `DimProject[projectName]`, `DimProject[targetDate]`, `DimProject[deliveredDate]`, `_Measures[Delivered Project Budget Hours]`, `_Measures[Delivered Project Actual Hours]`, `_Measures[Schedule Deviation Days]` |
-| 03_delivery_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 03_delivery_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 03_delivery_01 | Text | GCC \| Delivery & quality | Static text | 8, 8 / 308 × 64 |
+| 03_delivery_02 | Text | Effort compares lifetime work with lifetime budget for projects delivered in the selected period. Gray quality cards mean the deliverable source is missing. | Static text | 8, 740 / 308 × 104 |
+| 03_delivery_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 03_delivery_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 03_delivery_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` | 8, 388 / 308 × 104 |
+| 03_delivery_06 | Card | Effort deviation | Values: `_Measures[Effort Deviation %]`; Formatting/other: `_Measures[Effort Alert Color]` | 8, 500 / 150 × 112 |
+| 03_delivery_07 | Card | Schedule deviation | Values: `_Measures[Schedule Deviation %]`; Formatting/other: `_Measures[Schedule Alert Color]` | 166, 500 / 150 × 112 |
+| 03_delivery_08 | Card | Defect density | Values: `_Measures[Defect Density %]`; Formatting/other: `_Measures[Defect Alert Color]` | 8, 620 / 150 × 112 |
+| 03_delivery_09 | Card | First time right | Values: `_Measures[First Time Right %]` | 166, 620 / 150 × 112 |
+| 03_delivery_10 | Clustered column chart | Project deliveries by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Projects Delivered]`, `_Measures[Projects On Time]` | 8, 852 / 308 × 288 |
+| 03_delivery_11 | Clustered column chart | Weekly quality and improvements | Category: `DimDate[WeekStart]`; Y: `_Measures[Weekly Fundamental Errors]`, `_Measures[Improvement Log Count]` | 8, 1148 / 308 × 288 |
+| 03_delivery_12 | Table | Project delivery detail | Values: `DimProject[projectCode]`, `DimProject[projectName]`, `DimProject[targetDate]`, `DimProject[deliveredDate]`, `_Measures[Delivered Project Budget Hours]`, `_Measures[Delivered Project Actual Hours]`, `_Measures[Schedule Deviation Days]` | 8, 1556 / 308 × 400 |
+| 03_delivery_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1444 / 308 × 104 |
+| 03_delivery_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Capacity & forecast
 
 Page ID: `04_capacity`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/04_capacity/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 04_capacity_01 | Text | GCC \| Capacity & forecast | Static text |
-| 04_capacity_02 | Text | Forecast is an estimate from remaining project budgets spread over future working dates. Department/team demand needs resource allocations; clear the team filter. | Static text |
-| 04_capacity_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 04_capacity_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 04_capacity_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` |
-| 04_capacity_06 | Card | Available Hours Last Week | Values: `_Measures[Available Hours Last Week]` |
-| 04_capacity_07 | Card | Available Hours Current Week | Values: `_Measures[Available Hours Current Week]` |
-| 04_capacity_08 | Card | Available Hours Next Week | Values: `_Measures[Available Hours Next Week]` |
-| 04_capacity_09 | Card | Overdue Unscheduled Hours | Values: `_Measures[Overdue Unscheduled Hours]` |
-| 04_capacity_10 | Line chart | Actuals plus future demand | Category: `DimDate[WeekStart]`; Y: `_Measures[Team Forecast Hours]`, `_Measures[Hours Scheduled]`, `_Measures[Available Hours]` |
-| 04_capacity_11 | Card | Projects missing planning inputs | Values: `_Measures[Projects Missing Plan Inputs]` |
-| 04_capacity_12 | Table | Project planning inputs | Values: `DimProject[projectCode]`, `DimProject[projectStatus]`, `DimProject[startDate]`, `DimProject[targetDate]`, `DimProject[budgetHours]`, `_Measures[Hours Scheduled]`, `_Measures[Remaining Forecast Hours]` |
-| 04_capacity_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 04_capacity_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 04_capacity_01 | Text | GCC \| Capacity & forecast | Static text | 8, 8 / 308 × 64 |
+| 04_capacity_02 | Text | Forecast is an estimate from remaining project budgets spread over future working dates. Department/team demand needs resource allocations; clear the team filter. | Static text | 8, 860 / 308 × 104 |
+| 04_capacity_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 04_capacity_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 04_capacity_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` | 8, 388 / 308 × 104 |
+| 04_capacity_06 | Card | Available Hours Last Week | Values: `_Measures[Available Hours Last Week]` | 8, 500 / 150 × 112 |
+| 04_capacity_07 | Card | Available Hours Current Week | Values: `_Measures[Available Hours Current Week]` | 166, 500 / 150 × 112 |
+| 04_capacity_08 | Card | Available Hours Next Week | Values: `_Measures[Available Hours Next Week]` | 8, 620 / 150 × 112 |
+| 04_capacity_09 | Card | Overdue Unscheduled Hours | Values: `_Measures[Overdue Unscheduled Hours]` | 166, 620 / 150 × 112 |
+| 04_capacity_10 | Line chart | Actuals plus future demand | Category: `DimDate[WeekStart]`; Y: `_Measures[Team Forecast Hours]`, `_Measures[Hours Scheduled]`, `_Measures[Available Hours]` | 8, 972 / 308 × 288 |
+| 04_capacity_11 | Card | Projects missing planning inputs | Values: `_Measures[Projects Missing Plan Inputs]` | 8, 740 / 308 × 112 |
+| 04_capacity_12 | Table | Project planning inputs | Values: `DimProject[projectCode]`, `DimProject[projectStatus]`, `DimProject[startDate]`, `DimProject[targetDate]`, `DimProject[budgetHours]`, `_Measures[Hours Scheduled]`, `_Measures[Remaining Forecast Hours]` | 8, 1380 / 308 × 400 |
+| 04_capacity_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1268 / 308 × 104 |
+| 04_capacity_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Dedicated & Flex teams
 
 Page ID: `05_teams`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/05_teams/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 05_teams_01 | Text | GCC \| Dedicated & Flex teams | Static text |
-| 05_teams_02 | Text | Team type comes from each employee’s supporting category. Strength is the current roster; contributing employees have submitted or approved work in the selected period. | Static text |
-| 05_teams_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 05_teams_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 05_teams_05 | Slicer | Dedicated / Flex | Values: `DimEmployee[supportingCategory]` |
-| 05_teams_06 | Card | Dedicated Strength | Values: `_Measures[Dedicated Strength]` |
-| 05_teams_07 | Card | Flex Strength | Values: `_Measures[Flex Strength]` |
-| 05_teams_08 | Card | Dedicated FY Hours | Values: `_Measures[Dedicated FY Hours]` |
-| 05_teams_09 | Card | Flex FY Hours | Values: `_Measures[Flex FY Hours]` |
-| 05_teams_10 | Clustered column chart | Dedicated / Flex hours | Category: `DimDate[YearMonth]`; Y: `_Measures[Dedicated Hours]`, `_Measures[Flex Hours]` |
-| 05_teams_11 | Line chart | Flex utilization through the year | Category: `DimDate[YearMonth]`; Y: `_Measures[Flex Utilization %]` |
-| 05_teams_12 | Table | Department capacity | Values: `DimEmployee[department]`, `_Measures[Flex Strength]`, `_Measures[Contributing Employees]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Available Employee Equivalents]` |
-| 05_teams_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 05_teams_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 05_teams_01 | Text | GCC \| Dedicated & Flex teams | Static text | 8, 8 / 308 × 64 |
+| 05_teams_02 | Text | Team type comes from each employee’s supporting category. Strength is the current roster; contributing employees have submitted or approved work in the selected period. | Static text | 8, 740 / 308 × 104 |
+| 05_teams_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 05_teams_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 05_teams_05 | Slicer | Dedicated / Flex | Values: `DimEmployee[supportingCategory]` | 8, 388 / 308 × 104 |
+| 05_teams_06 | Card | Dedicated Strength | Values: `_Measures[Dedicated Strength]` | 8, 500 / 150 × 112 |
+| 05_teams_07 | Card | Flex Strength | Values: `_Measures[Flex Strength]` | 166, 500 / 150 × 112 |
+| 05_teams_08 | Card | Dedicated FY Hours | Values: `_Measures[Dedicated FY Hours]` | 8, 620 / 150 × 112 |
+| 05_teams_09 | Card | Flex FY Hours | Values: `_Measures[Flex FY Hours]` | 166, 620 / 150 × 112 |
+| 05_teams_10 | Clustered column chart | Dedicated / Flex hours | Category: `DimDate[YearMonth]`; Y: `_Measures[Dedicated Hours]`, `_Measures[Flex Hours]` | 8, 852 / 308 × 288 |
+| 05_teams_11 | Line chart | Flex utilization through the year | Category: `DimDate[YearMonth]`; Y: `_Measures[Flex Utilization %]` | 8, 1148 / 308 × 288 |
+| 05_teams_12 | Table | Department capacity | Values: `DimEmployee[department]`, `_Measures[Flex Strength]`, `_Measures[Contributing Employees]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Available Employee Equivalents]` | 8, 1556 / 308 × 400 |
+| 05_teams_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1444 / 308 × 104 |
+| 05_teams_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Continuous improvement
 
 Page ID: `06_improvement`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/06_improvement/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 06_improvement_01 | Text | GCC \| Continuous improvement | Static text |
-| 06_improvement_02 | Text | Weekly counts are deduplicated and attributed to Monday. VAVE / Automation / COE / cost optimization and additive manufacturing need the improvement register. | Static text |
-| 06_improvement_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 06_improvement_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 06_improvement_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` |
-| 06_improvement_06 | Card | Products Touched | Values: `_Measures[Products Touched]` |
-| 06_improvement_07 | Card | Improvement Log Count | Values: `_Measures[Improvement Log Count]` |
-| 06_improvement_08 | Card | Designed | Values: `_Measures[Designed]` |
-| 06_improvement_09 | Card | Developed | Values: `_Measures[Developed]` |
-| 06_improvement_10 | Clustered column chart | Improvement activity by week | Category: `DimDate[WeekStart]`; Y: `_Measures[Improvement Log Count]`, `_Measures[Designed]`, `_Measures[Developed]` |
-| 06_improvement_11 | Clustered column chart | Initiatives by category • source pending | Category: `FactImprovement[category]`; Y: `_Measures[Improvement Initiatives]` |
-| 06_improvement_12 | Table | Weekly improvement details | Values: `FactWeeklyDetails[date]`, `DimProject[projectCode]`, `FactWeeklyDetails[item_number]`, `FactWeeklyDetails[improvement_location]`, `_Measures[Improvement Log Count]`, `_Measures[Weekly Fundamental Errors]`, `_Measures[Detail Conflicts]` |
-| 06_improvement_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 06_improvement_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 06_improvement_01 | Text | GCC \| Continuous improvement | Static text | 8, 8 / 308 × 64 |
+| 06_improvement_02 | Text | Weekly counts are deduplicated and attributed to Monday. VAVE / Automation / COE / cost optimization and additive manufacturing need the improvement register. | Static text | 8, 740 / 308 × 104 |
+| 06_improvement_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 06_improvement_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 06_improvement_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` | 8, 388 / 308 × 104 |
+| 06_improvement_06 | Card | Products Touched | Values: `_Measures[Products Touched]` | 8, 500 / 150 × 112 |
+| 06_improvement_07 | Card | Improvement Log Count | Values: `_Measures[Improvement Log Count]` | 166, 500 / 150 × 112 |
+| 06_improvement_08 | Card | Designed | Values: `_Measures[Designed]` | 8, 620 / 150 × 112 |
+| 06_improvement_09 | Card | Developed | Values: `_Measures[Developed]` | 166, 620 / 150 × 112 |
+| 06_improvement_10 | Clustered column chart | Improvement activity by week | Category: `DimDate[WeekStart]`; Y: `_Measures[Improvement Log Count]`, `_Measures[Designed]`, `_Measures[Developed]` | 8, 852 / 308 × 288 |
+| 06_improvement_11 | Clustered column chart | Initiatives by category • source pending | Category: `FactImprovement[category]`; Y: `_Measures[Improvement Initiatives]` | 8, 1148 / 308 × 288 |
+| 06_improvement_12 | Table | Weekly improvement details | Values: `FactWeeklyDetails[date]`, `DimProject[projectCode]`, `FactWeeklyDetails[item_number]`, `FactWeeklyDetails[improvement_location]`, `_Measures[Improvement Log Count]`, `_Measures[Weekly Fundamental Errors]`, `_Measures[Detail Conflicts]` | 8, 1556 / 308 × 400 |
+| 06_improvement_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1444 / 308 × 104 |
+| 06_improvement_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Staffing
 
 Page ID: `07_staffing`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/07_staffing/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 07_staffing_01 | Text | GCC \| Staffing | Static text |
-| 07_staffing_02 | Text | Open positions are the last selected month’s snapshot. New joiners are summed across selected months. Missing division/month submissions remain blank. | Static text |
-| 07_staffing_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 07_staffing_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 07_staffing_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` |
-| 07_staffing_06 | Card | Open Positions | Values: `_Measures[Open Positions]` |
-| 07_staffing_07 | Card | New Joiners | Values: `_Measures[New Joiners]` |
-| 07_staffing_08 | Card | Active Team Strength | Values: `_Measures[Active Team Strength]` |
-| 07_staffing_09 | Card | Contributing Employees | Values: `_Measures[Contributing Employees]` |
-| 07_staffing_10 | Clustered column chart | Monthly open positions | Category: `DimDate[YearMonth]`; Y: `_Measures[Open Positions]` |
-| 07_staffing_11 | Clustered column chart | Monthly new joiners | Category: `DimDate[YearMonth]`; Y: `_Measures[New Joiners]` |
-| 07_staffing_12 | Table | Staffing submissions | Values: `FactStaffing[date]`, `FactStaffing[division]`, `FactStaffing[openPositions]`, `FactStaffing[newJoiners]` |
-| 07_staffing_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 07_staffing_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 07_staffing_01 | Text | GCC \| Staffing | Static text | 8, 8 / 308 × 64 |
+| 07_staffing_02 | Text | Open positions are the last selected month’s snapshot. New joiners are summed across selected months. Missing division/month submissions remain blank. | Static text | 8, 740 / 308 × 104 |
+| 07_staffing_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 07_staffing_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 07_staffing_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` | 8, 388 / 308 × 104 |
+| 07_staffing_06 | Card | Open Positions | Values: `_Measures[Open Positions]` | 8, 500 / 150 × 112 |
+| 07_staffing_07 | Card | New Joiners | Values: `_Measures[New Joiners]` | 166, 500 / 150 × 112 |
+| 07_staffing_08 | Card | Active Team Strength | Values: `_Measures[Active Team Strength]` | 8, 620 / 150 × 112 |
+| 07_staffing_09 | Card | Contributing Employees | Values: `_Measures[Contributing Employees]` | 166, 620 / 150 × 112 |
+| 07_staffing_10 | Clustered column chart | Monthly open positions | Category: `DimDate[YearMonth]`; Y: `_Measures[Open Positions]` | 8, 852 / 308 × 288 |
+| 07_staffing_11 | Clustered column chart | Monthly new joiners | Category: `DimDate[YearMonth]`; Y: `_Measures[New Joiners]` | 8, 1148 / 308 × 288 |
+| 07_staffing_12 | Table | Staffing submissions | Values: `FactStaffing[date]`, `FactStaffing[division]`, `FactStaffing[openPositions]`, `FactStaffing[newJoiners]` | 8, 1556 / 308 × 400 |
+| 07_staffing_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1444 / 308 × 104 |
+| 07_staffing_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Timesheet & training detail
 
 Page ID: `08_detail`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/08_detail/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
-|---|---|---|---|
-| 08_detail_01 | Text | GCC \| Timesheet & training detail | Static text |
-| 08_detail_02 | Text | Actual measures use submitted and approved records. This detailed table also exposes draft/rejected rows for reconciliation; filter status as needed. | Static text |
-| 08_detail_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` |
-| 08_detail_04 | Slicer | Division | Values: `DimDivision[divisionName]` |
-| 08_detail_05 | Slicer | Dedicated / Flex | Values: `DimEmployee[supportingCategory]` |
-| 08_detail_06 | Card | Actual Hours | Values: `_Measures[Actual Hours]` |
-| 08_detail_07 | Card | Approved Hours | Values: `_Measures[Approved Hours]` |
-| 08_detail_08 | Card | Training Hours | Values: `_Measures[Training Hours]` |
-| 08_detail_09 | Card | Detail Conflicts | Values: `_Measures[Detail Conflicts]` |
-| 08_detail_10 | Table | Timesheet detail | Values: `FactTimesheet[id]`, `FactTimesheet[date]`, `DimEmployee[employeeName]`, `DimEmployee[department]`, `DimProject[projectCode]`, `DimTask[taskCategory]`, `FactTimesheet[status]`, `_Measures[Raw Hours]` |
-| 08_detail_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 08_detail_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 08_detail_01 | Text | GCC \| Timesheet & training detail | Static text | 8, 8 / 308 × 64 |
+| 08_detail_02 | Text | Actual measures use submitted and approved records. This detailed table also exposes draft/rejected rows for reconciliation; filter status as needed. | Static text | 8, 740 / 308 × 104 |
+| 08_detail_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 164 / 308 × 104 |
+| 08_detail_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 276 / 308 × 104 |
+| 08_detail_05 | Slicer | Dedicated / Flex | Values: `DimEmployee[supportingCategory]` | 8, 388 / 308 × 104 |
+| 08_detail_06 | Card | Actual Hours | Values: `_Measures[Actual Hours]` | 8, 500 / 150 × 112 |
+| 08_detail_07 | Card | Approved Hours | Values: `_Measures[Approved Hours]` | 166, 500 / 150 × 112 |
+| 08_detail_08 | Card | Training Hours | Values: `_Measures[Training Hours]` | 8, 620 / 150 × 112 |
+| 08_detail_09 | Card | Detail Conflicts | Values: `_Measures[Detail Conflicts]` | 166, 620 / 150 × 112 |
+| 08_detail_10 | Table | Timesheet detail | Values: `FactTimesheet[id]`, `FactTimesheet[date]`, `DimEmployee[employeeName]`, `DimEmployee[department]`, `DimProject[projectCode]`, `DimTask[taskCategory]`, `FactTimesheet[status]`, `_Measures[Raw Hours]` | 8, 964 / 308 × 400 |
+| 08_detail_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 852 / 308 × 104 |
+| 08_detail_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
 
 
 ### GCC | Input readiness
 
 Page ID: `09_inputs`. Visuals: **6**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/09_inputs/page.json).
 
-| Visual ID | Type | Title / text | Query bindings and formatting |
+| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
+|---|---|---|---|---|
+| 09_inputs_01 | Text | GCC \| Input readiness | Static text | 8, 8 / 308 × 64 |
+| 09_inputs_02 | Text | Definitions needing confirmation and missing source contracts are visible here. No production records or credentials are included in the saved project. | Static text | 8, 164 / 308 × 104 |
+| 09_inputs_03 | Table | Requirements coverage | Values: `InputStatus[Requirement]`, `InputStatus[Status]`, `InputStatus[Definition]` | 8, 388 / 308 × 640 |
+| 09_inputs_04 | Table | Refresh settings | Values: `Settings[FiscalStartMonth]`, `Settings[DailyHours]`, `Settings[DefectTarget]`, `Settings[AsOfDate]`, `Settings[RefreshUTC]` | 8, 1036 / 308 × 180 |
+| 09_inputs_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 276 / 308 × 104 |
+| 09_inputs_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 76 |
+
+
+## Phone layouts
+
+All **9 pages** have native portrait phone layouts; **116 existing visuals** are placed. The canvas is 324 units wide, with 8-unit side margins and gaps. Pages scroll vertically. The desktop report and the phone view share the same model, queries, filters and conditional alert colors. Phone formatting overrides do not change desktop typography or geometry.
+
+Open **View → Mobile layout** in Desktop, then choose a page tab to inspect/edit its phone view. The bottom phone icon also switches views. The last-refresh card spans the phone width and shows the complete imported UTC timestamp at 13 pt. Headings use 17 pt in a 64-unit box; filters are full-width 104-unit dropdowns with 12 pt items; KPI cards use two columns, wrapped 10 pt titles and 22 pt values. A remaining odd KPI occupies the full width. Explanatory text uses 10.5 pt in a 104-unit box. Charts span the width with 10 pt axis/legend labels.
+
+Tables retain every query column at 10 pt with wrapped headers/values and narrower fixed column widths. Wide detail tables scroll horizontally inside the visual; swipe sideways for remaining columns. Input-readiness columns use 62/50/150 units so their long definitions wrap on the phone. Tables also scroll vertically through their rows. The phone instruction strip describes snapshot freshness and table gestures; the Desktop owner still imports new data using Home → Refresh → Data. Phone layout does not enable automatic refresh.
+
+For access on an actual phone, publish the report to an approved Power BI workspace and share it with the appropriate team members. **Power BI iOS/Android apps show this layout in portrait**; landscape and ordinary web-browser viewing use the standard report layout. No Service publication or phone-device test is claimed by this update. See [Microsoft mobile layout overview](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-create-mobile-optimized-report-about) and [mobile visual formatting](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-create-mobile-optimized-report-format-visuals).
+
+| Phone page | Native visuals | Width | Scroll content height |
 |---|---|---|---|
-| 09_inputs_01 | Text | GCC \| Input readiness | Static text |
-| 09_inputs_02 | Text | Definitions needing confirmation and missing source contracts are visible here. No production records or credentials are included in the saved project. | Static text |
-| 09_inputs_03 | Table | Requirements coverage | Values: `InputStatus[Requirement]`, `InputStatus[Status]`, `InputStatus[Definition]` |
-| 09_inputs_04 | Table | Refresh settings | Values: `Settings[FiscalStartMonth]`, `Settings[DailyHours]`, `Settings[DefectTarget]`, `Settings[AsOfDate]`, `Settings[RefreshUTC]` |
-| 09_inputs_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
-| 09_inputs_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
+| GCC \| Performance overview | 14 | 324 | 1964 |
+| GCC \| Utilization | 14 | 324 | 1964 |
+| GCC \| Delivery & quality | 14 | 324 | 1964 |
+| GCC \| Capacity & forecast | 14 | 324 | 1788 |
+| GCC \| Dedicated & Flex teams | 14 | 324 | 1964 |
+| GCC \| Continuous improvement | 14 | 324 | 1964 |
+| GCC \| Staffing | 14 | 324 | 1964 |
+| GCC \| Timesheet & training detail | 12 | 324 | 1372 |
+| GCC \| Input readiness | 6 | 324 | 1224 |
+
+These are native PBIR `visuals/<id>/mobile.json` files using the documented [public report-project structure](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report). The per-visual geometry above is extracted from the saved files. `scripts/build-powerbi-mobile.py` authors the layout; close Desktop before regenerating it, because generation replaces custom phone formatting. `--check` only checks saved geometry and writes aggregate layout evidence.
 
 
 ## Tables, columns and relationships
@@ -1975,6 +2001,7 @@ Maintain the canonical `.pbip`, native report JSON and **TMDL definition folder*
 # From the repository root, after installing the application's dependencies:
 python scripts/document-powerbi.py
 node scripts/validate-powerbi.js
+python scripts/build-powerbi-mobile.py --check
 node --test scripts/powerbi-requirements.test.js
 
 # Native synthetic scenarios need a running Desktop local engine:
@@ -1984,14 +2011,15 @@ powershell.exe -NoProfile -File scripts/test-powerbi-model.ps1 -Port <DesktopEng
 python scripts/preview-powerbi-fixture.py
 ```
 
-The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries; the native test no longer requires PowerShell 7. The validator fetches/caches Microsoft schemas and resolves each visual field against the actual model. Visual JSON editor schema links use the published compatible 2.12.0 schema because the Store build's emitted 2.13.0 schema URL was unavailable during verification; visual content and native formatting are retained. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
+The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries; the native test no longer requires PowerShell 7. The validator fetches/caches Microsoft schemas and resolves each visual field against the actual model. Visual JSON editor schema links use the published compatible 2.12.0 schema because the Store build's emitted 2.13.0 schema URL was unavailable during verification; visual content and native formatting are retained. Phone files use the compatible published visualContainerMobileState 2.7.0 schema; Desktop emitted 2.8.0, whose public schema URL returned HTTP 404. Both compatible formats passed Microsoft schema validation and opened in native Desktop. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
 
 ### Evidence and limits
 
 | Check | Evidence | Scope |
 |---|---|---|
 | Current saved TMDL | Deserialized through installed Desktop TOM | Metadata syntax and saved format; no claim of successful production Desktop refresh |
-| Current report schema/fields | `validation/schema-validation.json`: 128 schema documents, zero errors | PBIR definitions and model field references after the header/refresh display update |
+| Current report schema/fields | `validation/schema-validation.json`: 244 schema documents, zero errors | PBIR definitions including 116 native phone visual files and model field references |
+| Phone layout geometry | `validation/mobile-layout-validation.json`: 9 pages, 116 phone visuals, no overlaps or width violations | Native preview inspected overview, utilization and delivery, plus initial input-readiness rendering; the remaining visual checks await Windows unlock. Actual phone app requires publication |
 | Native calculation fixtures | `validation/engine-validation.json`: 72 measures evaluated, 25 cases passed | Isolated synthetic Power Query processing and DAX, including second-precision UTC timestamp and the header's imported refresh value |
 | Layout/refresh update | Larger text/header areas, timestamp cards on all 9 pages, 116 visual containers, no overlapping/out-of-bounds visuals | Manual Desktop refresh selected; no unsupported canvas scheduler |
 | Canonical Desktop refresh on 2026-10-05 local date | Ribbon Data refresh completed; UTC header `2026-10-06 06:25:03 UTC`; 10 daily rows, 72 raw hours, 32 actual/approved hours | Read-only aggregate query and native overview/input-readiness inspection; wrapped descriptions and Unicode symbols verified; project saved |

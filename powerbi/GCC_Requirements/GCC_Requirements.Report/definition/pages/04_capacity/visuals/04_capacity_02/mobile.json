@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.7.0/schema.json",
+  "objects": {
+    "general": [
+      {
+        "properties": {
+          "paragraphs": [
+            {
+              "textRuns": [
+                {
+                  "value": "Forecast is an estimate from remaining project budgets spread over future working dates. Department/team demand needs resource allocations; clear the team filter.",
+                  "textStyle": {
+                    "fontFamily": "Segoe UI",
+                    "fontSize": "10.5pt",
+                    "color": "#475569"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "position": {
+    "x": 8,
+    "y": 860,
+    "width": 308,
+    "height": 104,
+    "z": 11,
+    "tabOrder": 11
+  }
+}
