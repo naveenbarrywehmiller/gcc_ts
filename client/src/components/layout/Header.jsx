@@ -3,6 +3,7 @@ import { useTheme } from '../../contexts/theme';
 import { Sun, Moon, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ServerClock from './ServerClock';
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -25,10 +26,12 @@ export default function Header() {
   };
 
   return (
-    <header className="h-[60px] flex items-center justify-between gap-2 px-3 md:px-6 border-b border-surface-200 dark:border-surface-800 bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl sticky top-0 z-20" id="main-header">
-      <div className="flex items-center h-full py-2 min-w-0">
+    <header className="min-h-[60px] sm:h-[60px] flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-3 py-2 sm:py-0 md:px-6 border-b border-surface-200 dark:border-surface-800 bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl sticky top-0 z-20" id="main-header">
+      <div className="flex flex-1 items-center h-11 sm:h-full sm:py-2 min-w-0">
         <img src="/logo.png" alt="Barry Wehmiller Logo" className="max-h-full max-w-full object-contain" />
       </div>
+
+      <ServerClock />
 
       <div className="flex items-center gap-2 shrink-0">
         {/* Theme toggle */}
