@@ -1,6 +1,7 @@
 param([Parameter(Mandatory=$true)][int]$Port)
 $ErrorActionPreference = 'Stop'
-$taskBin = 'C:/Program Files/Microsoft Power BI Desktop/bin'
+. (Join-Path $PSScriptRoot 'powerbi-runtime.ps1')
+$taskBin = Get-GccPowerBIDesktopBin
 Add-Type -Path (Join-Path $taskBin 'Microsoft.PowerBI.Tabular.dll')
 Add-Type -Path (Join-Path $taskBin 'Microsoft.PowerBI.AdomdClient.dll')
 $taskRoot = Split-Path -Parent $PSScriptRoot
@@ -60,7 +61,9 @@ try {
         @{name='Forecast uses past actuals plus remaining budget';dax='[Team Forecast Hours]';expected=88},
         @{name='Flex slicer changes roster capacity';dax='CALCULATE([Available Hours],DimDate[Date]=DATE(2026,10,2),DimEmployee[supportingCategory]="Flex Team")';expected=8},
         @{name='Division filter excludes other-division hours';dax='CALCULATE([Actual Hours],DimDivision[divisionName]="South")';expected=$null},
-        @{name='Strictly previous completed Friday';dax='INT([Last Completed Friday])';expected=46290}
+        @{name='Strictly previous completed Friday';dax='INT([Last Completed Friday])';expected=46290},
+        @{name='Last refresh includes seconds and UTC zone';dax='[Last Refresh UTC]';expected='2026-10-01 12:00:00 UTC'},
+        @{name='Header shows the imported refresh timestamp';dax='[Report Status]';expected='2026-10-01 12:00:00 UTC'}
     )
     foreach($taskCase in $taskCases) {
         $taskCommand=$taskConnection.CreateCommand()
@@ -74,7 +77,7 @@ try {
         }
     }
     # Second scenario checks non-empty delivery/quality data and contradictory weekly copies.
-    $taskScenario=ConvertFrom-Json $taskFixture -AsHashtable
+    $taskScenario=ConvertFrom-Json $taskFixture
     $taskScenario.projects += @{id=2;projectCode='TEST-2';projectName='Completed synthetic project';division='North';startDate='2026-09-01';targetDate='2026-09-29';deliveredDate='2026-09-30';budgetHours=100;projectStatus='Completed';isActive=$true}
     foreach($taskEntry in @(@{id=4;date='2026-08-31';hours=40},@{id=5;date='2026-09-30';hours=80})) {
         $taskScenario.timesheets += @{id=$taskEntry.id;userId=1;projectId=2;taskId=1;date=$taskEntry.date;hours=$taskEntry.hours;status='approved';division='North';department='Engineering';projectCategory='Development';weeklyRowKey=('test-extra-'+$taskEntry.id);weeklyDetails=@{};updatedDate='2026-09-30T12:00:00'}
@@ -106,7 +109,8 @@ try {
         } catch {$taskResults.Add([pscustomobject]@{test=$taskCase.name;status='Error';error=$_.Exception.Message})}
     }
     $taskConnection.Close()
-    $taskResults | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $taskRoot 'powerbi/validation/engine-validation.json') -Encoding utf8
+    $taskValidationJson = $taskResults | ConvertTo-Json -Depth 8
+    [IO.File]::WriteAllText((Join-Path $taskRoot 'powerbi/validation/engine-validation.json'), $taskValidationJson, [Text.UTF8Encoding]::new($false))
     $taskResults | Where-Object { $_.status -in 'Fail','Error' } | ConvertTo-Json -Depth 8
     Write-Output ("Native engine: {0} measures evaluated; {1} cases checked; {2} failures" -f $taskDb.Model.Tables['_Measures'].Measures.Count,($taskCases.Count+$taskExtraCases.Count),@($taskResults | Where-Object {$_.status -in 'Fail','Error'}).Count)
     if(@($taskResults | Where-Object {$_.status -in 'Fail','Error'}).Count){throw 'Native validation failed.'}

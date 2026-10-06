@@ -1,12 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "09_inputs_03",
   "position": {
     "x": 24,
-    "y": 140,
-    "width": 1392,
-    "height": 584,
+    "y": 230,
     "z": 3,
+    "height": 620,
+    "width": 1392,
     "tabOrder": 3
   },
   "visual": {
@@ -60,6 +60,126 @@
           ]
         }
       }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "autoSizeColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'fixedWidth'"
+                }
+              }
+            },
+            "defaultColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "90D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "grid": [
+        {
+          "properties": {
+            "rowPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "6D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "281D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "InputStatus.Requirement"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "196D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "InputStatus.Status"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "880D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "InputStatus.Definition"
+          }
+        }
+      ]
     },
     "visualContainerObjects": {
       "title": [
@@ -163,61 +283,6 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true,
-    "objects": {
-      "values": [
-        {
-          "properties": {
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "11D"
-                }
-              }
-            },
-            "wordWrap": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "columnHeaders": [
-        {
-          "properties": {
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "11D"
-                }
-              }
-            },
-            "wordWrap": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "grid": [
-        {
-          "properties": {
-            "rowPadding": {
-              "expr": {
-                "Literal": {
-                  "Value": "6D"
-                }
-              }
-            }
-          }
-        }
-      ]
-    }
+    "drillFilterOtherVisuals": true
   }
 }

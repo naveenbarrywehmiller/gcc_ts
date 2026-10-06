@@ -210,7 +210,7 @@ coverage=[
 ('Schedule alert ±3%','Provisional definition','Schedule days divided by planned project duration. Workbook mixes days and percent; definition needs owner confirmation.'),
 ('Defect alert ±5%','Provisional target','DefectTarget defaults to 0; red at >5 percentage points away. Confirm target and whether tolerance means relative percent.'),
 ('Platform / cohorts','Needs business mapping','Division is available; no separate platform master or cohort definition exists. Do not silently rename division as platform.')]
-coverage_source='#table(type table [Requirement=text,Status=text,Definition=text], {'+','.join('{'+','.join(json.dumps(v) for v in row)+'}' for row in coverage)+'})'
+coverage_source='#table(type table [Requirement=text,Status=text,Definition=text], {'+','.join('{'+','.join(json.dumps(v,ensure_ascii=False) for v in row)+'}' for row in coverage)+'})'
 table('InputStatus',[('Requirement','string'),('Status','string'),('Definition','string')],coverage_source)
 
 def rel(ft,fc,dt,dc):

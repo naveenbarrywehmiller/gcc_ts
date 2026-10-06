@@ -4,10 +4,8 @@ param(
 )
 # Read-only TOM deserialization supports Desktop's TMDL save format and older BIM models.
 $ErrorActionPreference = 'Stop'
-$taskDll = 'C:/Program Files/Microsoft Power BI Desktop/bin/Microsoft.PowerBI.Tabular.dll'
-if (-not (Test-Path -LiteralPath $taskDll)) {
-    throw 'Install Power BI Desktop, or update taskDll to its Microsoft.PowerBI.Tabular.dll location.'
-}
+. (Join-Path $PSScriptRoot 'powerbi-runtime.ps1')
+$taskDll = Join-Path (Get-GccPowerBIDesktopBin) 'Microsoft.PowerBI.Tabular.dll'
 Add-Type -Path $taskDll
 $taskDefinition = Join-Path $ModelPath 'definition'
 $taskBim = Join-Path $ModelPath 'model.bim'

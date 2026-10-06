@@ -4,6 +4,7 @@ Read-only against the project. Requires Windows Power BI Desktop's TOM library.
 Only powerbi/POWERBI.md is written. Credentials and imported records are not read.
 """
 import collections
+import argparse
 import datetime
 import json
 import pathlib
@@ -32,7 +33,11 @@ for name in page_order:
     pages.append((page, visuals))
 total_visuals = sum(len(v) for _, v in pages)
 version = json.loads((ROOT / 'package.json').read_text())['version']
-date = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--reference-date', help='ISO authoring date in the user\'s timezone; defaults to the host local date.')
+args = parser.parse_args()
+date = args.reference_date or datetime.datetime.now().astimezone().date().isoformat()
+datetime.date.fromisoformat(date)
 
 def body(value):
     return '\n'.join(value) if isinstance(value, list) else str(value)
@@ -103,7 +108,7 @@ PURPOSE = {
     'Vacation Days': 'Capacity vacation hours divided by the standard daily hours.',
     'Available Hours': 'Current active-roster capacity less capacity vacation hours, bounded at zero.',
     'Under Utilized %': 'One minus monthly/selected-period utilization; retains blank when utilization is unknown.',
-    'As Of Date': 'UTC calendar date captured by the refresh settings, not a changing clock between visuals.',
+    'As Of Date': 'Calendar date captured by Date.From(RefreshClock). For datetimezone values, Desktop uses the local datetime equivalent; the visible refresh timestamp is separately shown in UTC.',
     'Last Completed Friday': 'Friday strictly before the refresh date, including a seven-day lookback when refreshed on Friday.',
     'Available Hours Last Week': 'Estimated available roster capacity for the previous Monday–Sunday week.',
     'Available Hours Current Week': 'Estimated available roster capacity for the week containing the refresh date.',
@@ -145,7 +150,7 @@ PURPOSE = {
     'Remaining Forecast Hours': 'Selected future remaining-budget allocation; blank under employee/task filters without allocations.',
     'Overdue Unscheduled Hours': 'Remaining Inprogress budget for projects whose target is before the refresh date; separate from scheduled future hours.',
     'Projects Missing Plan Inputs': 'Count of projects missing budget/start/target or with a target before start.',
-    'Report Status': 'Refresh timestamp and reminder to inspect missing source contracts; not a business approval flag.',
+    'Report Status': 'Imported refresh timestamp for the visible header, or Not refreshed yet before the first import. It does not use NOW() or change without a data refresh.',
     'Last Refresh UTC': 'Refresh timestamp text captured in Settings.',
 }
 
@@ -170,7 +175,7 @@ This guide documents the saved **GCC_Requirements** Power BI Desktop project bui
 
 Open [GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
 
-The original `GCC_Timesheet.pbix`, portable model, queries and their older guides are separate artifacts. This file is the complete reference for **GCC_Requirements**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
+The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the portable model, queries and older guides remain separate compatibility artifacts. This file is the complete reference for **GCC_Requirements**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
 
 ## Contents
 
@@ -207,7 +212,13 @@ The original `GCC_Timesheet.pbix`, portable model, queries and their older guide
 | DeliverablesEndpoint | empty string | Optional endpoint name under ApiPath; leaves typed empty FactDeliverable until supplied |
 | ImprovementsEndpoint | empty string | Optional endpoint name under ApiPath; leaves typed empty FactImprovement until supplied |
 
-`RefreshClock` captures UTC at refresh. `Settings` persists the refresh date/time used by the calendar, FY window and forecast. Changing a date slicer does not move the refresh clock or recalculate the imported remaining-budget schedule. Refresh after changing parameters or adding source records. Desktop stores source credentials locally; GitHub does not distribute them.
+`RefreshClock` captures UTC at refresh. `Settings` persists the derived calendar date used by the FY window and forecast, plus the UTC timestamp. `AsOfDate` uses `Date.From(RefreshClock)`, which converts a datetimezone to its local datetime equivalent before extracting the date; in Desktop this can be the previous date while the UTC timestamp is already on the next day. This behavior is documented in [Microsoft's Date.From reference](https://learn.microsoft.com/en-us/powerquery-m/date-from). Confirm the reporting timezone before moving refresh to another environment. Changing a date slicer does not move the refresh clock or recalculate the imported remaining-budget schedule. Refresh after changing parameters or adding source records. Desktop stores source credentials locally; GitHub does not distribute them.
+
+### Current Desktop refresh controls
+
+Automatic refresh is **off** for this local Import-mode project, as selected by the user. To fetch the latest data for all tables, use **Home → Refresh → Data**. **Schema and data** also refreshes data and rechecks source structure. The built-in ribbon command is the working Refresh All control; a normal canvas button cannot execute this Desktop import. Every page shows these instructions and a separate **Last refreshed (UTC)** card in `yyyy-MM-dd HH:mm:ss UTC` format. The timestamp comes from imported Settings, captured when the refresh starts and retained with that imported snapshot; it is not the current computer clock or the source's latest timesheet modification date. Before the first import it shows **Not refreshed yet**.
+
+No automatic-refresh checkbox or interval dropdown is added because those controls cannot schedule this Desktop Import model. A slicer would only filter values. If automation is needed later, configure Power BI Service semantic-model scheduled refresh and its gateway connection; automatic page refresh does not refresh imported REST data. See [Microsoft's Import-mode refresh limitations](https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-automatic-page-refresh).
 
 ### Power BI Service and scheduled refresh
 
@@ -328,7 +339,7 @@ lines = [INTRO, '\n## Saved project inventory\n',
          '```text\npowerbi/\n  POWERBI.md\n  GCC_Requirements/\n    GCC_Requirements.pbip\n    .gitignore                       # excludes local .pbi cache/settings\n    GCC_Requirements.Report/\n      definition.pbir               # local semantic-model reference\n      definition/\n        report.json, version.json\n        pages/<page>/page.json\n        pages/<page>/visuals/<id>/visual.json\n    GCC_Requirements.SemanticModel/\n      definition.pbism\n      definition/\n        database.tmdl, model.tmdl\n        expressions.tmdl, relationships.tmdl\n        tables/*.tmdl\n      diagramLayout.json, .platform\n  validation/                       # schema/native-fixture evidence\n```\n',
          'The saved canonical semantic model is **definition/*.tmdl**. Desktop converted the original BIM scaffold on save; `model.bim` is intentionally absent. Preserve the PBIP, report folder and semantic-model folder together. Local `.pbi` cache and credentials are excluded from Git.\n',
          '\n## Report pages and every visual\n',
-         'All pages are **1440 × 900**, FitToPage, with Segoe UI text, pale-gray canvas, white visual backgrounds and dark headings. Native visuals used are textboxes, legacy cards, slicers, clustered column charts, line charts and tables. No external/custom visual package is required. Red (`#DC2626`) means a defined alert exceeded; green (`#0F766E`) means within tolerance; gray (`#64748B`) means unknown. Alert-color measures bind through native conditional formatting on the relevant cards.\n',
+         'All pages are **1440 × 1040**, FitToPage, with Segoe UI text, pale-gray canvas, white visual backgrounds and dark headings. Heading boxes are 76 units tall at 24 pt; explanatory boxes are 66 units tall to fit wrapped text. Each page has a separate 76-unit refresh-time card and 50-unit manual-refresh instruction strip. Native visuals used are textboxes, legacy cards, slicers, clustered column charts, line charts and tables. No external/custom visual package is required. Red (`#DC2626`) means a defined alert exceeded; green (`#0F766E`) means within tolerance; gray (`#64748B`) means unknown. Alert-color measures bind through native conditional formatting on the relevant cards.\n',
          'The inventory below lists every visual ID, type, title and bound query role. `Values` is the legacy-card/table role, `Category` is the category axis/slicer role and `Y` is a chart value role. Textboxes have no model fields. Any additional model-bound conditional formatting is listed with the visual. IDs match the PBIR paths for maintenance.\n']
 friendly_types = {'textbox':'Text', 'card':'Card', 'slicer':'Slicer', 'clusteredColumnChart':'Clustered column chart', 'lineChart':'Line chart', 'tableEx':'Table'}
 for page, visuals in pages:
@@ -430,22 +441,23 @@ node scripts/validate-powerbi.js
 node --test scripts/powerbi-requirements.test.js
 
 # Native synthetic scenarios need a running Desktop local engine:
-pwsh -File scripts/test-powerbi-model.ps1 -Port <DesktopEnginePort>
+powershell.exe -NoProfile -File scripts/test-powerbi-model.ps1 -Port <DesktopEnginePort>
 
 # Optional isolated Desktop preview, with conspicuous synthetic-data titles:
 python scripts/preview-powerbi-fixture.py
 ```
 
-The schema validator requires Windows Power BI Desktop's TOM library at `C:/Program Files/Microsoft Power BI Desktop/bin`, Node, and the application's `client/node_modules` AJV dependency. It fetches/caches Microsoft schemas and resolves each visual field against the actual model. The native test needs PowerShell 7 (`pwsh`, because its fixture scenario uses `ConvertFrom-Json -AsHashtable`), Desktop's TOM/ADOMD libraries and a local Desktop engine port. It creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
+The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries; the native test no longer requires PowerShell 7. The validator fetches/caches Microsoft schemas and resolves each visual field against the actual model. Visual JSON editor schema links use the published compatible 2.12.0 schema because the Store build's emitted 2.13.0 schema URL was unavailable during verification; visual content and native formatting are retained. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
 
 ### Evidence and limits
 
 | Check | Evidence | Scope |
 |---|---|---|
 | Current saved TMDL | Deserialized through installed Desktop TOM | Metadata syntax and saved format; no claim of successful production Desktop refresh |
-| Current report schema/fields | `validation/schema-validation.json`: 110 schema documents, zero errors | Current Desktop-normalized PBIR and model field references |
-| Native calculation fixtures | `validation/engine-validation.json`: 72 measures evaluated, 23 cases passed | Isolated synthetic Power Query processing and DAX in Desktop's native engine |
-| Calculation continuity after Desktop save | Numerical DAX and M unchanged from tested scaffold; Report Status text separator normalized | Supports applying prior calculation evidence to this saved model; not a fresh production reconciliation |
+| Current report schema/fields | `validation/schema-validation.json`: 128 schema documents, zero errors | PBIR definitions and model field references after the header/refresh display update |
+| Native calculation fixtures | `validation/engine-validation.json`: 72 measures evaluated, 25 cases passed | Isolated synthetic Power Query processing and DAX, including second-precision UTC timestamp and the header's imported refresh value |
+| Layout/refresh update | Larger text/header areas, timestamp cards on all 9 pages, 116 visual containers, no overlapping/out-of-bounds visuals | Manual Desktop refresh selected; no unsupported canvas scheduler |
+| Canonical Desktop refresh on 2026-10-05 local date | Ribbon Data refresh completed; UTC header `2026-10-06 06:25:03 UTC`; 10 daily rows, 72 raw hours, 32 actual/approved hours | Read-only aggregate query and native overview/input-readiness inspection; wrapped descriptions and Unicode symbols verified; project saved |
 | Application regression | 52 tests passed; existing reporting API suite 55 checks passed | Previous implementation verification; in-memory test databases |
 | Added reporting inputs | Two stable-row-key/access/null/zero tests passed | Read-only reporting scope, stable daily/weekly identities, staffing/vacation inputs |
 | Live API on 2026-10-02 | API v1.1.0; all nine queried diagnostic/model endpoints returned HTTP 200 | Authorized read-only production GETs, not Power BI Service refresh |
@@ -453,7 +465,7 @@ The schema validator requires Windows Power BI Desktop's TOM library at `C:/Prog
 | Isolated live snapshot native processing | 16 tables, 72 measures evaluated, 4 daily entries/32 approved hours; October utilization blank | Authorized API response snapshot processed in an isolated native test model; not the cached canonical Desktop model |
 | Service deployment | No Power BI Service publication/gateway/schedule completed | GitHub application deployment is separate |
 
-The reporting endpoints are live in application v1.15.0. Production credential entry/refresh in the canonical Desktop report and final business reconciliation remain user-side checks. Missing task mapping, staffing/register records, fiscal assumptions, allocation history and platform/cohort definitions remain substantive input gaps. Local ignored live-snapshot evidence is not shipped with raw employee records. See [validation evidence](validation/README.md).
+The reporting endpoints are live in application v1.15.0. The canonical Desktop report was refreshed and saved using existing local credentials; its header and aggregate results are recorded in `validation/desktop-refresh-validation.json`. A fresh clone still needs its own credentials and refresh. Final business reconciliation, task mapping, staffing/register records, fiscal/timezone assumptions, allocation history and platform/cohort definitions remain substantive input gaps. Raw employee records and local imported cache are not shipped. See [validation evidence](validation/README.md).
 
 ### Troubleshooting
 
@@ -463,6 +475,7 @@ The reporting endpoints are live in application v1.15.0. Production credential e
 | HTTP 503 reporting not configured | Reporting disabled, or no configured dedicated key and no valid admin JWT fallback | Confirm server reporting settings; use valid Basic credentials or configure the private dedicated key |
 | HTTP 401 / 403 | Invalid/expired credentials or insufficient admin/division permission | Re-enter permitted credentials in Desktop/gateway; verify active account and server scope |
 | Old localhost source or stale imported values | Cached credentials/model or unapplied external edits | Verify ApiBaseUrl, review unsaved edits, reopen/apply external changes and refresh |
+| PackageSession / Pipe is broken | Desktop's current session failed while applying external changes | Preserve the saved source; open the canonical PBIP in a fresh Desktop window and use Home → Refresh → Data. This recovered the verified refresh without changing credentials |
 | Missing stable IDs/weeklyRowKey | Old reporting API | Verify `/api/powerbi/version` is 1.1.0 and update the application before refresh |
 | Pagination total changed | Source changed between pages | Retry after source is stable; do not accept a partial import |
 | Duplicate daily/deliverable/improvement ID | Broken source grain | Correct the source identity; keep contract checks enabled |

@@ -4,7 +4,7 @@ This guide documents the saved **GCC_Requirements** Power BI Desktop project bui
 
 Open [GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
 
-The original `GCC_Timesheet.pbix`, portable model, queries and their older guides are separate artifacts. This file is the complete reference for **GCC_Requirements**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
+The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the portable model, queries and older guides remain separate compatibility artifacts. This file is the complete reference for **GCC_Requirements**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
 
 ## Contents
 
@@ -41,7 +41,13 @@ The original `GCC_Timesheet.pbix`, portable model, queries and their older guide
 | DeliverablesEndpoint | empty string | Optional endpoint name under ApiPath; leaves typed empty FactDeliverable until supplied |
 | ImprovementsEndpoint | empty string | Optional endpoint name under ApiPath; leaves typed empty FactImprovement until supplied |
 
-`RefreshClock` captures UTC at refresh. `Settings` persists the refresh date/time used by the calendar, FY window and forecast. Changing a date slicer does not move the refresh clock or recalculate the imported remaining-budget schedule. Refresh after changing parameters or adding source records. Desktop stores source credentials locally; GitHub does not distribute them.
+`RefreshClock` captures UTC at refresh. `Settings` persists the derived calendar date used by the FY window and forecast, plus the UTC timestamp. `AsOfDate` uses `Date.From(RefreshClock)`, which converts a datetimezone to its local datetime equivalent before extracting the date; in Desktop this can be the previous date while the UTC timestamp is already on the next day. This behavior is documented in [Microsoft's Date.From reference](https://learn.microsoft.com/en-us/powerquery-m/date-from). Confirm the reporting timezone before moving refresh to another environment. Changing a date slicer does not move the refresh clock or recalculate the imported remaining-budget schedule. Refresh after changing parameters or adding source records. Desktop stores source credentials locally; GitHub does not distribute them.
+
+### Current Desktop refresh controls
+
+Automatic refresh is **off** for this local Import-mode project, as selected by the user. To fetch the latest data for all tables, use **Home → Refresh → Data**. **Schema and data** also refreshes data and rechecks source structure. The built-in ribbon command is the working Refresh All control; a normal canvas button cannot execute this Desktop import. Every page shows these instructions and a separate **Last refreshed (UTC)** card in `yyyy-MM-dd HH:mm:ss UTC` format. The timestamp comes from imported Settings, captured when the refresh starts and retained with that imported snapshot; it is not the current computer clock or the source's latest timesheet modification date. Before the first import it shows **Not refreshed yet**.
+
+No automatic-refresh checkbox or interval dropdown is added because those controls cannot schedule this Desktop Import model. A slicer would only filter values. If automation is needed later, configure Power BI Service semantic-model scheduled refresh and its gateway connection; automatic page refresh does not refresh imported REST data. See [Microsoft's Import-mode refresh limitations](https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-automatic-page-refresh).
 
 ### Power BI Service and scheduled refresh
 
@@ -157,7 +163,7 @@ M checks unique/nonempty register IDs and converts types. Full validation of for
 
 ## Saved project inventory
 
-Reference generated **2026-10-02** from the saved model/PBIR sources. Application version: **1.15.0**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 98 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
+Reference generated **2026-10-05** from the saved model/PBIR sources. Application version: **1.15.0**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
 
 ```text
 powerbi/
@@ -186,14 +192,14 @@ The saved canonical semantic model is **definition/*.tmdl**. Desktop converted t
 
 ## Report pages and every visual
 
-All pages are **1440 × 900**, FitToPage, with Segoe UI text, pale-gray canvas, white visual backgrounds and dark headings. Native visuals used are textboxes, legacy cards, slicers, clustered column charts, line charts and tables. No external/custom visual package is required. Red (`#DC2626`) means a defined alert exceeded; green (`#0F766E`) means within tolerance; gray (`#64748B`) means unknown. Alert-color measures bind through native conditional formatting on the relevant cards.
+All pages are **1440 × 1040**, FitToPage, with Segoe UI text, pale-gray canvas, white visual backgrounds and dark headings. Heading boxes are 76 units tall at 24 pt; explanatory boxes are 66 units tall to fit wrapped text. Each page has a separate 76-unit refresh-time card and 50-unit manual-refresh instruction strip. Native visuals used are textboxes, legacy cards, slicers, clustered column charts, line charts and tables. No external/custom visual package is required. Red (`#DC2626`) means a defined alert exceeded; green (`#0F766E`) means within tolerance; gray (`#64748B`) means unknown. Alert-color measures bind through native conditional formatting on the relevant cards.
 
 The inventory below lists every visual ID, type, title and bound query role. `Values` is the legacy-card/table role, `Category` is the category axis/slicer role and `Y` is a chart value role. Textboxes have no model fields. Any additional model-bound conditional formatting is listed with the visual. IDs match the PBIR paths for maintenance.
 
 
 ### GCC | Performance overview
 
-Page ID: `01_overview`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/01_overview/page.json).
+Page ID: `01_overview`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/01_overview/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -209,11 +215,13 @@ Page ID: `01_overview`. Visuals: **12**. Source: [page.json](GCC_Requirements/GC
 | 01_overview_10 | Clustered column chart | Actual hours by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Actual Hours]`, `_Measures[Training Hours]` |
 | 01_overview_11 | Clustered column chart | Delivery and workload by division | Category: `DimDivision[divisionName]`; Y: `_Measures[Actual Hours]` |
 | 01_overview_12 | Table | Performance by division | Values: `DimDivision[divisionName]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]`, `_Measures[Projects Delivered]`, `_Measures[Products Touched]` |
+| 01_overview_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 01_overview_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Utilization
 
-Page ID: `02_utilization`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/02_utilization/page.json).
+Page ID: `02_utilization`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/02_utilization/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -229,11 +237,13 @@ Page ID: `02_utilization`. Visuals: **12**. Source: [page.json](GCC_Requirements
 | 02_utilization_10 | Line chart | Monthly utilization | Category: `DimDate[YearMonth]`; Y: `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]` |
 | 02_utilization_11 | Clustered column chart | Hours by task category | Category: `DimTask[taskCategory]`; Y: `_Measures[Actual Hours]` |
 | 02_utilization_12 | Table | Capacity and exclusions | Values: `DimEmployee[department]`, `_Measures[Active Team Strength]`, `_Measures[Working Days]`, `_Measures[Holiday Days]`, `_Measures[Vacation Days]`, `_Measures[Available Hours]`, `_Measures[Training Hours]`, `_Measures[Internal Hours]`, `_Measures[Admin Hours]` |
+| 02_utilization_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 02_utilization_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Delivery & quality
 
-Page ID: `03_delivery`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/03_delivery/page.json).
+Page ID: `03_delivery`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/03_delivery/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -249,11 +259,13 @@ Page ID: `03_delivery`. Visuals: **12**. Source: [page.json](GCC_Requirements/GC
 | 03_delivery_10 | Clustered column chart | Project deliveries by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Projects Delivered]`, `_Measures[Projects On Time]` |
 | 03_delivery_11 | Clustered column chart | Weekly quality and improvements | Category: `DimDate[WeekStart]`; Y: `_Measures[Weekly Fundamental Errors]`, `_Measures[Improvement Log Count]` |
 | 03_delivery_12 | Table | Project delivery detail | Values: `DimProject[projectCode]`, `DimProject[projectName]`, `DimProject[targetDate]`, `DimProject[deliveredDate]`, `_Measures[Delivered Project Budget Hours]`, `_Measures[Delivered Project Actual Hours]`, `_Measures[Schedule Deviation Days]` |
+| 03_delivery_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 03_delivery_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Capacity & forecast
 
-Page ID: `04_capacity`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/04_capacity/page.json).
+Page ID: `04_capacity`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/04_capacity/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -269,11 +281,13 @@ Page ID: `04_capacity`. Visuals: **12**. Source: [page.json](GCC_Requirements/GC
 | 04_capacity_10 | Line chart | Actuals plus future demand | Category: `DimDate[WeekStart]`; Y: `_Measures[Team Forecast Hours]`, `_Measures[Hours Scheduled]`, `_Measures[Available Hours]` |
 | 04_capacity_11 | Card | Projects missing planning inputs | Values: `_Measures[Projects Missing Plan Inputs]` |
 | 04_capacity_12 | Table | Project planning inputs | Values: `DimProject[projectCode]`, `DimProject[projectStatus]`, `DimProject[startDate]`, `DimProject[targetDate]`, `DimProject[budgetHours]`, `_Measures[Hours Scheduled]`, `_Measures[Remaining Forecast Hours]` |
+| 04_capacity_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 04_capacity_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Dedicated & Flex teams
 
-Page ID: `05_teams`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/05_teams/page.json).
+Page ID: `05_teams`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/05_teams/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -289,11 +303,13 @@ Page ID: `05_teams`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_R
 | 05_teams_10 | Clustered column chart | Dedicated / Flex hours | Category: `DimDate[YearMonth]`; Y: `_Measures[Dedicated Hours]`, `_Measures[Flex Hours]` |
 | 05_teams_11 | Line chart | Flex utilization through the year | Category: `DimDate[YearMonth]`; Y: `_Measures[Flex Utilization %]` |
 | 05_teams_12 | Table | Department capacity | Values: `DimEmployee[department]`, `_Measures[Flex Strength]`, `_Measures[Contributing Employees]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Available Employee Equivalents]` |
+| 05_teams_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 05_teams_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Continuous improvement
 
-Page ID: `06_improvement`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/06_improvement/page.json).
+Page ID: `06_improvement`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/06_improvement/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -309,11 +325,13 @@ Page ID: `06_improvement`. Visuals: **12**. Source: [page.json](GCC_Requirements
 | 06_improvement_10 | Clustered column chart | Improvement activity by week | Category: `DimDate[WeekStart]`; Y: `_Measures[Improvement Log Count]`, `_Measures[Designed]`, `_Measures[Developed]` |
 | 06_improvement_11 | Clustered column chart | Initiatives by category • source pending | Category: `FactImprovement[category]`; Y: `_Measures[Improvement Initiatives]` |
 | 06_improvement_12 | Table | Weekly improvement details | Values: `FactWeeklyDetails[date]`, `DimProject[projectCode]`, `FactWeeklyDetails[item_number]`, `FactWeeklyDetails[improvement_location]`, `_Measures[Improvement Log Count]`, `_Measures[Weekly Fundamental Errors]`, `_Measures[Detail Conflicts]` |
+| 06_improvement_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 06_improvement_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Staffing
 
-Page ID: `07_staffing`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/07_staffing/page.json).
+Page ID: `07_staffing`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/07_staffing/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -329,11 +347,13 @@ Page ID: `07_staffing`. Visuals: **12**. Source: [page.json](GCC_Requirements/GC
 | 07_staffing_10 | Clustered column chart | Monthly open positions | Category: `DimDate[YearMonth]`; Y: `_Measures[Open Positions]` |
 | 07_staffing_11 | Clustered column chart | Monthly new joiners | Category: `DimDate[YearMonth]`; Y: `_Measures[New Joiners]` |
 | 07_staffing_12 | Table | Staffing submissions | Values: `FactStaffing[date]`, `FactStaffing[division]`, `FactStaffing[openPositions]`, `FactStaffing[newJoiners]` |
+| 07_staffing_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 07_staffing_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Timesheet & training detail
 
-Page ID: `08_detail`. Visuals: **10**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/08_detail/page.json).
+Page ID: `08_detail`. Visuals: **12**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/08_detail/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -347,11 +367,13 @@ Page ID: `08_detail`. Visuals: **10**. Source: [page.json](GCC_Requirements/GCC_
 | 08_detail_08 | Card | Training Hours | Values: `_Measures[Training Hours]` |
 | 08_detail_09 | Card | Detail Conflicts | Values: `_Measures[Detail Conflicts]` |
 | 08_detail_10 | Table | Timesheet detail | Values: `FactTimesheet[id]`, `FactTimesheet[date]`, `DimEmployee[employeeName]`, `DimEmployee[department]`, `DimProject[projectCode]`, `DimTask[taskCategory]`, `FactTimesheet[status]`, `_Measures[Raw Hours]` |
+| 08_detail_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 08_detail_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ### GCC | Input readiness
 
-Page ID: `09_inputs`. Visuals: **4**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/09_inputs/page.json).
+Page ID: `09_inputs`. Visuals: **6**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/09_inputs/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting |
 |---|---|---|---|
@@ -359,6 +381,8 @@ Page ID: `09_inputs`. Visuals: **4**. Source: [page.json](GCC_Requirements/GCC_R
 | 09_inputs_02 | Text | Definitions needing confirmation and missing source contracts are visible here. No production records or credentials are included in the saved project. | Static text |
 | 09_inputs_03 | Table | Requirements coverage | Values: `InputStatus[Requirement]`, `InputStatus[Status]`, `InputStatus[Definition]` |
 | 09_inputs_04 | Table | Refresh settings | Values: `Settings[FiscalStartMonth]`, `Settings[DailyHours]`, `Settings[DefectTarget]`, `Settings[AsOfDate]`, `Settings[RefreshUTC]` |
+| 09_inputs_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text |
+| 09_inputs_refresh_time | Card | Last refreshed (UTC) | Values: `_Measures[Report Status]` |
 
 
 ## Tables, columns and relationships
@@ -921,7 +945,7 @@ IF(NOT ISBLANK([Monthly Utilization %]),1-[Monthly Utilization %])
 
 #### As Of Date
 
-UTC calendar date captured by the refresh settings, not a changing clock between visuals.
+Calendar date captured by Date.From(RefreshClock). For datetimezone values, Desktop uses the local datetime equivalent; the visible refresh timestamp is separately shown in UTC.
 
 Format: `yyyy-mm-dd`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
 
@@ -1539,13 +1563,13 @@ CALCULATE(COUNTROWS(FILTER(DimProject,DimProject[projectStatus]="Inprogress" && 
 
 #### Report Status
 
-Refresh timestamp and reminder to inspect missing source contracts; not a business approval flag.
+Successful import timestamp for the page header. Never use NOW(), which changes without fetching data.
 
 Format: `General`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Report Status =
-IF(ISBLANK([Last Refresh UTC]),"API refresh required","Refreshed " & [Last Refresh UTC]) & " • see Input readiness for missing source contracts"
+COALESCE([Last Refresh UTC], "Not refreshed yet")
 ```
 
 
@@ -1840,7 +1864,7 @@ Parameters and RefreshClock; one row.
 let
     Valid=if FiscalStartMonth<1 or FiscalStartMonth>12 or Number.RoundDown(FiscalStartMonth)<>FiscalStartMonth or DailyHours<=0 or DailyHours>24 then error "Invalid capacity settings." else true
 in if Valid then #table(type table [FiscalStartMonth=Int64.Type,DailyHours=number,DefectTarget=number,AsOfDate=date,RefreshUTC=text],
-    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(RefreshClock),DateTimeZone.ToText(RefreshClock,"yyyy-MM-dd HH:mm 'UTC'")}}) else error "Invalid settings"
+    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(RefreshClock),DateTimeZone.ToText(RefreshClock,"yyyy-MM-dd HH:mm:ss 'UTC'")}}) else error "Invalid settings"
 ```
 
 
@@ -1924,7 +1948,7 @@ in Typed
 Authored source-readiness definitions; static explanatory rows.
 
 ```powerquery
-#table(type table [Requirement=text,Status=text,Definition=text], {{"Monthly utilization","Available with assumptions","Submitted + approved work; training/internal/admin/leave/holiday excluded. Current active roster capacity, Mon\u2013Fri. Unmapped task categories block result."},{"Yearly utilization from project start","Needs allocation history","Roster FY utilization is provided separately. Exact project-start utilization needs employee project allocations and employment start/end dates."},{"Defect density / FTR / F I R","Needs deliverable register","FactDeliverable requires unique IDs, delivered dates, error counts and rework flags. Weekly error counts are available separately."},{"Effort / schedule / on-time","Available at project grain","Budget vs project lifetime actuals for projects delivered in selected dates. Project delivery is not treated as a deliverable count."},{"Team strength / dedicated / flex","Available","Current active roster and distinct contributing employees are separate. Employee supportingCategory defines Dedicated/Flex."},{"Vacation / holidays / capacity","Available with assumptions","Historical recorded leave; future planned vacation. Capacity is a current-roster estimate, not historical contracted capacity."},{"Training / internal / admin hours","Available","Explicit HourCategoryMap. Edit mappings to match production task categories; do not infer from billable flag."},{"Forecast / scheduled hours","Available as estimate","Budget spread evenly across working dates. No resource assignment exists; department-specific demand is blank."},{"Products touched","Available","Distinct project products with submitted/approved work in selected dates; blank products excluded."},{"Improvement / designed / developed","Available at weekly grain","Deduplicated weekly row details, attributed to Monday. Conflicting copies block counts."},{"VAVE / Automation / COE / cost / additive","Needs improvement register","FactImprovement is an empty typed source contract; no fabricated classification or counts."},{"Open positions / new joiners","Available","Read-only staffing endpoint. Open positions at last selected month, joiners summed over selected months. Null stays unknown."},{"Schedule alert \u00b13%","Provisional definition","Schedule days divided by planned project duration. Workbook mixes days and percent; definition needs owner confirmation."},{"Defect alert \u00b15%","Provisional target","DefectTarget defaults to 0; red at >5 percentage points away. Confirm target and whether tolerance means relative percent."},{"Platform / cohorts","Needs business mapping","Division is available; no separate platform master or cohort definition exists. Do not silently rename division as platform."}})
+#table(type table [Requirement=text,Status=text,Definition=text], {{"Monthly utilization","Available with assumptions","Submitted + approved work; training/internal/admin/leave/holiday excluded. Current active roster capacity, Mon–Fri. Unmapped task categories block result."},{"Yearly utilization from project start","Needs allocation history","Roster FY utilization is provided separately. Exact project-start utilization needs employee project allocations and employment start/end dates."},{"Defect density / FTR / F I R","Needs deliverable register","FactDeliverable requires unique IDs, delivered dates, error counts and rework flags. Weekly error counts are available separately."},{"Effort / schedule / on-time","Available at project grain","Budget vs project lifetime actuals for projects delivered in selected dates. Project delivery is not treated as a deliverable count."},{"Team strength / dedicated / flex","Available","Current active roster and distinct contributing employees are separate. Employee supportingCategory defines Dedicated/Flex."},{"Vacation / holidays / capacity","Available with assumptions","Historical recorded leave; future planned vacation. Capacity is a current-roster estimate, not historical contracted capacity."},{"Training / internal / admin hours","Available","Explicit HourCategoryMap. Edit mappings to match production task categories; do not infer from billable flag."},{"Forecast / scheduled hours","Available as estimate","Budget spread evenly across working dates. No resource assignment exists; department-specific demand is blank."},{"Products touched","Available","Distinct project products with submitted/approved work in selected dates; blank products excluded."},{"Improvement / designed / developed","Available at weekly grain","Deduplicated weekly row details, attributed to Monday. Conflicting copies block counts."},{"VAVE / Automation / COE / cost / additive","Needs improvement register","FactImprovement is an empty typed source contract; no fabricated classification or counts."},{"Open positions / new joiners","Available","Read-only staffing endpoint. Open positions at last selected month, joiners summed over selected months. Null stays unknown."},{"Schedule alert ±3%","Provisional definition","Schedule days divided by planned project duration. Workbook mixes days and percent; definition needs owner confirmation."},{"Defect alert ±5%","Provisional target","DefectTarget defaults to 0; red at >5 percentage points away. Confirm target and whether tolerance means relative percent."},{"Platform / cohorts","Needs business mapping","Division is available; no separate platform master or cohort definition exists. Do not silently rename division as platform."}})
 ```
 
 
@@ -1954,22 +1978,23 @@ node scripts/validate-powerbi.js
 node --test scripts/powerbi-requirements.test.js
 
 # Native synthetic scenarios need a running Desktop local engine:
-pwsh -File scripts/test-powerbi-model.ps1 -Port <DesktopEnginePort>
+powershell.exe -NoProfile -File scripts/test-powerbi-model.ps1 -Port <DesktopEnginePort>
 
 # Optional isolated Desktop preview, with conspicuous synthetic-data titles:
 python scripts/preview-powerbi-fixture.py
 ```
 
-The schema validator requires Windows Power BI Desktop's TOM library at `C:/Program Files/Microsoft Power BI Desktop/bin`, Node, and the application's `client/node_modules` AJV dependency. It fetches/caches Microsoft schemas and resolves each visual field against the actual model. The native test needs PowerShell 7 (`pwsh`, because its fixture scenario uses `ConvertFrom-Json -AsHashtable`), Desktop's TOM/ADOMD libraries and a local Desktop engine port. It creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
+The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries; the native test no longer requires PowerShell 7. The validator fetches/caches Microsoft schemas and resolves each visual field against the actual model. Visual JSON editor schema links use the published compatible 2.12.0 schema because the Store build's emitted 2.13.0 schema URL was unavailable during verification; visual content and native formatting are retained. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
 
 ### Evidence and limits
 
 | Check | Evidence | Scope |
 |---|---|---|
 | Current saved TMDL | Deserialized through installed Desktop TOM | Metadata syntax and saved format; no claim of successful production Desktop refresh |
-| Current report schema/fields | `validation/schema-validation.json`: 110 schema documents, zero errors | Current Desktop-normalized PBIR and model field references |
-| Native calculation fixtures | `validation/engine-validation.json`: 72 measures evaluated, 23 cases passed | Isolated synthetic Power Query processing and DAX in Desktop's native engine |
-| Calculation continuity after Desktop save | Numerical DAX and M unchanged from tested scaffold; Report Status text separator normalized | Supports applying prior calculation evidence to this saved model; not a fresh production reconciliation |
+| Current report schema/fields | `validation/schema-validation.json`: 128 schema documents, zero errors | PBIR definitions and model field references after the header/refresh display update |
+| Native calculation fixtures | `validation/engine-validation.json`: 72 measures evaluated, 25 cases passed | Isolated synthetic Power Query processing and DAX, including second-precision UTC timestamp and the header's imported refresh value |
+| Layout/refresh update | Larger text/header areas, timestamp cards on all 9 pages, 116 visual containers, no overlapping/out-of-bounds visuals | Manual Desktop refresh selected; no unsupported canvas scheduler |
+| Canonical Desktop refresh on 2026-10-05 local date | Ribbon Data refresh completed; UTC header `2026-10-06 06:25:03 UTC`; 10 daily rows, 72 raw hours, 32 actual/approved hours | Read-only aggregate query and native overview/input-readiness inspection; wrapped descriptions and Unicode symbols verified; project saved |
 | Application regression | 52 tests passed; existing reporting API suite 55 checks passed | Previous implementation verification; in-memory test databases |
 | Added reporting inputs | Two stable-row-key/access/null/zero tests passed | Read-only reporting scope, stable daily/weekly identities, staffing/vacation inputs |
 | Live API on 2026-10-02 | API v1.1.0; all nine queried diagnostic/model endpoints returned HTTP 200 | Authorized read-only production GETs, not Power BI Service refresh |
@@ -1977,7 +2002,7 @@ The schema validator requires Windows Power BI Desktop's TOM library at `C:/Prog
 | Isolated live snapshot native processing | 16 tables, 72 measures evaluated, 4 daily entries/32 approved hours; October utilization blank | Authorized API response snapshot processed in an isolated native test model; not the cached canonical Desktop model |
 | Service deployment | No Power BI Service publication/gateway/schedule completed | GitHub application deployment is separate |
 
-The reporting endpoints are live in application v1.15.0. Production credential entry/refresh in the canonical Desktop report and final business reconciliation remain user-side checks. Missing task mapping, staffing/register records, fiscal assumptions, allocation history and platform/cohort definitions remain substantive input gaps. Local ignored live-snapshot evidence is not shipped with raw employee records. See [validation evidence](validation/README.md).
+The reporting endpoints are live in application v1.15.0. The canonical Desktop report was refreshed and saved using existing local credentials; its header and aggregate results are recorded in `validation/desktop-refresh-validation.json`. A fresh clone still needs its own credentials and refresh. Final business reconciliation, task mapping, staffing/register records, fiscal/timezone assumptions, allocation history and platform/cohort definitions remain substantive input gaps. Raw employee records and local imported cache are not shipped. See [validation evidence](validation/README.md).
 
 ### Troubleshooting
 
@@ -1987,6 +2012,7 @@ The reporting endpoints are live in application v1.15.0. Production credential e
 | HTTP 503 reporting not configured | Reporting disabled, or no configured dedicated key and no valid admin JWT fallback | Confirm server reporting settings; use valid Basic credentials or configure the private dedicated key |
 | HTTP 401 / 403 | Invalid/expired credentials or insufficient admin/division permission | Re-enter permitted credentials in Desktop/gateway; verify active account and server scope |
 | Old localhost source or stale imported values | Cached credentials/model or unapplied external edits | Verify ApiBaseUrl, review unsaved edits, reopen/apply external changes and refresh |
+| PackageSession / Pipe is broken | Desktop's current session failed while applying external changes | Preserve the saved source; open the canonical PBIP in a fresh Desktop window and use Home → Refresh → Data. This recovered the verified refresh without changing credentials |
 | Missing stable IDs/weeklyRowKey | Old reporting API | Verify `/api/powerbi/version` is 1.1.0 and update the application before refresh |
 | Pagination total changed | Source changed between pages | Retry after source is stable; do not accept a partial import |
 | Duplicate daily/deliverable/improvement ID | Broken source grain | Correct the source identity; keep contract checks enabled |

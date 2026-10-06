@@ -1,0 +1,11 @@
+{
+  "mode": "Read-only aggregate query of the canonical open Desktop model",
+  "LastRefreshUTC": "2026-10-06 06:25:03 UTC",
+  "HeaderValue": "2026-10-06 06:25:03 UTC",
+  "DailyRows": 10,
+  "RawHours": 72,
+  "ActualHours": 32,
+  "ApprovedHours": 32,
+  "refreshCommand": "Home > Refresh > Data",
+  "projectSaved": true
+}

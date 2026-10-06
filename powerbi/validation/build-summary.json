@@ -3,11 +3,12 @@
   "measures": 72,
   "relationships": 18,
   "pages": 9,
-  "visuals": 98,
+  "visuals": 116,
   "source": "PowerPi Requirments.xlsx / Sheet1",
   "semanticModelFormat": "TMDL",
   "reportingApiVersion": "1.1.0",
   "liveApiCheck": "Authorized read-only GETs passed on 2026-10-02; 4 daily entries, 32 approved hours.",
   "liveNativeCheck": "Authorized API snapshot processed in an isolated native model; 72 measures evaluated without errors. Canonical report cache not verified.",
-  "liveRefresh": "DietPi origin configured in source; canonical Desktop refresh and reconciliation require verification. No Power BI Service publication."
+  "liveRefresh": "Canonical Desktop import completed and project saved on 2026-10-05 local date; UTC header 2026-10-06 06:25:03 UTC, 10 daily rows, 72 raw hours, 32 actual/approved hours. No Power BI Service publication.",
+  "refreshMode": "Manual Desktop refresh via Home > Refresh > Data; automatic refresh not configured."
 }

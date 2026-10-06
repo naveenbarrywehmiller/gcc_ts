@@ -2,17 +2,17 @@
   {
     "measure": "Raw Hours",
     "status": "Evaluated",
-    "value": 24.0
+    "value": 24
   },
   {
     "measure": "Actual Hours",
     "status": "Evaluated",
-    "value": 24.0
+    "value": 24
   },
   {
     "measure": "Approved Hours",
     "status": "Evaluated",
-    "value": 16.0
+    "value": 16
   },
   {
     "measure": "Contributing Employees",
@@ -27,7 +27,7 @@
   {
     "measure": "Training Hours",
     "status": "Evaluated",
-    "value": 8.0
+    "value": 8
   },
   {
     "measure": "Internal Hours",
@@ -52,7 +52,7 @@
   {
     "measure": "Productive Hours",
     "status": "Evaluated",
-    "value": 16.0
+    "value": 16
   },
   {
     "measure": "Unmapped Hours",
@@ -62,7 +62,7 @@
   {
     "measure": "Effective Hours",
     "status": "Evaluated",
-    "value": 16.0
+    "value": 16
   },
   {
     "measure": "Working Days",
@@ -77,22 +77,22 @@
   {
     "measure": "Roster Capacity Hours",
     "status": "Evaluated",
-    "value": 12512.0
+    "value": 12512
   },
   {
     "measure": "Capacity Vacation Hours",
     "status": "Evaluated",
-    "value": 0.0
+    "value": 0
   },
   {
     "measure": "Vacation Days",
     "status": "Evaluated",
-    "value": 0.0
+    "value": 0
   },
   {
     "measure": "Available Hours",
     "status": "Evaluated",
-    "value": 12512.0
+    "value": 12512
   },
   {
     "measure": "Monthly Utilization %",
@@ -107,42 +107,42 @@
   {
     "measure": "As Of Date",
     "status": "Evaluated",
-    "value": "2026-10-01T00:00:00"
+    "value": "/Date(1790838000000)/"
   },
   {
     "measure": "Last Completed Friday",
     "status": "Evaluated",
-    "value": "2026-09-25T00:00:00"
+    "value": "/Date(1790319600000)/"
   },
   {
     "measure": "FY Utilization Through Friday %",
     "status": "Evaluated",
-    "value": 0.0
+    "value": 0
   },
   {
     "measure": "Available Hours Last Week",
     "status": "Evaluated",
-    "value": 80.0
+    "value": 80
   },
   {
     "measure": "Available Hours Current Week",
     "status": "Evaluated",
-    "value": 64.0
+    "value": 64
   },
   {
     "measure": "Available Hours Next Week",
     "status": "Evaluated",
-    "value": 80.0
+    "value": 80
   },
   {
     "measure": "Available Hours FY",
     "status": "Evaluated",
-    "value": 4160.0
+    "value": 4160
   },
   {
     "measure": "Dedicated Hours",
     "status": "Evaluated",
-    "value": 16.0
+    "value": 16
   },
   {
     "measure": "Dedicated Strength",
@@ -162,7 +162,7 @@
   {
     "measure": "Flex Hours",
     "status": "Evaluated",
-    "value": 8.0
+    "value": 8
   },
   {
     "measure": "Flex Strength",
@@ -172,7 +172,7 @@
   {
     "measure": "Flex Utilization %",
     "status": "Evaluated",
-    "value": 0.0
+    "value": 0
   },
   {
     "measure": "Flex FY Hours",
@@ -337,7 +337,7 @@
   {
     "measure": "Team Forecast Hours",
     "status": "Evaluated",
-    "value": 88.0
+    "value": 88
   },
   {
     "measure": "Overdue Unscheduled Hours",
@@ -352,12 +352,12 @@
   {
     "measure": "Report Status",
     "status": "Evaluated",
-    "value": "Refreshed 2026-10-01 12:00 UTC • see Input readiness for missing source contracts"
+    "value": "2026-10-01 12:00:00 UTC"
   },
   {
     "measure": "Last Refresh UTC",
     "status": "Evaluated",
-    "value": "2026-10-01 12:00 UTC"
+    "value": "2026-10-01 12:00:00 UTC"
   },
   {
     "test": "Weekly counts not multiplied by days",
@@ -369,7 +369,7 @@
     "test": "Monthly productive hours",
     "status": "Pass",
     "expected": 16,
-    "actual": 16.0
+    "actual": 16
   },
   {
     "test": "Staffing snapshot preserves known zero",
@@ -393,13 +393,13 @@
     "test": "Team capacity counts both employees",
     "status": "Pass",
     "expected": 16,
-    "actual": 16.0
+    "actual": 16
   },
   {
     "test": "Holiday and vacation overlap not subtracted twice",
     "status": "Pass",
     "expected": 0,
-    "actual": 0.0
+    "actual": 0
   },
   {
     "test": "Project capacity needs allocation",
@@ -423,13 +423,13 @@
     "test": "Forecast uses past actuals plus remaining budget",
     "status": "Pass",
     "expected": 88,
-    "actual": 88.0
+    "actual": 88
   },
   {
     "test": "Flex slicer changes roster capacity",
     "status": "Pass",
     "expected": 8,
-    "actual": 8.0
+    "actual": 8
   },
   {
     "test": "Division filter excludes other-division hours",
@@ -442,6 +442,18 @@
     "status": "Pass",
     "expected": 46290,
     "actual": 46290
+  },
+  {
+    "test": "Last refresh includes seconds and UTC zone",
+    "status": "Pass",
+    "expected": "2026-10-01 12:00:00 UTC",
+    "actual": "2026-10-01 12:00:00 UTC"
+  },
+  {
+    "test": "Header shows the imported refresh timestamp",
+    "status": "Pass",
+    "expected": "2026-10-01 12:00:00 UTC",
+    "actual": "2026-10-01 12:00:00 UTC"
   },
   {
     "test": "Effort compares lifetime actuals with lifetime budget",
@@ -459,7 +471,7 @@
     "test": "Schedule reports days late",
     "status": "Pass",
     "expected": 1,
-    "actual": 1.0
+    "actual": 1
   },
   {
     "test": "Schedule tolerance turns red",
@@ -477,7 +489,7 @@
     "test": "First-time-right uses explicit false rework flags",
     "status": "Pass",
     "expected": 1,
-    "actual": 1.0
+    "actual": 1
   },
   {
     "test": "Partial error counts remain unknown",

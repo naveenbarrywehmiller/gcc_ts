@@ -3,9 +3,9 @@
   "name": "02_utilization_01",
   "position": {
     "x": 24,
-    "y": 18,
-    "width": 1360,
-    "height": 45,
+    "y": 16,
+    "width": 872,
+    "height": 76,
     "z": 1,
     "tabOrder": 1
   },
@@ -22,7 +22,7 @@
                     "value": "GCC | Utilization",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
-                      "fontSize": "28pt",
+                      "fontSize": "24pt",
                       "color": "#0F172A"
                     }
                   }

@@ -40,5 +40,5 @@ table Settings
 				let
 				    Valid=if FiscalStartMonth<1 or FiscalStartMonth>12 or Number.RoundDown(FiscalStartMonth)<>FiscalStartMonth or DailyHours<=0 or DailyHours>24 then error "Invalid capacity settings." else true
 				in if Valid then #table(type table [FiscalStartMonth=Int64.Type,DailyHours=number,DefectTarget=number,AsOfDate=date,RefreshUTC=text],
-				    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(RefreshClock),DateTimeZone.ToText(RefreshClock,"yyyy-MM-dd HH:mm 'UTC'")}}) else error "Invalid settings"
+				    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(RefreshClock),DateTimeZone.ToText(RefreshClock,"yyyy-MM-dd HH:mm:ss 'UTC'")}}) else error "Invalid settings"
 
