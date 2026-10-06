@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.15.0...v1.16.0) (2026-10-06)
+
+
+### Features
+
+* show server date and time in IST in logged-in headers ([1696ddc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/1696ddca0f51d90268f0154a8b578812125d6ec4))
+
 ## [1.15.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.14.0...v1.15.0) (2026-10-02)
 
 
