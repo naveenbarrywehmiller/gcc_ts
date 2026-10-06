@@ -8,7 +8,7 @@
             {
               "textRuns": [
                 {
-                  "value": "Team type comes from each employee\u2019s supporting category. Strength is the current roster; contributing employees have submitted or approved work in the selected period.",
+                  "value": "Team type comes from each employee’s supporting category. Strength is the current roster; contributing employees have submitted or approved work in the selected period.",
                   "textStyle": {
                     "fontFamily": "Segoe UI",
                     "fontSize": "10.5pt",
@@ -24,7 +24,7 @@
   },
   "position": {
     "x": 8,
-    "y": 740,
+    "y": 716,
     "width": 308,
     "height": 104,
     "z": 10,

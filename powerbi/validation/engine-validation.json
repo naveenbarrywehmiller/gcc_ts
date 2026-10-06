@@ -352,12 +352,12 @@
   {
     "measure": "Report Status",
     "status": "Evaluated",
-    "value": "2026-10-01 12:00:00 UTC"
+    "value": "2026-10-01 17:30:00 IST"
   },
   {
-    "measure": "Last Refresh UTC",
+    "measure": "Last Refresh IST",
     "status": "Evaluated",
-    "value": "2026-10-01 12:00:00 UTC"
+    "value": "2026-10-01 17:30:00 IST"
   },
   {
     "test": "Weekly counts not multiplied by days",
@@ -444,16 +444,16 @@
     "actual": 46290
   },
   {
-    "test": "Last refresh includes seconds and UTC zone",
+    "test": "Last refresh converts UTC to IST with seconds",
     "status": "Pass",
-    "expected": "2026-10-01 12:00:00 UTC",
-    "actual": "2026-10-01 12:00:00 UTC"
+    "expected": "2026-10-01 17:30:00 IST",
+    "actual": "2026-10-01 17:30:00 IST"
   },
   {
     "test": "Header shows the imported refresh timestamp",
     "status": "Pass",
-    "expected": "2026-10-01 12:00:00 UTC",
-    "actual": "2026-10-01 12:00:00 UTC"
+    "expected": "2026-10-01 17:30:00 IST",
+    "actual": "2026-10-01 17:30:00 IST"
   },
   {
     "test": "Effort compares lifetime actuals with lifetime budget",
@@ -508,5 +508,71 @@
     "status": "Pass",
     "expected": 1,
     "actual": 1
+  },
+  {
+    "test": "Before IST midnight: timestamp",
+    "status": "Pass",
+    "expected": "2026-10-01 23:59:59 IST",
+    "actual": "2026-10-01 23:59:59 IST"
+  },
+  {
+    "test": "Before IST midnight: reporting date",
+    "status": "Pass",
+    "expected": 46296,
+    "actual": 46296
+  },
+  {
+    "test": "At IST midnight: timestamp",
+    "status": "Pass",
+    "expected": "2026-10-02 00:00:00 IST",
+    "actual": "2026-10-02 00:00:00 IST"
+  },
+  {
+    "test": "At IST midnight: reporting date",
+    "status": "Pass",
+    "expected": 46297,
+    "actual": 46297
+  },
+  {
+    "test": "Forecast excludes the previous IST day",
+    "status": "Pass",
+    "expected": 0,
+    "actual": 0
+  },
+  {
+    "test": "IST Saturday while UTC is Friday: timestamp",
+    "status": "Pass",
+    "expected": "2026-10-03 00:00:00 IST",
+    "actual": "2026-10-03 00:00:00 IST"
+  },
+  {
+    "test": "IST Saturday while UTC is Friday: reporting date",
+    "status": "Pass",
+    "expected": 46298,
+    "actual": 46298
+  },
+  {
+    "test": "Completed Friday follows IST reporting date",
+    "status": "Pass",
+    "expected": 46297,
+    "actual": 46297
+  },
+  {
+    "test": "IST new year while UTC is December: timestamp",
+    "status": "Pass",
+    "expected": "2027-01-01 02:15:07 IST",
+    "actual": "2027-01-01 02:15:07 IST"
+  },
+  {
+    "test": "IST new year while UTC is December: reporting date",
+    "status": "Pass",
+    "expected": 46388,
+    "actual": 46388
+  },
+  {
+    "test": "Calendar bounds follow the IST year",
+    "status": "Pass",
+    "expected": 2028,
+    "actual": 2028
   }
 ]

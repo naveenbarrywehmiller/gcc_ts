@@ -68,7 +68,7 @@ table DimDate
 		mode: import
 		source =
 				let
-				    Today=Date.From(RefreshClock),
+				    Today=Date.From(DateTimeZone.RemoveZone(RefreshClock)),
 				    Dates=List.RemoveNulls(List.Combine({FactTimesheet[date],DimProject[startDate],DimProject[targetDate],DimProject[deliveredDate],FactStaffing[date],FactVacation[date],{Date.AddYears(Today,-1),Date.AddYears(Today,1)}})),
 				    Start=Date.StartOfYear(List.Min(Dates)), End=Date.EndOfYear(List.Max(Dates)),
 				    Source=Table.FromList(List.Dates(Start,Duration.Days(End-Start)+1,#duration(1,0,0,0)),Splitter.SplitByNothing(),{"Date"}),

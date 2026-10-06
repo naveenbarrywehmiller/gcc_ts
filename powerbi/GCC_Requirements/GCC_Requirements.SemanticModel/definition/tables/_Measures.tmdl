@@ -374,11 +374,11 @@ table _Measures
 		lineageTag: 50e5c8c0-a5e7-5f70-a972-857efd0e8a1d
 
 	/// Successful import timestamp for the page header. Never use NOW(), which changes without fetching data.
-	measure 'Report Status' = COALESCE([Last Refresh UTC], "Not refreshed yet")
+	measure 'Report Status' = COALESCE([Last Refresh IST], "Not refreshed yet")
 		displayFolder: 09 Metadata
 		lineageTag: 5b8e757b-f003-5d90-aabc-a5d1a17eb3b9
 
-	measure 'Last Refresh UTC' = SELECTEDVALUE(Settings[RefreshUTC])
+	measure 'Last Refresh IST' = SELECTEDVALUE(Settings[RefreshIST])
 		displayFolder: 09 Metadata
 		lineageTag: 8ee187a9-8ad9-557a-b306-b7a1860df90a
 

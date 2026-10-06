@@ -42,7 +42,7 @@ parameter('DailyHours', '8', 'Number', 'Standard Monday–Friday hours per emplo
 parameter('DefectTarget', '0', 'Number', 'Provisional target ratio; confirm with KPI owner. Red beyond target ± 0.05.')
 parameter('DeliverablesEndpoint', '\"\"', 'Text', 'Optional endpoint name within ApiPath, returning one unique deliverable record per ID. Empty until an approved source exists.')
 parameter('ImprovementsEndpoint', '\"\"', 'Text', 'Optional endpoint name within ApiPath, returning one unique improvement record per ID. Empty until an approved source exists.')
-expr('RefreshClock', 'DateTimeZone.FixedUtcNow()', 'One refresh-time UTC clock; dates and freshness use the same instant.')
+expr('RefreshClock', 'DateTimeZone.SwitchZone(DateTimeZone.FixedUtcNow(), 5, 30)', 'One refresh-time IST clock (UTC+05:30); dates and freshness use the same instant.')
 expr('fnApi', '''(endpoint as text) as list =>
 let
     Fetch = (page as number) as record =>
@@ -134,12 +134,12 @@ table('FactWeeklyDetails',weekly_cols,f'''let
 in Typed''','One employee/week/project/task/row-dimension record, using the latest daily copy. Counts attributed to Monday. Conflicting copies block quality totals.')
 api_table('FactVacation','planned-vacations',[('id','int64'),('userId','int64'),('date','dateTime')], 'Planned full-day absence, not approved or actual leave.',key='id')
 api_table('FactStaffing','staffing',[('id','int64'),('divisionId','int64'),('division','string'),('date','dateTime'),('openPositions','int64'),('newJoiners','int64')], 'One division/month. Open positions are a snapshot, new joiners a monthly flow. Blank differs from zero.',key='id')
-table('Settings',[('FiscalStartMonth','int64'),('DailyHours','double'),('DefectTarget','double'),('AsOfDate','dateTime'),('RefreshUTC','string')], '''let
+table('Settings',[('FiscalStartMonth','int64'),('DailyHours','double'),('DefectTarget','double'),('AsOfDate','dateTime'),('RefreshIST','string')], '''let
     Valid=if FiscalStartMonth<1 or FiscalStartMonth>12 or Number.RoundDown(FiscalStartMonth)<>FiscalStartMonth or DailyHours<=0 or DailyHours>24 then error "Invalid capacity settings." else true
-in if Valid then #table(type table [FiscalStartMonth=Int64.Type,DailyHours=number,DefectTarget=number,AsOfDate=date,RefreshUTC=text],
-    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(RefreshClock),DateTimeZone.ToText(RefreshClock,"yyyy-MM-dd HH:mm 'UTC'")}}) else error "Invalid settings"''')
+in if Valid then #table(type table [FiscalStartMonth=Int64.Type,DailyHours=number,DefectTarget=number,AsOfDate=date,RefreshIST=text],
+    {{FiscalStartMonth,DailyHours,DefectTarget,Date.From(DateTimeZone.RemoveZone(RefreshClock)),DateTimeZone.ToText(RefreshClock,"yyyy-MM-dd HH:mm:ss 'IST'")}}) else error "Invalid settings"''')
 table('DimDate',[('Date','dateTime'),('Year','int64'),('Month','string'),('MonthNumber','int64'),('YearMonth','string'),('WeekStart','dateTime'),('FiscalYear','string'),('IsWeekday','boolean'),('IsHoliday','boolean')],'''let
-    Today=Date.From(RefreshClock),
+    Today=Date.From(DateTimeZone.RemoveZone(RefreshClock)),
     Dates=List.RemoveNulls(List.Combine({FactTimesheet[date],DimProject[startDate],DimProject[targetDate],DimProject[deliveredDate],FactStaffing[date],FactVacation[date],{Date.AddYears(Today,-1),Date.AddYears(Today,1)}})),
     Start=Date.StartOfYear(List.Min(Dates)), End=Date.EndOfYear(List.Max(Dates)),
     Source=Table.FromList(List.Dates(Start,Duration.Days(End-Start)+1,#duration(1,0,0,0)),Splitter.SplitByNothing(),{"Date"}),
@@ -178,7 +178,7 @@ for optional_name, endpoint_parameter, key in [('FactDeliverable','DeliverablesE
 in Checked'''
 
 table('FactPlan',[('projectId','int64'),('date','dateTime'),('scheduledHours','double'),('remainingForecastHours','double')],'''let
-    Today=Date.From(RefreshClock),
+    Today=Date.From(DateTimeZone.RemoveZone(RefreshClock)),
     Actuals=Table.Group(Table.SelectRows(FactTimesheet,each List.Contains({"approved","submitted"},[status]) and [date]<Today),{"projectId"},{{"Actual",each List.Sum([hours]),type number}}),
     Joined=Table.NestedJoin(DimProject,{"id"},Actuals,{"projectId"},"Actuals",JoinKind.LeftOuter),
     Expanded=Table.ExpandTableColumn(Joined,"Actuals",{"Actual"}),
@@ -304,8 +304,8 @@ m('Remaining Forecast Hours',f'IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROS
 m('Team Forecast Hours','VAR A=[As Of Date] RETURN IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE([Actual Hours],KEEPFILTERS(DimDate[Date]<A))+[Remaining Forecast Hours])','03 Capacity',description='Past actuals plus future remaining budget. Past and future do not overlap.')
 m('Overdue Unscheduled Hours',f'VAR A=[As Of Date] RETURN CALCULATE(SUMX(FILTER(DimProject,DimProject[projectStatus]="Inprogress" && NOT ISBLANK(DimProject[targetDate]) && DimProject[targetDate]<A && NOT ISBLANK(DimProject[budgetHours])),MAX(0,DimProject[budgetHours]-CALCULATE([Actual Hours],REMOVEFILTERS(DimDate)))),{project_scope})','03 Capacity')
 m('Projects Missing Plan Inputs',f'CALCULATE(COUNTROWS(FILTER(DimProject,DimProject[projectStatus]="Inprogress" && (ISBLANK(DimProject[startDate]) || ISBLANK(DimProject[targetDate]) || ISBLANK(DimProject[budgetHours]) || DimProject[targetDate]<DimProject[startDate]))),{project_scope})','03 Capacity','#,##0')
-m('Report Status','IF(ISBLANK([Last Refresh UTC]),"API refresh required","Refreshed " & [Last Refresh UTC]) & " • see Input readiness for missing source contracts"','09 Metadata','')
-m('Last Refresh UTC','SELECTEDVALUE(Settings[RefreshUTC])','09 Metadata','')
+m('Report Status','IF(ISBLANK([Last Refresh IST]),"API refresh required","Refreshed " & [Last Refresh IST]) & " • see Input readiness for missing source contracts"','09 Metadata','')
+m('Last Refresh IST','SELECTEDVALUE(Settings[RefreshIST])','09 Metadata','')
 table('_Measures',[('Label','string')],'#table(type table [Label=text],{{"GCC requirements"}})')
 tables[-1]['columns'][0]['isHidden']=True
 tables[-1]['measures']=measures
@@ -410,7 +410,7 @@ cards(['Actual Hours','Approved Hours','Training Hours','Detail Conflicts'])
 grid('Timesheet detail',[C('FactTimesheet','id'),C('FactTimesheet','date'),C('DimEmployee','employeeName'),C('DimEmployee','department'),C('DimProject','projectCode'),C('DimTask','taskCategory'),C('FactTimesheet','status'),M('Raw Hours')],y=350,h=526)
 page('09_inputs','GCC | Input readiness','Definitions needing confirmation and missing source contracts are visible here. No production records or credentials are included in the saved project.',False)
 grid('Requirements coverage',[C('InputStatus','Requirement'),C('InputStatus','Status'),C('InputStatus','Definition')],y=140,h=584)
-grid('Refresh settings',[C('Settings','FiscalStartMonth'),C('Settings','DailyHours'),C('Settings','DefectTarget'),C('Settings','AsOfDate'),C('Settings','RefreshUTC')],y=744,h=132)
+grid('Refresh settings',[C('Settings','FiscalStartMonth'),C('Settings','DailyHours'),C('Settings','DefectTarget'),C('Settings','AsOfDate'),C('Settings','RefreshIST')],y=744,h=132)
 write(REPORT/'definition/pages/pages.json',{'$schema':SCHEMA+'pagesMetadata/1.0.0/schema.json','pageOrder':pages,'activePageName':pages[0]})
 (OUT/'.gitignore').write_text('.pbi/\n',encoding='utf-8')
 write(ROOT/'validation/build-summary.json',{'tables':len(tables),'measures':len(measures),'relationships':len(relationships),'pages':len(pages),'visuals':visual_count,'source':'PowerPi Requirments.xlsx / Sheet1','liveRefresh':'Not completed; URL and reporting credentials required.'})

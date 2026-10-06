@@ -5,55 +5,55 @@
       "name": "01_overview",
       "displayName": "GCC | Performance overview",
       "visuals": 14,
-      "height": 1964
+      "height": 1940
     },
     {
       "name": "02_utilization",
       "displayName": "GCC | Utilization",
       "visuals": 14,
-      "height": 1964
+      "height": 1940
     },
     {
       "name": "03_delivery",
       "displayName": "GCC | Delivery & quality",
       "visuals": 14,
-      "height": 1964
+      "height": 1940
     },
     {
       "name": "04_capacity",
       "displayName": "GCC | Capacity & forecast",
       "visuals": 14,
-      "height": 1788
+      "height": 1764
     },
     {
       "name": "05_teams",
       "displayName": "GCC | Dedicated & Flex teams",
       "visuals": 14,
-      "height": 1964
+      "height": 1940
     },
     {
       "name": "06_improvement",
       "displayName": "GCC | Continuous improvement",
       "visuals": 14,
-      "height": 1964
+      "height": 1940
     },
     {
       "name": "07_staffing",
       "displayName": "GCC | Staffing",
       "visuals": 14,
-      "height": 1964
+      "height": 1940
     },
     {
       "name": "08_detail",
       "displayName": "GCC | Timesheet & training detail",
       "visuals": 12,
-      "height": 1372
+      "height": 1348
     },
     {
       "name": "09_inputs",
       "displayName": "GCC | Input readiness",
       "visuals": 6,
-      "height": 1224
+      "height": 1200
     }
   ],
   "errors": [],

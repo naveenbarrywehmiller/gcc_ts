@@ -17,7 +17,7 @@ try {
     $taskConnection = New-Object Microsoft.AnalysisServices.AdomdClient.AdomdConnection("Data Source=localhost:$Port;Initial Catalog=$($taskCandidates[0].Name)")
     $taskConnection.Open()
     $taskCommand = $taskConnection.CreateCommand()
-    $taskCommand.CommandText = 'EVALUATE ROW("LastRefreshUTC",[Last Refresh UTC],"HeaderValue",[Report Status],"DailyRows",COUNTROWS(FactTimesheet),"RawHours",[Raw Hours],"ActualHours",[Actual Hours],"ApprovedHours",[Approved Hours])'
+    $taskCommand.CommandText = 'EVALUATE ROW("LastRefreshIST",[Last Refresh IST],"HeaderValue",[Report Status],"DailyRows",COUNTROWS(FactTimesheet),"RawHours",[Raw Hours],"ActualHours",[Actual Hours],"ApprovedHours",[Approved Hours])'
     $taskReader = $taskCommand.ExecuteReader()
     if (-not $taskReader.Read()) { throw 'No metadata row returned.' }
     $taskResult = [ordered]@{mode='Read-only aggregate query of the canonical open Desktop model'}

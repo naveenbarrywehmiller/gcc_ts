@@ -13,5 +13,8 @@
   "liveApiCheck": "Authorized read-only GETs passed on 2026-10-02; 4 daily entries, 32 approved hours.",
   "liveNativeCheck": "Authorized API snapshot processed in an isolated native model; 72 measures evaluated without errors. Canonical report cache not verified.",
   "liveRefresh": "Canonical Desktop import completed and project saved on 2026-10-05 local date; UTC header 2026-10-06 06:25:03 UTC, 10 daily rows, 72 raw hours, 32 actual/approved hours. No Power BI Service publication.",
-  "refreshMode": "Manual Desktop refresh via Home > Refresh > Data; automatic refresh not configured."
+  "refreshMode": "Manual Desktop refresh via Home > Refresh > Data; automatic refresh not configured.",
+  "reportingTimezone": "Indian Standard Time (IST), UTC+05:30; fixed for every viewer and refresh host.",
+  "timezoneValidation": "Isolated native fixture checks; canonical production IST refresh/native preview pending after user stopped Desktop automation.",
+  "refreshAppearance": "Small muted text, 9 pt label and 10 pt timestamp, transparent background, no border or shadow on all nine desktop and phone pages."
 }

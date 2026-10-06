@@ -8,7 +8,7 @@
             {
               "textRuns": [
                 {
-                  "value": "Open positions are the last selected month\u2019s snapshot. New joiners are summed across selected months. Missing division/month submissions remain blank.",
+                  "value": "Open positions are the last selected month’s snapshot. New joiners are summed across selected months. Missing division/month submissions remain blank.",
                   "textStyle": {
                     "fontFamily": "Segoe UI",
                     "fontSize": "10.5pt",
@@ -24,7 +24,7 @@
   },
   "position": {
     "x": 8,
-    "y": 740,
+    "y": 716,
     "width": 308,
     "height": 104,
     "z": 10,

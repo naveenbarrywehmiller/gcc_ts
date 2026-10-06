@@ -28,8 +28,8 @@ expression DefectTarget = 0 meta [IsParameterQuery=true, Type="Number", IsParame
 
 	annotation PBI_ResultType = Number
 
-/// One refresh-time UTC clock; dates and freshness use the same instant.
-expression RefreshClock = DateTimeZone.FixedUtcNow()
+/// One refresh-time IST clock (UTC+05:30); dates and freshness use the same instant for every viewer.
+expression RefreshClock = DateTimeZone.SwitchZone(DateTimeZone.FixedUtcNow(), 5, 30)
 	lineageTag: 9e8c599f-f860-4909-b608-d0b1c0fb4114
 
 expression fnApi =

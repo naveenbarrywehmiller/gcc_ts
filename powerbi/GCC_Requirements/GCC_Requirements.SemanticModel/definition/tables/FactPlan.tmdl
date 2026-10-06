@@ -33,7 +33,7 @@ table FactPlan
 		mode: import
 		source =
 				let
-				    Today=Date.From(RefreshClock),
+				    Today=Date.From(DateTimeZone.RemoveZone(RefreshClock)),
 				    Actuals=Table.Group(Table.SelectRows(FactTimesheet,each List.Contains({"approved","submitted"},[status]) and [date]<Today),{"projectId"},{{"Actual",each List.Sum([hours]),type number}}),
 				    Joined=Table.NestedJoin(DimProject,{"id"},Actuals,{"projectId"},"Actuals",JoinKind.LeftOuter),
 				    Expanded=Table.ExpandTableColumn(Joined,"Actuals",{"Actual"}),

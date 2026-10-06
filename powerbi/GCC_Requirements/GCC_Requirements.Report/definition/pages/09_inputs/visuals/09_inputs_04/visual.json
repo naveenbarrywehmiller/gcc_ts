@@ -79,11 +79,11 @@
                       "Entity": "Settings"
                     }
                   },
-                  "Property": "RefreshUTC"
+                  "Property": "RefreshIST"
                 }
               },
-              "queryRef": "Settings.RefreshUTC",
-              "nativeQueryRef": "RefreshUTC"
+              "queryRef": "Settings.RefreshIST",
+              "nativeQueryRef": "RefreshIST"
             }
           ]
         }

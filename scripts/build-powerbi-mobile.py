@@ -45,11 +45,19 @@ def formatting(visual):
     state['visualContainerObjects'] = {'title': obj(fontSize=number(11), titleWrap=expr('true'))}
     if kind == 'card':
         clock = name.endswith('_refresh_time')
-        state['objects'] = {'labels': obj(fontSize=number(13 if clock else 22)),
+        state['objects'] = {'labels': obj(fontSize=number(10 if clock else 22)),
                             'categoryLabels': obj(show=expr('false'))}
         # Longer KPI names wrap instead of being shortened or losing their meaning.
-        state['visualContainerObjects']['title'] = obj(fontSize=number(10 if not clock else 11),
+        state['visualContainerObjects']['title'] = obj(fontSize=number(10 if not clock else 9),
                                                        titleWrap=expr('true'))
+        if clock:
+            color = {'solid': {'color': expr("'#64748B'")}}
+            state['objects']['labels'][0]['properties']['color'] = copy.deepcopy(color)
+            state['visualContainerObjects']['title'][0]['properties']['fontColor'] = color
+            state['visualContainerObjects'].update({
+                'background': obj(show=expr('false'), transparency=number(100)),
+                'border': obj(show=expr('false')), 'dropShadow': obj(show=expr('false')),
+            })
     elif kind == 'slicer':
         state['objects'] = {'items': obj(fontSize=number(12)), 'header': obj(show=expr('false'))}
     elif kind in ('clusteredColumnChart', 'lineChart'):
@@ -104,7 +112,7 @@ def build_page(page_name):
         return next(v for v in visuals if v['name'] == page_name + suffix)
 
     place(named('_01'), 64)
-    place(named('_refresh_time'), 76)
+    place(named('_refresh_time'), 52)
     for v in visuals:
         if v['visual']['visualType'] == 'slicer':
             place(v, 104)

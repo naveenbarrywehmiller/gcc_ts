@@ -165,14 +165,14 @@
           }
         },
         "selector": {
-          "metadata": "Settings.RefreshUTC"
+          "metadata": "Settings.RefreshIST"
         }
       }
     ]
   },
   "position": {
     "x": 8,
-    "y": 1036,
+    "y": 1012,
     "width": 308,
     "height": 180,
     "z": 6,

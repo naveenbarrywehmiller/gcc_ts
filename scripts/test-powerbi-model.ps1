@@ -17,7 +17,10 @@ $taskDb.Name = 'GCC requirements isolated validation'
 $taskDb.ID = 'gcc_requirements_validation_' + [Guid]::NewGuid().ToString('N')
 $taskBytes = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($taskFixture))
 $taskDb.Model.Expressions['fnApi'].Expression = '(endpoint as text) as list => Record.Field(Json.Document(Binary.FromText("' + $taskBytes + '", BinaryEncoding.Base64)), endpoint)'
-$taskDb.Model.Expressions['RefreshClock'].Expression = '#datetimezone(2026,10,1,12,0,0,0,0)'
+# Substitute only the current-time input; exercise the production IST conversion.
+$taskClockExpression = $taskDb.Model.Expressions['RefreshClock'].Expression
+if (-not $taskClockExpression.Contains('DateTimeZone.FixedUtcNow()')) { throw 'Expected the production UTC clock input.' }
+$taskDb.Model.Expressions['RefreshClock'].Expression = $taskClockExpression.Replace('DateTimeZone.FixedUtcNow()', '#datetimezone(2026,10,1,12,0,0,0,0)')
 $taskServer = New-Object Microsoft.AnalysisServices.Tabular.Server
 $taskServer.Connect("localhost:$Port")
 $taskResults = [Collections.Generic.List[object]]::new()
@@ -62,8 +65,8 @@ try {
         @{name='Flex slicer changes roster capacity';dax='CALCULATE([Available Hours],DimDate[Date]=DATE(2026,10,2),DimEmployee[supportingCategory]="Flex Team")';expected=8},
         @{name='Division filter excludes other-division hours';dax='CALCULATE([Actual Hours],DimDivision[divisionName]="South")';expected=$null},
         @{name='Strictly previous completed Friday';dax='INT([Last Completed Friday])';expected=46290},
-        @{name='Last refresh includes seconds and UTC zone';dax='[Last Refresh UTC]';expected='2026-10-01 12:00:00 UTC'},
-        @{name='Header shows the imported refresh timestamp';dax='[Report Status]';expected='2026-10-01 12:00:00 UTC'}
+        @{name='Last refresh converts UTC to IST with seconds';dax='[Last Refresh IST]';expected='2026-10-01 17:30:00 IST'},
+        @{name='Header shows the imported refresh timestamp';dax='[Report Status]';expected='2026-10-01 17:30:00 IST'}
     )
     foreach($taskCase in $taskCases) {
         $taskCommand=$taskConnection.CreateCommand()
@@ -108,11 +111,47 @@ try {
             $taskResults.Add([pscustomobject]@{test=$taskCase.name;status=if(Test-TaskValue $taskValue $taskCase.expected){'Pass'}else{'Fail'};expected=$taskCase.expected;actual=$taskValue})
         } catch {$taskResults.Add([pscustomobject]@{test=$taskCase.name;status='Error';error=$_.Exception.Message})}
     }
+    # Refresh only the isolated fixture database across IST date boundaries.
+    $taskZoneCaseCount = 0
+    $taskZoneScenarios = @(
+        @{name='Before IST midnight';clock='#datetimezone(2026,10,1,18,29,59,0,0)';stamp='2026-10-01 23:59:59 IST';date=[datetime]::new(2026,10,1)},
+        @{name='At IST midnight';clock='#datetimezone(2026,10,1,18,30,0,0,0)';stamp='2026-10-02 00:00:00 IST';date=[datetime]::new(2026,10,2)},
+        @{name='IST Saturday while UTC is Friday';clock='#datetimezone(2026,10,2,18,30,0,0,0)';stamp='2026-10-03 00:00:00 IST';date=[datetime]::new(2026,10,3)},
+        @{name='IST new year while UTC is December';clock='#datetimezone(2026,12,31,20,45,7,0,0)';stamp='2027-01-01 02:15:07 IST';date=[datetime]::new(2027,1,1)}
+    )
+    foreach ($taskZoneScenario in $taskZoneScenarios) {
+        $taskDb.Model.Expressions['RefreshClock'].Expression = $taskClockExpression.Replace('DateTimeZone.FixedUtcNow()', $taskZoneScenario.clock)
+        $taskDb.Model.RequestRefresh([Microsoft.AnalysisServices.Tabular.RefreshType]::Full)
+        $taskDb.Model.SaveChanges() | Out-Null
+        $taskZoneCases = @(
+            @{name=($taskZoneScenario.name + ': timestamp');dax='[Report Status]';expected=$taskZoneScenario.stamp},
+            @{name=($taskZoneScenario.name + ': reporting date');dax='INT([As Of Date])';expected=$taskZoneScenario.date.ToOADate()}
+        )
+        if ($taskZoneScenario.name -eq 'At IST midnight') {
+            $taskZoneCases += @{name='Forecast excludes the previous IST day';dax='COALESCE(COUNTROWS(FILTER(FactPlan, FactPlan[date] < [As Of Date] && FactPlan[remainingForecastHours] > 0)),0)';expected=0}
+        }
+        if ($taskZoneScenario.name -eq 'IST Saturday while UTC is Friday') {
+            $taskZoneCases += @{name='Completed Friday follows IST reporting date';dax='INT([Last Completed Friday])';expected=([datetime]::new(2026,10,2).ToOADate())}
+        }
+        if ($taskZoneScenario.name -eq 'IST new year while UTC is December') {
+            $taskZoneCases += @{name='Calendar bounds follow the IST year';dax='YEAR(MAX(DimDate[Date]))';expected=2028}
+        }
+        foreach ($taskCase in $taskZoneCases) {
+            $taskZoneCaseCount++
+            $taskCommand = $taskConnection.CreateCommand()
+            $taskCommand.CommandText = 'EVALUATE ROW("Value", ' + $taskCase.dax + ')'
+            try {
+                $taskValue = Read-TaskValue $taskCommand
+                if ($taskValue -is [DBNull]) { $taskValue = $null }
+                $taskResults.Add([pscustomobject]@{test=$taskCase.name;status=if(Test-TaskValue $taskValue $taskCase.expected){'Pass'}else{'Fail'};expected=$taskCase.expected;actual=$taskValue})
+            } catch { $taskResults.Add([pscustomobject]@{test=$taskCase.name;status='Error';error=$_.Exception.Message}) }
+        }
+    }
     $taskConnection.Close()
     $taskValidationJson = $taskResults | ConvertTo-Json -Depth 8
     [IO.File]::WriteAllText((Join-Path $taskRoot 'powerbi/validation/engine-validation.json'), $taskValidationJson, [Text.UTF8Encoding]::new($false))
     $taskResults | Where-Object { $_.status -in 'Fail','Error' } | ConvertTo-Json -Depth 8
-    Write-Output ("Native engine: {0} measures evaluated; {1} cases checked; {2} failures" -f $taskDb.Model.Tables['_Measures'].Measures.Count,($taskCases.Count+$taskExtraCases.Count),@($taskResults | Where-Object {$_.status -in 'Fail','Error'}).Count)
+    Write-Output ("Native engine: {0} measures evaluated; {1} cases checked; {2} failures" -f $taskDb.Model.Tables['_Measures'].Measures.Count,($taskCases.Count+$taskExtraCases.Count+$taskZoneCaseCount),@($taskResults | Where-Object {$_.status -in 'Fail','Error'}).Count)
     if(@($taskResults | Where-Object {$_.status -in 'Fail','Error'}).Count){throw 'Native validation failed.'}
 } finally {
     # This database was created above with a random task-specific ID. Never touch the report database.

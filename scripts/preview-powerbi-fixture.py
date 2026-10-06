@@ -12,7 +12,7 @@ shutil.copytree(root/'powerbi/GCC_Requirements',target,dirs_exist_ok=True,ignore
 fixture=base64.b64encode((root/'scripts/powerbi-fixture.json').read_bytes()).decode()
 replacements={
     'fnApi':'(endpoint as text) as list => Record.Field(Json.Document(Binary.FromText("'+fixture+'",BinaryEncoding.Base64)),endpoint)',
-    'RefreshClock':'#datetimezone(2026,10,1,12,0,0,0,0)',
+    'RefreshClock':'DateTimeZone.SwitchZone(#datetimezone(2026,10,1,12,0,0,0,0), 5, 30)',
 }
 tmdl=target/'GCC_Requirements.SemanticModel/definition/expressions.tmdl'
 if tmdl.exists():
