@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.16.0...v1.16.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* display header clock in 12-hour format with AM/PM ([795354d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/795354dcc36bbc3dfab9eca02c733cd9eb1e4486))
+
 ## [1.16.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.15.0...v1.16.0) (2026-10-06)
 
 
