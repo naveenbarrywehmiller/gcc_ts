@@ -4,6 +4,8 @@ Employee time tracking, team approvals, administration, and reporting in one app
 
 [Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
+**Releases:** [Application v1.17.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.17.0) · [Power BI v1.1.2](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v1.1.2) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v1.1.2/gcc-requirements-powerbi-v1.1.2.zip))
+
 **Frontend development:** All UI changes must follow the permanent [Responsive Web Design Rules](RESPONSIVE_WEB_DESIGN_RULES.md). The [responsive audit](docs/RESPONSIVE_AUDIT.md) records the current implementation and validation baseline.
 
 ## Features
