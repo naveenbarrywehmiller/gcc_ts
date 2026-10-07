@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.16.2...v1.17.0) (2026-10-07)
+
+
+### Features
+
+* improve responsive layouts and document standards ([fd77c82](https://github.com/naveenbarrywehmiller/gcc_ts/commit/fd77c82087c7b6bd1c5014f30793889d2f1fbc89))
+* **powerbi:** improve management overview and DAX measures ([68dc2b3](https://github.com/naveenbarrywehmiller/gcc_ts/commit/68dc2b3900340d806afce48ea7d0ed05c0b0c955))
+
 ## [1.16.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.16.1...v1.16.2) (2026-10-07)
 
 
