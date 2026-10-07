@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.16.1...v1.16.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* remove legacy data import and improve dark mode form readability ([cc5c8e1](https://github.com/naveenbarrywehmiller/gcc_ts/commit/cc5c8e18176e4c9048180d8372085ec560cc212b))
+
 ## [1.16.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.16.0...v1.16.1) (2026-10-07)
 
 
