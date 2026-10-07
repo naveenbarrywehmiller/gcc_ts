@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import FieldHelp from '../../components/ui/FieldHelp';
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -43,7 +42,6 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">{title}<FieldHelp label={itemLabel} /></h1>
-        {endpoint === "/divisions" && <Link className="btn-secondary btn-sm" to="/admin/import?type=divisions">Import Excel</Link>}
         <button onClick={() => { setEditing(null); setName(''); setShowModal(true); }} className="btn-primary btn-sm">
           <Plus className="w-4 h-4" /> Add {itemLabel}
         </button>

@@ -22,7 +22,6 @@ import AdminDepartments from './pages/admin/AdminDepartments';
 import AdminSubdivisions from './pages/admin/Subdivisions';
 import AdminHolidays from './pages/admin/Holidays';
 import AdminApprovals from './pages/admin/Approvals';
-import AdminImport from './pages/admin/Import';
 import AdminAuditLog from './pages/admin/AuditLog';
 import SystemMaintenance from './pages/admin/SystemMaintenance';
 
@@ -73,7 +72,6 @@ function AppRoutes() {
         <Route path="/admin/activities" element={<AdminRoute><AdminActivities /></AdminRoute>} />
         <Route path="/admin/holidays" element={<AdminRoute><AdminHolidays /></AdminRoute>} />
         <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
-        <Route path="/admin/import" element={<AdminRoute><AdminImport /></AdminRoute>} />
         <Route path="/admin/audit" element={<AdminRoute><AdminAuditLog /></AdminRoute>} />
         
         <Route path="/admin/travel" element={<AdminRoute><DivisionUpdates kind="travel" /></AdminRoute>} />

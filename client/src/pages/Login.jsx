@@ -72,7 +72,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-600 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
                 autoComplete="email"
                 autoFocus
               />
@@ -87,7 +87,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 pr-10 text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-600 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                  className="w-full px-3.5 py-2.5 pr-10 text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
                   autoComplete="current-password"
                 />
                 <button

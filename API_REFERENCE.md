@@ -289,9 +289,9 @@ GET /api/audit?page=1&limit=50
 ```
 * **Auth**: Admin
 
-#### Import Master Data (CSV)
+#### Import Projects (XLSX/CSV)
 ```http
-POST /api/import
+POST /api/import/projects
 Content-Type: multipart/form-data
 ```
 * **Auth**: Admin

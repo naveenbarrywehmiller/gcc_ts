@@ -1,5 +1,4 @@
 import FieldHelp from '../../components/ui/FieldHelp';
-import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -49,7 +48,6 @@ export default function AdminTasks() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">Task Name/Number</h1>
-        <Link className="btn-secondary btn-sm" to="/admin/import?type=tasks">Import Excel</Link>
         <button onClick={openCreate} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Task</button>
       </div>
       <div className="relative max-w-sm">

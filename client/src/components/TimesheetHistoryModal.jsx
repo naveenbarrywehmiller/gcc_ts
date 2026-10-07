@@ -97,7 +97,7 @@ function TimesheetHistoryContent({
         <div className="space-y-4">
           {/* Controls bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-surface-200 dark:border-surface-700">
-            <div className="text-xs text-surface-500 font-medium flex items-center gap-2">
+            <div className="text-xs text-surface-500 dark:text-surface-300 font-medium flex items-center gap-2">
               <span>
                 Showing {entries.length} {entries.length === 1 ? 'entry' : 'entries'} across all weeks
               </span>
@@ -115,14 +115,14 @@ function TimesheetHistoryContent({
               {/* If not locked to a specific single user, allow picking an employee */}
               {!initialUser && (
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-surface-600 dark:text-surface-400">Employee:</label>
+                  <label htmlFor="history-modal-user-select" className="text-xs font-medium text-surface-600 dark:text-surface-300">Employee:</label>
                   <select
                     value={selectedUser}
                     onChange={(e) => {
                       setSelectedUser(e.target.value);
                       fetchEntries(e.target.value, selectedStatus);
                     }}
-                    className="select select-sm text-xs py-1 px-2.5 h-8 rounded-lg"
+                    className="input-sm w-auto max-w-full h-8"
                     id="history-modal-user-select"
                   >
                     <option value="">All My Assigned Users</option>
@@ -137,14 +137,14 @@ function TimesheetHistoryContent({
 
               {/* Status filter */}
               <div className="flex items-center gap-2">
-                <label className="text-xs font-medium text-surface-600 dark:text-surface-400">Status:</label>
+                <label htmlFor="history-modal-status-select" className="text-xs font-medium text-surface-600 dark:text-surface-300">Status:</label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => {
                     setSelectedStatus(e.target.value);
                     fetchEntries(selectedUser, e.target.value);
                   }}
-                  className="select select-sm text-xs py-1 px-2.5 h-8 rounded-lg"
+                  className="input-sm w-auto max-w-full h-8"
                   id="history-modal-status-select"
                 >
                   <option value="">All Statuses</option>

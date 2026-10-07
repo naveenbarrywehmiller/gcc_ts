@@ -161,7 +161,7 @@ approved / submitted → recalled → (re-edit) → submitted
 - `GET/POST/PUT/DELETE /api/divisions`
 - `GET/POST/PUT/DELETE /api/activities`
 - `GET/POST/PUT/DELETE /api/holidays`
-- `POST /api/import/{projects,users,tasks,divisions}` — Excel import
+- `POST /api/import/projects` — Project Excel/CSV import
 - `GET /api/audit` — Audit log retrieval
 - `GET /api/health` — Health check
 

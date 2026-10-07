@@ -125,26 +125,10 @@ test('user management checks both the original and destination division on every
   for (const [division, status] of [[a, 201], [b, 403]]) {
     assert.equal((await request(admin, '/users', { name: 'New Employee', email: `new-${division}@test.invalid`, password: 'password123', division_id: division }, 'POST')).status, status);
   }
-  const form = new FormData();
-  form.append('file', new Blob(['Name,Email,Role,Division\nForeign Import,foreign-import@test.invalid,employee,Audit B']), 'users.csv');
-  assert.equal((await request(admin, '/import/users', form, 'POST')).body.imported, 0);
   assert.equal(db.prepare('SELECT active FROM users WHERE id = ?').get(foreign).active, 1);
 });
 
-test('user import links master IDs and rejects unknown sidebar values and unauthorized roles', async () => {
-  const team = db.prepare("SELECT id FROM supporting_categories WHERE name = 'Dedicated Team'").get().id;
-  const upload = (actor, text) => {
-    const body = new FormData(); body.append('file', new Blob([text]), 'users.csv');
-    return request(actor, '/import/users', body, 'POST');
-  };
-  const result = await upload(system, 'Name,Email,Role,Division,Team Type\nImported,imported@test.invalid,admin, audit a , dedicated team \nUnknown,unknown@test.invalid,employee,Missing,');
-  assert.equal(result.status, 200); assert.equal(result.body.imported, 1); assert.equal(result.body.skipped, 1);
-  const imported = db.prepare("SELECT * FROM users WHERE email = 'imported@test.invalid'").get();
-  assert.equal(imported.division_id, a); assert.equal(imported.division, 'Audit A');
-  assert.equal(imported.supporting_category_id, team);
-  assert.deepEqual((await request(imported.id, '/projects/options')).body.divisions.map(d => d.id), [a]);
-  const denied = await upload(admin, 'Name,Email,Role,Division\nEscalate,import-escalate@test.invalid,admin,Audit B');
-  assert.equal(denied.body.imported, 0);
+test('user updates reject unknown divisions and link valid master IDs', async () => {
   assert.equal((await request(system, `/users/${employee}`, { division_id: 999999 }, 'PUT')).status, 400);
   assert.equal((await request(system, `/users/${employee}`, { division: 'Audit B' }, 'PUT')).status, 200);
   assert.equal(db.prepare('SELECT division_id FROM users WHERE id = ?').get(employee).division_id, b);

@@ -77,7 +77,7 @@ department_ownerships — id, department_id(FK), label, active
 | `/api/holidays` | Auth/Admin | Holiday calendar |
 | `/api/timesheets` | Auth/Admin | Full workflow: upsert, batch, submit, approve, reject, recall |
 | `/api/reports` | Auth/Admin | Dashboard, utilization, project-hours, export (Excel/PDF/JSON) |
-| `/api/import` | Admin | Excel bulk import for projects/users/tasks/divisions |
+| `/api/import/projects` | Admin | Excel/CSV bulk import for projects |
 | `/api/audit` | Admin | Audit log retrieval |
 
 ---

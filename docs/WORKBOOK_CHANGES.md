@@ -14,7 +14,7 @@ Source: `Changes Needed.xlsx`, sheets `Timesheet Web Input` and `Timesheet Web T
 - Timesheet normal inputs: Fundamental Error count, Review by (text), Review date. The other 22 fields are inside Additional Details and remain optional. Count fields are nonnegative integers; query status is free text because choices were not supplied.
 - Details belong to a weekly project/task row in the UI and are saved on each of its populated daily entries. One improvement/query record per row. Details follow the existing timesheet edit/approval rules and persist with hours. A row with no hours is not stored, matching the existing timesheet model.
 - Travel & VISA and staffing are separate screens backed by one record per division/month. Saving one screen preserves the other's fields. Earlier months remain selectable. Staffing distinguishes blank from zero.
-- The standalone Import menu is removed. Users, Task Name/Number, and Division have Import Excel links to retain existing non-project imports.
+- The standalone Import Data page and its Users, Task Name/Number, and Division import links and handlers are removed. Project import remains available on the Projects page.
 - New fields use the supplied help text, accessible by hover or keyboard focus. Tooltip-only modules (Platform, Deliverables, M1/M2/M3 categories, Training database, Executive/Dedicated/Flex summaries, Miscellaneous) are not new features in this change.
 
 ## Reporting and integrations

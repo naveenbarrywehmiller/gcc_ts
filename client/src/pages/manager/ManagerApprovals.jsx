@@ -105,7 +105,7 @@ export default function ManagerApprovals() {
               placeholder="Search team members..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-surface-800 border border-surface-700 rounded-xl text-sm text-white placeholder:text-surface-500 focus:ring-2 focus:ring-brand-500/40"
+              className="w-full pl-9 pr-4 py-2 bg-surface-800 border border-surface-700 rounded-xl text-sm text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40"
             />
           </div>
           <div className="flex items-center gap-2 text-sm text-surface-400">

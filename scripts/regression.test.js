@@ -58,15 +58,14 @@ test('bootstrap is explicit and does not recreate renamed accounts', () => {
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'system admin'").get().n, 1);
 });
 
-test('admin cannot assign system admin through update, creation, or CSV import', async () => {
+test('admin cannot assign system admin through update or creation, and removed imports are unavailable', async () => {
   assert.equal((await request(admin, `/users/${admin}`, { role: 'system admin' }, 'PUT')).status, 403);
   assert.equal((await request(admin, '/users', { name: 'Escalated', email: 'escalated@test.invalid', password: 'long-password', role: 'system admin' })).status, 403);
-  const form = new FormData();
-  form.append('file', new Blob(['Name,Email,Role\nEscalated,imported@test.invalid,system admin']), 'roles.csv');
-  const imported = await request(admin, '/import/users', form);
-  assert.equal(imported.status, 200);
-  assert.equal(imported.body.imported, 0);
-  assert.equal(imported.body.skipped, 1);
+  for (const type of ['users', 'tasks', 'divisions']) {
+    const form = new FormData();
+    form.append('file', new Blob(['Name,Email,Role\nEscalated,imported@test.invalid,system admin']), 'data.csv');
+    assert.equal((await request(systemAdmin, `/import/${type}`, form)).status, 404);
+  }
   assert.equal((await request(admin, '/system/maintenance', undefined, 'GET')).status, 403);
   assert.equal((await request(systemAdmin, `/users/${admin}`, { role: 'admin' }, 'PUT')).status, 200);
 });

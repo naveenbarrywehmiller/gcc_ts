@@ -1,5 +1,4 @@
 import FieldHelp from '../../components/ui/FieldHelp';
-import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
@@ -292,7 +291,6 @@ export default function AdminUsers() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-surface-900 dark:text-white">Users</h1>
-        <Link className="btn-secondary btn-sm" to="/admin/import?type=users">Import Excel</Link>
           <p className="text-xs text-surface-500 mt-1">
             {activeCount} Active • {inactiveCount} Inactive
           </p>

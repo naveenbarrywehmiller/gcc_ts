@@ -63,7 +63,7 @@ export default function SearchableSelect({
           id={id}
           className={`input text-left flex items-center justify-between gap-2 ${error ? 'border-red-500 dark:border-red-400' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
         >
-          <span className={displayValue ? '' : 'text-surface-400 dark:text-surface-500'}>
+          <span className={displayValue ? '' : 'text-surface-500 dark:text-surface-300'}>
             {displayValue || placeholder}
           </span>
           <div className="flex items-center gap-1 shrink-0">
@@ -88,7 +88,7 @@ export default function SearchableSelect({
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-50 dark:bg-surface-800 rounded-md border-0 focus:ring-1 focus:ring-brand-500 text-surface-900 dark:text-surface-100 placeholder:text-surface-400"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-50 dark:bg-surface-800 rounded-md border-0 focus:ring-1 focus:ring-brand-500 text-surface-900 dark:text-surface-100 placeholder:text-surface-600 dark:placeholder:text-surface-300"
                   />
                 </div>
               </div>
