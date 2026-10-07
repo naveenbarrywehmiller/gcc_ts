@@ -103,3 +103,7 @@ Fifteen additional administration and manager routes rendered without document w
 - Vite still reports a JavaScript chunk above 500kB. Bundle splitting remains separate from the layout changes.
 
 The existing Power BI working tree changes were left untouched.
+
+## Help page follow-up (October 7, 2026)
+
+The new Help page uses the existing centered content container and sidebar drawer. Its guide cards form one column on small screens and two columns from the laptop breakpoint. Browser checks covered employee and system admin content at all 27 portrait, landscape, laptop, desktop, and ultrawide viewports listed above. Manager and admin content was checked at 390×844, 768×1024, and 1366×768. All 60 role-and-viewport checks passed without document horizontal overflow, and the mobile Help navigation link opened and closed the drawer correctly. Browser data was provided by read only API fixtures; the authenticated `/api/help` endpoint was tested separately for all four roles.

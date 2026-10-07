@@ -74,6 +74,7 @@ app.use('/api/departments', require('./routes/departments'));
 app.use('/api/department-ownerships', require('./routes/department-ownerships'));
 app.use('/api/supporting-categories', require('./routes/supporting-categories'));
 app.use('/api/activities', require('./routes/activities'));
+app.use('/api/help', require('./routes/help'));
 app.use('/api/holidays', require('./routes/holidays'));
 app.use('/api/timesheets', require('./routes/timesheets'));
 app.use('/api/planned-vacations', require('./routes/planned-vacations'));

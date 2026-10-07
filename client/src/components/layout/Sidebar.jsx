@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/auth';
 import {
   LayoutDashboard, Clock, Users, FolderKanban, ListTodo, Building2,
   Activity, Calendar, ClipboardCheck, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Timer, Shield, X
+  ChevronLeft, ChevronRight, Timer, Shield, X, CircleHelp
 } from 'lucide-react';
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
@@ -44,6 +44,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/timesheet', icon: Clock, label: 'Timesheet' },
     { to: '/planned-vacation', icon: Calendar, label: 'Planned Vacation' },
+    { to: '/help', icon: CircleHelp, label: 'Help' },
   ];
 
   const adminItems = [
