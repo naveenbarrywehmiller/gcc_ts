@@ -1,8 +1,22 @@
 # GCC requirements Power BI project
 
+**[User guide: change source URL, password, refresh and report settings](../POWERBI_USER_GUIDE.md)** provides step-by-step maintenance instructions.
+
 Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. The saved project contains **16 tables, 72 DAX measures, 18 relationships, nine report pages and 116 visual containers**. Its semantic model is TMDL in `GCC_Requirements.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
 
 **[Complete Power BI guide — POWERBI.md](../POWERBI.md)** includes every DAX formula, all 11 shared Power Query expressions, all 16 table queries, the full column/relationship dictionary, every visual and its field bindings, phone geometry, connection instructions, troubleshooting and missing inputs.
+
+## Management overview design — 1.1.1 (2026-10-06)
+
+The report opens on **GCC | Management overview**. Compact filters lead into four prominent KPI cards, followed by input guidance, monthly actual/training hours, a descending horizontal comparison of actual hours by division, and a division table that includes on-time delivery. Training is a subset of actual hours; the monthly chart follows the selected period. The footer retains manual refresh guidance and the header retains the IST timestamp. Blank KPIs are not presented as zero or assigned an invented target/status. All existing measure calculations are retained.
+
+The overview includes descriptive alt text, reading-order keyboard navigation and a shorter phone layout. The other eight analytical pages remain available for investigation. Local schema, field-binding and layout checks cover the saved project; runtime/data validation is separate from those static checks.
+
+The redesigned overview opened successfully in Desktop using its cached data. Final text-box spacing changes were saved after Windows locked; their native visual review and the phone visual review remain pending. Reopen the project to load the latest file changes. See [management overview validation](../validation/management-overview-validation.json) for the exact check scope.
+
+## DAX optimization — 1.1.2
+
+The saved model includes six tested DAX variable refactors (1.1.2, 2026-10-06). See the [DAX optimization review](../documentation/DAX_OPTIMIZATION_REVIEW.md) for formulas, comparison tests, synthetic benchmark scope and the current report-schema validation limitation. Reopen this project to load the saved formula changes into Desktop.
 
 ## Phone layouts
 

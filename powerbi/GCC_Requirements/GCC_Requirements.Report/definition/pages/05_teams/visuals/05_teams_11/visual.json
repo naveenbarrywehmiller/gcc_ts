@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "05_teams_11",
   "position": {
     "x": 728,
     "y": 474,
-    "z": 11,
+    "z": 10000,
     "height": 244,
     "width": 688,
-    "tabOrder": 11
+    "tabOrder": 10000
   },
   "visual": {
     "visualType": "lineChart",

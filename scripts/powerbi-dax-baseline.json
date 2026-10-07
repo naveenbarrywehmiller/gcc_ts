@@ -1,0 +1,8 @@
+{
+  "Available Hours": "IF(NOT ISBLANK([Roster Capacity Hours]),MAX(0,[Roster Capacity Hours]-COALESCE([Capacity Vacation Hours],0)))",
+  "Under Utilized %": "IF(NOT ISBLANK([Monthly Utilization %]),1-[Monthly Utilization %])",
+  "Effort Deviation %": "IF(NOT ISBLANK([Delivered Project Budget Hours]) && NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),DIVIDE([Delivered Project Actual Hours]-[Delivered Project Budget Hours],[Delivered Project Budget Hours]))",
+  "Effort Alert Color": "IF(ISBLANK([Effort Deviation %]),\"#64748B\",IF(ABS([Effort Deviation %])>0.05,\"#DC2626\",\"#0F766E\"))",
+  "Schedule Alert Color": "IF(ISBLANK([Schedule Deviation %]),\"#64748B\",IF(ABS([Schedule Deviation %])>0.03,\"#DC2626\",\"#0F766E\"))",
+  "Defect Alert Color": "IF(ISBLANK([Defect Density %]),\"#64748B\",IF(ABS([Defect Density %]-SELECTEDVALUE(Settings[DefectTarget],0))>0.05,\"#DC2626\",\"#0F766E\"))"
+}

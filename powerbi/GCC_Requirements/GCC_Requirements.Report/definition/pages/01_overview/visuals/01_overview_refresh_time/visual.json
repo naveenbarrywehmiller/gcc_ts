@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "01_overview_refresh_time",
   "position": {
     "x": 936,
     "y": 16,
-    "z": 30,
+    "z": 12000,
     "height": 52,
     "width": 480,
-    "tabOrder": 30
+    "tabOrder": 1000
   },
   "visual": {
     "visualType": "card",
@@ -107,6 +107,13 @@
                   }
                 }
               }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }
@@ -151,6 +158,19 @@
               "expr": {
                 "Literal": {
                   "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Last data refresh in Indian Standard Time. This report uses a saved snapshot.'"
                 }
               }
             }

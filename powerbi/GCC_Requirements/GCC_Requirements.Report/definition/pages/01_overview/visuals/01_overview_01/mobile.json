@@ -8,7 +8,7 @@
             {
               "textRuns": [
                 {
-                  "value": "GCC | Performance overview",
+                  "value": "GCC | Management overview",
                   "textStyle": {
                     "fontFamily": "Segoe UI",
                     "fontSize": "17pt",
@@ -26,7 +26,7 @@
     "x": 8,
     "y": 8,
     "width": 308,
-    "height": 64,
+    "height": 72,
     "z": 1,
     "tabOrder": 1
   }

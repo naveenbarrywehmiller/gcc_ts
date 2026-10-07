@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "01_overview_12",
   "position": {
     "x": 24,
-    "y": 738,
+    "y": 676,
+    "z": 11000,
+    "height": 216,
     "width": 1392,
-    "height": 278,
-    "z": 12,
-    "tabOrder": 12
+    "tabOrder": 12000
   },
   "visual": {
     "visualType": "tableEx",
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "DimDivision.divisionName",
-              "nativeQueryRef": "divisionName"
+              "nativeQueryRef": "divisionName",
+              "displayName": "Division"
             },
             {
               "field": {
@@ -93,6 +94,21 @@
                       "Entity": "_Measures"
                     }
                   },
+                  "Property": "Project On Time %"
+                }
+              },
+              "queryRef": "_Measures.Project On Time %",
+              "nativeQueryRef": "Project On Time %",
+              "displayName": "On-time delivery %"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
                   "Property": "Products Touched"
                 }
               },
@@ -102,6 +118,61 @@
           ]
         }
       }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "grid": [
+        {
+          "properties": {
+            "rowPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "6D"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "visualContainerObjects": {
       "title": [
@@ -117,7 +188,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Performance by division'"
+                  "Value": "'Division performance | compare workload, utilization and delivery'"
                 }
               }
             },
@@ -136,6 +207,13 @@
                       "Value": "'#0F172A'"
                     }
                   }
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }
@@ -203,63 +281,21 @@
             }
           }
         }
-      ]
-    },
-    "drillFilterOtherVisuals": true,
-    "objects": {
-      "values": [
-        {
-          "properties": {
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "11D"
-                }
-              }
-            },
-            "wordWrap": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            }
-          }
-        }
       ],
-      "columnHeaders": [
+      "general": [
         {
           "properties": {
-            "fontSize": {
+            "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "11D"
-                }
-              }
-            },
-            "wordWrap": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "grid": [
-        {
-          "properties": {
-            "rowPadding": {
-              "expr": {
-                "Literal": {
-                  "Value": "6D"
+                  "Value": "'Division-level hours, utilization, under-utilization, delivered projects, on-time delivery and products touched.'"
                 }
               }
             }
           }
         }
       ]
-    }
+    },
+    "drillFilterOtherVisuals": true
   }
 }

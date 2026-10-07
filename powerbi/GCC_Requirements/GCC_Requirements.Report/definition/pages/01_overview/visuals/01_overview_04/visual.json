@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "01_overview_04",
   "position": {
     "x": 480,
-    "y": 230,
-    "z": 4,
-    "height": 88,
+    "y": 88,
+    "z": 3000,
+    "height": 72,
     "width": 440,
-    "tabOrder": 4
+    "tabOrder": 3000
   },
   "visual": {
     "visualType": "slicer",
@@ -47,6 +47,24 @@
             }
           }
         }
+      ],
+      "header": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "items": [
+        {
+          "properties": {}
+        }
       ]
     },
     "visualContainerObjects": {
@@ -82,6 +100,13 @@
                       "Value": "'#0F172A'"
                     }
                   }
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }
@@ -144,6 +169,19 @@
               "expr": {
                 "Literal": {
                   "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Filter the overview to a division.'"
                 }
               }
             }

@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "01_overview_02",
   "position": {
     "x": 24,
-    "y": 100,
+    "y": 304,
+    "z": 1000,
+    "height": 64,
     "width": 1392,
-    "height": 66,
-    "z": 2,
-    "tabOrder": 2
+    "tabOrder": 9000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Select a reporting month. Capacity uses the current roster. Delivery cards count projects; quality cards require a deliverable register.",
+                    "value": "Blank KPI? Check Input readiness. Utilization needs mapped hours; on-time delivery needs target dates.\nActual hours include submitted and approved entries. Team size and capacity use the current roster.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "12pt",

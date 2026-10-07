@@ -104,7 +104,13 @@ table _Measures
 		displayFolder: 02 Utilization
 		lineageTag: 2639e998-0754-5a5c-8b94-48152e2bce8c
 
-	measure 'Available Hours' = IF(NOT ISBLANK([Roster Capacity Hours]),MAX(0,[Roster Capacity Hours]-COALESCE([Capacity Vacation Hours],0)))
+	measure 'Available Hours' =
+			VAR RosterCapacity = [Roster Capacity Hours]
+			RETURN
+			    IF (
+			        NOT ISBLANK ( RosterCapacity ),
+			        MAX ( 0, RosterCapacity - COALESCE ( [Capacity Vacation Hours], 0 ) )
+			    )
 		formatString: #,##0.0
 		displayFolder: 02 Utilization
 		lineageTag: ba6141fe-866c-5987-993d-b82e44532ff6
@@ -115,7 +121,9 @@ table _Measures
 		displayFolder: 02 Utilization
 		lineageTag: da295a52-d2bc-542c-a6de-7963367604ae
 
-	measure 'Under Utilized %' = IF(NOT ISBLANK([Monthly Utilization %]),1-[Monthly Utilization %])
+	measure 'Under Utilized %' =
+			VAR Utilization = [Monthly Utilization %]
+			RETURN IF ( NOT ISBLANK ( Utilization ), 1 - Utilization )
 		formatString: 0.0%
 		displayFolder: 02 Utilization
 		lineageTag: 0fb4712a-ab92-55d9-9be8-014ff6ab3ce2
@@ -232,7 +240,15 @@ table _Measures
 		displayFolder: 05 Delivery
 		lineageTag: 3afcb945-1573-5501-8e4c-523ae8ef458b
 
-	measure 'Effort Deviation %' = IF(NOT ISBLANK([Delivered Project Budget Hours]) && NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),DIVIDE([Delivered Project Actual Hours]-[Delivered Project Budget Hours],[Delivered Project Budget Hours]))
+	measure 'Effort Deviation %' =
+			VAR BudgetHours = [Delivered Project Budget Hours]
+			RETURN
+			    IF (
+			        NOT ISBLANK ( BudgetHours )
+			            && NOT ISCROSSFILTERED ( DimEmployee )
+			            && NOT ISCROSSFILTERED ( DimTask ),
+			        DIVIDE ( [Delivered Project Actual Hours] - BudgetHours, BudgetHours )
+			    )
 		formatString: 0.0%
 		displayFolder: 05 Delivery
 		lineageTag: 687657cb-aa77-537b-a404-b52d21f5089e
@@ -249,11 +265,19 @@ table _Measures
 		displayFolder: 05 Delivery
 		lineageTag: 6b4e61a5-14cc-5ae2-a28a-d2ece67e39cc
 
-	measure 'Effort Alert Color' = IF(ISBLANK([Effort Deviation %]),"#64748B",IF(ABS([Effort Deviation %])>0.05,"#DC2626","#0F766E"))
+	measure 'Effort Alert Color' =
+			VAR Deviation = [Effort Deviation %]
+			RETURN
+			    IF ( ISBLANK ( Deviation ), "#64748B",
+			        IF ( ABS ( Deviation ) > 0.05, "#DC2626", "#0F766E" ) )
 		displayFolder: 05 Delivery
 		lineageTag: 9caaa3f9-e58b-5f9d-9122-bd74af395705
 
-	measure 'Schedule Alert Color' = IF(ISBLANK([Schedule Deviation %]),"#64748B",IF(ABS([Schedule Deviation %])>0.03,"#DC2626","#0F766E"))
+	measure 'Schedule Alert Color' =
+			VAR Deviation = [Schedule Deviation %]
+			RETURN
+			    IF ( ISBLANK ( Deviation ), "#64748B",
+			        IF ( ABS ( Deviation ) > 0.03, "#DC2626", "#0F766E" ) )
 		displayFolder: 05 Delivery
 		lineageTag: 1e39c6dc-1e7d-5544-a404-c75c3888f2b5
 
@@ -317,7 +341,12 @@ table _Measures
 		displayFolder: 08 Quality
 		lineageTag: d88d8eca-faab-5902-875c-3ff5f0a5e771
 
-	measure 'Defect Alert Color' = IF(ISBLANK([Defect Density %]),"#64748B",IF(ABS([Defect Density %]-SELECTEDVALUE(Settings[DefectTarget],0))>0.05,"#DC2626","#0F766E"))
+	measure 'Defect Alert Color' =
+			VAR Density = [Defect Density %]
+			RETURN
+			    IF ( ISBLANK ( Density ), "#64748B",
+			        IF ( ABS ( Density - SELECTEDVALUE ( Settings[DefectTarget], 0 ) ) > 0.05,
+			            "#DC2626", "#0F766E" ) )
 		displayFolder: 08 Quality
 		lineageTag: e4a6fd0f-bc4d-567f-be6d-070568cb051b
 

@@ -38,7 +38,11 @@ def formatting(visual):
         for paragraph in state['objects']['general'][0]['properties']['paragraphs']:
             for run in paragraph['textRuns']:
                 run.setdefault('textStyle', {})['fontSize'] = '17pt' if heading else '10.5pt'
-                if name.endswith('_refresh_help'):
+                if name == '01_overview_refresh_help':
+                    run['value'] = ('Saved snapshot. Auto-refresh off. '
+                                    'Desktop refresh: Home > Refresh > Data. '
+                                    'Swipe the division table sideways for all columns.')
+                elif name.endswith('_refresh_help'):
                     run['value'] = ('Data is a saved snapshot. Desktop owner: Home > Refresh > Data. '
                                     'Auto-refresh is off. Swipe wide tables sideways for all columns.')
         return state
@@ -60,7 +64,7 @@ def formatting(visual):
             })
     elif kind == 'slicer':
         state['objects'] = {'items': obj(fontSize=number(12)), 'header': obj(show=expr('false'))}
-    elif kind in ('clusteredColumnChart', 'lineChart'):
+    elif kind in ('clusteredColumnChart', 'clusteredBarChart', 'lineChart'):
         state['objects'] = {'categoryAxis': obj(fontSize=number(10)),
                             'valueAxis': obj(fontSize=number(10)),
                             'legend': obj(fontSize=number(10))}
@@ -111,11 +115,12 @@ def build_page(page_name):
     def named(suffix):
         return next(v for v in visuals if v['name'] == page_name + suffix)
 
-    place(named('_01'), 64)
+    overview = page_name == '01_overview'
+    place(named('_01'), 72 if overview else 64)
     place(named('_refresh_time'), 52)
     for v in visuals:
         if v['visual']['visualType'] == 'slicer':
-            place(v, 104)
+            place(v, 80 if overview else 104)
     cards = [v for v in visuals if v['visual']['visualType'] == 'card'
              and not v['name'].endswith('_refresh_time')]
     for i in range(0, len(cards), 2):
@@ -125,17 +130,20 @@ def build_page(page_name):
         else:
             place(pair[0], 112, width=150, advance=False)
             place(pair[1], 112, x=166, width=150)
-    place(named('_02'), 104)
+    place(named('_02'), 136 if overview else 104)
     for v in visuals:
-        if v['visual']['visualType'] in ('clusteredColumnChart', 'lineChart'):
+        if v['visual']['visualType'] in ('clusteredColumnChart', 'clusteredBarChart', 'lineChart'):
             place(v, 288)
-    place(named('_refresh_help'), 104)
+    if not overview:
+        place(named('_refresh_help'), 104)
     for v in visuals:
         if v['visual']['visualType'] == 'tableEx':
             height = 640 if page_name == '09_inputs' and v['name'].endswith('_03') else 400
             if page_name == '09_inputs' and v['name'].endswith('_04'):
                 height = 180
             place(v, height)
+    if overview:
+        place(named('_refresh_help'), 88)
     for name, state in states.items():
         if 'position' not in state:
             raise ValueError('Visual omitted from phone layout: ' + name)

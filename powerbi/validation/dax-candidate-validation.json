@@ -1,0 +1,225 @@
+[
+    {
+        "scenario":  "Base fixture",
+        "check":  "Month/division, totals, empty dates, project/employee/task contexts",
+        "mismatchRows":  0
+    },
+    {
+        "scenario":  "Base fixture",
+        "check":  "Blank, zero, over-capacity and positive/negative threshold boundaries",
+        "cases":  26,
+        "mismatchRows":  0
+    },
+    {
+        "scenario":  "Base fixture",
+        "check":  "Alternating original/candidate annual-summary benchmark",
+        "measurement":  "Identical query with six model-level formulas swapped in the isolated database before each run; client elapsed query time; synthetic fixture only, no formula/storage-engine trace",
+        "medians":  [
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "medianMs":  183.1201,
+                            "runs":  7
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "medianMs":  133.8509,
+                            "runs":  7
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "medianMs":  146.33880000000002,
+                            "runs":  7
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "medianMs":  85.870100000000008,
+                            "runs":  7
+                        }
+                    ],
+        "samples":  [
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "run":  1,
+                            "elapsedMs":  197.7555
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "run":  1,
+                            "elapsedMs":  146.0243
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "run":  2,
+                            "elapsedMs":  141.0865
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "run":  2,
+                            "elapsedMs":  183.1201
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "run":  3,
+                            "elapsedMs":  175.8983
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "run":  3,
+                            "elapsedMs":  133.8509
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "run":  4,
+                            "elapsedMs":  125.63990000000001
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "run":  4,
+                            "elapsedMs":  492.23010000000005
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "run":  5,
+                            "elapsedMs":  246.09300000000002
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "run":  5,
+                            "elapsedMs":  108.23960000000001
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "run":  6,
+                            "elapsedMs":  130.4695
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "run":  6,
+                            "elapsedMs":  165.80540000000002
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "original",
+                            "run":  7,
+                            "elapsedMs":  183.1115
+                        },
+                        {
+                            "cache":  "cold",
+                            "variant":  "candidate",
+                            "run":  7,
+                            "elapsedMs":  142.4891
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "run":  1,
+                            "elapsedMs":  154.84910000000002
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "run":  1,
+                            "elapsedMs":  83.34490000000001
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "run":  2,
+                            "elapsedMs":  85.870100000000008
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "run":  2,
+                            "elapsedMs":  146.33880000000002
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "run":  3,
+                            "elapsedMs":  158.6403
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "run":  3,
+                            "elapsedMs":  107.8827
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "run":  4,
+                            "elapsedMs":  95.8541
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "run":  4,
+                            "elapsedMs":  239.6749
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "run":  5,
+                            "elapsedMs":  101.122
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "run":  5,
+                            "elapsedMs":  80.6408
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "run":  6,
+                            "elapsedMs":  89.2018
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "run":  6,
+                            "elapsedMs":  119.54610000000001
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "original",
+                            "run":  7,
+                            "elapsedMs":  111.1699
+                        },
+                        {
+                            "cache":  "warm",
+                            "variant":  "candidate",
+                            "run":  7,
+                            "elapsedMs":  69.1336
+                        }
+                    ]
+    },
+    {
+        "scenario":  "Delivery and conflicting-input fixture",
+        "check":  "Month/division, totals, empty dates, project/employee/task contexts",
+        "mismatchRows":  0
+    },
+    {
+        "scenario":  "Delivery and conflicting-input fixture",
+        "check":  "Blank, zero, over-capacity and positive/negative threshold boundaries",
+        "cases":  26,
+        "mismatchRows":  0
+    }
+]

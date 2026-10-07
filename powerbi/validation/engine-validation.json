@@ -1,578 +1,578 @@
 [
-  {
-    "measure": "Raw Hours",
-    "status": "Evaluated",
-    "value": 24
-  },
-  {
-    "measure": "Actual Hours",
-    "status": "Evaluated",
-    "value": 24
-  },
-  {
-    "measure": "Approved Hours",
-    "status": "Evaluated",
-    "value": 16
-  },
-  {
-    "measure": "Contributing Employees",
-    "status": "Evaluated",
-    "value": 2
-  },
-  {
-    "measure": "Active Team Strength",
-    "status": "Evaluated",
-    "value": 2
-  },
-  {
-    "measure": "Training Hours",
-    "status": "Evaluated",
-    "value": 8
-  },
-  {
-    "measure": "Internal Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Admin Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Vacation Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Holiday Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Productive Hours",
-    "status": "Evaluated",
-    "value": 16
-  },
-  {
-    "measure": "Unmapped Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Effective Hours",
-    "status": "Evaluated",
-    "value": 16
-  },
-  {
-    "measure": "Working Days",
-    "status": "Evaluated",
-    "value": 782
-  },
-  {
-    "measure": "Holiday Days",
-    "status": "Evaluated",
-    "value": 1
-  },
-  {
-    "measure": "Roster Capacity Hours",
-    "status": "Evaluated",
-    "value": 12512
-  },
-  {
-    "measure": "Capacity Vacation Hours",
-    "status": "Evaluated",
-    "value": 0
-  },
-  {
-    "measure": "Vacation Days",
-    "status": "Evaluated",
-    "value": 0
-  },
-  {
-    "measure": "Available Hours",
-    "status": "Evaluated",
-    "value": 12512
-  },
-  {
-    "measure": "Monthly Utilization %",
-    "status": "Evaluated",
-    "value": 0.0012787723785166241
-  },
-  {
-    "measure": "Under Utilized %",
-    "status": "Evaluated",
-    "value": 0.9987212276214834
-  },
-  {
-    "measure": "As Of Date",
-    "status": "Evaluated",
-    "value": "/Date(1790838000000)/"
-  },
-  {
-    "measure": "Last Completed Friday",
-    "status": "Evaluated",
-    "value": "/Date(1790319600000)/"
-  },
-  {
-    "measure": "FY Utilization Through Friday %",
-    "status": "Evaluated",
-    "value": 0
-  },
-  {
-    "measure": "Available Hours Last Week",
-    "status": "Evaluated",
-    "value": 80
-  },
-  {
-    "measure": "Available Hours Current Week",
-    "status": "Evaluated",
-    "value": 64
-  },
-  {
-    "measure": "Available Hours Next Week",
-    "status": "Evaluated",
-    "value": 80
-  },
-  {
-    "measure": "Available Hours FY",
-    "status": "Evaluated",
-    "value": 4160
-  },
-  {
-    "measure": "Dedicated Hours",
-    "status": "Evaluated",
-    "value": 16
-  },
-  {
-    "measure": "Dedicated Strength",
-    "status": "Evaluated",
-    "value": 1
-  },
-  {
-    "measure": "Dedicated Utilization %",
-    "status": "Evaluated",
-    "value": 0.0025575447570332483
-  },
-  {
-    "measure": "Dedicated FY Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Flex Hours",
-    "status": "Evaluated",
-    "value": 8
-  },
-  {
-    "measure": "Flex Strength",
-    "status": "Evaluated",
-    "value": 1
-  },
-  {
-    "measure": "Flex Utilization %",
-    "status": "Evaluated",
-    "value": 0
-  },
-  {
-    "measure": "Flex FY Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Available Employee Equivalents",
-    "status": "Evaluated",
-    "value": 1.9974424552429668
-  },
-  {
-    "measure": "Projects Delivered",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Projects On Time",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Project On Time %",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Delivered Project Budget Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Delivered Project Actual Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Effort Deviation %",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Schedule Deviation Days",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Schedule Deviation %",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Effort Alert Color",
-    "status": "Evaluated",
-    "value": "#64748B"
-  },
-  {
-    "measure": "Schedule Alert Color",
-    "status": "Evaluated",
-    "value": "#64748B"
-  },
-  {
-    "measure": "Detail Conflicts",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Weekly Fundamental Errors",
-    "status": "Evaluated",
-    "value": 2
-  },
-  {
-    "measure": "Improvement Log Count",
-    "status": "Evaluated",
-    "value": 1
-  },
-  {
-    "measure": "Designed",
-    "status": "Evaluated",
-    "value": 1
-  },
-  {
-    "measure": "Developed",
-    "status": "Evaluated",
-    "value": 0
-  },
-  {
-    "measure": "Fundamental Errors",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Information Errors",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Readable Errors",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Deliverables",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Defect Density %",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "First Time Right %",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "On Time Deliverables",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Defect Alert Color",
-    "status": "Evaluated",
-    "value": "#64748B"
-  },
-  {
-    "measure": "Products Touched",
-    "status": "Evaluated",
-    "value": 1
-  },
-  {
-    "measure": "Additive Manufacturing",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Improvement Initiatives",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Open Positions",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "New Joiners",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Hours Scheduled",
-    "status": "Evaluated",
-    "value": 80.00000000000001
-  },
-  {
-    "measure": "Remaining Forecast Hours",
-    "status": "Evaluated",
-    "value": 63.99999999999999
-  },
-  {
-    "measure": "Team Forecast Hours",
-    "status": "Evaluated",
-    "value": 88
-  },
-  {
-    "measure": "Overdue Unscheduled Hours",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Projects Missing Plan Inputs",
-    "status": "Evaluated",
-    "value": null
-  },
-  {
-    "measure": "Report Status",
-    "status": "Evaluated",
-    "value": "2026-10-01 17:30:00 IST"
-  },
-  {
-    "measure": "Last Refresh IST",
-    "status": "Evaluated",
-    "value": "2026-10-01 17:30:00 IST"
-  },
-  {
-    "test": "Weekly counts not multiplied by days",
-    "status": "Pass",
-    "expected": 2,
-    "actual": 2
-  },
-  {
-    "test": "Monthly productive hours",
-    "status": "Pass",
-    "expected": 16,
-    "actual": 16
-  },
-  {
-    "test": "Staffing snapshot preserves known zero",
-    "status": "Pass",
-    "expected": 0,
-    "actual": 0
-  },
-  {
-    "test": "Missing staffing is unknown",
-    "status": "Pass",
-    "expected": null,
-    "actual": null
-  },
-  {
-    "test": "Missing deliverables is unknown",
-    "status": "Pass",
-    "expected": null,
-    "actual": null
-  },
-  {
-    "test": "Team capacity counts both employees",
-    "status": "Pass",
-    "expected": 16,
-    "actual": 16
-  },
-  {
-    "test": "Holiday and vacation overlap not subtracted twice",
-    "status": "Pass",
-    "expected": 0,
-    "actual": 0
-  },
-  {
-    "test": "Project capacity needs allocation",
-    "status": "Pass",
-    "expected": null,
-    "actual": null
-  },
-  {
-    "test": "New joiners with a mid-month date selection",
-    "status": "Pass",
-    "expected": 1,
-    "actual": 1
-  },
-  {
-    "test": "Plan allocation reconciles to budget",
-    "status": "Pass",
-    "expected": 80,
-    "actual": 80.00000000000001
-  },
-  {
-    "test": "Forecast uses past actuals plus remaining budget",
-    "status": "Pass",
-    "expected": 88,
-    "actual": 88
-  },
-  {
-    "test": "Flex slicer changes roster capacity",
-    "status": "Pass",
-    "expected": 8,
-    "actual": 8
-  },
-  {
-    "test": "Division filter excludes other-division hours",
-    "status": "Pass",
-    "expected": null,
-    "actual": null
-  },
-  {
-    "test": "Strictly previous completed Friday",
-    "status": "Pass",
-    "expected": 46290,
-    "actual": 46290
-  },
-  {
-    "test": "Last refresh converts UTC to IST with seconds",
-    "status": "Pass",
-    "expected": "2026-10-01 17:30:00 IST",
-    "actual": "2026-10-01 17:30:00 IST"
-  },
-  {
-    "test": "Header shows the imported refresh timestamp",
-    "status": "Pass",
-    "expected": "2026-10-01 17:30:00 IST",
-    "actual": "2026-10-01 17:30:00 IST"
-  },
-  {
-    "test": "Effort compares lifetime actuals with lifetime budget",
-    "status": "Pass",
-    "expected": 0.2,
-    "actual": 0.2
-  },
-  {
-    "test": "Effort tolerance turns red",
-    "status": "Pass",
-    "expected": "#DC2626",
-    "actual": "#DC2626"
-  },
-  {
-    "test": "Schedule reports days late",
-    "status": "Pass",
-    "expected": 1,
-    "actual": 1
-  },
-  {
-    "test": "Schedule tolerance turns red",
-    "status": "Pass",
-    "expected": "#DC2626",
-    "actual": "#DC2626"
-  },
-  {
-    "test": "Defect density uses explicit deliverables",
-    "status": "Pass",
-    "expected": 0.5,
-    "actual": 0.5
-  },
-  {
-    "test": "First-time-right uses explicit false rework flags",
-    "status": "Pass",
-    "expected": 1,
-    "actual": 1
-  },
-  {
-    "test": "Partial error counts remain unknown",
-    "status": "Pass",
-    "expected": null,
-    "actual": null
-  },
-  {
-    "test": "Conflicting weekly detail copies block totals",
-    "status": "Pass",
-    "expected": null,
-    "actual": null
-  },
-  {
-    "test": "Conflicting weekly rows counted once",
-    "status": "Pass",
-    "expected": 1,
-    "actual": 1
-  },
-  {
-    "test": "Before IST midnight: timestamp",
-    "status": "Pass",
-    "expected": "2026-10-01 23:59:59 IST",
-    "actual": "2026-10-01 23:59:59 IST"
-  },
-  {
-    "test": "Before IST midnight: reporting date",
-    "status": "Pass",
-    "expected": 46296,
-    "actual": 46296
-  },
-  {
-    "test": "At IST midnight: timestamp",
-    "status": "Pass",
-    "expected": "2026-10-02 00:00:00 IST",
-    "actual": "2026-10-02 00:00:00 IST"
-  },
-  {
-    "test": "At IST midnight: reporting date",
-    "status": "Pass",
-    "expected": 46297,
-    "actual": 46297
-  },
-  {
-    "test": "Forecast excludes the previous IST day",
-    "status": "Pass",
-    "expected": 0,
-    "actual": 0
-  },
-  {
-    "test": "IST Saturday while UTC is Friday: timestamp",
-    "status": "Pass",
-    "expected": "2026-10-03 00:00:00 IST",
-    "actual": "2026-10-03 00:00:00 IST"
-  },
-  {
-    "test": "IST Saturday while UTC is Friday: reporting date",
-    "status": "Pass",
-    "expected": 46298,
-    "actual": 46298
-  },
-  {
-    "test": "Completed Friday follows IST reporting date",
-    "status": "Pass",
-    "expected": 46297,
-    "actual": 46297
-  },
-  {
-    "test": "IST new year while UTC is December: timestamp",
-    "status": "Pass",
-    "expected": "2027-01-01 02:15:07 IST",
-    "actual": "2027-01-01 02:15:07 IST"
-  },
-  {
-    "test": "IST new year while UTC is December: reporting date",
-    "status": "Pass",
-    "expected": 46388,
-    "actual": 46388
-  },
-  {
-    "test": "Calendar bounds follow the IST year",
-    "status": "Pass",
-    "expected": 2028,
-    "actual": 2028
-  }
+    {
+        "measure":  "Raw Hours",
+        "status":  "Evaluated",
+        "value":  24
+    },
+    {
+        "measure":  "Actual Hours",
+        "status":  "Evaluated",
+        "value":  24
+    },
+    {
+        "measure":  "Approved Hours",
+        "status":  "Evaluated",
+        "value":  16
+    },
+    {
+        "measure":  "Contributing Employees",
+        "status":  "Evaluated",
+        "value":  2
+    },
+    {
+        "measure":  "Active Team Strength",
+        "status":  "Evaluated",
+        "value":  2
+    },
+    {
+        "measure":  "Training Hours",
+        "status":  "Evaluated",
+        "value":  8
+    },
+    {
+        "measure":  "Internal Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Admin Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Vacation Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Holiday Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Productive Hours",
+        "status":  "Evaluated",
+        "value":  16
+    },
+    {
+        "measure":  "Unmapped Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Effective Hours",
+        "status":  "Evaluated",
+        "value":  16
+    },
+    {
+        "measure":  "Working Days",
+        "status":  "Evaluated",
+        "value":  782
+    },
+    {
+        "measure":  "Holiday Days",
+        "status":  "Evaluated",
+        "value":  1
+    },
+    {
+        "measure":  "Roster Capacity Hours",
+        "status":  "Evaluated",
+        "value":  12512
+    },
+    {
+        "measure":  "Capacity Vacation Hours",
+        "status":  "Evaluated",
+        "value":  0
+    },
+    {
+        "measure":  "Vacation Days",
+        "status":  "Evaluated",
+        "value":  0
+    },
+    {
+        "measure":  "Available Hours",
+        "status":  "Evaluated",
+        "value":  12512
+    },
+    {
+        "measure":  "Monthly Utilization %",
+        "status":  "Evaluated",
+        "value":  0.0012787723785166241
+    },
+    {
+        "measure":  "Under Utilized %",
+        "status":  "Evaluated",
+        "value":  0.99872122762148341
+    },
+    {
+        "measure":  "As Of Date",
+        "status":  "Evaluated",
+        "value":  "\/Date(1790838000000)\/"
+    },
+    {
+        "measure":  "Last Completed Friday",
+        "status":  "Evaluated",
+        "value":  "\/Date(1790319600000)\/"
+    },
+    {
+        "measure":  "FY Utilization Through Friday %",
+        "status":  "Evaluated",
+        "value":  0
+    },
+    {
+        "measure":  "Available Hours Last Week",
+        "status":  "Evaluated",
+        "value":  80
+    },
+    {
+        "measure":  "Available Hours Current Week",
+        "status":  "Evaluated",
+        "value":  64
+    },
+    {
+        "measure":  "Available Hours Next Week",
+        "status":  "Evaluated",
+        "value":  80
+    },
+    {
+        "measure":  "Available Hours FY",
+        "status":  "Evaluated",
+        "value":  4160
+    },
+    {
+        "measure":  "Dedicated Hours",
+        "status":  "Evaluated",
+        "value":  16
+    },
+    {
+        "measure":  "Dedicated Strength",
+        "status":  "Evaluated",
+        "value":  1
+    },
+    {
+        "measure":  "Dedicated Utilization %",
+        "status":  "Evaluated",
+        "value":  0.0025575447570332483
+    },
+    {
+        "measure":  "Dedicated FY Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Flex Hours",
+        "status":  "Evaluated",
+        "value":  8
+    },
+    {
+        "measure":  "Flex Strength",
+        "status":  "Evaluated",
+        "value":  1
+    },
+    {
+        "measure":  "Flex Utilization %",
+        "status":  "Evaluated",
+        "value":  0
+    },
+    {
+        "measure":  "Flex FY Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Available Employee Equivalents",
+        "status":  "Evaluated",
+        "value":  1.9974424552429668
+    },
+    {
+        "measure":  "Projects Delivered",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Projects On Time",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Project On Time %",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Delivered Project Budget Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Delivered Project Actual Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Effort Deviation %",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Schedule Deviation Days",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Schedule Deviation %",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Effort Alert Color",
+        "status":  "Evaluated",
+        "value":  "#64748B"
+    },
+    {
+        "measure":  "Schedule Alert Color",
+        "status":  "Evaluated",
+        "value":  "#64748B"
+    },
+    {
+        "measure":  "Detail Conflicts",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Weekly Fundamental Errors",
+        "status":  "Evaluated",
+        "value":  2
+    },
+    {
+        "measure":  "Improvement Log Count",
+        "status":  "Evaluated",
+        "value":  1
+    },
+    {
+        "measure":  "Designed",
+        "status":  "Evaluated",
+        "value":  1
+    },
+    {
+        "measure":  "Developed",
+        "status":  "Evaluated",
+        "value":  0
+    },
+    {
+        "measure":  "Fundamental Errors",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Information Errors",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Readable Errors",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Deliverables",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Defect Density %",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "First Time Right %",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "On Time Deliverables",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Defect Alert Color",
+        "status":  "Evaluated",
+        "value":  "#64748B"
+    },
+    {
+        "measure":  "Products Touched",
+        "status":  "Evaluated",
+        "value":  1
+    },
+    {
+        "measure":  "Additive Manufacturing",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Improvement Initiatives",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Open Positions",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "New Joiners",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Hours Scheduled",
+        "status":  "Evaluated",
+        "value":  80.000000000000014
+    },
+    {
+        "measure":  "Remaining Forecast Hours",
+        "status":  "Evaluated",
+        "value":  63.999999999999993
+    },
+    {
+        "measure":  "Team Forecast Hours",
+        "status":  "Evaluated",
+        "value":  88
+    },
+    {
+        "measure":  "Overdue Unscheduled Hours",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Projects Missing Plan Inputs",
+        "status":  "Evaluated",
+        "value":  null
+    },
+    {
+        "measure":  "Report Status",
+        "status":  "Evaluated",
+        "value":  "2026-10-01 17:30:00 IST"
+    },
+    {
+        "measure":  "Last Refresh IST",
+        "status":  "Evaluated",
+        "value":  "2026-10-01 17:30:00 IST"
+    },
+    {
+        "test":  "Weekly counts not multiplied by days",
+        "status":  "Pass",
+        "expected":  2,
+        "actual":  2
+    },
+    {
+        "test":  "Monthly productive hours",
+        "status":  "Pass",
+        "expected":  16,
+        "actual":  16
+    },
+    {
+        "test":  "Staffing snapshot preserves known zero",
+        "status":  "Pass",
+        "expected":  0,
+        "actual":  0
+    },
+    {
+        "test":  "Missing staffing is unknown",
+        "status":  "Pass",
+        "expected":  null,
+        "actual":  null
+    },
+    {
+        "test":  "Missing deliverables is unknown",
+        "status":  "Pass",
+        "expected":  null,
+        "actual":  null
+    },
+    {
+        "test":  "Team capacity counts both employees",
+        "status":  "Pass",
+        "expected":  16,
+        "actual":  16
+    },
+    {
+        "test":  "Holiday and vacation overlap not subtracted twice",
+        "status":  "Pass",
+        "expected":  0,
+        "actual":  0
+    },
+    {
+        "test":  "Project capacity needs allocation",
+        "status":  "Pass",
+        "expected":  null,
+        "actual":  null
+    },
+    {
+        "test":  "New joiners with a mid-month date selection",
+        "status":  "Pass",
+        "expected":  1,
+        "actual":  1
+    },
+    {
+        "test":  "Plan allocation reconciles to budget",
+        "status":  "Pass",
+        "expected":  80,
+        "actual":  80.000000000000014
+    },
+    {
+        "test":  "Forecast uses past actuals plus remaining budget",
+        "status":  "Pass",
+        "expected":  88,
+        "actual":  88
+    },
+    {
+        "test":  "Flex slicer changes roster capacity",
+        "status":  "Pass",
+        "expected":  8,
+        "actual":  8
+    },
+    {
+        "test":  "Division filter excludes other-division hours",
+        "status":  "Pass",
+        "expected":  null,
+        "actual":  null
+    },
+    {
+        "test":  "Strictly previous completed Friday",
+        "status":  "Pass",
+        "expected":  46290,
+        "actual":  46290
+    },
+    {
+        "test":  "Last refresh converts UTC to IST with seconds",
+        "status":  "Pass",
+        "expected":  "2026-10-01 17:30:00 IST",
+        "actual":  "2026-10-01 17:30:00 IST"
+    },
+    {
+        "test":  "Header shows the imported refresh timestamp",
+        "status":  "Pass",
+        "expected":  "2026-10-01 17:30:00 IST",
+        "actual":  "2026-10-01 17:30:00 IST"
+    },
+    {
+        "test":  "Effort compares lifetime actuals with lifetime budget",
+        "status":  "Pass",
+        "expected":  0.2,
+        "actual":  0.2
+    },
+    {
+        "test":  "Effort tolerance turns red",
+        "status":  "Pass",
+        "expected":  "#DC2626",
+        "actual":  "#DC2626"
+    },
+    {
+        "test":  "Schedule reports days late",
+        "status":  "Pass",
+        "expected":  1,
+        "actual":  1
+    },
+    {
+        "test":  "Schedule tolerance turns red",
+        "status":  "Pass",
+        "expected":  "#DC2626",
+        "actual":  "#DC2626"
+    },
+    {
+        "test":  "Defect density uses explicit deliverables",
+        "status":  "Pass",
+        "expected":  0.5,
+        "actual":  0.5
+    },
+    {
+        "test":  "First-time-right uses explicit false rework flags",
+        "status":  "Pass",
+        "expected":  1,
+        "actual":  1
+    },
+    {
+        "test":  "Partial error counts remain unknown",
+        "status":  "Pass",
+        "expected":  null,
+        "actual":  null
+    },
+    {
+        "test":  "Conflicting weekly detail copies block totals",
+        "status":  "Pass",
+        "expected":  null,
+        "actual":  null
+    },
+    {
+        "test":  "Conflicting weekly rows counted once",
+        "status":  "Pass",
+        "expected":  1,
+        "actual":  1
+    },
+    {
+        "test":  "Before IST midnight: timestamp",
+        "status":  "Pass",
+        "expected":  "2026-10-01 23:59:59 IST",
+        "actual":  "2026-10-01 23:59:59 IST"
+    },
+    {
+        "test":  "Before IST midnight: reporting date",
+        "status":  "Pass",
+        "expected":  46296,
+        "actual":  46296
+    },
+    {
+        "test":  "At IST midnight: timestamp",
+        "status":  "Pass",
+        "expected":  "2026-10-02 00:00:00 IST",
+        "actual":  "2026-10-02 00:00:00 IST"
+    },
+    {
+        "test":  "At IST midnight: reporting date",
+        "status":  "Pass",
+        "expected":  46297,
+        "actual":  46297
+    },
+    {
+        "test":  "Forecast excludes the previous IST day",
+        "status":  "Pass",
+        "expected":  0,
+        "actual":  0
+    },
+    {
+        "test":  "IST Saturday while UTC is Friday: timestamp",
+        "status":  "Pass",
+        "expected":  "2026-10-03 00:00:00 IST",
+        "actual":  "2026-10-03 00:00:00 IST"
+    },
+    {
+        "test":  "IST Saturday while UTC is Friday: reporting date",
+        "status":  "Pass",
+        "expected":  46298,
+        "actual":  46298
+    },
+    {
+        "test":  "Completed Friday follows IST reporting date",
+        "status":  "Pass",
+        "expected":  46297,
+        "actual":  46297
+    },
+    {
+        "test":  "IST new year while UTC is December: timestamp",
+        "status":  "Pass",
+        "expected":  "2027-01-01 02:15:07 IST",
+        "actual":  "2027-01-01 02:15:07 IST"
+    },
+    {
+        "test":  "IST new year while UTC is December: reporting date",
+        "status":  "Pass",
+        "expected":  46388,
+        "actual":  46388
+    },
+    {
+        "test":  "Calendar bounds follow the IST year",
+        "status":  "Pass",
+        "expected":  2028,
+        "actual":  2028
+    }
 ]

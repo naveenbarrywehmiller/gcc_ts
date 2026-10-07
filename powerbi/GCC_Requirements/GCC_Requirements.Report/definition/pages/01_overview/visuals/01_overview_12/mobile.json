@@ -1,26 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.7.0/schema.json",
-  "visualContainerObjects": {
-    "title": [
-      {
-        "properties": {
-          "fontSize": {
-            "expr": {
-              "Literal": {
-                "Value": "11D"
-              }
-            }
-          },
-          "titleWrap": {
-            "expr": {
-              "Literal": {
-                "Value": "true"
-              }
-            }
-          }
-        }
-      }
-    ]
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.8.0/schema.json",
+  "position": {
+    "x": 8,
+    "y": 1388,
+    "z": 13,
+    "height": 400,
+    "width": 308,
+    "tabOrder": 13
   },
   "objects": {
     "values": [
@@ -63,14 +49,14 @@
           "autoSizeColumnWidth": {
             "expr": {
               "Literal": {
-                "Value": "false"
+                "Value": "true"
               }
             }
           },
           "columnAdjustment": {
             "expr": {
               "Literal": {
-                "Value": "'fixedWidth'"
+                "Value": "'fitToContent'"
               }
             }
           },
@@ -179,17 +165,48 @@
           }
         },
         "selector": {
+          "metadata": "_Measures.Project On Time %"
+        }
+      },
+      {
+        "properties": {
+          "value": {
+            "expr": {
+              "Literal": {
+                "Value": "84D"
+              }
+            }
+          }
+        },
+        "selector": {
           "metadata": "_Measures.Products Touched"
         }
       }
     ]
   },
-  "position": {
-    "x": 8,
-    "y": 1532,
-    "width": 308,
-    "height": 400,
-    "z": 14,
-    "tabOrder": 14
+  "visualContainerObjects": {
+    "title": [
+      {
+        "properties": {
+          "fontSize": {
+            "expr": {
+              "Literal": {
+                "Value": "11D"
+              }
+            }
+          },
+          "titleWrap": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "background": [],
+    "border": [],
+    "general": []
   }
 }

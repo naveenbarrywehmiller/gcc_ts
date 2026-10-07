@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "01_overview_07",
   "position": {
     "x": 376,
-    "y": 338,
-    "z": 7,
+    "y": 176,
+    "z": 6000,
     "height": 116,
     "width": 336,
-    "tabOrder": 7
+    "tabOrder": 6000
   },
   "visual": {
     "visualType": "card",
@@ -53,7 +53,18 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "26D"
+                  "Value": "32D"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#0F172A'"
+                    }
+                  }
                 }
               }
             }
@@ -75,7 +86,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Monthly Utilization %'"
+                  "Value": "'Monthly utilization'"
                 }
               }
             },
@@ -94,6 +105,13 @@
                       "Value": "'#0F172A'"
                     }
                   }
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }
@@ -161,26 +179,21 @@
             }
           }
         }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Effective hours divided by available capacity. Blank values need input checks; they are not zero.'"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "4b58bb00188985b6a389",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Monthly Utilization %"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

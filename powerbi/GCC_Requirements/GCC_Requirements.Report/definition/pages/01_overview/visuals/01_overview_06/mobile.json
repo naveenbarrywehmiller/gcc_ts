@@ -1,26 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.7.0/schema.json",
-  "visualContainerObjects": {
-    "title": [
-      {
-        "properties": {
-          "fontSize": {
-            "expr": {
-              "Literal": {
-                "Value": "10D"
-              }
-            }
-          },
-          "titleWrap": {
-            "expr": {
-              "Literal": {
-                "Value": "true"
-              }
-            }
-          }
-        }
-      }
-    ]
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.8.0/schema.json",
+  "position": {
+    "x": 8,
+    "y": 412,
+    "z": 6,
+    "height": 112,
+    "width": 150,
+    "tabOrder": 6
   },
   "objects": {
     "labels": [
@@ -50,12 +36,29 @@
       }
     ]
   },
-  "position": {
-    "x": 8,
-    "y": 476,
-    "width": 150,
-    "height": 112,
-    "z": 6,
-    "tabOrder": 6
+  "visualContainerObjects": {
+    "title": [
+      {
+        "properties": {
+          "fontSize": {
+            "expr": {
+              "Literal": {
+                "Value": "10D"
+              }
+            }
+          },
+          "titleWrap": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "background": [],
+    "border": [],
+    "general": []
   }
 }

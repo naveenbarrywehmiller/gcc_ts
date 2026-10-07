@@ -1,0 +1,81 @@
+// Query-scoped candidates: no model updates. Rows returned are mismatches.
+// This checks correctness in sampled contexts; benchmark candidates separately.
+DEFINE
+    MEASURE '_Measures'[__Opt Available Hours] =
+        VAR RosterCapacity = [Roster Capacity Hours]
+        RETURN
+            IF (
+                NOT ISBLANK ( RosterCapacity ),
+                MAX ( 0, RosterCapacity - COALESCE ( [Capacity Vacation Hours], 0 ) )
+            )
+
+    MEASURE '_Measures'[__Opt Under Utilized %] =
+        VAR Utilization = [Monthly Utilization %]
+        RETURN IF ( NOT ISBLANK ( Utilization ), 1 - Utilization )
+
+    MEASURE '_Measures'[__Opt Effort Deviation %] =
+        VAR BudgetHours = [Delivered Project Budget Hours]
+        RETURN
+            IF (
+                NOT ISBLANK ( BudgetHours )
+                    && NOT ISCROSSFILTERED ( DimEmployee )
+                    && NOT ISCROSSFILTERED ( DimTask ),
+                DIVIDE ( [Delivered Project Actual Hours] - BudgetHours, BudgetHours )
+            )
+
+    MEASURE '_Measures'[__Opt Effort Alert Color] =
+        VAR Deviation = [Effort Deviation %]
+        RETURN
+            IF ( ISBLANK ( Deviation ), "#64748B",
+                IF ( ABS ( Deviation ) > 0.05, "#DC2626", "#0F766E" ) )
+
+    MEASURE '_Measures'[__Opt Schedule Alert Color] =
+        VAR Deviation = [Schedule Deviation %]
+        RETURN
+            IF ( ISBLANK ( Deviation ), "#64748B",
+                IF ( ABS ( Deviation ) > 0.03, "#DC2626", "#0F766E" ) )
+
+    MEASURE '_Measures'[__Opt Defect Alert Color] =
+        VAR Density = [Defect Density %]
+        RETURN
+            IF ( ISBLANK ( Density ), "#64748B",
+                IF ( ABS ( Density - SELECTEDVALUE ( Settings[DefectTarget], 0 ) ) > 0.05,
+                    "#DC2626", "#0F766E" ) )
+
+    MEASURE '_Measures'[__Candidate Mismatch Count] =
+        INT ( NOT ( [Available Hours] == [__Opt Available Hours] ) )
+        + INT ( NOT ( [Under Utilized %] == [__Opt Under Utilized %] ) )
+        + INT ( NOT ( [Effort Deviation %] == [__Opt Effort Deviation %] ) )
+        + INT ( NOT ( [Effort Alert Color] == [__Opt Effort Alert Color] ) )
+        + INT ( NOT ( [Schedule Alert Color] == [__Opt Schedule Alert Color] ) )
+        + INT ( NOT ( [Defect Alert Color] == [__Opt Defect Alert Color] ) )
+
+EVALUATE
+    FILTER (
+        UNION (
+            SELECTCOLUMNS (
+                SUMMARIZECOLUMNS (
+                    DimDate[YearMonth], DimDivision[divisionName],
+                    "Mismatches", [__Candidate Mismatch Count]
+                ),
+                "Context", "Month/division: " & DimDate[YearMonth] & " / " & DimDivision[divisionName],
+                "Mismatches", [Mismatches]
+            ),
+            ROW ( "Context", "Grand total", "Mismatches", [__Candidate Mismatch Count] ),
+            ROW ( "Context", "Empty dates", "Mismatches",
+                CALCULATE ( [__Candidate Mismatch Count], FILTER ( ALL ( DimDate ), FALSE () ) ) ),
+            SELECTCOLUMNS (
+                ADDCOLUMNS ( VALUES ( DimProject[id] ), "Mismatches", [__Candidate Mismatch Count] ),
+                "Context", "Project: " & DimProject[id], "Mismatches", [Mismatches]
+            ),
+            SELECTCOLUMNS (
+                ADDCOLUMNS ( VALUES ( DimEmployee[id] ), "Mismatches", [__Candidate Mismatch Count] ),
+                "Context", "Employee: " & DimEmployee[id], "Mismatches", [Mismatches]
+            ),
+            SELECTCOLUMNS (
+                ADDCOLUMNS ( VALUES ( DimTask[id] ), "Mismatches", [__Candidate Mismatch Count] ),
+                "Context", "Task: " & DimTask[id], "Mismatches", [Mismatches]
+            )
+        ),
+        [Mismatches] > 0
+    )

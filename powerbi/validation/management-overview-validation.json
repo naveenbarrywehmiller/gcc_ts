@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-06",
+  "evidenceType": "local",
+  "page": "01_overview",
+  "canvas": {
+    "width": 1440,
+    "height": 960
+  },
+  "visuals": 14,
+  "overlapsOrBoundsErrors": [],
+  "uniqueTabOrder": true,
+  "schemaDocuments": 244,
+  "schemaErrors": 0,
+  "phonePages": 9,
+  "phoneVisuals": 116,
+  "phoneLayoutErrors": 0,
+  "nativeReview": "Canonical project opened in Power BI Desktop. Updated cards, charts and on-time delivery table column rendered successfully with the existing cached data. Textbox scrollbars and a clipped footer prompted final spacing adjustments. Windows locked before those final adjustments could be rechecked; final Desktop and phone visual review remains pending.",
+  "dataRefreshPerformed": false,
+  "semanticModelChanged": false
+}

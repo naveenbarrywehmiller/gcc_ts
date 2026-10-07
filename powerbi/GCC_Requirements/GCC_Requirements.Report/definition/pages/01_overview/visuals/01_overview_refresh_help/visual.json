@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "01_overview_refresh_help",
   "position": {
     "x": 24,
-    "y": 170,
+    "y": 908,
+    "z": 13000,
+    "height": 44,
     "width": 1392,
-    "height": 50,
-    "z": 31,
-    "tabOrder": 31
+    "tabOrder": 13000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,11 +19,11 @@
               {
                 "textRuns": [
                   {
-                    "value": "Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop).",
+                    "value": "Saved snapshot · Auto-refresh off · Desktop refresh: Home > Refresh > Data",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
-                      "fontSize": "12pt",
-                      "color": "#0F766E"
+                      "fontSize": "10pt",
+                      "color": "#475569"
                     }
                   }
                 ]

@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][int]$Port)
+param([Parameter(Mandatory=$true)][int]$Port, [switch]$VerifyDaxCandidates)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'powerbi-runtime.ps1')
 $taskBin = Get-GccPowerBIDesktopBin
@@ -14,6 +14,16 @@ if (Test-Path -LiteralPath $taskDefinition) {
     $taskDb = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase((Get-Content (Join-Path $taskModelPath 'model.bim') -Raw))
 }
 $taskDb.Name = 'GCC requirements isolated validation'
+if ($VerifyDaxCandidates) {
+    # Keep comparisons meaningful after candidates have been applied to source.
+    $taskBaselinePath = Join-Path $PSScriptRoot 'powerbi-dax-baseline.json'
+    if (Test-Path -LiteralPath $taskBaselinePath) {
+        $taskBaseline = Get-Content -LiteralPath $taskBaselinePath -Raw | ConvertFrom-Json
+        foreach ($taskProperty in $taskBaseline.PSObject.Properties) {
+            $taskDb.Model.Tables['_Measures'].Measures[$taskProperty.Name].Expression = $taskProperty.Value
+        }
+    }
+}
 $taskDb.ID = 'gcc_requirements_validation_' + [Guid]::NewGuid().ToString('N')
 $taskBytes = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($taskFixture))
 $taskDb.Model.Expressions['fnApi'].Expression = '(endpoint as text) as list => Record.Field(Json.Document(Binary.FromText("' + $taskBytes + '", BinaryEncoding.Base64)), endpoint)'
@@ -40,6 +50,10 @@ try {
     $taskDb.Model.SaveChanges() | Out-Null
     $taskConnection = New-Object Microsoft.AnalysisServices.AdomdClient.AdomdConnection("Data Source=localhost:$Port;Initial Catalog=$($taskDb.Name)")
     $taskConnection.Open()
+    if ($VerifyDaxCandidates) {
+        . (Join-Path $PSScriptRoot 'test-powerbi-dax-candidates.ps1')
+        Test-GccDaxCandidates -Scenario 'Base fixture' -Benchmark
+    }
     foreach ($taskMeasure in $taskDb.Model.Tables['_Measures'].Measures) {
         $taskCommand = $taskConnection.CreateCommand()
         $taskCommand.CommandText = 'EVALUATE ROW("Value", [' + $taskMeasure.Name.Replace(']',']]') + '])'
@@ -91,6 +105,7 @@ try {
     $taskDb.Model.Tables['FactDeliverable'].Partitions[0].Source.Expression='#table(type table [deliverableId=text,projectId=Int64.Type,plannedDate=date,deliveredDate=date,fundamentalErrors=Int64.Type,informationErrors=Int64.Type,readableErrors=Int64.Type,hadRework=logical], {{"d1",2,#date(2026,9,30),#date(2026,9,30),1,0,0,false},{"d2",2,#date(2026,9,30),#date(2026,9,30),0,null,0,false}})'
     $taskDb.Model.RequestRefresh([Microsoft.AnalysisServices.Tabular.RefreshType]::Full)
     $taskDb.Model.SaveChanges() | Out-Null
+    if ($VerifyDaxCandidates) { Test-GccDaxCandidates -Scenario 'Delivery and conflicting-input fixture' }
     $taskExtraCases=@(
         @{name='Effort compares lifetime actuals with lifetime budget';dax='CALCULATE([Effort Deviation %],DimDate[YearMonth]="2026-09")';expected=0.2},
         @{name='Effort tolerance turns red';dax='CALCULATE([Effort Alert Color],DimDate[YearMonth]="2026-09")';expected='#DC2626'},

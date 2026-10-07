@@ -8,11 +8,11 @@
             {
               "textRuns": [
                 {
-                  "value": "Data is a saved snapshot. Desktop owner: Home > Refresh > Data. Auto-refresh is off. Swipe wide tables sideways for all columns.",
+                  "value": "Saved snapshot. Auto-refresh off. Desktop refresh: Home > Refresh > Data. Swipe the division table sideways for all columns.",
                   "textStyle": {
                     "fontFamily": "Segoe UI",
                     "fontSize": "10.5pt",
-                    "color": "#0F766E"
+                    "color": "#475569"
                   }
                 }
               ]
@@ -24,10 +24,10 @@
   },
   "position": {
     "x": 8,
-    "y": 1420,
+    "y": 1796,
     "width": 308,
-    "height": 104,
-    "z": 13,
-    "tabOrder": 13
+    "height": 88,
+    "z": 14,
+    "tabOrder": 14
   }
 }

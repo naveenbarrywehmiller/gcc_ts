@@ -5,6 +5,21 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.2] — 2026-10-06
+
+### Changed
+- Reused scalar calculations with named variables in Available Hours, Under Utilized %, Effort Deviation %, and the three alert-color measures, retaining KPI semantics and thresholds.
+- Added repeatable baseline/candidate comparison tests and an isolated cold/warm-cache benchmark. Two fixtures and 52 boundary comparisons passed; the applied model passed 72 measure evaluations and 36 regression cases.
+- Recorded the external Microsoft report-schema 2.13.0 HTTP 404 limitation separately from successful native model validation.
+
+## [1.1.1] — 2026-10-06
+
+### Changed
+- Redesigned the GCC Requirements overview for managers with compact filters, larger KPI values, taller charts, clearer input guidance and a compact refresh footer.
+- Corrected chart titles to match their measures; ranked division hours in a horizontal bar chart and added on-time delivery to the division table.
+- Made Management overview the opening page, added descriptive alt text and logical keyboard order, and updated the overview phone layout and its generator.
+- Preserved KPI calculations, source connections, reporting-month selection and all eight supporting pages.
+
 ## [1.1.0] — 2026-09-27
 
 ### Added

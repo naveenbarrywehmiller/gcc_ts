@@ -3,9 +3,9 @@
   "pages": [
     {
       "name": "01_overview",
-      "displayName": "GCC | Performance overview",
+      "displayName": "GCC | Management overview",
       "visuals": 14,
-      "height": 1940
+      "height": 1892
     },
     {
       "name": "02_utilization",

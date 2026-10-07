@@ -166,7 +166,7 @@ M checks unique/nonempty register IDs and converts types. Full validation of for
 
 ## Saved project inventory
 
-Reference generated **2026-10-06** from the saved model/PBIR sources. Application version: **1.15.0**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
+Reference generated **2026-10-06** from the saved model/PBIR sources. Application version: **1.16.0**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
 
 ```text
 powerbi/
@@ -200,26 +200,26 @@ All pages are **1440 × 1040**, FitToPage, with Segoe UI text, pale-gray canvas,
 The inventory below lists every visual ID, type, title and bound query role. `Values` is the legacy-card/table role, `Category` is the category axis/slicer role and `Y` is a chart value role. Textboxes have no model fields. Any additional model-bound conditional formatting is listed with the visual. IDs match the PBIR paths for maintenance.
 
 
-### GCC | Performance overview
+### GCC | Management overview
 
 Page ID: `01_overview`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/01_overview/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
-| 01_overview_01 | Text | GCC \| Performance overview | Static text | 8, 8 / 308 × 64 |
-| 01_overview_02 | Text | Select a reporting month. Capacity uses the current roster. Delivery cards count projects; quality cards require a deliverable register. | Static text | 8, 716 / 308 × 104 |
-| 01_overview_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 140 / 308 × 104 |
-| 01_overview_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 252 / 308 × 104 |
-| 01_overview_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` | 8, 364 / 308 × 104 |
-| 01_overview_06 | Card | Actual Hours | Values: `_Measures[Actual Hours]` | 8, 476 / 150 × 112 |
-| 01_overview_07 | Card | Monthly Utilization % | Values: `_Measures[Monthly Utilization %]` | 166, 476 / 150 × 112 |
-| 01_overview_08 | Card | Active Team Strength | Values: `_Measures[Active Team Strength]` | 8, 596 / 150 × 112 |
-| 01_overview_09 | Card | Project On Time % | Values: `_Measures[Project On Time %]` | 166, 596 / 150 × 112 |
-| 01_overview_10 | Clustered column chart | Actual hours by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Actual Hours]`, `_Measures[Training Hours]` | 8, 828 / 308 × 288 |
-| 01_overview_11 | Clustered column chart | Delivery and workload by division | Category: `DimDivision[divisionName]`; Y: `_Measures[Actual Hours]` | 8, 1124 / 308 × 288 |
-| 01_overview_12 | Table | Performance by division | Values: `DimDivision[divisionName]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]`, `_Measures[Projects Delivered]`, `_Measures[Products Touched]` | 8, 1532 / 308 × 400 |
-| 01_overview_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1420 / 308 × 104 |
-| 01_overview_refresh_time | Card | Last refreshed (IST) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 52 |
+| 01_overview_01 | Text | GCC \| Management overview | Static text | 8, 8 / 308 × 72 |
+| 01_overview_02 | Text | Blank KPI? Check Input readiness. Utilization needs mapped hours; on-time delivery needs target dates.<br>Actual hours include submitted and approved entries. Team size and capacity use the current roster. | Static text | 8, 652 / 308 × 136 |
+| 01_overview_03 | Slicer | Reporting month | Values: `DimDate[YearMonth]` | 8, 148 / 308 × 80 |
+| 01_overview_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 236 / 308 × 80 |
+| 01_overview_05 | Slicer | Fiscal year (start year) | Values: `DimDate[FiscalYear]` | 8, 324 / 308 × 80 |
+| 01_overview_06 | Card | Actual hours | Values: `_Measures[Actual Hours]` | 8, 412 / 150 × 112 |
+| 01_overview_07 | Card | Monthly utilization | Values: `_Measures[Monthly Utilization %]` | 166, 412 / 150 × 112 |
+| 01_overview_08 | Card | Active team members | Values: `_Measures[Active Team Strength]` | 8, 532 / 150 × 112 |
+| 01_overview_09 | Card | Projects delivered on time | Values: `_Measures[Project On Time %]` | 166, 532 / 150 × 112 |
+| 01_overview_10 | Clustered column chart | Actual and training hours by month | Category: `DimDate[YearMonth]`; Y: `_Measures[Actual Hours]`, `_Measures[Training Hours]` | 8, 796 / 308 × 288 |
+| 01_overview_11 | clusteredBarChart | Actual hours by division | Category: `DimDivision[divisionName]`; Y: `_Measures[Actual Hours]` | 8, 1092 / 308 × 288 |
+| 01_overview_12 | Table | Division performance \| compare workload, utilization and delivery | Values: `DimDivision[divisionName]`, `_Measures[Actual Hours]`, `_Measures[Monthly Utilization %]`, `_Measures[Under Utilized %]`, `_Measures[Projects Delivered]`, `_Measures[Project On Time %]`, `_Measures[Products Touched]` | 8, 1388 / 308 × 400 |
+| 01_overview_refresh_help | Text | Saved snapshot · Auto-refresh off · Desktop refresh: Home > Refresh > Data | Static text | 8, 1796 / 308 × 88 |
+| 01_overview_refresh_time | Card | Last refreshed (IST) | Values: `_Measures[Report Status]` | 8, 88 / 308 × 52 |
 
 
 ### GCC | Utilization
@@ -400,7 +400,7 @@ For access on an actual phone, publish the report to an approved Power BI worksp
 
 | Phone page | Native visuals | Width | Scroll content height |
 |---|---|---|---|
-| GCC \| Performance overview | 14 | 324 | 1940 |
+| GCC \| Management overview | 14 | 324 | 1892 |
 | GCC \| Utilization | 14 | 324 | 1940 |
 | GCC \| Delivery & quality | 14 | 324 | 1940 |
 | GCC \| Capacity & forecast | 14 | 324 | 1764 |
@@ -940,7 +940,12 @@ Format: `#,##0.0`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirement
 
 ```dax
 Available Hours =
-IF(NOT ISBLANK([Roster Capacity Hours]),MAX(0,[Roster Capacity Hours]-COALESCE([Capacity Vacation Hours],0)))
+VAR RosterCapacity = [Roster Capacity Hours]
+RETURN
+    IF (
+        NOT ISBLANK ( RosterCapacity ),
+        MAX ( 0, RosterCapacity - COALESCE ( [Capacity Vacation Hours], 0 ) )
+    )
 ```
 
 
@@ -964,7 +969,8 @@ Format: `0.0%`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirements.S
 
 ```dax
 Under Utilized % =
-IF(NOT ISBLANK([Monthly Utilization %]),1-[Monthly Utilization %])
+VAR Utilization = [Monthly Utilization %]
+RETURN IF ( NOT ISBLANK ( Utilization ), 1 - Utilization )
 ```
 
 
@@ -1246,7 +1252,14 @@ Format: `0.0%`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirements.S
 
 ```dax
 Effort Deviation % =
-IF(NOT ISBLANK([Delivered Project Budget Hours]) && NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),DIVIDE([Delivered Project Actual Hours]-[Delivered Project Budget Hours],[Delivered Project Budget Hours]))
+VAR BudgetHours = [Delivered Project Budget Hours]
+RETURN
+    IF (
+        NOT ISBLANK ( BudgetHours )
+            && NOT ISCROSSFILTERED ( DimEmployee )
+            && NOT ISCROSSFILTERED ( DimTask ),
+        DIVIDE ( [Delivered Project Actual Hours] - BudgetHours, BudgetHours )
+    )
 ```
 
 
@@ -1282,7 +1295,10 @@ Format: `General`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirement
 
 ```dax
 Effort Alert Color =
-IF(ISBLANK([Effort Deviation %]),"#64748B",IF(ABS([Effort Deviation %])>0.05,"#DC2626","#0F766E"))
+VAR Deviation = [Effort Deviation %]
+RETURN
+    IF ( ISBLANK ( Deviation ), "#64748B",
+        IF ( ABS ( Deviation ) > 0.05, "#DC2626", "#0F766E" ) )
 ```
 
 
@@ -1294,7 +1310,10 @@ Format: `General`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirement
 
 ```dax
 Schedule Alert Color =
-IF(ISBLANK([Schedule Deviation %]),"#64748B",IF(ABS([Schedule Deviation %])>0.03,"#DC2626","#0F766E"))
+VAR Deviation = [Schedule Deviation %]
+RETURN
+    IF ( ISBLANK ( Deviation ), "#64748B",
+        IF ( ABS ( Deviation ) > 0.03, "#DC2626", "#0F766E" ) )
 ```
 
 
@@ -1453,7 +1472,11 @@ Format: `General`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirement
 
 ```dax
 Defect Alert Color =
-IF(ISBLANK([Defect Density %]),"#64748B",IF(ABS([Defect Density %]-SELECTEDVALUE(Settings[DefectTarget],0))>0.05,"#DC2626","#0F766E"))
+VAR Density = [Defect Density %]
+RETURN
+    IF ( ISBLANK ( Density ), "#64748B",
+        IF ( ABS ( Density - SELECTEDVALUE ( Settings[DefectTarget], 0 ) ) > 0.05,
+            "#DC2626", "#0F766E" ) )
 ```
 
 

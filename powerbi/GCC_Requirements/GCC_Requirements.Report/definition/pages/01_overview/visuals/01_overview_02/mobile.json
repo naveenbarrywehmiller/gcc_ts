@@ -8,7 +8,7 @@
             {
               "textRuns": [
                 {
-                  "value": "Select a reporting month. Capacity uses the current roster. Delivery cards count projects; quality cards require a deliverable register.",
+                  "value": "Blank KPI? Check Input readiness. Utilization needs mapped hours; on-time delivery needs target dates.\nActual hours include submitted and approved entries. Team size and capacity use the current roster.",
                   "textStyle": {
                     "fontFamily": "Segoe UI",
                     "fontSize": "10.5pt",
@@ -24,9 +24,9 @@
   },
   "position": {
     "x": 8,
-    "y": 716,
+    "y": 652,
     "width": 308,
-    "height": 104,
+    "height": 136,
     "z": 10,
     "tabOrder": 10
   }

@@ -30,3 +30,5 @@ ref table FactPlan
 ref table InputStatus
 ref table _Measures
 
+ref cultureInfo en-US
+
