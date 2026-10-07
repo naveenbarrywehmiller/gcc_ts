@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.17.0...v1.18.0) (2026-10-07)
+
+
+### Features
+
+* add role-scoped help center ([336c4c4](https://github.com/naveenbarrywehmiller/gcc_ts/commit/336c4c4ab47f2a926383490318b3277872b8c7d3))
+
 ## [1.17.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.16.2...v1.17.0) (2026-10-07)
 
 
