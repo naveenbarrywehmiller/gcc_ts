@@ -1,526 +1,285 @@
-# ⏰ GCC TimeSheet
+# GCC TimeSheet
 
-> **Internal Employee Time Tracking System** — A full-stack web application for logging, submitting, approving, and reporting on employee timesheets, with optional Microsoft 365 / Entra ID SSO integration.
+Employee time tracking, team approvals, administration, and reporting in one application. Built with React and Express, backed by SQLite, with optional Microsoft 365 integrations and a companion Power BI project.
 
----
+[Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
-## 🧱 Tech Stack
+## Features
 
-### Frontend
-| Technology | Version | Purpose |
-|---|---|---|
-| **React** | 19 | UI framework |
-| **Vite** | 8 | Build tool & dev server |
-| **React Router v7** | 7 | Client-side routing |
-| **TanStack Query** | v5 | Server-state management & caching |
-| **@azure/msal-react** | — | Microsoft SSO (optional) |
-| **Lucide React** | — | Icon library |
-| **Vanilla CSS** | — | Custom design system with dark mode |
+| Area | Available capabilities |
+| --- | --- |
+| Timesheets | Weekly grid with ISO week numbers; project/task entries; non-project activities; bulk save; submit, approve, reject, and recall; administrator posting |
+| Planned vacation | Month calendar, individual dates and date ranges, save/remove/discard controls, and administrator team view; stored separately from timesheet hours |
+| Dashboard | Personal hours, weekly progress, status summaries, recent activity, and shortcuts |
+| Approvals | Manager review and administrator approval screens, comments, and division-scoped administration |
+| Organization | Divisions, subdivisions, departments, department ownerships, supporting categories, and activities |
+| Master data | Users, projects, customers/project metadata, tasks, billable classification, and activation/deactivation |
+| Reporting | Utilization, project hours and detail, weekly summaries, filtering, Excel/PDF exports |
+| Reporting inputs | Division travel and staffing updates for reporting |
+| Holidays | Holiday calendar administration and calendar integration; see implementation and tests in the repository |
+| Power BI | Read-only reporting API, dedicated API-key authentication, filtering/pagination, and a requirements-based report/model project |
+| Microsoft 365 | Optional Entra ID SSO, SharePoint synchronization, and Power Automate approvals |
+| Operations | System-admin maintenance, online database download, database upload/restore, token generation, and error-log viewing |
+| Interface | Dark mode, responsive screens, notifications, and server date/time display in IST with a 12-hour clock |
 
-### Backend
-| Technology | Version | Purpose |
-|---|---|---|
-| **Node.js** | ≥18 | Runtime |
-| **Express** | 4 | REST API framework |
-| **better-sqlite3** | 11 | SQLite ORM (synchronous, fast) |
-| **jsonwebtoken** | 9 | JWT auth (HttpOnly cookie) |
-| **jwks-rsa** | 4 | Microsoft Entra ID token validation |
-| **bcryptjs** | 2 | Password hashing |
-| **helmet** | 8 | HTTP security headers |
-| **express-rate-limit** | 7 | API rate limiting |
-| **multer** | 1 | File uploads (CSV import) |
-| **ExcelJS** | 4 | Excel report generation |
-| **PDFKit** | 0.19 | PDF report generation |
-| **nodemon** | 3 | Dev auto-restart |
-| **PM2** | 7 | Production process manager |
+### Roles and access
 
-### Database
-| Technology | Details |
-|---|---|
-| **SQLite** (via `better-sqlite3`) | File-based, zero-config, embedded |
-| **Location** | `server/data/timesheet.db` |
-| **Migrations** | Auto-run on startup via `src/config/migrate.js` |
-| **Seeding** | Initial data via `src/config/seed.js` |
+There are **four roles**: `employee`, `manager`, `admin`, and `system admin`.
 
-### DevOps & Infrastructure
-| Technology | Purpose |
-|---|---|
-| **Docker** | Multi-architecture containerisation (`linux/amd64` + `linux/arm64`) |
-| **GitHub Actions** | CI/CD — automated multi-arch build & push to GHCR |
-| **GHCR** (GitHub Container Registry) | Docker image hosting |
-| **Tailscale Funnel** | Secure public HTTPS tunneling |
-| **Watchtower** | Automated container auto-refresh on new releases |
-| **Deployment Log** | See [DEPLOYMENT_NOTES.md](./DEPLOYMENT_NOTES.md) for full infrastructure & fix notes |
+| Role | Typical access |
+| --- | --- |
+| Employee | Own dashboard, timesheets, and planned vacation |
+| Manager | Employee features plus manager approvals, subject to backend scope checks |
+| Admin | Administration and reports, scoped to assigned divisions where applicable |
+| System admin | Full role access, system maintenance, database operations, and error logs |
 
----
+The backend checks permissions independently of the UI. Administrative reports are not available to every authenticated employee.
 
-## 🗂️ Project Structure
+### Timesheet workflow
 
-```
-├── client/                  # React frontend (Vite)
-│   └── src/
-│       ├── pages/           # Route-level pages
-│       │   ├── Login.jsx
-│       │   ├── Dashboard.jsx
-│       │   ├── Timesheet.jsx
-│       │   ├── Reports.jsx
-│       │   ├── admin/       # Admin-only pages
-│       │   └── manager/     # Manager-only pages
-│       ├── components/      # Reusable UI components
-│       ├── contexts/        # React contexts (Auth, Theme, Toast)
-│       └── services/        # API client & MSAL config
-│
-├── server/                  # Express backend
-│   └── src/
-│       ├── routes/          # API route handlers (19 route files)
-│       ├── config/          # DB, migrations, seed, backup
-│       └── utils/           # Shared utilities
-│
-├── .github/workflows/       # GitHub Actions CI/CD
-├── docker-compose.yml       # Docker Compose config
-└── Dockerfile               # Multi-stage Docker build
-```
+Save hours as drafts, submit the week for review, then approve or reject it through the applicable approval screen. Recall moves eligible entries back to an editable state; the server enforces ownership, division scope, and eligible status. Planned vacation does not create timesheet hours or submit an approval request.
 
----
+## Getting started
 
-## ✨ Features
+### Requirements
 
-### 👤 Authentication & Roles
-- **JWT authentication** stored in secure HttpOnly cookies
-- **Three roles**: `admin`, `manager`, `employee`
-- **Optional Microsoft SSO** via Azure Entra ID (MSAL) — disabled automatically if `VITE_ENTRA_CLIENT_ID` is not set
-- Route-level protection (Admin/Manager guards)
+- **Node.js 22.12 or later**; the Dockerfile uses Node 22. The installed `better-sqlite3` 13 package requires Node 22+, and [Vite requires 22.12+ on Node 22](https://vite.dev/guide/).
+- npm supplied with your Node installation.
+- Git. Docker with the Compose plugin is optional.
+- If SQLite's native dependency must compile locally, install the compiler/Python toolchain appropriate for your operating system.
 
-### 🕐 Timesheet Management
-- Log hours per day against **Project + Task** combinations
-- Support for **non-project tasks** (Leave, Meeting, Training, Admin) that don't require a project
-- Weekly view with ISO week number tracking
-- Timesheet **status workflow**: `draft → submitted → approved / rejected → recalled`
-- **Admin comments** on approval/rejection
-- Cumulative project hours tracking
+### 1. Clone and install
 
-### 📊 Dashboard
-- Personal hours summary
-- Weekly/monthly breakdowns
-- Recent activity overview
-
-### 📁 Organisational Hierarchy
-| Entity | Description |
-|---|---|
-| **Divisions** | Top-level business units |
-| **Subdivisions** | Sub-units under divisions |
-| **Departments** | Cross-cutting departments |
-| **Department Ownerships** | Ownership labels within departments |
-| **Supporting Categories** | Team type classification (e.g. Dedicated Team, Flex Team) |
-| **Activities** | Project activity types |
-
-### 🗂️ Project & Task Management
-- **Projects**: code, name, customer, activity, division, subdivision
-- **Tasks**: classification (Billable / Non-Billable), category, description, `requires_project` flag
-- Soft-delete (deactivate) for both
-
-### 👔 Manager Features
-- **Manager Approvals** page — review and act on team submissions
-- Filtered views by division ownership
-
-### 🛡️ Admin Features
-| Feature | Route |
-|---|---|
-| User Management | `/admin/users` |
-| Project Management | `/admin/projects` |
-| Task Management | `/admin/tasks` |
-| Division Management | `/admin/divisions` |
-| Subdivision Management | `/admin/subdivisions` |
-| Department Management | `/admin/departments` |
-| Supporting Categories | `/admin/supporting-categories` |
-| Activities | `/admin/activities` |
-| Holiday Calendar | `/admin/holidays` |
-| Approvals (all users) | `/admin/approvals` |
-| CSV/Excel Import | `/admin/import` |
-| Audit Log | `/admin/audit` |
-
-### 📈 Reports & Exports
-- Filterable reports by user, project, date range, division
-- Export to **Excel (.xlsx)** and **PDF**
-- Power BI Read-Only REST API endpoints (`/api/powerbi/*` — see [API integration](docs/POWERBI.md)) and the [complete requirements Power BI project guide](powerbi/POWERBI.md), with all formulas, queries, tables, visuals and connection steps
-- SharePoint sync (`/api/sharepoint-sync`)
-
-### 🔍 Audit Log
-- Every create/update/delete action is logged
-- Captures: user, action, entity type & ID, old value, new value, IP address
-
-### 🌗 UI/UX
-- **Dark mode** support (system preference + manual toggle)
-- Toast notifications
-- Loading skeletons
-- Responsive layout
-- Glassmorphism design with animated gradient backgrounds
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js** ≥ 18
-- **npm** ≥ 9
-
-### 1. Clone & Install
-
-```bash
+```sh
 git clone https://github.com/naveenbarrywehmiller/gcc_ts.git
 cd gcc_ts
-npm install          # installs both server and client dependencies
+npm install
 ```
 
-### 2. Configure Environment
+The root `postinstall` installs dependencies in both `server/` and `client/`. To install strictly from the committed lockfiles, run `npm ci --prefix server` and `npm ci --prefix client` instead.
 
-```bash
+### 2. Configure the backend
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example server/.env
+```
+
+On Linux/macOS:
+
+```sh
 cp .env.example server/.env
-# Edit server/.env with your settings
 ```
 
-Key variables in `server/.env`:
+Edit `server/.env`. Generate **two independent secrets**, running this command twice:
 
-```env
-PORT=3001
-JWT_SECRET=your-secret-key
-DB_PATH=./data/timesheet.db
-CORS_ORIGIN=http://localhost:5173
-
-# Optional: Microsoft SSO
-VITE_ENTRA_CLIENT_ID=
-VITE_ENTRA_TENANT_ID=
+```sh
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
-### 3. Run Database Migrations & Seed
+Set `JWT_SECRET` and `JWT_REFRESH_SECRET` to the generated values. For first-time provisioning, also set:
 
-```bash
-npm run setup        # runs migrate + seed
+```dotenv
+BOOTSTRAP_ADMIN_EMAIL=admin@example.com
+BOOTSTRAP_ADMIN_PASSWORD=replace-with-a-unique-password-at-least-12-characters
 ```
 
-### 4. Start Development Servers
+There is **no default production login**. Migrations create a system admin only when these values are supplied and no system admin already exists. Remove the bootstrap values after successful provisioning; they do not reset an existing user's password.
 
-```bash
-# Terminal 1 — Backend (port 3001)
-cd server && npm run dev
+### 3. Initialize and run
 
-# Terminal 2 — Frontend (port 5173)
-cd client && npm run dev
+```sh
+npm run setup
 ```
 
-Open **http://localhost:5173**
+This runs migrations and catalog seeding. `SEED_DEMO_DATA=false` is the default; demo-user creation is prohibited in production. Migrations also run automatically on server startup.
 
-### First System Admin
+Open two terminals at the repository root:
 
-Before the first `npm run setup` or server startup, set `BOOTSTRAP_ADMIN_EMAIL`
-and `BOOTSTRAP_ADMIN_PASSWORD` in `server/.env`. Use a unique password of at least
-12 characters. For Docker, supply these variables through the container environment.
-Startup provisions this account only when no system admin exists; there are no
-default login credentials. Remove the bootstrap variables after provisioning.
-
-Existing accounts and passwords are preserved. If an older installation still
-uses the former default system-admin password, change it before exposing the app.
-Renaming an existing system admin does not create another account on restart.
-
-`npm run setup` seeds reference data. Demo users require `SEED_DEMO_DATA=true`
-and are refused in production.
-
-### Local Checks
-
-Run `npm run lint`, `npm run build`, and `npm test` from the repository root.
-Tests use isolated in-memory databases and explicit test users; they do not use
-or alter the configured application database. The regression suite covers role
-assignment, approval scope, rate limits, daily totals, bootstrap provisioning,
-SharePoint status dispatch, and client save behavior.
-
----
-
-## 💾 Database Management
-
-The application includes built-in scripts to safely backup and restore your SQLite database. These commands should be run from within the `server` directory.
-
-### 🚧 Maintenance Mode (Zero-Restart)
-To prevent users from modifying data while you take a backup or restore, you can instantly put the app in maintenance mode without stopping PM2:
-```bash
-cd server
-touch .maintenance   # Enables maintenance mode instantly
-```
-*When finished, simply run `rm .maintenance` to restore normal access.*
-
-### Taking a Backup
-While in maintenance mode, safely backup the database (handles WAL mode correctly):
-```bash
-cd server
-npm run backup
-```
-The backup will be saved to `server/backup/timesheet-YYYY-MM-DD.db`.
-
-### Restoring a Backup
-Before restoring, put the app in maintenance mode. Then run:
-```bash
-cd server
-npm run restore -- ./backup/timesheet-YYYY-MM-DD.db
-```
-*(Replace `timesheet-YYYY-MM-DD.db` with the actual name of your backup file).*
-
-**Important:** After restoring a database, you must restart the server process (e.g., `pm2 restart timesheet-server`) to apply the new database before removing the `.maintenance` file.
-
----
-
-## 📡 REST API Reference
-
-The backend provides a comprehensive JSON REST API. All endpoints are prefixed with `/api`.
-
-👉 **For the complete documentation with request/response schemas and examples, see [`API_REFERENCE.md`](./API_REFERENCE.md).**
-
-### Quick Endpoints Overview
-
-| Category | Endpoint | Methods | Description |
-|---|---|---|---|
-| **System** | `/api/health` | `GET` | Service status, timestamp & release version |
-| **Auth** | `/api/auth/login` | `POST` | Local user login (sets HttpOnly cookie) |
-| | `/api/auth/logout` | `POST` | Clear session cookies |
-| | `/api/auth/me` | `GET` | Current user profile & permissions |
-| | `/api/auth/ms/login` | `POST` | Microsoft 365 Entra ID SSO |
-| **Timesheets** | `/api/timesheets` | `GET`, `POST` | Log and retrieve weekly time entries |
-| | `/api/timesheets/batch` | `POST` | Bulk save weekly grid |
-| | `/api/timesheets/submit` | `POST` | Submit week for manager approval |
-| | `/api/timesheets/recall` | `POST` | Recall submitted timesheet back to draft |
-| | `/api/timesheets/approve` | `POST` | Manager/Admin timesheet approval |
-| | `/api/timesheets/reject` | `POST` | Manager/Admin timesheet rejection |
-| **Manager** | `/api/manager/pending-approvals` | `GET` | Team pending review list |
-| | `/api/manager/week-details/:userId/:year/:week` | `GET` | Detailed employee week breakdown |
-| **Reports** | `/api/reports/dashboard` | `GET` | Dashboard KPI metrics |
-| | `/api/reports/utilization` | `GET` | Employee utilization rates |
-| | `/api/reports/project-hours` | `GET` | Project hour aggregations |
-| | `/api/reports/export` | `GET` | Export timesheet records to Excel or PDF |
-| **Power BI** | `/api/powerbi/*` | `GET` | Secure read-only feeds for Power BI reporting |
-| **Master Data** | `/api/users`, `/api/projects`, `/api/tasks`, ... | CRUD | Entity catalogs and management |
-| **Admin** | `/api/audit`, `/api/import`, `/api/sharepoint-sync/*` | `GET`, `POST` | Audit logs, CSV import, sync |
-
----
-
-## 🐳 Docker Deployment Guide (GitHub Container Registry)
-
-Follow these step-by-step instructions to deploy the GCC Timesheet application on any Linux server, Raspberry Pi, Mac, or VM using the pre-built multi-architecture Docker image from GitHub Container Registry (`ghcr.io`).
-
-Both **`linux/arm64`** (Raspberry Pi 3/4/5, Apple Silicon) and **`linux/amd64`** (Intel/AMD x86_64) are supported natively.
-
----
-
-### Step 1: Install Docker & Docker Compose
-
-Ensure Docker and the Docker Compose plugin are installed on your target machine:
-
-```bash
-# Ubuntu / Debian / DietPi / Raspberry Pi OS
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
+```sh
+# Terminal 1
+npm run dev:server
 ```
 
-Verify installation:
-```bash
-docker --version
-docker compose version
+```sh
+# Terminal 2
+npm run dev:client
 ```
 
----
+Visit **http://localhost:5173** and sign in with the bootstrap credentials. The API runs on **http://localhost:3001**; Vite proxies `/api` requests there. Use separate terminals on Windows: the root `npm run dev` command uses POSIX shell background-job syntax.
 
-### Step 2: Create the Project Directory and Storage
+### 4. First administrator setup
 
-Create a dedicated directory on your server (e.g., `/opt/gcc_ts` or `~/gcc_ts`) and set up persistent storage folders for SQLite data, file uploads, and backups:
+1. Create or review divisions, departments, supporting categories, and activities.
+2. Configure projects, tasks, and holiday dates.
+3. Create employees and managers; assign roles and organization membership.
+4. Assign division ownership for administrators as appropriate.
+5. Save a sample timesheet, submit it, and verify the approval/reporting flow.
+6. Configure optional integrations only when their credentials and permissions are ready.
 
-```bash
-# Create directory
-sudo mkdir -p /opt/gcc_ts/data /opt/gcc_ts/uploads /opt/gcc_ts/backup
-cd /opt/gcc_ts
+## Configuration
+
+The backend explicitly loads **`server/.env`**. Docker Compose reads **root `.env`** and passes it into the container. Frontend `VITE_*` settings belong in **`client/.env`**. These files serve different purposes.
+
+| Setting | Default / behavior | Guidance |
+| --- | --- | --- |
+| `NODE_ENV` | `development` | Use `production` to serve `client/dist` through Express |
+| `PORT` | `3001` | Vite's API proxy targets 3001; update `client/vite.config.js` if changing local API port |
+| `JWT_SECRET`, `JWT_REFRESH_SECRET` | Development fallbacks | Supply independent random values; production requires at least 32 characters each |
+| `JWT_EXPIRES_IN` | `15m` | Access-token lifetime |
+| `JWT_REFRESH_EXPIRES_IN` | `30d` | Refresh-token lifetime |
+| `COOKIE_SECURE` | `false` | Set `true` for browser access through HTTPS; local HTTP requires `false` |
+| `DB_PATH` | `./data/timesheet.db` | Relative paths resolve from `server/`; persist this location in deployments |
+| `CORS_ORIGIN` | `http://localhost:5173` | Comma-separated exact browser origins; use your real application origin in production |
+| `APP_BASE_URL` | Empty in code; localhost in example | Set to the externally accessible URL for integrations |
+| `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX` | `900000`, `2000` | API request window and maximum count |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | Empty | One-time system-admin provisioning |
+| `SEED_DEMO_DATA` | `false` | Development-only demo users |
+| `POWERBI_API_ENABLED` | `true` | Set `false` to disable the reporting API |
+| `POWERBI_API_KEY` | Empty | Generate a dedicated random key before enabling external reporting clients |
+| `POWERBI_API_BASE_PATH` | `/api/powerbi` | Custom mount supported; the standard path remains an alias |
+| `POWERBI_MAX_RECORDS` | `50000` | Reporting query safety cap |
+| `POWERBI_CACHE_TTL` | `60` seconds | Use a positive integer; currently `0` falls back to 60 rather than disabling caching |
+
+See [.env.example](.env.example) for integration credentials and feature flags. Never commit environment files or expose credentials through screenshots, issue reports, or frontend variables.
+
+### Microsoft SSO
+
+Configure `ENABLE_MSAL_AUTH=true`, `ENTRA_CLIENT_ID`, and `ENTRA_TENANT_ID` in `server/.env`. Copy [client/.env.example](client/.env.example) to `client/.env` and set matching `VITE_ENTRA_CLIENT_ID` and `VITE_ENTRA_TENANT_ID` values. Register the browser application's redirect URL in Entra ID: the client uses its current origin plus `/auth/callback` (for example, `http://localhost:5173/auth/callback`).
+
+The server exposes `/api/auth/ms-config` and validates identity tokens through `/api/auth/ms-callback`. The browser also needs its Vite settings to instantiate MSAL. Restart the frontend dev server or rebuild after changing them: [Vite environment values are embedded at build time](https://vite.dev/guide/env-and-mode). Never put a client secret in `VITE_*` values.
+
+The supplied Dockerfile does not forward SSO build arguments. Adding `VITE_*` values only to Compose runtime environment will not enable MSAL in an already-built image. Build a frontend with the intended public settings for an SSO deployment.
+
+### SharePoint and Power Automate
+
+Enable `ENABLE_SHAREPOINT_SYNC` or `ENABLE_POWER_AUTOMATE` only after configuring the corresponding credentials, site/flow URL, and callback secret. See [SharePoint setup](SHAREPOINT_SETUP.md) and [Power Automate setup](POWER_AUTOMATE_SETUP.md). Review older examples against the current environment table and implemented routes.
+
+## Docker deployment
+
+### Build from this checkout
+
+Copy `.env.example` to **root `.env`**. Configure independent JWT secrets and initial bootstrap credentials. Set the actual `APP_BASE_URL`, `CORS_ORIGIN`, and HTTPS cookie policy.
+
+```sh
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=100 timesheet
 ```
 
-> **Important:** Persistent volume mounts ensure your timesheet database, users, and audit logs are preserved across container updates and restarts.
+The supplied Compose file publishes host port `${PORT:-3001}` to container port 3001, loads root `.env`, and keeps the database, uploads, logs, and restore safety backups in named volumes. The server runs in production regardless of the development value in the example file.
 
----
+Do not use `docker compose down -v` for routine updates: it removes named volumes and their data. Download an online database backup before upgrading or restoring.
 
-### Step 3: Create `docker-compose.yml`
+### Use the GitHub container image
 
-In `/opt/gcc_ts`, create a `docker-compose.yml` file:
-
-```bash
-nano /opt/gcc_ts/docker-compose.yml
-```
-
-Paste the following production configuration:
+Save this as `compose.registry.yml` beside the supplied Compose file:
 
 ```yaml
 services:
-  gcc-ts:
+  timesheet:
     image: ghcr.io/naveenbarrywehmiller/gcc_ts:latest
-    container_name: gcc_ts
-    restart: unless-stopped
-    ports:
-      - "3001:3001"
-    environment:
-      - PORT=3001
-      - NODE_ENV=production
-      - DB_PATH=./data/timesheet.db
-      - CORS_ORIGIN=*
-      - JWT_SECRET=replace_with_a_secure_random_key_64_characters
-      - JWT_REFRESH_SECRET=replace_with_another_secure_random_key_64_characters
-      - BOOTSTRAP_ADMIN_EMAIL=admin@example.com
-      - BOOTSTRAP_ADMIN_PASSWORD=replace_with_a_unique_password_12_chars_or_longer
-    volumes:
-      - /opt/gcc_ts/data:/app/server/data
-      - /opt/gcc_ts/uploads:/app/server/uploads
-      - /opt/gcc_ts/backup:/app/server/backup
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 --cleanup --label-enable
 ```
 
-#### What this configuration does:
-* **`image: ghcr.io/naveenbarrywehmiller/gcc_ts:latest`**: Pulls the multi-arch native image directly from GitHub Container Registry.
-* **Persistent Volumes**: Maps `/opt/gcc_ts/data` on host ➔ `/app/server/data` in container.
-* **`watchtower`**: Automatically checks GHCR every 5 minutes (`--interval 300`), pulls any new GitHub release, and recreates the `gcc_ts` container with zero manual intervention.
-
----
-
-### Step 4: Pull the Image & Start Containers
-
-Pull the latest multi-architecture image and launch in detached mode:
-
-```bash
-cd /opt/gcc_ts
-docker compose pull
-docker compose up -d
+```sh
+docker compose -f docker-compose.yml -f compose.registry.yml pull
+docker compose -f docker-compose.yml -f compose.registry.yml up -d --no-build
 ```
 
----
+GHCR images support `linux/amd64` and `linux/arm64`. For controlled upgrades, replace `latest` with an available version tag or a verified digest. Registry authentication is required if the package is private; see [GitHub help](.github/HELP.md#container-registries).
 
-### Step 5: Verify the Deployment
+### Health and HTTPS
 
-1. **Check container status:**
-   ```bash
-   docker compose ps
-   ```
-   Both `gcc_ts` and `watchtower` should be listed with `Up` status.
+Open `http://localhost:3001` (or the configured host port) and check `/api/health`. A normal response contains `status`, `timestamp`, and the version derived from root `package.json`. Maintenance mode intentionally returns 503 for health requests.
 
-2. **Check container logs:**
-   ```bash
-   docker logs -f gcc_ts
-   ```
-   You should see:
-   ```text
-   ✅ Database migrations complete.
-   ╔═══════════════════════════════════════════════════╗
-   ║         ⏰ Timesheet Server Running               ║
-   ║   Local:   http://localhost:3001                  ║
-   ║   Network: http://0.0.0.0:3001                    ║
-   ║   Mode:    production                             ║
-   ╚═══════════════════════════════════════════════════╝
-   ```
+Use a trusted reverse proxy or your established HTTPS tunnel for external access. Set `COOKIE_SECURE=true`, `APP_BASE_URL=https://your-host`, and `CORS_ORIGIN=https://your-host` for that deployment. The server trusts one proxy hop; restrict direct access to the upstream port when relying on forwarded headers.
 
-3. **Check the health & version endpoint:**
-   ```bash
-   curl -s http://localhost:3001/api/health
-   ```
-   Expected response:
-   ```json
-   {"status":"ok","timestamp":"...","version":"v1.7.1"}
-   ```
+## Operations and recovery
 
-4. **Access in browser:**
-   Open `http://<your-server-ip>:3001` in your browser. The login screen should display the active release version tag in the footer.
+- **Online backup:** sign in as system admin, open `/admin/system`, and download the database. The download endpoint uses SQLite's native online backup API.
+- **Restore:** use the system-admin database upload workflow, after saving a backup and reviewing the file. Restore replaces application data and should be coordinated with users.
+- **CLI backup:** `npm --prefix server run backup` writes to `server/backup`. Install `sqlite3` for an online CLI snapshot. If unavailable, the script copies database/WAL files; stop the server first to keep that fallback consistent.
+- **CLI restore:** stop the server, then run `npm --prefix server run restore -- /absolute/path/to/backup.db` and restart. The script replaces the database and clears existing WAL/SHM files; use a self-contained verified backup.
+- **Maintenance:** use the system-admin screen. File-based maintenance uses `server/.maintenance`; API requests generally return 503 while enabled. Container recreation removes that non-mounted marker, so check maintenance state after recreation.
+- **Diagnostics:** review `/admin/error-logs`, application logs, and `/api/health`. Keep backups outside the host as part of your operational process; a persistent volume alone is not an off-host backup.
 
----
+## Commands and validation
 
-### Step 6: Public HTTPS Access with Tailscale Funnel (Optional)
+Run from the repository root:
 
-If your machine runs Tailscale and you want public HTTPS access without opening firewall ports:
+| Command | Purpose |
+| --- | --- |
+| `npm run setup` | Database migrations and seeding |
+| `npm run dev:server` | Backend development server |
+| `npm run dev:client` | Frontend development server |
+| `npm run build` | Production frontend build |
+| `npm run start` | Start backend; set production mode to serve built frontend |
+| `npm run lint` | Frontend ESLint checks |
+| `npm test` | Backend regression tests and Power BI API tests |
+| `npm --prefix server run test:powerbi` | Power BI API test suite |
+| `node scripts/validate-powerbi.js` | Power BI project validation |
 
-```bash
-# Enable Tailscale Funnel on port 443 -> local port 3001 in background
-tailscale funnel --https=443 --bg 3001
+For a local production run, build first and set `NODE_ENV=production` in `server/.env`. The database tests configure an in-memory database; Power BI Desktop engine checks have separate prerequisites described in [validation documentation](powerbi/validation/README.md).
+
+## API overview
+
+| Category | Implemented route examples |
+| --- | --- |
+| Health | `GET /api/health` |
+| Local authentication | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` |
+| Microsoft authentication | `GET /api/auth/ms-config`, `POST /api/auth/ms-callback` |
+| Timesheets | `/api/timesheets`, `/batch`, `/submit`, `/recall`, `/approve`, `/reject`, `/post` |
+| Manager | `/api/manager/pending-approvals`, `/api/manager/week-details/:userId/:year/:week` |
+| Reports | `/api/reports/dashboard`, `/utilization`, `/project-hours`, `/project-hours-detail`, `/weekly-summary`, `/export` |
+| Vacation | `/api/planned-vacations` |
+| Reporting feeds | `/api/powerbi/*` |
+| Master data | `/api/users`, `/api/projects`, `/api/tasks`, and organization catalogs |
+| Administration | `/api/audit`, `/api/import`, `/api/admin-ownership`, `/api/division-updates`, `/api/error-logs` |
+| System | `/api/system/maintenance`, `/database/download`, `/database/restore-upload`, `/tokens` |
+
+Paths after the first entry in a row share that row's prefix. See [API_REFERENCE.md](API_REFERENCE.md) for expanded examples; route handlers in `server/src/routes/` are authoritative where older examples differ.
+
+## GitHub builds and releases
+
+The Docker workflow builds both supported architectures on pull requests without publishing. Pushes to `main`, `v*` tag pushes, and manual dispatch publish GHCR images. Optional Docker Hub publishing copies the completed multi-platform image by digest, without rebuilding.
+
+Release Please manages release pull requests, version updates, tags, and changelog entries. Its default `GITHUB_TOKEN` cannot be assumed to trigger Docker builds from the tag it creates. See the [GitHub help guide](.github/HELP.md) for repository permissions, registry secrets, tag behavior, release recovery, and troubleshooting.
+
+The current workflows build images but do not run `npm test` or frontend lint as an automatic merge gate. Run the validation commands above before merging; configure required checks/branch protection in repository settings if your team requires enforced gates.
+
+## Project map and documentation
+
+```text
+client/                 React pages, components, contexts, API/MSAL services
+server/src/routes/      Express endpoints
+server/src/config/      Environment, SQLite, migrations, seed, backup/restore
+server/src/middleware/  Authentication, permissions, maintenance, errors
+scripts/                Regression tests and Power BI generation/validation
+powerbi/                Power BI report, semantic model, and documentation
+.github/workflows/      Docker publishing and Release Please
 ```
 
-Check the funnel status:
-```bash
-tailscale funnel status
-```
+| Guide | Use it for |
+| --- | --- |
+| [GitHub help](.github/HELP.md) | Actions, releases, registries, support, and troubleshooting |
+| [API reference](API_REFERENCE.md) | Endpoint usage and examples |
+| [Architecture](ARCHITECTURE.md) | Application structure and design |
+| [Deployment notes](DEPLOYMENT_NOTES.md) | Infrastructure history and deployment fixes |
+| [Migration guide](MIGRATION.md) | Migration guidance |
+| [Power BI API integration](docs/POWERBI.md) | Read-only feed configuration |
+| [Power BI project guide](powerbi/POWERBI.md) | Requirements, model, queries, and report setup |
+| [Power BI project README](powerbi/GCC_Requirements/README.md) | Opening and configuring the report project |
+| [Power BI validation](powerbi/validation/README.md) | Model validation prerequisites and evidence |
+| [Changelog](CHANGELOG.md) | Release history |
 
-Your app is now accessible securely at `https://<your-tailscale-node>.ts.net`!
+## Technology and security
 
----
+React 19, Vite 8, React Router 7, TanStack Query 5, Tailwind CSS 3/custom CSS, and MSAL power the client. Express 4, `better-sqlite3` 13, bcryptjs, JWT, Helmet, ExcelJS, and PDFKit power the server. Dependency manifests and lockfiles contain exact declared/resolved versions.
 
-### Step 7: Updates and Maintenance
+Browser authentication uses HttpOnly cookies; API clients may use bearer tokens. Passwords are hashed, backend routes enforce roles/scope, and API requests are rate limited. Helmet is enabled, with its Content Security Policy explicitly disabled in the current server. Configure exact CORS origins and HTTPS cookies for production; these are deployment settings, not automatically guaranteed by using Docker.
 
-* **Automatic Updates**: Watchtower checks GHCR every 5 minutes. Whenever a new release is merged to `main`, the container updates automatically.
-* **Manual Immediate Update**:
-  ```bash
-  cd /opt/gcc_ts && docker compose pull && docker compose up -d
-  ```
-* **Database Backup**:
-  The SQLite database is stored on the host at `/opt/gcc_ts/data/timesheet.db`. To take an instant snapshot:
-  ```bash
-  sqlite3 /opt/gcc_ts/data/timesheet.db ".backup /opt/gcc_ts/backup/backup_$(date +%Y%m%d_%H%M%S).db"
-  ```
+## Usage
 
----
-
-## ⚙️ CI/CD
-
-### Optional Docker Hub publishing
-
-The Docker workflow can also copy each successfully published multi-platform image
-from GHCR to Docker Hub, preserving AMD64, ARM64, image digests, and the same tags.
-It copies the image produced by that workflow run without rebuilding it.
-
-1. Create the `gcc_ts` repository in your Docker Hub account (or organization),
-   choosing public or private visibility before enabling publishing.
-2. Create a Docker Hub personal access token with **Read and Write** permissions.
-3. In GitHub **Settings → Secrets and variables → Actions**, add the repository
-   secret `DOCKERHUB_TOKEN`. Never commit the token to the repository.
-4. Add the repository variable `DOCKERHUB_USERNAME` with the Docker account used
-   to authenticate. This enables Docker Hub publishing.
-5. For an organization or a different repository name, also set the repository
-   variable `DOCKERHUB_IMAGE` to the full `namespace/repository` name. Otherwise,
-   the destination defaults to `DOCKERHUB_USERNAME/gcc_ts`.
-6. Run **Actions → Build & Publish Docker Image → Run workflow** on `main` to
-   publish the current version. Later pushes and release builds publish automatically.
-
-Without `DOCKERHUB_USERNAME`, the Docker Hub job is skipped and GHCR publishing
-continues normally. A configured account with a missing or invalid token fails the
-Docker Hub job visibly; the already-published GHCR image remains available.
-Pull-request builds never publish to either registry.
-
-### GitHub Container Registry
-
-GitHub Actions workflow (`.github/workflows/docker-build.yml`) automatically:
-1. Builds the Docker image on every push to `main`
-2. Publishes to GHCR with tags:
-   - `latest` — always points to the newest `main` build
-   - `main` — branch name tag
-   - `<sha>` — commit SHA tag
-   - `v*.*` — semantic version tags (on git tags)
-
----
-
-## 🔒 Security
-
-- Passwords hashed with **bcryptjs**
-- JWT stored in **HttpOnly cookies** (not localStorage)
-- **Helmet.js** security headers on all responses
-- **Rate limiting** on all API routes (configurable via env)
-- Input validation on all API endpoints
-- Role-based route guards on both frontend and backend
-
----
-
-## 📝 License
-
-Internal use only. © GCC TimeSheet Team.
+Internal use only. This repository does not provide an open-source license grant.

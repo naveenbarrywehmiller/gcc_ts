@@ -47,3 +47,7 @@ server/src/data/*.db-shm
 
 # Bounded system diagnostics
 server/logs/
+
+# Database backups and maintenance state
+server/backup/
+server/.maintenance
