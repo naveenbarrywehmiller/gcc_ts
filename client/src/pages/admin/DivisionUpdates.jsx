@@ -22,7 +22,7 @@ function RecordForm({ record, divisionId, month, kind }) {
   };
   return <form onSubmit={save} className="space-y-4">
     {travel ? <div><label htmlFor="travel-visa" className="block text-sm mb-2">Travel &amp; VISA<FieldHelp label="Travel & VISA" /></label><textarea id="travel-visa" rows={7} maxLength={10000} className="input" value={form.travel_visa} onChange={e => setForm({ ...form, travel_visa: e.target.value })} /></div> :
-      <div className="grid grid-cols-2 gap-4">{[['open_positions', 'Open Position'], ['new_joiners', 'New Joiners']].map(([key, label]) => <div key={key}><label htmlFor={key} className="block text-sm mb-2">{label}<FieldHelp label="Open Position / New Joiners" /></label><input id={key} className="input" type="number" min="0" step="1" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{[['open_positions', 'Open Position'], ['new_joiners', 'New Joiners']].map(([key, label]) => <div key={key}><label htmlFor={key} className="block text-sm mb-2">{label}<FieldHelp label="Open Position / New Joiners" /></label><input id={key} className="input" type="number" min="0" step="1" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>}
     <button className="btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
     {record?.updated_at && <p className="text-xs text-surface-500">Last saved: {record.updated_at} UTC</p>}
   </form>;
@@ -39,7 +39,7 @@ export default function DivisionUpdates({ kind }) {
     queryFn: () => api.get('/division-updates', { params: { division_id: selected, month } }).then(r => r.data) });
   return <div className="max-w-3xl space-y-5"><h1 className="text-xl font-bold">{kind === 'travel' ? 'Travel & VISA' : 'Open Position / New Joiners'}</h1>
     <p className="text-sm text-surface-500">One record per division and month. Select an earlier month to view or update its record.</p>
-    <div className="grid grid-cols-2 gap-4"><label className="text-sm">Division<select className="input mt-1" value={selected} onChange={e => setDivisionId(e.target.value)}><option value="">Select division</option>{divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="text-sm">Month<input type="month" className="input mt-1" value={month} onChange={e => setMonth(e.target.value)} /></label></div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="text-sm">Division<select className="input mt-1" value={selected} onChange={e => setDivisionId(e.target.value)}><option value="">Select division</option>{divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="text-sm">Month<input type="month" className="input mt-1" value={month} onChange={e => setMonth(e.target.value)} /></label></div>
     {(query.isError || options.isError) && <p role="alert" className="text-red-600">Unable to load this record. Please refresh.</p>}
     {query.isLoading && <p>Loading…</p>}
     {selected && month && query.data && !query.isError && <RecordForm key={`${selected}:${month}:${kind}`} record={query.data.record} divisionId={selected} month={month} kind={kind} />}

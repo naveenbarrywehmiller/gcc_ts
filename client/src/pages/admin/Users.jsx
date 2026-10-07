@@ -295,7 +295,7 @@ export default function AdminUsers() {
             {activeCount} Active • {inactiveCount} Inactive
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button onClick={openAllAssignedHistory} className="btn-secondary btn-sm" id="view-assigned-history-btn" title="View timesheets for all your assigned users across all weeks">
             <History className="w-4 h-4" /> Assigned Timesheets (All Weeks)
           </button>
@@ -312,38 +312,39 @@ export default function AdminUsers() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
             <input
               type="text"
+              aria-label="Search users"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search users..."
               className="input pl-9 w-full"
             />
           </div>
-          <select value={filters.division_id} onChange={(e) => setFilters({...filters, division_id: e.target.value})} className="input">
+          <select aria-label="Filter users by division" value={filters.division_id} onChange={(e) => setFilters({...filters, division_id: e.target.value})} className="input">
             <option value="">All Divisions</option>
             {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
-          <select value={filters.department_id} onChange={(e) => setFilters({...filters, department_id: e.target.value})} className="input">
+          <select aria-label="Filter users by department" value={filters.department_id} onChange={(e) => setFilters({...filters, department_id: e.target.value})} className="input">
             <option value="">All Departments</option>
             {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
-          <select value={filters.supporting_category_id} onChange={(e) => setFilters({...filters, supporting_category_id: e.target.value})} className="input">
+          <select aria-label="Filter users by supporting category" value={filters.supporting_category_id} onChange={(e) => setFilters({...filters, supporting_category_id: e.target.value})} className="input">
             <option value="">All Supporting Categories</option>
             {supportingCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
-          <select value={filters.role} onChange={(e) => setFilters({...filters, role: e.target.value})} className="input">
+          <select aria-label="Filter users by role" value={filters.role} onChange={(e) => setFilters({...filters, role: e.target.value})} className="input">
             <option value="">All Roles</option>
             <option value="employee">Employee</option>
             <option value="manager">Manager</option>
             <option value="admin">Admin</option>
             <option value="system admin">System Admin</option>
           </select>
-          <select value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})} className="input">
+          <select aria-label="Filter users by status" value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})} className="input">
             <option value="all">All Statuses</option>
             <option value="active">Active Only</option>
             <option value="inactive">Inactive Only</option>
           </select>
           <div className="col-span-1 lg:col-span-2 flex gap-2">
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="input flex-1">
+            <select aria-label="Sort users by" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="input flex-1">
               <option value="name">Sort by Name</option>
               <option value="email">Sort by Email</option>
               <option value="role">Sort by Role</option>
@@ -353,7 +354,7 @@ export default function AdminUsers() {
               <option value="status">Sort by Status</option>
               <option value="created_at">Sort by Date Created</option>
             </select>
-            <select value={sortDir} onChange={(e) => setSortDir(e.target.value)} className="input w-32">
+            <select aria-label="Sort direction" value={sortDir} onChange={(e) => setSortDir(e.target.value)} className="input w-32">
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>
             </select>
@@ -478,24 +479,25 @@ export default function AdminUsers() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *<FieldHelp label="Team Member name" /></label>
-            <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" />
+            <label htmlFor="user-form-name" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *<FieldHelp label="Team Member name" /></label>
+            <input id="user-form-name" className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Email *</label>
-            <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@company.com" />
+            <label htmlFor="user-form-email" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Email *</label>
+            <input id="user-form-email" className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@company.com" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Employee ID<FieldHelp label="Employee - ID" /></label>
-            <input className="input" value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. EMP-001" />
+            <label htmlFor="user-form-employee-id" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Employee ID<FieldHelp label="Employee - ID" /></label>
+            <input id="user-form-employee-id" className="input" value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. EMP-001" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">
+            <label htmlFor="user-form-password" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">
               Password {editing ? '(leave blank to keep current)' : '*'}
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <input
+                  id="user-form-password"
                   className="input pr-20"
                   type={showPassword ? 'text' : 'password'}
                   value={form.password}
@@ -505,6 +507,7 @@ export default function AdminUsers() {
                 <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                   <button
                     type="button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                     onClick={() => setShowPassword(!showPassword)}
                     className="p-1.5 rounded text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors"
                   >
@@ -513,6 +516,7 @@ export default function AdminUsers() {
                   {form.password && (
                     <button
                       type="button"
+                      aria-label="Copy password"
                       onClick={copyPassword}
                       className="p-1.5 rounded text-surface-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                     >
@@ -531,10 +535,10 @@ export default function AdminUsers() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Role</label>
-              <select className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <label htmlFor="user-form-role" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Role</label>
+              <select id="user-form-role" className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="employee">Employee</option>
                 <option value="manager">Manager</option>
                 {(isSystemAdmin || form.role === 'admin') && <option value="admin">Admin</option>}
@@ -542,26 +546,26 @@ export default function AdminUsers() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division<FieldHelp label="Division" /></label>
-              <select className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
+              <label htmlFor="user-form-division" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division<FieldHelp label="Division" /></label>
+              <select id="user-form-division" className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
                 <option value="">— Select —</option>
                 {form.division_id && !(isSystemAdmin ? divisions : managedDivisions).some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{editing?.division_name || editing?.division} (current)</option>}
                 {(isSystemAdmin ? divisions : managedDivisions).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Department</label>
-              <select className="input" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
+              <label htmlFor="user-form-department" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Department</label>
+              <select id="user-form-department" className="input" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
                 <option value="">— Select —</option>
                 {form.department_id && !departments.some(d => d.id === Number(form.department_id)) && <option value={form.department_id}>{editing?.department_name} (inactive)</option>}
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Dedicated/Flex<FieldHelp label="Dedicated / Flex" /></label>
-              <select className="input" value={form.supporting_category_id} onChange={(e) => setForm({ ...form, supporting_category_id: e.target.value })}>
+              <label htmlFor="user-form-supporting-category" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Dedicated/Flex<FieldHelp label="Dedicated / Flex" /></label>
+              <select id="user-form-supporting-category" className="input" value={form.supporting_category_id} onChange={(e) => setForm({ ...form, supporting_category_id: e.target.value })}>
                 <option value="">— Select —</option>
                 {form.supporting_category_id && !supportingCategories.some(d => d.id === Number(form.supporting_category_id)) && <option value={form.supporting_category_id}>{editing?.supporting_category_name} (inactive)</option>}
                 {supportingCategories.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
@@ -590,7 +594,7 @@ export default function AdminUsers() {
           <p className="text-xs text-surface-500 dark:text-surface-400">
             Select the divisions this admin can manage. They will only see timesheets from their assigned divisions.
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {divisions.map(d => (
               <label
                 key={d.id}

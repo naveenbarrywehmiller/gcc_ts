@@ -46,13 +46,13 @@ export default function AdminTasks() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">Task Name/Number</h1>
         <button onClick={openCreate} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Task</button>
       </div>
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
-        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks..." className="input pl-9" />
+        <input type="text" aria-label="Search tasks" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks..." className="input pl-9" />
       </div>
       <div className="table-container">
         <table className="w-full">

@@ -90,22 +90,23 @@ export default function ManagerApprovals() {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto animate-fade-in">
+    <div className="p-3 sm:p-6 max-w-6xl mx-auto animate-fade-in min-w-0">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">Team Approvals</h1>
-        <p className="text-surface-400">Review and approve timesheets for your team members.</p>
+        <h1 className="text-2xl font-bold text-surface-900 dark:text-white mb-2">Team Approvals</h1>
+        <p className="text-surface-600 dark:text-surface-400">Review and approve timesheets for your team members.</p>
       </div>
 
       <div className="bg-surface-900 border border-surface-800 rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-4 border-b border-surface-800 flex items-center justify-between">
-          <div className="relative w-64">
+        <div className="p-4 border-b border-surface-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" />
             <input
               type="text"
+              aria-label="Search team members"
               placeholder="Search team members..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-surface-800 border border-surface-700 rounded-xl text-sm text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40"
+              className="w-full min-h-[44px] pl-9 pr-4 py-2 bg-surface-800 border border-surface-700 rounded-xl text-base sm:text-sm text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40"
             />
           </div>
           <div className="flex items-center gap-2 text-sm text-surface-400">
@@ -134,16 +135,16 @@ export default function ManagerApprovals() {
               return (
                 <div key={key} className="group">
                   {/* Row Header */}
-                  <div className="p-4 flex items-center justify-between hover:bg-surface-800/50 transition-colors">
-                    <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => toggleUserExpansion(approval.user_id, approval.week_number, approval.week_year)}>
-                      <button className="p-1 hover:bg-surface-700 rounded transition-colors">
+                  <div className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-surface-800/50 transition-colors">
+                    <div className="grid grid-cols-[44px_minmax(0,1fr)] sm:flex sm:items-center gap-3 cursor-pointer w-full sm:flex-1 min-w-0" onClick={() => toggleUserExpansion(approval.user_id, approval.week_number, approval.week_year)}>
+                      <button className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-surface-700 rounded transition-colors" aria-label={isExpanded ? 'Collapse approval details' : 'Expand approval details'}>
                         {isExpanded ? <ChevronDown className="w-4 h-4 text-surface-400" /> : <ChevronRight className="w-4 h-4 text-surface-400" />}
                       </button>
-                      <div>
-                        <div className="font-medium text-white">{approval.user_name}</div>
-                        <div className="text-xs text-surface-400">{approval.user_email} • {approval.team_type}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-white break-words">{approval.user_name}</div>
+                        <div className="text-xs text-surface-400 break-all">{approval.user_email} • {approval.team_type}</div>
                       </div>
-                      <div className="ml-auto mr-8 flex items-center gap-6 text-sm">
+                      <div className="col-span-2 sm:w-auto sm:ml-auto flex flex-wrap items-center gap-3 sm:gap-6 text-sm">
                         <div className="text-surface-300">
                           <span className="text-surface-500">Week:</span> {approval.week_number}/{approval.week_year}
                         </div>
@@ -154,18 +155,18 @@ export default function ManagerApprovals() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => handleAction(approval.user_id, approval.week_number, approval.week_year, 'approve')}
                         disabled={actionMutation.isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 font-medium text-sm transition-colors"
+                        className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 font-medium text-sm transition-colors"
                       >
                         <Check className="w-4 h-4" /> Approve
                       </button>
                       <button
                         onClick={() => handleAction(approval.user_id, approval.week_number, approval.week_year, 'reject')}
                         disabled={actionMutation.isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 font-medium text-sm transition-colors"
+                        className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 font-medium text-sm transition-colors"
                       >
                         <X className="w-4 h-4" /> Reject
                       </button>
@@ -214,13 +215,14 @@ export default function ManagerApprovals() {
                   {selectedAction.userId === approval.user_id && selectedAction.type === 'reject' && selectedAction.week === approval.week_number && (
                     <div className="p-4 bg-red-500/5 border-t border-red-500/10">
                       <label className="block text-sm font-medium text-red-400 mb-2">Reason for rejection (required)</label>
-                      <div className="flex gap-3">
+                      <div className="flex flex-wrap gap-3">
                         <input
                           type="text"
+                          aria-label="Reason for rejection"
                           value={comment}
                           onChange={(e) => setComment(e.target.value)}
                           placeholder="Please provide details for the employee to correct..."
-                          className="flex-1 bg-surface-900 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500"
+                          className="min-w-0 min-h-[44px] basis-full sm:basis-48 flex-1 bg-surface-900 border border-surface-700 rounded-lg px-3 py-2 text-base sm:text-sm text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500"
                           autoFocus
                         />
                         <button

@@ -1,13 +1,43 @@
 import { NavLink } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/auth';
 import {
   LayoutDashboard, Clock, Users, FolderKanban, ListTodo, Building2,
   Activity, Calendar, ClipboardCheck, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Timer, Shield
+  ChevronLeft, ChevronRight, Timer, Shield, X
 } from 'lucide-react';
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   const { isAdmin, isSystemAdmin, isManager } = useAuth();
+  const asideRef = useRef(null);
+  const onMobileCloseRef = useRef(onMobileClose);
+
+  useEffect(() => { onMobileCloseRef.current = onMobileClose; }, [onMobileClose]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    // Wait for the opening transform so the link is visible when it receives focus.
+    const focusTimer = window.setTimeout(() => asideRef.current?.querySelector('a[href]')?.focus(), 320);
+    const handleKeys = event => {
+      if (event.key === 'Escape') onMobileCloseRef.current();
+      if (event.key !== 'Tab' || window.innerWidth >= 768) return;
+      const focusable = [...asideRef.current.querySelectorAll('a[href], button:not([disabled])')]
+        .filter(element => element.getClientRects().length);
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', handleKeys);
+    return () => {
+      document.removeEventListener('keydown', handleKeys);
+      window.clearTimeout(focusTimer);
+      document.body.style.overflow = previousOverflow;
+      document.getElementById('mobile-nav-toggle')?.focus();
+    };
+  }, [mobileOpen]);
 
 
   const navItems = [
@@ -45,12 +75,19 @@ export default function Sidebar({ collapsed, onToggle }) {
   }
 
   return (
+    <>
+    {mobileOpen && <button type="button" className="fixed inset-0 z-30 bg-black/50 md:hidden" aria-label="Close navigation" onClick={onMobileClose} />}
     <aside
+      ref={asideRef}
       className={`fixed left-0 top-0 h-full z-30 flex flex-col
         bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800
-        transition-all duration-300 ease-in-out
-        w-[68px] ${collapsed ? '' : 'md:w-[240px]'}`}
+        transition-[transform,width] duration-300 ease-in-out w-[min(280px,85vw)]
+        ${mobileOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'} md:visible md:translate-x-0
+        ${collapsed ? 'md:w-[68px]' : 'md:w-[240px]'}`}
       id="main-sidebar"
+      aria-label="Main navigation"
+      role={mobileOpen ? 'dialog' : undefined}
+      aria-modal={mobileOpen || undefined}
     >
       {/* Logo */}
       <div className="h-[60px] flex items-center px-4 border-b border-surface-200 dark:border-surface-800 shrink-0">
@@ -58,13 +95,14 @@ export default function Sidebar({ collapsed, onToggle }) {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shrink-0 shadow-lg shadow-brand-500/20">
             <Timer className="w-4.5 h-4.5 text-white" />
           </div>
-          {!collapsed && (
-            <div className="hidden md:block animate-fade-in">
+          {(!collapsed || mobileOpen) && (
+            <div className="animate-fade-in">
               <h1 className="text-sm font-bold text-surface-900 dark:text-white tracking-tight">TimeSheet</h1>
               <p className="text-xxs text-surface-400 -mt-0.5">Employee Portal</p>
             </div>
           )}
         </div>
+        <button type="button" className="md:hidden ml-auto min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg" aria-label="Close navigation" onClick={onMobileClose}><X className="w-5 h-5" /></button>
       </div>
 
       {/* Navigation */}
@@ -73,12 +111,12 @@ export default function Sidebar({ collapsed, onToggle }) {
           if (item.type === 'divider') {
             return (
               <div key={i} className="pt-4 pb-2">
-                {!collapsed && (
-                  <p className="hidden md:block px-3 text-[10px] font-semibold uppercase tracking-widest text-surface-400 dark:text-surface-600">
+                {(!collapsed || mobileOpen) && (
+                  <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-surface-400 dark:text-surface-600">
                     {item.label}
                   </p>
                 )}
-                {collapsed && <div className="border-t border-surface-200 dark:border-surface-800 mx-2" />}
+                {collapsed && !mobileOpen && <div className="border-t border-surface-200 dark:border-surface-800 mx-2" />}
               </div>
             );
           }
@@ -89,19 +127,20 @@ export default function Sidebar({ collapsed, onToggle }) {
               key={item.to}
               to={item.to}
               end={item.to === '/'}
+              onClick={onMobileClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 group
+                `flex items-center gap-3 px-3 min-h-[44px] rounded-lg text-sm font-medium transition-all duration-150 group
                 ${isActive
                   ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400'
                   : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-200'
                 }
-                ${collapsed ? 'justify-center' : ''}`
+                ${collapsed ? 'md:justify-center' : ''}`
               }
               title={item.label}
               aria-label={item.label}
             >
               <Icon className="w-[18px] h-[18px] shrink-0" />
-              {!collapsed && <span className="hidden md:inline whitespace-normal leading-tight">{item.label}</span>}
+              <span className={`${collapsed ? 'md:hidden' : ''} whitespace-normal leading-tight`}>{item.label}</span>
             </NavLink>
           );
         })}
@@ -126,5 +165,6 @@ export default function Sidebar({ collapsed, onToggle }) {
         </button>
       </div>
     </aside>
+    </>
   );
 }

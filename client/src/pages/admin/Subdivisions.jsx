@@ -87,18 +87,19 @@ export default function AdminSubdivisions() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">Location</h1>
         <button onClick={openCreate} className="btn-primary btn-sm">
           <Plus className="w-4 h-4" /> Add Location
         </button>
       </div>
       
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="relative flex-1 min-w-0 basis-full sm:basis-48 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
           <input 
             type="text" 
+            aria-label="Search locations"
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
             placeholder="Search locations..."
@@ -106,7 +107,8 @@ export default function AdminSubdivisions() {
           />
         </div>
         <select 
-          className="input max-w-xs" 
+          className="input w-full sm:max-w-xs"
+          aria-label="Filter locations by division"
           value={filterDivisionId} 
           onChange={e => setFilterDivisionId(e.target.value)}
         >

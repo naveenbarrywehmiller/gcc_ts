@@ -106,7 +106,7 @@ export default function AdminDepartments() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-bold text-surface-900 dark:text-white">Departments</h1>
           <p className="text-xs text-surface-500 mt-0.5">
@@ -173,7 +173,7 @@ export default function AdminDepartments() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
                       <button
                         onClick={() => { setEditing(dept); setName(dept.name); setShowModal(true); }}
                         className="btn-ghost btn-xs p-1.5"
@@ -240,7 +240,7 @@ export default function AdminDepartments() {
                                     <Tag className="w-3.5 h-3.5 text-brand-500 shrink-0" />
                                     <span className="text-sm text-surface-700 dark:text-surface-300 truncate">{o.label}</span>
                                   </div>
-                                  <div className="flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                  <div className="flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover/item:opacity-100 focus-within:opacity-100 transition-opacity">
                                     <button
                                       onClick={() => { setEditingOwnership(o.id); setEditOwnershipLabel(o.label); }}
                                       className="btn-ghost btn-xs p-1"

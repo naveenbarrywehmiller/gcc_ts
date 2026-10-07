@@ -4,6 +4,8 @@ Employee time tracking, team approvals, administration, and reporting in one app
 
 [Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
+**Frontend development:** All UI changes must follow the permanent [Responsive Web Design Rules](RESPONSIVE_WEB_DESIGN_RULES.md). The [responsive audit](docs/RESPONSIVE_AUDIT.md) records the current implementation and validation baseline.
+
 ## Features
 
 | Area | Available capabilities |

@@ -165,9 +165,9 @@ export default function AdminApprovals() {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto min-w-0">
           <button onClick={prevWeek} className="btn-ghost btn-sm p-1.5"><ChevronLeft className="w-5 h-5" /></button>
-          <div className="text-center min-w-[240px]">
+          <div className="text-center min-w-0 flex-1 sm:flex-none sm:min-w-[200px]">
             <h1 className="text-xl font-bold text-surface-900 dark:text-white">Week {week}</h1>
             <p className="text-xs text-surface-500 dark:text-surface-400">{weekLabel}</p>
           </div>
@@ -208,6 +208,7 @@ export default function AdminApprovals() {
               value={divisionFilter}
               onChange={(e) => setDivisionFilter(e.target.value)}
               id="division-filter"
+              aria-label="Filter approvals by division"
             >
               <option value="">All Divisions</option>
               {divisions.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
@@ -234,14 +235,14 @@ export default function AdminApprovals() {
             {submitted.map(s => (
               <div key={`${s.user_id}-submitted`}>
                 <div className="card p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-semibold">
+                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 min-w-0">
+                    <div className="flex flex-wrap items-center gap-3 w-full xl:flex-1 min-w-0">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-semibold">
                         {s.user_name?.charAt(0)}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 basis-[calc(100%-3.25rem)] xl:basis-auto min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold text-surface-800 dark:text-surface-200">{s.user_name}</p>
+                          <p className="text-sm font-semibold text-surface-800 dark:text-surface-200 break-words">{s.user_name}</p>
                           {s.employee_id && (
                             <span className="text-[11px] text-surface-400 font-mono">({s.employee_id})</span>
                           )}
@@ -255,9 +256,9 @@ export default function AdminApprovals() {
                             </span>
                           ) : null}
                         </div>
-                        <p className="text-xs text-surface-400">{s.email} • {s.division || 'No division'}</p>
+                        <p className="text-xs text-surface-400 break-all">{s.email} • {s.division || 'No division'}</p>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-1 w-full xl:w-auto">
                         <button
                           onClick={() => openHistoryForUser(s.user_id, s.user_name)}
                           className="btn-ghost btn-sm text-xs text-surface-500 hover:text-brand-600"
@@ -276,7 +277,7 @@ export default function AdminApprovals() {
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 ml-4">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full xl:w-auto xl:ml-4">
                       <div className="text-right mr-2">
                         <p className="text-lg font-bold text-surface-900 dark:text-white">{s.total_hours?.toFixed(1)}h</p>
                         <p className="text-xs text-surface-400">{s.days_worked} days</p>
@@ -293,7 +294,7 @@ export default function AdminApprovals() {
                   {/* Expanded details */}
                   {expandedUser === s.user_id && userDetails[`${year}:${week}:${s.user_id}`] && (
                     <div className="mt-4 pt-4 border-t border-surface-200 dark:border-surface-800">
-                      <table className="w-full text-sm">
+                      <div className="table-container"><table className="w-full text-sm">
                         <thead>
                           <tr className="text-xs text-surface-400">
                             <th className="text-left pb-2">Date</th>
@@ -323,7 +324,7 @@ export default function AdminApprovals() {
                             </tr>
                           ))}
                         </tbody>
-                      </table>
+                      </table></div>
                     </div>
                   )}
                 </div>

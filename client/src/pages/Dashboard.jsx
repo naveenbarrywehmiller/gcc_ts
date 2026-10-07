@@ -55,7 +55,7 @@ export default function Dashboard() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Welcome back, {user?.name} 👋</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-surface-900 dark:text-white break-words">Welcome back, {user?.name} 👋</h1>
           <p className="text-sm text-surface-600 dark:text-surface-300 mt-1">{weekDescription} · {stats.currentWeekYear}</p>
           <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-surface-500 dark:text-surface-400">
             {user?.employee_id && <span className="inline-flex items-center gap-1"><Hash className="w-3 h-3" />Employee ID: {user.employee_id}</span>}

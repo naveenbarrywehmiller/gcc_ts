@@ -40,13 +40,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-950 relative overflow-hidden">
+    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-surface-950 relative overflow-hidden py-6">
       {/* Background gradient orbs */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-brand-600/20 blur-[120px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] rounded-full bg-violet-600/15 blur-[120px]" />
       <div className="absolute top-[40%] right-[20%] w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-[100px]" />
 
-      <div className="relative w-full max-w-[400px] mx-4 animate-fade-in">
+      <div className="relative w-full max-w-[400px] mx-4 min-w-0 animate-fade-in">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-full h-24 bg-white rounded-2xl p-4 flex items-center justify-center mb-4 shadow-xl border border-surface-200">
@@ -57,7 +57,7 @@ export default function Login() {
         </div>
 
         {/* Login card */}
-        <div className="bg-surface-900/80 backdrop-blur-xl border border-surface-800 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-surface-900/80 backdrop-blur-xl border border-surface-800 rounded-2xl p-5 sm:p-8 shadow-2xl">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-white">Sign in</h2>
             <p className="text-sm text-surface-500 mt-0.5">Enter your credentials to continue</p>
@@ -72,7 +72,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                className="w-full min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
                 autoComplete="email"
                 autoFocus
               />
@@ -87,14 +87,14 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 pr-10 text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 pr-12 text-base sm:text-sm rounded-xl bg-surface-800/60 border border-surface-700 text-white placeholder:text-surface-300 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-surface-300 transition-colors"
-                  tabIndex={-1}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-surface-500 hover:text-surface-300 transition-colors"
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
                 >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -104,7 +104,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+              className="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
                 bg-gradient-to-r from-brand-600 to-brand-500 text-white
                 hover:from-brand-500 hover:to-brand-400
                 shadow-lg shadow-brand-600/25 hover:shadow-brand-500/40

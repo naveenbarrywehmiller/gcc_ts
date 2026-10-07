@@ -1,11 +1,11 @@
 import { useAuth } from '../../contexts/auth';
 import { useTheme } from '../../contexts/theme';
-import { Sun, Moon, LogOut } from 'lucide-react';
+import { Sun, Moon, LogOut, Menu } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ServerClock from './ServerClock';
 
-export default function Header() {
+export default function Header({ onMenuOpen, mobileNavOpen }) {
   const { user, logout } = useAuth();
   const { dark, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,8 +27,13 @@ export default function Header() {
 
   return (
     <header className="min-h-[60px] sm:h-[60px] flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-3 py-2 sm:py-0 md:px-6 border-b border-surface-200 dark:border-surface-800 bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl sticky top-0 z-20" id="main-header">
+      <button type="button" onClick={onMenuOpen} aria-label="Open navigation" aria-controls="main-sidebar" aria-expanded={mobileNavOpen}
+        id="mobile-nav-toggle"
+        className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800">
+        <Menu className="w-5 h-5" />
+      </button>
       <div className="flex flex-1 items-center h-11 sm:h-full sm:py-2 min-w-0">
-        <img src="/logo.png" alt="Barry Wehmiller Logo" className="max-h-full max-w-full object-contain" />
+        <img src="/logo.png" alt="Barry Wehmiller Logo" className="max-h-full max-w-full object-contain object-left" />
       </div>
 
       <ServerClock />
@@ -37,7 +42,7 @@ export default function Header() {
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-lg text-surface-500 hover:text-surface-700 hover:bg-surface-100 dark:hover:text-surface-300 dark:hover:bg-surface-800 transition-colors"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-surface-500 hover:text-surface-700 hover:bg-surface-100 dark:hover:text-surface-300 dark:hover:bg-surface-800 transition-colors"
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           id="theme-toggle"
         >
@@ -48,14 +53,15 @@ export default function Header() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2.5 pl-3 pr-2 py-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            aria-label="User menu" aria-expanded={menuOpen}
+            className="min-w-[44px] min-h-[44px] flex items-center gap-2.5 pl-2 pr-2 py-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
             id="user-menu-btn"
           >
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-semibold shadow-sm">
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-sm font-medium text-surface-800 dark:text-surface-200 leading-tight">{user?.name}</p>
+            <div className="text-left hidden lg:block min-w-0 max-w-40">
+              <p className="text-sm font-medium text-surface-800 dark:text-surface-200 leading-tight truncate" title={user?.name}>{user?.name}</p>
               <p className="text-[10px] text-surface-400 capitalize">{user?.role}</p>
             </div>
           </button>

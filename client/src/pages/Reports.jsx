@@ -216,7 +216,7 @@ export default function Reports() {
 
       {/* Date presets + custom range */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
-        <div className="flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg">
+        <div className="flex flex-wrap max-w-full gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg">
           {presets.map(p => (
             <button
               key={p.id}
@@ -232,9 +232,10 @@ export default function Reports() {
           ))}
         </div>
         {preset === 'custom' && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 max-w-full">
             <input
               type="date"
+              aria-label="Report start date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="input-sm w-36"
@@ -242,6 +243,7 @@ export default function Reports() {
             <span className="text-surface-400 text-xs">to</span>
             <input
               type="date"
+              aria-label="Report end date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="input-sm w-36"
@@ -257,18 +259,18 @@ export default function Reports() {
       {/* Filters */}
       <div className="flex items-center gap-2 flex-wrap">
         <Filter className="w-4 h-4 text-surface-400" />
-        <select className="input-sm w-36" value={divisionFilter} onChange={(e) => setDivisionFilter(e.target.value)}>
+        <select className="input-sm w-36" aria-label="Filter by division" value={divisionFilter} onChange={(e) => setDivisionFilter(e.target.value)}>
           <option value="">All Divisions</option>
           {divisions.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
         </select>
         {(tab === 'weekly' || tab === 'projects') && (
           <>
-            <select className="input-sm w-36" value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
+            <select className="input-sm w-36" aria-label="Filter by user" value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
               <option value="">All Users</option>
               {users.filter(u => u.active).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
             {tab !== 'projects' && (
-              <select className="input-sm w-32" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <select className="input-sm w-32" aria-label="Filter by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                 <option value="">All Status</option>
                 <option value="draft">Draft</option>
                 <option value="submitted">Submitted</option>
@@ -282,12 +284,12 @@ export default function Reports() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg w-fit">
+      <div className="flex flex-wrap gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg max-w-full w-fit">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-all ${
               tab === t.id
                 ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm'
                 : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'

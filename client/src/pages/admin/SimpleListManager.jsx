@@ -40,7 +40,7 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">{title}<FieldHelp label={itemLabel} /></h1>
         <button onClick={() => { setEditing(null); setName(''); setShowModal(true); }} className="btn-primary btn-sm">
           <Plus className="w-4 h-4" /> Add {itemLabel}
@@ -60,12 +60,12 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
           ) : (
             items.map(item => (
               <div key={item.id} className="px-4 py-3 flex items-center justify-between hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors group">
-                <span className="text-sm font-medium text-surface-800 dark:text-surface-200">{item[fieldName]}</span>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => { setEditing(item); setName(item[fieldName]); setShowModal(true); }} className="btn-ghost btn-xs p-1.5">
+                <span className="min-w-0 text-sm font-medium text-surface-800 dark:text-surface-200 break-words">{item[fieldName]}</span>
+                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
+                  <button onClick={() => { setEditing(item); setName(item[fieldName]); setShowModal(true); }} className="btn-ghost btn-xs p-1.5" aria-label={`Edit ${item[fieldName]}`}>
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handleDelete(item.id)} className="btn-ghost btn-xs p-1.5 text-red-500">
+                  <button onClick={() => handleDelete(item.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Delete ${item[fieldName]}`}>
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -78,8 +78,8 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? `Edit ${itemLabel}` : `Add ${itemLabel}`}
         footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} className="btn-primary btn-sm">{editing ? 'Update' : 'Create'}</button></>}>
         <div>
-          <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *</label>
-          <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder={`${itemLabel} name`} autoFocus
+          <label htmlFor="simple-list-name" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *</label>
+          <input id="simple-list-name" className="input" value={name} onChange={e => setName(e.target.value)} placeholder={`${itemLabel} name`} autoFocus
             onKeyDown={e => { if (e.key === 'Enter') handleSave(); }} />
         </div>
       </Modal>

@@ -123,16 +123,16 @@ export default function PlannedVacation() {
     </div>}
 
     <section className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 overflow-hidden" aria-label="Vacation calendar">
-      <div className="p-5 flex flex-wrap items-center justify-between gap-4 border-b border-surface-200 dark:border-surface-700">
-        <div className="flex items-center gap-3">
+      <div className="p-3 sm:p-5 flex flex-wrap items-center justify-between gap-4 border-b border-surface-200 dark:border-surface-700">
+        <div className="flex items-center gap-1 sm:gap-3 min-w-0 w-full sm:w-auto">
           <button className="btn-ghost p-2" aria-label={`Previous ${mode}`} disabled={saving} onClick={() => setAnchor(shiftPeriod(anchor, mode, -1))}><ChevronLeft className="w-5 h-5" /></button>
-          <div className="min-w-[200px]">
+          <div className="min-w-0 flex-1 sm:flex-none sm:min-w-[200px] text-center sm:text-left">
             <h2 className="text-lg font-semibold">{mode === 'week' ? `Week ${week.week} · ${week.year}` : formatDate(anchor, { month: 'long', year: 'numeric' })}</h2>
             <p className="text-sm text-surface-500">{mode === 'week' ? `${formatDate(start)} – ${formatDate(end)}` : 'Monday–Sunday · ISO week numbers'}</p>
           </div>
           <button className="btn-ghost p-2" aria-label={`Next ${mode}`} disabled={saving} onClick={() => setAnchor(shiftPeriod(anchor, mode, 1))}><ChevronRight className="w-5 h-5" /></button>
         </div>
-        <div className="flex items-center flex-wrap gap-2">
+        <div className="flex items-center flex-wrap gap-2 min-w-0">
           <button className="btn-secondary btn-sm" disabled={saving} onClick={currentWeek}>Current Week</button>
           <button className={mode === 'week' ? 'btn-primary btn-sm' : 'btn-ghost btn-sm'} disabled={saving} aria-pressed={mode === 'week'} onClick={() => setMode('week')}>Week</button>
           <button className={mode === 'month' ? 'btn-primary btn-sm' : 'btn-ghost btn-sm'} disabled={saving} aria-pressed={mode === 'month'} onClick={() => setMode('month')}><CalendarDays className="w-4 h-4" />Open month calendar</button>
@@ -197,7 +197,7 @@ export default function PlannedVacation() {
         <div aria-live="polite" className="text-sm"><span className="font-medium">{changeCount ? `${changeCount} date changes ready to save` : 'All changes saved'}</span>
           <p className="text-xs text-surface-500 mt-1">Save before leaving this page{isAdmin ? ' or switching to the team view' : ''}.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button className="btn-ghost" disabled={!changeCount || saving} onClick={() => setPending({})}>Discard changes</button>
           <button className="btn-primary" disabled={!changeCount || saving || plans.isPending || plans.isError} onClick={save}><Save className="w-4 h-4" />{saving ? 'Saving…' : 'Save vacation'}</button>
         </div>

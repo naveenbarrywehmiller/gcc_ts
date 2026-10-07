@@ -8,6 +8,7 @@ import { useState } from 'react';
 export default function Layout() {
   const { user, loading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   if (loading) {
     return (
@@ -26,11 +27,11 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />
-      <div className={`transition-all duration-300 ml-[68px] ${sidebarCollapsed ? '' : 'md:ml-[240px]'} min-h-screen flex flex-col`} id="main-content-area">
-        <Header />
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
+      <div className={`min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'md:ml-[68px]' : 'md:ml-[240px]'} min-h-screen flex flex-col`} id="main-content-area">
+        <Header onMenuOpen={() => setMobileNavOpen(true)} mobileNavOpen={mobileNavOpen} />
         <main className="p-3 md:p-6 flex-1 min-w-0">
-          <Outlet />
+          <div className="w-full max-w-[1600px] mx-auto min-w-0"><Outlet /></div>
         </main>
         <Footer />
       </div>

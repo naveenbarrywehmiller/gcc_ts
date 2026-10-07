@@ -113,7 +113,7 @@ export default function AuditLog() {
       <div className="card p-4">
         <div className="flex flex-wrap items-end gap-3">
           {/* Search */}
-          <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
+          <form onSubmit={handleSearch} className="flex-1 min-w-0 basis-full sm:basis-[200px]">
             <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">Search</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
@@ -129,7 +129,7 @@ export default function AuditLog() {
           </form>
 
           {/* Action filter */}
-          <div className="w-44">
+          <div className="w-full sm:w-44">
             <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">Action</label>
             <select className="input text-sm" value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
               <option value="">All Actions</option>
@@ -138,7 +138,7 @@ export default function AuditLog() {
           </div>
 
           {/* User filter */}
-          <div className="w-40">
+          <div className="w-full sm:w-40">
             <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">User</label>
             <select className="input text-sm" value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
               <option value="">All Users</option>
@@ -147,11 +147,11 @@ export default function AuditLog() {
           </div>
 
           {/* Date range */}
-          <div className="w-36">
+          <div className="w-full sm:w-36">
             <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">From</label>
             <input type="date" className="input text-sm" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
           </div>
-          <div className="w-36">
+          <div className="w-full sm:w-36">
             <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">To</label>
             <input type="date" className="input text-sm" value={toDate} onChange={(e) => setToDate(e.target.value)} />
           </div>

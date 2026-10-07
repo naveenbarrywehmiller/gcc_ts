@@ -731,12 +731,12 @@ export default function Timesheet() {
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="relative w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2 max-w-full">
             <button onClick={prevWeek} className="btn-ghost btn-sm p-1.5" id="prev-week-btn">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="text-center min-w-[260px]">
+            <div className="text-center min-w-0 flex-1 sm:flex-none sm:min-w-[220px]">
               <h2 className="text-xl font-bold text-surface-900 dark:text-white">
                 Week {week}
               </h2>
@@ -749,7 +749,7 @@ export default function Timesheet() {
             </button>
 
             {/* Calendar dropdown picker */}
-            <div className="relative" ref={calendarRef}>
+            <div ref={calendarRef}>
               <button
                 onClick={toggleCalendar}
                 className={`btn-ghost btn-sm p-1.5 ml-0.5 ${
@@ -761,7 +761,7 @@ export default function Timesheet() {
               </button>
 
               {showCalendar && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-[300px]
+                <div className="absolute left-0 top-full mt-2 z-50 w-[min(300px,calc(100vw-2rem))] max-h-[calc(100dvh-12rem)] overflow-y-auto
                   bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700
                   shadow-xl shadow-surface-900/10 dark:shadow-black/30
                   animate-scale-in origin-top"
@@ -1104,13 +1104,14 @@ export default function Timesheet() {
                           >
                             <input
                               type="number"
+                              aria-label={`Hours for ${d.date}, ${row.project_code || row.task_category || 'entry'}`}
                               min="0"
                               max="24"
                               step="0.5"
                               value={val}
                               onChange={(e) => updateHours(rowIdx, d.date, e.target.value)}
                               disabled={isLocked}
-                              className={`w-14 h-9 text-center text-sm rounded-lg border transition-all
+                              className={`w-14 h-10 sm:h-9 text-center text-base sm:text-sm rounded-lg border transition-all
                                 ${val > 0
                                   ? 'border-brand-200 bg-brand-50/50 text-brand-700 font-semibold dark:border-brand-800 dark:bg-brand-950/30 dark:text-brand-400'
                                   : 'border-transparent bg-transparent text-surface-400 hover:border-surface-300 dark:hover:border-surface-600'
@@ -1132,7 +1133,7 @@ export default function Timesheet() {
                       </td>
 
                       <td className="px-1 py-1 text-center">
-                        <div className="flex items-center gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-all">
+                        <div className="flex items-center gap-0.5 justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-all">
                           {!isLocked && (
                             <button
                               onClick={() => openEditRow(row, rowIdx)}

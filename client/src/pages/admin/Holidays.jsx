@@ -101,13 +101,13 @@ export default function AdminHolidays() {
               <div className="space-y-2">
                 {days.map(h => (
                   <div key={h.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 group transition-colors">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <span className="text-xs font-mono text-surface-400 w-10">
                         {new Date(h.date + 'T00:00:00').toLocaleDateString('en-US', { day: '2-digit', month: 'short' })}
                       </span>
-                      <span className="text-sm text-surface-700 dark:text-surface-300">{h.name}</span>
+                      <span className="text-sm text-surface-700 dark:text-surface-300 break-words">{h.name}</span>
                     </div>
-                    <button onClick={() => handleDelete(h.id)} className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all">
+                    <button onClick={() => handleDelete(h.id)} aria-label={`Delete ${h.name}`} className="opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center text-red-400 hover:text-red-600 transition-all">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
