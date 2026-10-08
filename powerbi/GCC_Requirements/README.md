@@ -18,6 +18,10 @@ The redesigned overview opened successfully in Desktop using its cached data. Fi
 
 The saved model includes six tested DAX variable refactors (1.1.2, 2026-10-06). See the [DAX optimization review](../documentation/DAX_OPTIMIZATION_REVIEW.md) for formulas, comparison tests, synthetic benchmark scope and the current report-schema validation limitation. Reopen this project to load the saved formula changes into Desktop.
 
+## Training category mapping — 1.1.3
+
+The saved HourCategoryMap maps `Trainings/Webinars` to Training. This also covers non-billable hours logged without a project. DAX measures and visuals are unchanged; refresh the Desktop report to import the updated category. Other unmapped task labels still block utilization until their classifications are confirmed. See the [validation notes](../validation/README.md) for current test limits.
+
 ## Phone layouts
 
 All nine pages have native portrait phone layouts covering all 116 existing visuals. Open **View → Mobile layout** in Desktop and select a page tab. The layouts use a 324-unit canvas, full-width timestamp/dropdown controls, two-column KPI cards, readable wrapped headings/notes and full-width charts. The last-refresh timestamp is small muted text (9 pt label, 10 pt value), with a transparent background and no border/shadow on both desktop and phone views. Detail tables retain all columns with horizontal scrolling; input-readiness definitions wrap into narrow columns.

@@ -5,6 +5,16 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.3] — 2026-10-07
+
+### Fixed
+- Mapped the normalized `Trainings/Webinars` task label to Training, including hours logged without a project or division. Training measures use the new mapping after the report refreshes.
+- Kept all other unmapped labels, including `SOP 1234` and `vgnn`, unchanged until their business classifications are confirmed.
+
+### Validation
+- The saved TMDL deserialized with Desktop's TOM library; the requirements API tests passed. A native calculation run and production Desktop refresh are still pending.
+- The existing report-schema 2.13.0 URL still returns HTTP 404 during full schema validation; no report visuals or DAX measures changed.
+
 ## [1.1.2] — 2026-10-06
 
 ### Changed
