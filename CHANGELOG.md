@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.3...v1.19.0) (2026-10-08)
+
+
+### Features
+
+* support multi-division user assignments ([de8a79a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/de8a79ae6e30af12d0b4bdf6a44396f3adde3c83))
+
 ## [1.18.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.2...v1.18.3) (2026-10-08)
 
 
