@@ -145,7 +145,7 @@ Unrecognized task categories become **Unmapped** and can leave utilization blank
 6. Keep one mapping per source category; duplicate keys can duplicate joined rows.
 7. **Close & Apply**, refresh, and check unmapped hours and utilization.
 
-Existing examples include `development → Productive`, `training → Training`, `meeting → Internal`, and `leave → Vacation`. The model uses `Productive`, `Training`, `Internal`, `Admin`, `Vacation`, `Holiday`, and the fallback `Unmapped`. Do not assume every billable category is productive. Categories such as `SOP 1234` and `vgnn` need an agreed business classification before mapping them.
+Existing examples include `development → Productive`, `training → Training`, `trainings/webinars → Training`, `meeting → Internal`, and `leave → Vacation`. The model uses `Productive`, `Training`, `Internal`, `Admin`, `Vacation`, `Holiday`, and the fallback `Unmapped`. Do not assume every billable category is productive. Categories such as `SOP 1234` and `vgnn` need an agreed business classification before mapping them.
 
 ## 7. Edit charts, labels and filters
 

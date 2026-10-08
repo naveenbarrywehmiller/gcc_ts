@@ -166,7 +166,7 @@ M checks unique/nonempty register IDs and converts types. Full validation of for
 
 ## Saved project inventory
 
-Reference generated **2026-10-06** from the saved model/PBIR sources. Application version: **1.16.0**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
+Reference generated **2026-10-07** from the saved model/PBIR sources. Application version: **1.18.1**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
 
 ```text
 powerbi/
@@ -1732,7 +1732,8 @@ Explicit editable classification. Unmapped categories block utilization so they 
 #table(type table [taskCategory=text, hourCategory=text], {
     {"development","Productive"}, {"bug fix","Productive"}, {"code review","Productive"},
     {"testing","Productive"}, {"design","Productive"}, {"documentation","Productive"},
-    {"training","Training"}, {"meeting","Internal"}, {"admin","Admin"},
+    {"training","Training"}, {"trainings/webinars","Training"},
+    {"meeting","Internal"}, {"admin","Admin"},
     {"leave","Vacation"}, {"vacation","Vacation"}, {"holiday","Holiday"}
 })
 ```

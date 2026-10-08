@@ -61,7 +61,8 @@ expression HourCategoryMap =
 		#table(type table [taskCategory=text, hourCategory=text], {
 		    {"development","Productive"}, {"bug fix","Productive"}, {"code review","Productive"},
 		    {"testing","Productive"}, {"design","Productive"}, {"documentation","Productive"},
-		    {"training","Training"}, {"meeting","Internal"}, {"admin","Admin"},
+		    {"training","Training"}, {"trainings/webinars","Training"},
+		    {"meeting","Internal"}, {"admin","Admin"},
 		    {"leave","Vacation"}, {"vacation","Vacation"}, {"holiday","Holiday"}
 		})
 	lineageTag: e96760c9-fcd2-4a12-8def-0b8bc1c9007a

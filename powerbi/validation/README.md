@@ -2,6 +2,10 @@
 
 The deliverable is `../GCC_Requirements/GCC_Requirements.pbip`.
 
+## Training category update (October 7, 2026)
+
+`Trainings/Webinars` now maps to Training in the saved HourCategoryMap. The projectless, submitted training row in `scripts/powerbi-fixture.json` uses that exact source label. The updated TMDL deserialized through Desktop's TOM library, and the requirements API tests passed (2/2). A new native-engine calculation run is pending because Power BI Desktop is not running. The full report-schema validator is currently blocked by a 404 for the report's existing Microsoft `visualContainer/2.13.0` schema URL; this change did not edit report JSON. The engine and schema result files below remain evidence from the earlier model version.
+
 * `schema-validation.json`: 244 Microsoft JSON schema documents validated, including 116 native `mobile.json` files, plus visual field resolution against the TMDL model; zero errors. Desktop removed schema declarations from some manifests when saving, so the count differs from the original scaffold.
 * `mobile-layout-validation.json`: nine phone pages, 116 placements on a 324-unit canvas; no overlaps, omitted visuals or width violations. Each page keeps its timestamp, filters, KPI/chart/detail visuals and explanatory context. Desktop phone preview inspection checks rendering; physical phone access still requires Service publication.
 * Phone preview scope on 2026-10-06: overview header/timestamp/dropdowns, KPI cards, notes, charts and sideways table scrolling were inspected; utilization and delivery phone pages loaded, and initial input-readiness text/table wrapping was inspected. Dropdown clipping found during preview was corrected with taller controls and rechecked. Native Staffing desktop preview confirmed the compact transparent timestamp before the IST edit. Remaining native page previews and the final IST display check are pending; the user stopped Desktop automation with Escape. Schema and geometry validation covers all nine saved pages.
