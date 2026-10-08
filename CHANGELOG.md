@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.19.1...v1.19.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* hide weekly details for projectless non-billable tasks ([e45a2a7](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e45a2a7b76fdc3e347a9707bdd5da83534bf0f99))
+
 ## [1.19.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.19.0...v1.19.1) (2026-10-08)
 
 
