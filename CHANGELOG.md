@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.0...v1.18.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* allow non-billable timesheet rows without a project ([c1f9031](https://github.com/naveenbarrywehmiller/gcc_ts/commit/c1f90316c54d9a2f740b5f010db67773c6d35fcb))
+
 ## [1.18.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.17.0...v1.18.0) (2026-10-07)
 
 
