@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.2...v1.18.3) (2026-10-08)
+
+
+### Bug Fixes
+
+* allow recalled timesheets with multiple project tasks ([ab97449](https://github.com/naveenbarrywehmiller/gcc_ts/commit/ab974496023559c5a18ba00e1b71c287f098667e))
+
 ## [1.18.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.1...v1.18.2) (2026-10-08)
 
 
