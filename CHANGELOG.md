@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.1...v1.18.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **powerbi:** map trainings and webinars to training ([728c896](https://github.com/naveenbarrywehmiller/gcc_ts/commit/728c8961064fc199267c14e40c9ba9faa8695038))
+
 ## [1.18.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.0...v1.18.1) (2026-10-08)
 
 
