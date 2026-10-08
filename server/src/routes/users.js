@@ -24,10 +24,12 @@ router.use('/:id', authenticate, (req, res, next) => {
     }
     return next();
   }
-  if ((input.role !== undefined && input.role !== target.role) ||
-      (input.division_id !== undefined && (Number(input.division_id) || null) !== target.division_id) ||
+  const selfAdminEdit = req.user.id === target.id && target.role === 'admin';
+  const selfDivisionAssignment = selfAdminEdit && (Array.isArray(input.division_ids) || (input.role !== undefined && input.role !== target.role));
+  if ((!selfAdminEdit && input.role !== undefined && input.role !== target.role) ||
+      (!selfDivisionAssignment && input.division_id !== undefined && (Number(input.division_id) || null) !== target.division_id) ||
       (input.division !== undefined && input.division !== target.division)) {
-    return res.status(403).json({ error: 'Only a system admin can change an administrator role or division' });
+    return res.status(403).json({ error: 'Only this admin or a system admin can change the administrator role or division' });
   }
   next();
 });
@@ -57,6 +59,49 @@ function generatePassword(length = 14) {
 
   // Shuffle the password so required chars aren't always at start
   return password.split('').sort(() => crypto.randomInt(3) - 1).join('');
+}
+
+function validateUserDivisions({ division_ids, division_id, role, actor, targetId }) {
+  if (division_ids === undefined) return null;
+  if (!Array.isArray(division_ids) || !division_ids.length) return { status: 400, error: 'Select at least one division' };
+  if (!['admin', 'employee'].includes(role)) {
+    return { status: 400, error: 'Multiple divisions require an admin or employee account' };
+  }
+  const isSelfAdmin = actor.role === 'admin' && actor.id === Number(targetId) && role === 'admin';
+  const isSelfDemotion = actor.role === 'admin' && actor.id === Number(targetId) && role === 'employee';
+  if (role === 'admin' && actor.role !== 'system admin' && !isSelfAdmin) {
+    return { status: 403, error: 'You can only edit your own divisions' };
+  }
+  const ids = [...new Set(division_ids.map(Number))];
+  if (ids.some(id => !Number.isSafeInteger(id) || id <= 0 ||
+      !db.prepare('SELECT id FROM divisions WHERE id = ? AND active = 1').get(id))) {
+    return { status: 400, error: 'Select valid active divisions' };
+  }
+  if (!ids.includes(Number(division_id))) return { status: 400, error: 'Primary division must be selected' };
+  const previouslyAssigned = targetId && role === 'employee'
+    ? new Set(db.prepare('SELECT division_id FROM employee_divisions WHERE user_id = ?').all(targetId).map(row => row.division_id))
+    : new Set();
+  if (targetId && role === 'employee' && previouslyAssigned.size === 0) {
+    const previous = db.prepare(`SELECT COALESCE(sc.name, u.team_type) AS category
+      FROM users u LEFT JOIN supporting_categories sc ON sc.id = u.supporting_category_id WHERE u.id = ?`).get(targetId);
+    if (previous && !previous.category?.toLowerCase().includes('dedicated')) {
+      for (const row of db.prepare('SELECT id FROM divisions WHERE active = 1').all()) previouslyAssigned.add(row.id);
+    }
+  }
+  if (role === 'employee' && actor.role !== 'system admin' && !isSelfDemotion &&
+      ids.some(id => !canManageDivision(actor, id) && !previouslyAssigned.has(id))) {
+    return { status: 403, error: 'Select only divisions assigned to you' };
+  }
+  return null;
+}
+
+function replaceUserDivisions(userId, role, ids) {
+  db.prepare('DELETE FROM admin_divisions WHERE user_id = ?').run(userId);
+  db.prepare('DELETE FROM employee_divisions WHERE user_id = ?').run(userId);
+  if (!['admin', 'employee'].includes(role)) return;
+  const table = role === 'admin' ? 'admin_divisions' : 'employee_divisions';
+  const insert = db.prepare(`INSERT INTO ${table} (user_id, division_id) VALUES (?, ?)`);
+  for (const id of new Set(ids.map(Number))) insert.run(userId, id);
 }
 
 // GET /api/users/generate-password - Generate a random secure password
@@ -171,11 +216,15 @@ router.get('/:id', authenticate, authorize('admin'), (req, res) => {
   res.json({ user });
 });
 
-// GET /api/users/:id/divisions - Get divisions assigned to an admin user
-router.get('/:id/divisions', authenticate, authorize('admin'), (req, res) => {
+// GET /api/users/:id/divisions - Get stored admin or employee division assignments
+router.get('/:id/divisions', authenticate, (req, res) => {
   const userId = req.params.id;
+  const user = db.prepare('SELECT id, role, division_id, division FROM users WHERE id = ?').get(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (req.user.id !== user.id && !canManageUser(req.user, user)) return res.status(403).json({ error: 'Division access denied' });
+  const table = user.role === 'employee' ? 'employee_divisions' : 'admin_divisions';
   const divisions = db.prepare(`
-    SELECT d.id, d.name FROM admin_divisions ad
+    SELECT d.id, d.name FROM ${table} ad
     JOIN divisions d ON ad.division_id = d.id
     WHERE ad.user_id = ?
     ORDER BY d.name ASC
@@ -228,7 +277,7 @@ router.put('/:id/divisions', authenticate, authorize('system admin'), (req, res)
 // POST /api/users - Create user
 router.post('/', authenticate, authorize('admin'), (req, res) => {
   req.body = normalizeUserReferences(req.body);
-  const { name, email, password, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id } = req.body;
+  const { name, email, password, role, division, core, team_type, division_id, division_ids, department_id, supporting_category_id, employee_id } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email, and password are required' });
@@ -241,6 +290,8 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
   const roleError = validateRoleAssignment(req.user, role || 'employee');
   if (roleError) return res.status(roleError.status).json({ error: roleError.error });
   if (!canManageDivision(req.user, division_id)) return res.status(403).json({ error: 'Select a division assigned to you' });
+  const divisionError = validateUserDivisions({ division_ids, division_id, role: role || 'employee', actor: req.user });
+  if (divisionError) return res.status(divisionError.status).json({ error: divisionError.error });
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
   if (existing) {
@@ -262,10 +313,14 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
   }
 
   const hash = bcrypt.hashSync(password, 12);
-  const result = db.prepare(`
-    INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(name.trim(), email.toLowerCase().trim(), hash, role || 'employee', divisionName, core || null, teamType, division_id || null, department_id || null, supporting_category_id || null, employee_id || null);
+  const result = db.transaction(() => {
+    const created = db.prepare(`
+      INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name.trim(), email.toLowerCase().trim(), hash, role || 'employee', divisionName, core || null, teamType, division_id || null, department_id || null, supporting_category_id || null, employee_id || null);
+    if (division_ids) replaceUserDivisions(created.lastInsertRowid, role || 'employee', division_ids);
+    return created;
+  })();
 
   db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
     req.user.id, 'CREATE_USER', `Created user: ${email}`, 'user', result.lastInsertRowid, req.ip
@@ -287,10 +342,10 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 // PUT /api/users/:id - Update user
 router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   req.body = normalizeUserReferences(req.body);
-  const { name, email, password, role, division, core, team_type, active, division_id, department_id, supporting_category_id, employee_id } = req.body;
+  const { name, email, password, role, division, core, team_type, active, division_id, division_ids, department_id, supporting_category_id, employee_id } = req.body;
   const userId = req.params.id;
 
-  const existing = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT id, role, division_id, team_type FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
   if (active !== undefined && !active && (existing.id === req.user.id || existing.role === 'system admin')) {
     return res.status(400).json({ error: 'Cannot deactivate your own account or a system admin account' });
@@ -302,9 +357,16 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   }
 
   if (role !== undefined && role !== existing.role) {
-    const roleError = validateRoleAssignment(req.user, role);
+    const roleError = validateRoleAssignment(req.user, role, { selfAdminChange: req.user.id === existing.id && existing.role === 'admin' });
     if (roleError) return res.status(roleError.status).json({ error: roleError.error });
   }
+
+  const divisionError = validateUserDivisions({
+    division_ids, division_id: division_id === undefined ? existing.division_id : division_id,
+    role: role === undefined ? existing.role : role,
+    actor: req.user, targetId: userId,
+  });
+  if (divisionError) return res.status(divisionError.status).json({ error: divisionError.error });
 
   if (email) {
     const emailExists = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email.toLowerCase().trim(), userId);
@@ -365,7 +427,16 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   updateFields.push('updated_at = CURRENT_TIMESTAMP');
   params.push(userId);
 
-  db.prepare(`UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`).run(...params);
+  db.transaction(() => {
+    db.prepare(`UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`).run(...params);
+    if (division_ids) replaceUserDivisions(userId, role === undefined ? existing.role : role, division_ids);
+    else if (['admin', 'employee'].includes(existing.role) && (
+      (role !== undefined && role !== existing.role) ||
+      (division_id !== undefined && Number(division_id) !== existing.division_id)
+    )) {
+      replaceUserDivisions(userId, role === undefined ? existing.role : role, [division_id === undefined ? existing.division_id : division_id].filter(Boolean));
+    }
+  })();
 
   db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
     req.user.id, 'UPDATE_USER', `Updated user ID: ${userId}`, 'user', userId, req.ip

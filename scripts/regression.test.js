@@ -59,8 +59,7 @@ test('bootstrap is explicit and does not recreate renamed accounts', () => {
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'system admin'").get().n, 1);
 });
 
-test('admin cannot assign system admin through update or creation, and removed imports are unavailable', async () => {
-  assert.equal((await request(admin, `/users/${admin}`, { role: 'system admin' }, 'PUT')).status, 403);
+test('admin can change their own role but cannot create system admins, and removed imports are unavailable', async () => {
   assert.equal((await request(admin, '/users', { name: 'Escalated', email: 'escalated@test.invalid', password: 'long-password', role: 'system admin' })).status, 403);
   for (const type of ['users', 'tasks', 'divisions']) {
     const form = new FormData();
@@ -68,7 +67,10 @@ test('admin cannot assign system admin through update or creation, and removed i
     assert.equal((await request(systemAdmin, `/import/${type}`, form)).status, 404);
   }
   assert.equal((await request(admin, '/system/maintenance', undefined, 'GET')).status, 403);
+  assert.equal((await request(admin, `/users/${admin}`, { role: 'system admin' }, 'PUT')).status, 200);
+  assert.equal((await request(admin, '/system/maintenance', undefined, 'GET')).status, 200);
   assert.equal((await request(systemAdmin, `/users/${admin}`, { role: 'admin' }, 'PUT')).status, 200);
+  assert.equal((await request(admin, '/system/maintenance', undefined, 'GET')).status, 403);
 });
 
 test('batch totals are atomic, include existing hours, and permit balanced redistribution', async () => {

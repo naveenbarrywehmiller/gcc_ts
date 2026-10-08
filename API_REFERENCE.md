@@ -279,6 +279,8 @@ Standard REST patterns (`GET /`, `POST /`, `PUT /:id`, `DELETE /:id`):
 | **Activities** | `/api/activities` | `name`, `category` |
 | **Holidays** | `/api/holidays` | `name`, `date` |
 
+`POST /api/users` and `PUT /api/users/:id` accept `division_ids` for Admin and Employee accounts. The array must contain active divisions and include `division_id`, the primary division. Admin accounts use these assignments for management scope; Employee accounts with stored assignments use them for timesheet division choices and write validation. Legacy employees without stored assignments retain the existing Dedicated/Flex behavior. `GET /api/users/:id/divisions` returns the stored assignments to the user or an authorized admin. An Admin may edit their own role and division assignments; other Admin accounts remain managed by a System Admin.
+
 ---
 
 ### 8. System Administration

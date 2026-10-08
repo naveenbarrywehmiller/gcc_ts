@@ -42,6 +42,8 @@ export default function AdminUsers() {
     name: '', email: '', password: '', role: 'employee', 
     division_id: '', department_id: '', supporting_category_id: '', employee_id: '' 
   });
+  const [formDivisionIds, setFormDivisionIds] = useState([]);
+  const [originalDivisionIds, setOriginalDivisionIds] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
 
   // Delete confirmation modal
@@ -108,22 +110,46 @@ export default function AdminUsers() {
 
   const openCreate = () => {
     setEditing(null);
+    const defaultDivision = !isSystemAdmin && managedDivisions.length === 1 ? managedDivisions[0].id : '';
     setForm({ 
       name: '', email: '', password: '', role: 'employee', 
-      division_id: !isSystemAdmin && managedDivisions.length === 1 ? managedDivisions[0].id : '', department_id: '', supporting_category_id: '', employee_id: ''
+      division_id: defaultDivision, department_id: '', supporting_category_id: '', employee_id: ''
     });
+    setFormDivisionIds(defaultDivision ? [Number(defaultDivision)] : []);
+    setOriginalDivisionIds([]);
     setShowPassword(false);
     setShowModal(true);
   };
 
-  const openEdit = (user) => {
+  const openEdit = async (user) => {
+    const activeDivisionIds = new Set(divisions.map(d => d.id));
+    let assignedDivisionIds = user.division_id && activeDivisionIds.has(Number(user.division_id)) ? [Number(user.division_id)] : [];
+    let hasExplicitAssignments = false;
+    if (user.role === 'admin' || user.role === 'employee') {
+      try {
+        const res = await api.get(`/users/${user.id}/divisions`);
+        hasExplicitAssignments = res.data.divisions.length > 0;
+        if (res.data.divisions.length) assignedDivisionIds = [...new Set([...assignedDivisionIds, ...res.data.divisions.map(d => d.id).filter(id => activeDivisionIds.has(id))])];
+      } catch {
+        toast.error('Unable to load division assignments');
+        return;
+      }
+    }
+    if (user.role === 'employee' && !hasExplicitAssignments &&
+        !user.supporting_category_name?.toLowerCase().includes('dedicated')) {
+      assignedDivisionIds = divisions.map(d => d.id);
+    }
     setEditing(user);
+    setFormDivisionIds(assignedDivisionIds);
+    setOriginalDivisionIds(assignedDivisionIds);
     setForm({ 
       name: user.name, 
       email: user.email, 
       password: '', 
       role: user.role, 
-      division_id: user.division_id || '', 
+      division_id: ['admin', 'employee'].includes(user.role)
+        ? (assignedDivisionIds.includes(Number(user.division_id)) ? user.division_id : assignedDivisionIds[0] || '')
+        : user.division_id || '',
       department_id: user.department_id || '', 
       supporting_category_id: user.supporting_category_id || '',
       employee_id: user.employee_id || ''
@@ -152,14 +178,24 @@ export default function AdminUsers() {
 
   const handleSave = async () => {
     try {
+      const hasDivisionChoices = form.role === 'admin' || form.role === 'employee';
+      if (hasDivisionChoices && formDivisionIds.length === 0) { toast.error('Select at least one division'); return; }
+      const payload = { ...form };
+      if (hasDivisionChoices) {
+        payload.division_ids = formDivisionIds;
+        payload.division_id = formDivisionIds.includes(Number(form.division_id)) ? form.division_id : formDivisionIds[0];
+      }
       if (editing) {
-        const payload = { ...form };
         if (!payload.password) delete payload.password;
         await api.put(`/users/${editing.id}`, payload);
         toast.success('User updated');
+        if (editing.id === currentUser?.id && form.role !== currentUser.role) {
+          window.location.reload();
+          return;
+        }
       } else {
         if (!form.password) { toast.error('Password is required'); return; }
-        await api.post('/users', form);
+        await api.post('/users', payload);
         toast.success('User created');
       }
       setShowModal(false);
@@ -233,6 +269,23 @@ export default function AdminUsers() {
       loadData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to update divisions');
+    }
+  };
+
+  const hasDivisionChoices = form.role === 'admin' || form.role === 'employee';
+  const editingOwnAdmin = editing?.id === currentUser?.id && editing?.role === 'admin';
+  const availableDivisions = isSystemAdmin || editingOwnAdmin
+    ? divisions
+    : form.role === 'employee'
+      ? divisions.filter(d => managedDivisions.some(managed => managed.id === d.id) || originalDivisionIds.includes(d.id))
+      : managedDivisions;
+  const toggleFormDivision = (divisionId) => {
+    const nextIds = formDivisionIds.includes(divisionId)
+      ? formDivisionIds.filter(id => id !== divisionId)
+      : [...formDivisionIds, divisionId];
+    setFormDivisionIds(nextIds);
+    if (!nextIds.includes(Number(form.division_id))) {
+      setForm(prev => ({ ...prev, division_id: nextIds[0] || '' }));
     }
   };
 
@@ -538,30 +591,13 @@ export default function AdminUsers() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="user-form-role" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Role</label>
-              <select id="user-form-role" className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <select id="user-form-role" className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="employee">Employee</option>
                 <option value="manager">Manager</option>
-                {(isSystemAdmin || form.role === 'admin') && <option value="admin">Admin</option>}
-                {isSystemAdmin && <option value="system admin">System Admin</option>}
+                {(isSystemAdmin || editingOwnAdmin || form.role === 'admin') && <option value="admin">Admin</option>}
+                {(isSystemAdmin || editingOwnAdmin) && <option value="system admin">System Admin</option>}
               </select>
-            </div>
-            <div>
-              <label htmlFor="user-form-division" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division<FieldHelp label="Division" /></label>
-              <select id="user-form-division" className="input" disabled={!isSystemAdmin && editing?.role === 'admin'} value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
-                <option value="">— Select —</option>
-                {form.division_id && !(isSystemAdmin ? divisions : managedDivisions).some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{editing?.division_name || editing?.division} (current)</option>}
-                {(isSystemAdmin ? divisions : managedDivisions).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="user-form-department" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Department</label>
-              <select id="user-form-department" className="input" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
-                <option value="">— Select —</option>
-                {form.department_id && !departments.some(d => d.id === Number(form.department_id)) && <option value={form.department_id}>{editing?.department_name} (inactive)</option>}
-                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
+              {editingOwnAdmin && <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">Changing your role updates your access after saving.</p>}
             </div>
             <div>
               <label htmlFor="user-form-supporting-category" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Dedicated/Flex<FieldHelp label="Dedicated / Flex" /></label>
@@ -569,6 +605,47 @@ export default function AdminUsers() {
                 <option value="">— Select —</option>
                 {form.supporting_category_id && !supportingCategories.some(d => d.id === Number(form.supporting_category_id)) && <option value={form.supporting_category_id}>{editing?.supporting_category_name} (inactive)</option>}
                 {supportingCategories.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={hasDivisionChoices ? 'sm:col-span-2 min-w-0' : 'min-w-0'}>
+              {hasDivisionChoices ? (
+                <fieldset>
+                  <legend className="text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Divisions *</legend>
+                  <p className="text-xs text-surface-500 dark:text-surface-400 mb-2">{form.role === 'admin' ? 'Select the divisions this admin can manage.' : 'Select the divisions this employee can book time in.'} Mark one as the primary division.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {availableDivisions.map(d => (
+                      <div key={d.id} className={`flex min-w-0 flex-wrap items-center gap-3 min-h-11 p-3 rounded-lg border ${formDivisionIds.includes(d.id) ? 'border-brand-300 bg-brand-50 dark:border-brand-700 dark:bg-brand-950/20' : 'border-surface-200 dark:border-surface-700'}`}>
+                        <label className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer">
+                          <input type="checkbox" checked={formDivisionIds.includes(d.id)} onChange={() => toggleFormDivision(d.id)} className="w-4 h-4 shrink-0 rounded border-surface-300 text-brand-600 focus:ring-brand-500" />
+                          <span className="min-w-0 break-words text-sm font-medium text-surface-700 dark:text-surface-300">{d.name}</span>
+                        </label>
+                        {formDivisionIds.includes(d.id) && <label className="flex items-center gap-1.5 text-xs text-surface-600 dark:text-surface-300 cursor-pointer">
+                          <input type="radio" name="primary-user-division" aria-label={`Primary division: ${d.name}`} checked={Number(form.division_id) === d.id} onChange={() => setForm(prev => ({ ...prev, division_id: d.id }))} className="w-4 h-4 text-brand-600 focus:ring-brand-500" />
+                          Primary
+                        </label>}
+                      </div>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : (
+                <label htmlFor="user-form-division" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division<FieldHelp label="Division" /></label>
+              )}
+              {!hasDivisionChoices && (
+                <select id="user-form-division" className="input" value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
+                  <option value="">— Select —</option>
+                  {form.division_id && !availableDivisions.some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{editing?.division_name || editing?.division} (current)</option>}
+                  {availableDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              )}
+            </div>
+            <div className="min-w-0">
+              <label htmlFor="user-form-department" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Department</label>
+              <select id="user-form-department" className="input" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
+                <option value="">— Select —</option>
+                {form.department_id && !departments.some(d => d.id === Number(form.department_id)) && <option value={form.department_id}>{editing?.department_name} (inactive)</option>}
+                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
           </div>

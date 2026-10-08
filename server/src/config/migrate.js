@@ -121,6 +121,15 @@ function migrate() {
       UNIQUE(user_id, division_id)
     );
 
+    CREATE TABLE IF NOT EXISTS employee_divisions (
+      user_id INTEGER NOT NULL,
+      division_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (division_id) REFERENCES divisions(id),
+      PRIMARY KEY (user_id, division_id)
+    );
+
     -- New tables for enhanced hierarchy --
 
     CREATE TABLE IF NOT EXISTS subdivisions (
@@ -169,6 +178,7 @@ function migrate() {
     CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_holidays_date ON holidays(date);
     CREATE INDEX IF NOT EXISTS idx_admin_divisions_user ON admin_divisions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_employee_divisions_division ON employee_divisions(division_id);
     CREATE INDEX IF NOT EXISTS idx_subdivisions_division ON subdivisions(division_id);
     CREATE INDEX IF NOT EXISTS idx_dept_ownerships_department ON department_ownerships(department_id);
   `;

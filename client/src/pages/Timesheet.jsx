@@ -135,13 +135,17 @@ export default function Timesheet() {
       if (user?.department_id) {
         fetches.push(api.get(`/department-ownerships?department_id=${user.department_id}&active=1`));
       }
-      const results = await Promise.all(fetches);
+      const [results, employeeDivisionsRes] = await Promise.all([
+        Promise.all(fetches),
+        user?.role === 'employee' ? api.get(`/users/${user.id}/divisions`) : Promise.resolve(null),
+      ]);
       const [tsRes, pRes, tkRes, divRes, subRes, hRes] = results;
       return {
         entries: tsRes.data.entries,
         projects: user?.role === 'admin' ? pRes.data.projects.filter(project => project.can_edit) : pRes.data.projects,
         tasks: tkRes.data.tasks,
         divisions: divRes.data.divisions,
+        assignedDivisionIds: employeeDivisionsRes?.data.divisions.map(d => d.id) || [],
         subdivisions: subRes.data.subdivisions,
         holidays: hRes.data.holidays,
         ownerships: results[6]?.data?.ownerships || []
@@ -1262,7 +1266,12 @@ export default function Timesheet() {
             <>
               <SearchableSelect
                 label={selectedTaskIsNonBillable ? 'Division (optional)' : 'Division'}
-                options={divisions.map(d => ({ value: d.id, label: d.name }))}
+                options={divisions.filter(d => {
+                  if (user?.role !== 'employee') return true;
+                  const assigned = loadedData?.assignedDivisionIds || [];
+                  if (assigned.length) return assigned.includes(d.id);
+                  return !user?.supporting_category_name?.toLowerCase().includes('dedicated') || !user?.division_id || d.id === user.division_id;
+                }).map(d => ({ value: d.id, label: d.name }))}
                 value={newRowDivision}
                 onChange={value => { setNewRowDivision(value); setNewRowSubdivision(null); setNewRowProject(null); }}
                 placeholder="Search and select a division..."

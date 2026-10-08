@@ -48,13 +48,22 @@ function checkDivisionAccess(userId, divisionId) {
   if (!divisionId) return { allowed: true }; // No division specified, allow
 
   const user = db.prepare(`
-    SELECT u.division_id, u.supporting_category_id, sc.name as supporting_category_name
+    SELECT u.role, u.division_id, u.supporting_category_id, sc.name as supporting_category_name
     FROM users u
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
     WHERE u.id = ?
   `).get(userId);
 
   if (!user) return { allowed: false, reason: 'User not found' };
+
+  if (user.role === 'employee') {
+    const assigned = db.prepare('SELECT division_id FROM employee_divisions WHERE user_id = ?').all(userId);
+    if (assigned.length) {
+      return assigned.some(row => row.division_id === Number(divisionId))
+        ? { allowed: true }
+        : { allowed: false, reason: 'Select one of your assigned divisions' };
+    }
+  }
 
   // If user has no supporting category set, allow (backward compat)
   if (!user.supporting_category_name) return { allowed: true };
@@ -75,6 +84,15 @@ function checkDivisionAccess(userId, divisionId) {
   }
 
   return { allowed: true }; // Unknown category, allow
+}
+
+function projectDivisionId(projectId, requestedDivisionId) {
+  const project = db.prepare('SELECT division_id FROM projects WHERE id = ?').get(projectId);
+  if (!project) throw Object.assign(new Error('Project not found'), { status: 400 });
+  if (project.division_id && requestedDivisionId && project.division_id !== Number(requestedDivisionId)) {
+    throw Object.assign(new Error('Division must match the selected project'), { status: 400 });
+  }
+  return project.division_id || requestedDivisionId || null;
 }
 
 
@@ -220,14 +238,11 @@ router.post('/', authenticate, normalizeDetails, (req, res) => {
     return res.status(400).json({ error: 'Hours must be between 0 and 24' });
   }
 
-  // Enforce Flex/Dedicated team logic (only when project is specified)
-  if (project_id) {
-    const effectiveDivisionId = division_id || db.prepare('SELECT division_id FROM projects WHERE id = ?').get(project_id)?.division_id;
-    if (effectiveDivisionId) {
-      const access = checkDivisionAccess(userId, effectiveDivisionId);
-      if (!access.allowed) {
-        return res.status(403).json({ error: access.reason });
-      }
+  const effectiveDivisionId = project_id ? projectDivisionId(project_id, division_id) : division_id || null;
+  if (effectiveDivisionId) {
+    const access = checkDivisionAccess(userId, effectiveDivisionId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason });
     }
   }
 
@@ -258,10 +273,6 @@ router.post('/', authenticate, normalizeDetails, (req, res) => {
       'SELECT id, status FROM timesheets WHERE user_id = ? AND project_id IS NULL AND task_id = ? AND work_date = ?'
     ).get(userId, task_id, work_date);
   }
-
-  const effectiveDivisionId = project_id
-    ? (division_id || db.prepare('SELECT division_id FROM projects WHERE id = ?').get(project_id)?.division_id)
-    : (division_id || null);
 
   if (existing) {
     if (existing.status === 'approved') {
@@ -338,14 +349,10 @@ router.post('/batch', authenticate, normalizeDetails, (req, res) => {
         throw Object.assign(new Error('Each entry requires a date, project or task, and numeric hours between 0 and 24'), { status: 400 });
       }
 
-      // Enforce Flex/Dedicated team logic (only when project is specified)
-      let effectiveDivisionId = null;
-      if (project_id) {
-        effectiveDivisionId = division_id || db.prepare('SELECT division_id FROM projects WHERE id = ?').get(project_id)?.division_id;
-        if (effectiveDivisionId) {
-          const access = checkDivisionAccess(userId, effectiveDivisionId);
-          if (!access.allowed) throw Object.assign(new Error(access.reason), { status: 403 });
-        }
+      const effectiveDivisionId = project_id ? projectDivisionId(project_id, division_id) : division_id || null;
+      if (effectiveDivisionId) {
+        const access = checkDivisionAccess(userId, effectiveDivisionId);
+        if (!access.allowed) throw Object.assign(new Error(access.reason), { status: 403 });
       }
 
       const { week, year: weekYear } = getISOWeekNumber(work_date);
@@ -379,7 +386,7 @@ router.post('/batch', authenticate, normalizeDetails, (req, res) => {
               ownership_id = ?, billable = ?, details_json = COALESCE(?, details_json), status = 'draft', updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
           `).run(task_id || null, hours, description || null, week, weekYear,
-                 division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? null, existing.id);
+                 effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? null, existing.id);
         }
       } else if (hours > 0) {
         const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
@@ -390,7 +397,7 @@ router.post('/batch', authenticate, normalizeDetails, (req, res) => {
                                   division_id, subdivision_id, project_description, ownership_id, billable, details_json, status)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
         `).run(userId, project_id || null, task_id || null, work_date, hours, description || null, week, weekYear,
-               division_id || effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? '{}');
+               effectiveDivisionId || null, subdivision_id || null, project_description || null, ownership_id || null, isBillable, details_json ?? '{}');
       }
       results.push({ project_id, task_id, work_date, hours, status: 'saved' });
     }
