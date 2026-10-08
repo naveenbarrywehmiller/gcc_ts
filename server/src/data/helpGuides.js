@@ -18,6 +18,7 @@ const commonGuides = [
     steps: [
       'Choose a week with the arrows or calendar, then select Add Project to enter project or task details.',
       'For project work, choose the division where the work was done. Employees can choose from the divisions assigned to them by an administrator; ask an administrator if a division is missing.',
+      'For a Non-Billable task that does not require a project, select the task and add the row; project and weekly detail fields are not needed.',
       'Enter hours on the appropriate days and select Save to keep work in progress.',
       'When the week is ready, select Submit Week. If a Recall action is available, use it to correct a submitted week.',
       'If an approved week needs a change and you cannot recall it, contact your administrator.',

@@ -107,3 +107,7 @@ The existing Power BI working tree changes were left untouched.
 ## Help page follow-up (October 7, 2026)
 
 The new Help page uses the existing centered content container and sidebar drawer. Its guide cards form one column on small screens and two columns from the laptop breakpoint. Browser checks covered employee and system admin content at all 27 portrait, landscape, laptop, desktop, and ultrawide viewports listed above. Manager and admin content was checked at 390×844, 768×1024, and 1366×768. All 60 role-and-viewport checks passed without document horizontal overflow, and the mobile Help navigation link opened and closed the drawer correctly. Browser data was provided by read only API fixtures; the authenticated `/api/help` endpoint was tested separately for all four roles.
+
+## Projectless non-billable row dialog (October 7, 2026)
+
+The Add Project Row dialog hides optional weekly detail fields for a Non-Billable task with Requires Project set to No. Browser fixture checks covered 320×568, 390×844, 568×320, 768×1024, 1024×768, 1366×768, and 3440×1440. At each size the dialog stayed inside the viewport, its footer remained accessible, and neither the document nor dialog had horizontal overflow. Switching from a task that requires a project cleared hidden detail values; a Non-Billable task that still requires a project retained the detail form.

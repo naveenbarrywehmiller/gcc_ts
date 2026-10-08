@@ -287,6 +287,7 @@ export default function Timesheet() {
     return task ? task.requires_project === 1 : true;
   }, [newRowTask, tasks]);
   const selectedTaskIsNonBillable = tasks.find(t => t.id === newRowTask)?.classification === 'Non-Billable';
+  const hideProjectlessNonBillableDetails = !!newRowTask && !selectedTaskRequiresProject && selectedTaskIsNonBillable;
 
   // Cumulative hours for selected project (client-side calculation)
   const cumulativeHoursForProject = useMemo(() => {
@@ -323,10 +324,12 @@ export default function Timesheet() {
 
   // Add or update a project row
   const handleAddRow = () => {
-    for (const { key, label, type } of fields) {
-      const value = newRowDetails[key];
-      if (type === 'number' && value !== undefined && value !== '' && (!Number.isSafeInteger(Number(value)) || Number(value) < 0)) {
-        toast.warning(`${label} must be a nonnegative whole number`); return;
+    if (!hideProjectlessNonBillableDetails) {
+      for (const { key, label, type } of fields) {
+        const value = newRowDetails[key];
+        if (type === 'number' && value !== undefined && value !== '' && (!Number.isSafeInteger(Number(value)) || Number(value) < 0)) {
+          toast.warning(`${label} must be a nonnegative whole number`); return;
+        }
       }
     }
     if (!newRowTask) { toast.warning('Please select a task category'); return; }
@@ -1088,7 +1091,10 @@ export default function Timesheet() {
                                   {row.task_category}{row.task_desc ? ` — ${row.task_desc}` : ''}
                                 </p>
                               )}
-                              <button type="button" className="text-xs text-brand-600 underline" onClick={() => setViewDetails(row)}>View details</button>
+                              {(row.requires_project !== 0 || row.classification !== 'Non-Billable' ||
+                                Object.values(row.details || {}).some(value => value !== null && value !== undefined && value !== '')) && (
+                                <button type="button" className="text-xs text-brand-600 underline" onClick={() => setViewDetails(row)}>View details</button>
+                              )}
                           {row.task_category && (
                                 <p className="text-[10px] text-surface-400 truncate">
                                   Task: {row.task_category}
@@ -1245,9 +1251,11 @@ export default function Timesheet() {
             value={newRowTask}
             onChange={value => {
               setNewRowTask(value);
-              if (tasks.find(task => task.id === value)?.requires_project === 0) {
+              const task = tasks.find(candidate => candidate.id === value);
+              if (task?.requires_project === 0) {
                 setNewRowDivision(null); setNewRowSubdivision(null); setNewRowProject(null); setNewRowProjectDesc('');
               }
+              if (task?.requires_project === 0 && task.classification === 'Non-Billable') setNewRowDetails({});
             }}
             placeholder="Select a task name/number..."
             id="add-row-task-category"
@@ -1338,7 +1346,7 @@ export default function Timesheet() {
             </>
           )}
           <ProjectStatus status={projects.find(p => p.id === newRowProject)?.project_status} />
-          <TimesheetDetails value={newRowDetails} onChange={setNewRowDetails} />
+          {!hideProjectlessNonBillableDetails && <TimesheetDetails value={newRowDetails} onChange={setNewRowDetails} />}
         </div>
       </Modal>
 
