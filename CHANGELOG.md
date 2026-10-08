@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.19.0...v1.19.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* clarify multi-division help and Power BI roster semantics ([b621b8a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b621b8a5ee1d3ba4b423faf9575b5535c2519022))
+
 ## [1.19.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.18.3...v1.19.0) (2026-10-08)
 
 
