@@ -1,6 +1,6 @@
 # Power BI API Compatibility — GCC Timesheet
 
-> **Last Updated:** 2026-09-27
+> **Last Updated:** 2026-10-07
 
 ---
 
@@ -8,7 +8,8 @@
 
 | Power BI Dashboard Version | Required API Version | GCC Timesheet App Version | Status |
 |---------------------------|---------------------|--------------------------|--------|
-| v1.1.0 | v1.x | v1.3.0+ | ✅ Current |
+| v1.1.4 | v1.1.0 | v1.15.0+ | ✅ Current |
+| v1.1.0–v1.1.3 | v1.x | v1.3.0+ | ✅ Legacy |
 | v1.0.0 | v1.x | v1.3.0+ | ✅ Legacy |
 
 ---

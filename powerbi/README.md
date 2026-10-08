@@ -1,6 +1,6 @@
 # GCC Timesheet — Power BI Dashboard
 
-> **Version:** 1.1.3
+> **Version:** 1.1.4
 > **API Compatibility:** Power BI API v1.x  
 > **Application Compatibility:** GCC Timesheet v1.3.0+
 

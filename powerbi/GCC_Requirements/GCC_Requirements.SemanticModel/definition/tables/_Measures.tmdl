@@ -22,7 +22,7 @@ table _Measures
 		displayFolder: 01 Overview
 		lineageTag: 102a7b8a-ca1c-56fa-92d0-e4f28dfeb874
 
-	/// Current roster; does not change with date or project selection.
+	/// Current roster, counted once per employee in the primary division; does not change with date or project selection. Additional checked divisions do not allocate capacity.
 	measure 'Active Team Strength' = CALCULATE(COUNTROWS(DimEmployee), KEEPFILTERS(DimEmployee[isActive] = TRUE()), KEEPFILTERS(DimEmployee[role] <> "system admin"), KEEPFILTERS(FILTER(ALL(DimEmployee[division]),NOT ISCROSSFILTERED(DimDivision) || DimEmployee[division] IN VALUES(DimDivision[divisionName]))))
 		formatString: #,##0
 		displayFolder: 01 Overview

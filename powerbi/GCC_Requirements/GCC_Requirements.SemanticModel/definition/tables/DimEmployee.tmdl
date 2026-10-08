@@ -20,6 +20,7 @@ table DimEmployee
 		summarizeBy: none
 		sourceColumn: employeeName
 
+	/// Primary (home) division from the user profile. Other checked divisions grant access but do not duplicate this roster row or allocate capacity.
 	column division
 		dataType: string
 		lineageTag: 0791688b-ddbd-5b27-a0c1-f128f919fb9c

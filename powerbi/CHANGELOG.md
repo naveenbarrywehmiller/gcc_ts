@@ -5,6 +5,15 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.4] — 2026-10-07
+
+### Clarified
+- Marked `DimEmployee[division]` and Active Team Strength as primary-division roster values. Checked division assignments for Dedicated and Flex users control app access; they do not allocate capacity across divisions.
+- Documented that timesheet hours follow the booked division. Cross-division utilization still needs effective-dated allocation data for an exact divisional capacity denominator.
+
+### Validation
+- The saved TMDL deserialized with Desktop's TOM library (16 tables, 72 measures); application and reporting API tests passed. No DAX formula, API contract, or report visual changed.
+
 ## [1.1.3] — 2026-10-07
 
 ### Fixed

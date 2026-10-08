@@ -22,6 +22,10 @@ The saved model includes six tested DAX variable refactors (1.1.2, 2026-10-06). 
 
 The saved HourCategoryMap maps `Trainings/Webinars` to Training. This also covers non-billable hours logged without a project. DAX measures and visuals are unchanged; refresh the Desktop report to import the updated category. Other unmapped task labels still block utilization until their classifications are confirmed. See the [validation notes](../validation/README.md) for current test limits.
 
+## Multiple division assignments — 1.1.4
+
+The `DimEmployee[division]` field is each person's primary division. Admin and employee checkbox assignments do not create extra roster rows or split capacity, regardless of Dedicated/Flex category. Timesheet hours use the division booked on each entry. Model descriptions and the [complete guide](../POWERBI.md) now state this distinction; calculations, data sources, and visuals are unchanged.
+
 ## Phone layouts
 
 All nine pages have native portrait phone layouts covering all 116 existing visuals. Open **View → Mobile layout** in Desktop and select a page tab. The layouts use a 324-unit canvas, full-width timestamp/dropdown controls, two-column KPI cards, readable wrapped headings/notes and full-width charts. The last-refresh timestamp is small muted text (9 pt label, 10 pt value), with a transparent background and no border/shadow on both desktop and phone views. Detail tables retain all columns with horizontal scrolling; input-readiness definitions wrap into narrow columns.

@@ -2,6 +2,10 @@
 
 The deliverable is `../GCC_Requirements/GCC_Requirements.pbip`.
 
+## Multiple division assignment clarification (October 7, 2026)
+
+TMDL descriptions now identify the roster division as the selected primary division and state that additional checked divisions do not allocate capacity. Timesheet hours continue to follow their booked division. The saved model deserialized through Desktop's TOM library (16 tables, 72 measures); application and reporting API tests passed. DAX expressions, API payloads, and report visuals did not change. Existing native-engine calculations and the production refresh were not rerun for this description-only patch.
+
 ## Training category update (October 7, 2026)
 
 `Trainings/Webinars` now maps to Training in the saved HourCategoryMap. The projectless, submitted training row in `scripts/powerbi-fixture.json` uses that exact source label. The updated TMDL deserialized through Desktop's TOM library, and the requirements API tests passed (2/2). A new native-engine calculation run is pending because Power BI Desktop is not running. The full report-schema validator is currently blocked by a 404 for the report's existing Microsoft `visualContainer/2.13.0` schema URL; this change did not edit report JSON. The engine and schema result files below remain evidence from the earlier model version.

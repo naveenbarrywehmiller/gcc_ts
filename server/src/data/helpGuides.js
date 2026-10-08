@@ -17,6 +17,7 @@ const commonGuides = [
     description: 'Record hours and send a completed week for review.',
     steps: [
       'Choose a week with the arrows or calendar, then select Add Project to enter project or task details.',
+      'For project work, choose the division where the work was done. Employees can choose from the divisions assigned to them by an administrator; ask an administrator if a division is missing.',
       'Enter hours on the appropriate days and select Save to keep work in progress.',
       'When the week is ready, select Submit Week. If a Recall action is available, use it to correct a submitted week.',
       'If an approved week needs a change and you cannot recall it, contact your administrator.',
@@ -66,10 +67,12 @@ const adminGuides = [
     id: 'users',
     title: 'Users',
     path: '/admin/users',
-    description: 'Find people and maintain user records within your assigned scope.',
+    description: 'Find people and maintain roles, team categories, and division access within your assigned scope.',
     steps: [
       'Search or filter by division, department, supporting category, role, or status.',
-      'Open a user to review or edit their details. Use Create User when your permissions allow it.',
+      'Open a user to edit their details, or select Create User when your permissions allow it. Role and Dedicated/Flex are separate fields.',
+      'For an admin or employee, check every division they need and mark one checked division as Primary. Admin assignments control management access; employee assignments control which divisions appear when booking project time. The same checkboxes apply to Dedicated and Flex users.',
+      'Edit a user later to change their checked divisions, primary division, role, or Dedicated/Flex category. An admin can edit their own role and division access; saving a role change updates their permissions.',
       'Use the assignment and history controls to manage or inspect users assigned to you.',
     ],
   },
