@@ -156,7 +156,6 @@ function migrate() {
     );
 
     -- Indexes for performance
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_timesheets_user_project_date ON timesheets(user_id, project_id, work_date);
     CREATE INDEX IF NOT EXISTS idx_timesheets_user_date ON timesheets(user_id, work_date);
     CREATE INDEX IF NOT EXISTS idx_timesheets_project ON timesheets(project_id);
     CREATE INDEX IF NOT EXISTS idx_timesheets_status ON timesheets(status);
@@ -405,7 +404,6 @@ function migrate() {
       ALTER TABLE timesheets_new RENAME TO timesheets;
 
       -- Recreate all indexes
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_timesheets_user_project_date ON timesheets(user_id, project_id, work_date);
       CREATE INDEX IF NOT EXISTS idx_timesheets_user_date ON timesheets(user_id, work_date);
       CREATE INDEX IF NOT EXISTS idx_timesheets_project ON timesheets(project_id);
       CREATE INDEX IF NOT EXISTS idx_timesheets_status ON timesheets(status);
@@ -414,6 +412,18 @@ function migrate() {
     `);
     console.log('  → Timesheets table migrated (project_id now nullable).');
   }
+
+  // A project can have multiple task rows on the same day. Replace the legacy
+  // project-only constraint after any table rebuild so existing databases can
+  // save those rows independently, including after a recall.
+  db.transaction(() => {
+    db.exec('DROP INDEX IF EXISTS idx_timesheets_user_project_date');
+    db.exec(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_timesheets_user_project_task_date
+      ON timesheets(user_id, project_id, COALESCE(task_id, 0), work_date)
+      WHERE project_id IS NOT NULL
+    `);
+  })();
 
   // --- Add unique index for non-project timesheet entries ---
   try {

@@ -9,6 +9,7 @@ config.enableSharepointSync = false;
 config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+const { migrate } = require('../server/src/config/migrate');
 const jwt = require('../server/node_modules/jsonwebtoken');
 const bcrypt = require('../server/node_modules/bcryptjs');
 const { bootstrapAdmin } = require('../server/src/config/bootstrapAdmin');
@@ -80,6 +81,42 @@ test('batch totals are atomic, include existing hours, and permit balanced redis
   assert.equal(db.prepare('SELECT SUM(hours) AS n FROM timesheets WHERE user_id = ?').get(employee).n, 24);
   assert.equal((await request(employee, '/timesheets/batch', { entries: entries([0, 8]) })).status, 200);
   assert.equal(db.prepare('SELECT SUM(hours) AS n FROM timesheets WHERE user_id = ?').get(employee).n, 8);
+});
+
+test('recalled project timesheet saves separate task rows and can be resubmitted', async () => {
+  // Simulate upgrading a database that still has the legacy project-only index.
+  db.exec('CREATE UNIQUE INDEX idx_timesheets_user_project_date ON timesheets(user_id, project_id, work_date)');
+  migrate();
+  const indexes = db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'timesheets'").all().map(index => index.name);
+  assert(!indexes.includes('idx_timesheets_user_project_date'));
+  assert(indexes.includes('idx_timesheets_user_project_task_date'));
+
+  const divisionId = db.prepare('SELECT division_id FROM users WHERE id = ?').get(employee).division_id;
+  const userId = Number(db.prepare('INSERT INTO users(name,email,password_hash,role,division_id) VALUES (?,?,?,?,?)')
+    .run('recall employee', 'recall-employee@test.invalid', 'unused', 'employee', divisionId).lastInsertRowid);
+  const projectId = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)')
+    .run('RECALL-TEST', 'Recall project', divisionId).lastInsertRowid);
+  const entries = (first, second) => [
+    { project_id: projectId, task_id: taskA, work_date: date, hours: first },
+    { project_id: projectId, task_id: taskB, work_date: date, hours: second },
+  ];
+
+  assert.equal((await request(userId, '/timesheets/batch', { entries: entries(2, 6) })).status, 200);
+  assert.equal((await request(userId, '/timesheets/submit', week)).status, 200);
+  assert.equal((await request(admin, '/timesheets/recall', { ...week, user_id: userId, comment: 'Correct hours' })).status, 200);
+  assert.equal((await request(userId, '/timesheets/batch', { entries: entries(3, 5) })).status, 200);
+
+  const saved = db.prepare('SELECT task_id, hours, status FROM timesheets WHERE user_id = ? AND project_id = ? ORDER BY task_id').all(userId, projectId);
+  assert.deepEqual(saved, [
+    { task_id: taskA, hours: 3, status: 'draft' },
+    { task_id: taskB, hours: 5, status: 'draft' },
+  ]);
+  assert.equal((await request(userId, '/timesheets/submit', week)).status, 200);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM timesheets WHERE user_id = ? AND project_id = ? AND status = 'submitted'").get(userId, projectId).n, 2);
+
+  // Startup migration must remain safe once a project has multiple task rows.
+  migrate();
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM timesheets WHERE user_id = ? AND project_id = ?').get(userId, projectId).n, 2);
 });
 
 test('managers can review their division but cannot review themselves or other divisions', async () => {
