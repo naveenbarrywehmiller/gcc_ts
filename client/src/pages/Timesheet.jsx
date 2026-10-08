@@ -282,6 +282,7 @@ export default function Timesheet() {
     const task = tasks.find(t => t.id === newRowTask);
     return task ? task.requires_project === 1 : true;
   }, [newRowTask, tasks]);
+  const selectedTaskIsNonBillable = tasks.find(t => t.id === newRowTask)?.classification === 'Non-Billable';
 
   // Cumulative hours for selected project (client-side calculation)
   const cumulativeHoursForProject = useMemo(() => {
@@ -325,18 +326,20 @@ export default function Timesheet() {
       }
     }
     if (!newRowTask) { toast.warning('Please select a task category'); return; }
-    if (selectedTaskRequiresProject && !newRowProject) { toast.warning('Please select a project category'); return; }
+    if (selectedTaskRequiresProject && !selectedTaskIsNonBillable && !newRowProject) {
+      toast.warning('Please select a project category'); return;
+    }
 
     const exists = rows.some((r, i) => {
       if (editingRowIdx !== null && i === editingRowIdx) return false;
-      if (selectedTaskRequiresProject) {
+      if (selectedTaskRequiresProject && newRowProject) {
         return r.project_id === newRowProject && 
           r.task_id === (newRowTask || null) &&
           r.division_id === (newRowDivision || null) &&
           r.subdivision_id === (newRowSubdivision || null) &&
           r.project_description === (newRowProjectDesc || null);
       } else {
-        // Non-project row: match by task_id only
+        // Projectless rows are saved by task_id, regardless of optional division.
         return r.task_id === newRowTask && !r.project_id;
       }
     });
@@ -1258,7 +1261,7 @@ export default function Timesheet() {
           {selectedTaskRequiresProject && (
             <>
               <SearchableSelect
-                label="Division"
+                label={selectedTaskIsNonBillable ? 'Division (optional)' : 'Division'}
                 options={divisions.map(d => ({ value: d.id, label: d.name }))}
                 value={newRowDivision}
                 onChange={value => { setNewRowDivision(value); setNewRowSubdivision(null); setNewRowProject(null); }}
@@ -1277,11 +1280,15 @@ export default function Timesheet() {
                 id="add-row-subdivision"
               />
               <SearchableSelect
-                label="Project Code *"
+                label={selectedTaskIsNonBillable ? 'Project Code (optional)' : 'Project Code *'}
                 options={modalProjectOptions.map(p => ({ value: p.id, label: `${p.project_code} — ${p.project_name}` }))}
                 value={newRowProject}
-                onChange={setNewRowProject}
+                onChange={value => {
+                  setNewRowProject(value);
+                  if (!value) { setNewRowProjectDesc(''); setNewRowOwnership(null); }
+                }}
                 placeholder="Search and select a project..."
+                clearable={selectedTaskIsNonBillable}
                 id="add-row-project"
               />
 
