@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.21.0...v1.22.0) (2026-10-09)
+
+
+### Features
+
+* enforce employee admin assignment and simplify project time entry ([91dd229](https://github.com/naveenbarrywehmiller/gcc_ts/commit/91dd22950b10ecb6acd63daa3dc83f6f294b7e7a))
+
 ## [1.21.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.20.0...v1.21.0) (2026-10-09)
 
 
