@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.22.0...v1.23.0) (2026-10-09)
+
+
+### Features
+
+* enforce timesheet routing and required project billing rules ([6c43dda](https://github.com/naveenbarrywehmiller/gcc_ts/commit/6c43dda6ced0a9823cf865863afb10508e438c30))
+
 ## [1.22.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.21.0...v1.22.0) (2026-10-09)
 
 
