@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.19.2...v1.20.0) (2026-10-09)
+
+
+### Features
+
+* allow authorized admins to permanently delete projects ([f7c360f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f7c360f6ec72a05630c1652d9efe90018412579b))
+
 ## [1.19.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.19.1...v1.19.2) (2026-10-08)
 
 
