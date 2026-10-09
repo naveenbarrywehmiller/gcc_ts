@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { useToast } from '../contexts/toast';
 import Modal from './ui/Modal';
+import TimesheetDescription from './TimesheetDescription';
+import TimesheetDetails from './TimesheetDetails';
 import { Calendar, RotateCcw } from 'lucide-react';
 
 export default function TimesheetHistoryModal(props) {
@@ -215,6 +217,11 @@ function TimesheetHistoryContent({
                               🏷️ {e.ownership_label}
                             </div>
                           )}
+                          <details className="mt-2 w-52 sm:w-64 whitespace-normal">
+                            <summary className="cursor-pointer min-h-[44px] py-3 text-xs text-brand-600">Description and details</summary>
+                            <TimesheetDescription entry={e} />
+                            <TimesheetDetails value={JSON.parse(e.details_json || '{}')} readOnly />
+                          </details>
                         </div>
                       </td>
                       <td className="px-3 py-2 text-xs text-surface-500">{e.task_category || '—'}</td>

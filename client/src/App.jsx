@@ -20,7 +20,6 @@ import AdminProjects from './pages/admin/Projects';
 import AdminTasks from './pages/admin/Tasks';
 import { AdminDivisions, AdminActivities, AdminSupportingCategories } from './pages/admin/SimpleListManager';
 import AdminDepartments from './pages/admin/AdminDepartments';
-import AdminSubdivisions from './pages/admin/Subdivisions';
 import AdminHolidays from './pages/admin/Holidays';
 import AdminApprovals from './pages/admin/Approvals';
 import AdminAuditLog from './pages/admin/AuditLog';
@@ -68,7 +67,7 @@ function AppRoutes() {
         <Route path="/admin/projects" element={<AdminRoute><AdminProjects /></AdminRoute>} />
         <Route path="/admin/tasks" element={<AdminRoute><AdminTasks /></AdminRoute>} />
         <Route path="/admin/divisions" element={<AdminRoute><AdminDivisions /></AdminRoute>} />
-        <Route path="/admin/subdivisions" element={<AdminRoute><AdminSubdivisions /></AdminRoute>} />
+        <Route path="/admin/subdivisions" element={<AdminRoute><Navigate to="/admin/divisions" replace /></AdminRoute>} />
         <Route path="/admin/departments" element={<AdminRoute><AdminDepartments /></AdminRoute>} />
         <Route path="/admin/supporting-categories" element={<AdminRoute><AdminSupportingCategories /></AdminRoute>} />
         <Route path="/admin/activities" element={<AdminRoute><AdminActivities /></AdminRoute>} />

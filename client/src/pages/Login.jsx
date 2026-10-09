@@ -10,12 +10,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(() => sessionStorage.getItem('loginError') || '');
   const { login, loginWithMicrosoft, msalEnabled } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [version, setVersion] = useState(null);
 
   useEffect(() => {
+    sessionStorage.removeItem('loginError');
     api.get('/health')
       .then(res => { if (res.data?.version) setVersion(res.data.version); })
       .catch(() => {});
@@ -28,12 +30,15 @@ export default function Login() {
       return;
     }
     setLoading(true);
+    setLoginError('');
     try {
       await login(email, password);
       toast.success('Welcome back!');
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Login failed');
+      const message = err.response?.data?.error || 'Login failed';
+      setLoginError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -64,6 +69,7 @@ export default function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {loginError && <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200 break-words">{loginError}</p>}
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-surface-400 mb-1.5">Email</label>
               <input
@@ -139,11 +145,14 @@ export default function Login() {
                 onClick={async () => {
                   try {
                     setLoading(true);
+                    setLoginError('');
                     await loginWithMicrosoft();
                     toast.success('Welcome back!');
                     navigate('/');
                   } catch (err) {
-                    toast.error(err.message || 'Microsoft login failed');
+                    const message = err.response?.data?.error || err.message || 'Microsoft login failed';
+                    setLoginError(message);
+                    toast.error(message);
                   } finally {
                     setLoading(false);
                   }

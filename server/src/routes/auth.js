@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const config = require('../config/env');
 const { authenticate } = require('../middleware/auth');
+const { employeeAccessError } = require('../utils/employeeAccess');
 
 const maintenance = require('../middleware/maintenance');
 
@@ -57,6 +58,9 @@ router.post(['/login', '/maintenance-login'], (req, res) => {
   if (!validPassword) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
+
+  const accessError = employeeAccessError(user);
+  if (accessError) return res.status(403).json(accessError);
 
   const maintenanceEnabled = maintenance.isEnabled();
   if ((maintenanceEnabled || /^\/maintenance-login\/?$/i.test(req.path)) && user.role !== 'system admin') {
@@ -125,6 +129,9 @@ router.post('/refresh', (req, res) => {
     if (!user || user.active !== 1) {
       return res.status(401).json({ error: 'User is inactive or deleted' });
     }
+
+    const accessError = employeeAccessError(user);
+    if (accessError) return res.status(403).json(accessError);
 
     const token = jwt.sign({ userId: user.id, role: user.role }, config.jwtSecret, {
       expiresIn: config.jwtExpiresIn,

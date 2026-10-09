@@ -29,6 +29,7 @@ test('maintenance login enforces system admin credentials and restores access', 
     db.prepare('INSERT INTO users(name,email,password_hash,role) VALUES (?,?,?,?)').run(role, role.replace(' ', '') + '@test.invalid', hash, role);
   }
   db.prepare('INSERT INTO users(name,email,password_hash,role,active) VALUES (?,?,?,?,0)').run('Inactive', 'inactive@test.invalid', hash, 'system admin');
+  db.exec("INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) SELECT employee.id, admin.id, admin.id FROM users employee, users admin WHERE employee.role = 'employee' AND admin.role = 'system admin' AND admin.active = 1");
   const server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;

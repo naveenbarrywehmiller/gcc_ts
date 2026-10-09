@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
 const db = require('../config/db');
+const { employeeAccessError } = require('../utils/employeeAccess');
 
 /**
  * Authenticate middleware.
@@ -43,6 +44,9 @@ function authenticate(req, res, next) {
     if (!user) {
       return res.status(401).json({ error: 'User not found or inactive' });
     }
+
+    const accessError = employeeAccessError(user);
+    if (accessError) return res.status(403).json(accessError);
 
     req.user = user;
 

@@ -4,9 +4,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import AdminSubdivisions from './Subdivisions';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function SimpleListManager({ endpoint, title, fieldName = 'name' }) {
+export default function SimpleListManager({ endpoint, title, fieldName = 'name', withLocations = false }) {
   const toast = useToast();
   const cache = useQueryClient();
   const itemLabel = title === 'Divisions' ? 'Division' : title;
@@ -15,6 +16,7 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState('');
+  const [expandedDivision, setExpandedDivision] = useState(null);
 
   const load = useCallback(() => {
     api.get(endpoint).then(res => {
@@ -59,16 +61,25 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
             <div className="text-center py-8 text-sm text-surface-400">No items found</div>
           ) : (
             items.map(item => (
-              <div key={item.id} className="px-4 py-3 flex items-center justify-between hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors group">
-                <span className="min-w-0 text-sm font-medium text-surface-800 dark:text-surface-200 break-words">{item[fieldName]}</span>
-                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
-                  <button onClick={() => { setEditing(item); setName(item[fieldName]); setShowModal(true); }} className="btn-ghost btn-xs p-1.5" aria-label={`Edit ${item[fieldName]}`}>
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => handleDelete(item.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Delete ${item[fieldName]}`}>
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+              <div key={item.id}>
+                <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2 hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors group">
+                  <span className="min-w-0 text-sm font-medium text-surface-800 dark:text-surface-200 break-words">{item[fieldName]}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {withLocations && <button type="button" className="btn-secondary btn-sm" aria-expanded={expandedDivision === item.id} aria-controls={`division-locations-${item.id}`}
+                      onClick={() => setExpandedDivision(expandedDivision === item.id ? null : item.id)}>
+                      Locations {expandedDivision === item.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>}
+                    <button onClick={() => { setEditing(item); setName(item[fieldName]); setShowModal(true); }} className="btn-ghost btn-xs p-1.5" aria-label={`Edit ${item[fieldName]}`}>
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDelete(item.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Delete ${item[fieldName]}`}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
+                {withLocations && expandedDivision === item.id && <div id={`division-locations-${item.id}`} className="border-t border-surface-200 dark:border-surface-800 p-3 sm:p-4 bg-surface-50 dark:bg-surface-950/30">
+                  <AdminSubdivisions division={item} />
+                </div>}
               </div>
             ))
           )}
@@ -89,7 +100,7 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name' 
 
 // Wrapper components
 export function AdminDivisions() {
-  return <SimpleListManager endpoint="/divisions" title="Divisions" fieldName="name" />;
+  return <SimpleListManager endpoint="/divisions" title="Divisions" fieldName="name" withLocations />;
 }
 
 export function AdminActivities() {

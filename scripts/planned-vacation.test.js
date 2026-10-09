@@ -27,6 +27,7 @@ before(async () => {
     ['legacy', 'employee', null, 'Vacation North'], ['fallback', 'admin', south, null],
   ]) users[name] = Number(insert.run(name, `${name}@vacation.test`, 'unused', role, id, legacy).lastInsertRowid);
   db.prepare('INSERT INTO admin_divisions(user_id,division_id) VALUES (?,?)').run(users.admin, north);
+  for (const id of [users.employee, users.other, users.legacy]) db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(id, users.system, users.system);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/vacations`;

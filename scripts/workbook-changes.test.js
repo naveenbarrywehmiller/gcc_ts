@@ -36,6 +36,7 @@ before(async () => {
   db.prepare('INSERT INTO admin_divisions(user_id,division_id) VALUES (?,?)').run(admin, divA);
   task = Number(db.prepare('INSERT INTO tasks(task_category,requires_project) VALUES (?,0)').run('Task').lastInsertRowid);
   projectB = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)').run('B-SECRET','Other Division',divB).lastInsertRowid);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
   server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); base = `http://127.0.0.1:${server.address().port}/api`;
 });
 after(() => { server?.close(); db.close(); fs.rmSync(temp, { recursive: true }); });

@@ -36,6 +36,7 @@ before(async () => {
   db.prepare('UPDATE users SET division = ? WHERE id = ?').run('Audit A', legacy);
   for (const id of [manager, employee, foreign]) db.prepare("INSERT INTO timesheets(user_id,work_date,hours,week_number,week_year,status) VALUES (?,'2026-09-28',8,40,2026,'submitted')").run(id);
   db.prepare("INSERT INTO projects(project_code,project_name,division_id) VALUES ('AUDIT-A','A',?),('AUDIT-B','B',?)").run(a, b);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -201,6 +202,7 @@ test('employee division checkboxes control which project divisions they can book
     division_id: a, division_ids: [a, b], supporting_category_id: dedicatedCategory,
   }, 'POST');
   assert.equal(created.status, 201);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(created.body.user.id, system, system);
   assert.deepEqual((await request(created.body.user.id, `/users/${created.body.user.id}/divisions`)).body.divisions.map(d => d.id), [a, b]);
 });
 

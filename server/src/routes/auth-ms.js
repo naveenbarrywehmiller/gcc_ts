@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 const db = require('../config/db');
 const config = require('../config/env');
+const { employeeAccessError } = require('../utils/employeeAccess');
 
 const router = express.Router();
 
@@ -86,6 +87,9 @@ router.post('/ms-callback', (req, res) => {
     } else if (!user.active) {
       return res.status(403).json({ error: 'Account is deactivated' });
     }
+
+    const accessError = employeeAccessError(user);
+    if (accessError) return res.status(403).json(accessError);
 
     // Update last seen
     db.prepare('UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);

@@ -1,5 +1,5 @@
-import TimesheetDetails from '../../components/TimesheetDetails';
-import { useState, useEffect, useCallback } from 'react';
+import TimesheetEntryTable from '../../components/TimesheetEntryTable';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
@@ -128,6 +128,7 @@ export default function AdminApprovals() {
       setActionModal({ open: false, type: '', userId: null, userName: '' });
       setActionComment('');
       setUserDetails({});
+      setExpandedUser(null);
       load();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Action failed');
@@ -271,8 +272,10 @@ export default function AdminApprovals() {
                           onClick={() => toggleExpand(s.user_id)}
                           className="btn-ghost btn-sm text-xs"
                           title="View details"
+                          aria-expanded={expandedUser === s.user_id}
                         >
                           <Eye className="w-4 h-4 mr-1" />
+                          Details
                           {expandedUser === s.user_id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </button>
                       </div>
@@ -294,37 +297,7 @@ export default function AdminApprovals() {
                   {/* Expanded details */}
                   {expandedUser === s.user_id && userDetails[`${year}:${week}:${s.user_id}`] && (
                     <div className="mt-4 pt-4 border-t border-surface-200 dark:border-surface-800">
-                      <div className="table-container"><table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-xs text-surface-400">
-                            <th className="text-left pb-2">Date</th>
-                            <th className="text-left pb-2">Project</th>
-                            <th className="text-left pb-2">Task</th>
-                            <th className="text-right pb-2">Hours</th>
-                            <th className="text-left pb-2">Description</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
-                          {userDetails[`${year}:${week}:${s.user_id}`].map((e, i) => (
-                            <tr key={i} className="hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
-                              <td className="py-2 text-surface-600 dark:text-surface-400">
-                                {new Date(e.work_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                              </td>
-                              <td className="py-2 font-medium text-surface-800 dark:text-surface-200">
-                                {e.project_code} — {e.project_name}
-                                {e.ownership_label && (
-                                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">
-                                    🏷️ {e.ownership_label}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="py-2 text-surface-500">{e.task_category || '—'}<details className="mt-2"><summary className="cursor-pointer text-xs">Review details</summary><TimesheetDetails value={JSON.parse(e.details_json || '{}')} readOnly /></details></td>
-                              <td className="py-2 text-right font-semibold text-surface-900 dark:text-white">{e.hours}h</td>
-                              <td className="py-2 text-surface-400 truncate max-w-[200px]">{e.description || '—'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table></div>
+                      <TimesheetEntryTable entries={userDetails[`${year}:${week}:${s.user_id}`].filter(entry => entry.status === 'submitted')} />
                     </div>
                   )}
                 </div>
@@ -354,7 +327,7 @@ export default function AdminApprovals() {
               </thead>
               <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
                 {approved.map(s => (
-                  <tr key={`${s.user_id}-approved`} className="hover:bg-surface-50 dark:hover:bg-surface-800/30">
+                  <Fragment key={`${s.user_id}-approved`}><tr className="hover:bg-surface-50 dark:hover:bg-surface-800/30">
                     <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span>{s.user_name}</span>
@@ -372,6 +345,7 @@ export default function AdminApprovals() {
                     <td className="px-4 py-3 text-xs text-surface-400 max-w-[200px] truncate">{s.admin_comment || '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button className="btn-ghost btn-xs" onClick={() => toggleExpand(s.user_id)} aria-expanded={expandedUser === s.user_id}>Details {expandedUser === s.user_id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}</button>
                         <button
                           onClick={() => openHistoryForUser(s.user_id, s.user_name)}
                           className="btn-ghost btn-xs text-surface-500 hover:text-brand-600"
@@ -389,6 +363,8 @@ export default function AdminApprovals() {
                       </div>
                     </td>
                   </tr>
+                  {expandedUser === s.user_id && <tr><td colSpan={6} className="p-3"><TimesheetEntryTable entries={userDetails[`${year}:${week}:${s.user_id}`]?.filter(entry => entry.status === "approved")} /></td></tr>}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

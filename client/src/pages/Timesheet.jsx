@@ -1,6 +1,7 @@
 import TimesheetDetails from '../components/TimesheetDetails';
 import ProjectStatus from '../components/ProjectStatus';
 import fields from '../data/timesheetFields.json';
+import { descriptionMaxLength } from '../../../shared/timesheetLimits.json';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
@@ -63,8 +64,6 @@ export default function Timesheet() {
   // Masters
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [divisions, setDivisions] = useState([]);
-  const [subdivisions, setSubdivisions] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [departmentOwnerships, setDepartmentOwnerships] = useState([]);
   
@@ -73,8 +72,6 @@ export default function Timesheet() {
   // Add/Edit Row Modal State
   const [showAddRow, setShowAddRow] = useState(false);
   const [editingRowIdx, setEditingRowIdx] = useState(null);
-  const [newRowDivision, setNewRowDivision] = useState(null);
-  const [newRowSubdivision, setNewRowSubdivision] = useState(null);
   const [newRowProject, setNewRowProject] = useState(null);
   const [newRowProjectDesc, setNewRowProjectDesc] = useState('');
   const [newRowTask, setNewRowTask] = useState(null);
@@ -127,8 +124,6 @@ export default function Timesheet() {
         api.get(`/timesheets?week=${week}&year=${year}`),
         api.get('/projects?active=1'),
         api.get('/tasks?active=1'),
-        api.get('/divisions?active=1'),
-        api.get('/subdivisions?active=1'),
         api.get(`/holidays?year=${year}`),
       ];
       // Fetch ownerships for the user's department (if assigned)
@@ -139,16 +134,14 @@ export default function Timesheet() {
         Promise.all(fetches),
         user?.role === 'employee' ? api.get(`/users/${user.id}/divisions`) : Promise.resolve(null),
       ]);
-      const [tsRes, pRes, tkRes, divRes, subRes, hRes] = results;
+      const [tsRes, pRes, tkRes, hRes] = results;
       return {
         entries: tsRes.data.entries,
         projects: user?.role === 'admin' ? pRes.data.projects.filter(project => project.can_edit) : pRes.data.projects,
         tasks: tkRes.data.tasks,
-        divisions: divRes.data.divisions,
         assignedDivisionIds: employeeDivisionsRes?.data.divisions.map(d => d.id) || [],
-        subdivisions: subRes.data.subdivisions,
         holidays: hRes.data.holidays,
-        ownerships: results[6]?.data?.ownerships || []
+        ownerships: results[4]?.data?.ownerships || []
       };
     }
   });
@@ -163,8 +156,6 @@ export default function Timesheet() {
       setLoadedData(fetchedData);
       setProjects(fetchedData.projects);
       setTasks(fetchedData.tasks);
-      setDivisions(fetchedData.divisions);
-      setSubdivisions(fetchedData.subdivisions);
       setHolidays(fetchedData.holidays);
       setDepartmentOwnerships(fetchedData.ownerships || []);
 
@@ -263,22 +254,17 @@ export default function Timesheet() {
   const getDayTotal = (date) => rows.reduce((sum, row) => sum + (row.hours[date] || 0), 0);
   const getGrandTotal = () => rows.reduce((sum, row) => sum + getRowTotal(row), 0);
 
-  // Cascading options for Add Row modal
-  const modalSubdivisionOptions = useMemo(() => {
-    if (!newRowDivision) return [];
-    return subdivisions.filter(s => s.division_id === newRowDivision);
-  }, [subdivisions, newRowDivision]);
-
+  // Project selection respects the employee's division grants without asking for metadata.
   const modalProjectOptions = useMemo(() => {
-    let filtered = projects;
-    if (newRowDivision) {
-      filtered = filtered.filter(p => p.division_id === newRowDivision);
-    }
-    if (newRowSubdivision) {
-      filtered = filtered.filter(p => p.subdivision_id === newRowSubdivision);
-    }
-    return filtered;
-  }, [projects, newRowDivision, newRowSubdivision]);
+    if (user?.role !== 'employee') return projects;
+    const assigned = loadedData?.assignedDivisionIds || [];
+    return projects.filter(project => {
+      if (!project.division_id) return true;
+      if (assigned.length) return assigned.includes(project.division_id);
+      return !user?.supporting_category_name?.toLowerCase().includes('dedicated') ||
+        !user?.division_id || project.division_id === user.division_id;
+    });
+  }, [projects, loadedData, user]);
 
   // Determine if the selected task requires a project
   const selectedTaskRequiresProject = useMemo(() => {
@@ -303,8 +289,6 @@ export default function Timesheet() {
     setEditingRowIdx(null);
     setNewRowProject(null);
     setNewRowTask(null);
-    setNewRowDivision(null);
-    setNewRowSubdivision(null);
     setNewRowProjectDesc('');
     setNewRowOwnership(null);
   };
@@ -314,8 +298,6 @@ export default function Timesheet() {
     setNewRowDetails(row.details || {});
     setEditingRowIdx(index);
     setNewRowTask(row.task_id);
-    setNewRowDivision(row.division_id);
-    setNewRowSubdivision(row.subdivision_id);
     setNewRowProject(row.project_id);
     setNewRowProjectDesc(row.project_description || '');
     setNewRowOwnership(row.ownership_id);
@@ -324,6 +306,9 @@ export default function Timesheet() {
 
   // Add or update a project row
   const handleAddRow = () => {
+    if (newRowProjectDesc.length > descriptionMaxLength) {
+      toast.warning(`Description must be at most ${descriptionMaxLength} characters`); return;
+    }
     if (!hideProjectlessNonBillableDetails) {
       for (const { key, label, type } of fields) {
         const value = newRowDetails[key];
@@ -340,11 +325,7 @@ export default function Timesheet() {
     const exists = rows.some((r, i) => {
       if (editingRowIdx !== null && i === editingRowIdx) return false;
       if (selectedTaskRequiresProject && newRowProject) {
-        return r.project_id === newRowProject && 
-          r.task_id === (newRowTask || null) &&
-          r.division_id === (newRowDivision || null) &&
-          r.subdivision_id === (newRowSubdivision || null) &&
-          r.project_description === (newRowProjectDesc || null);
+        return r.project_id === newRowProject && r.task_id === (newRowTask || null);
       } else {
         // Projectless rows are saved by task_id, regardless of optional division.
         return r.task_id === newRowTask && !r.project_id;
@@ -354,8 +335,6 @@ export default function Timesheet() {
 
     const project = selectedTaskRequiresProject ? projects.find(p => p.id === newRowProject) : null;
     const task = tasks.find(t => t.id === newRowTask);
-    const division = divisions.find(d => d.id === newRowDivision);
-    const subdivision = subdivisions.find(s => s.id === newRowSubdivision);
     const ownership = departmentOwnerships.find(o => o.id === newRowOwnership);
 
     if (editingRowIdx !== null) {
@@ -384,8 +363,8 @@ export default function Timesheet() {
           ...r,
           project_id: selectedTaskRequiresProject ? newRowProject : null,
           task_id: newRowTask || null,
-          division_id: selectedTaskRequiresProject ? (newRowDivision || null) : null,
-          subdivision_id: selectedTaskRequiresProject ? (newRowSubdivision || null) : null,
+          division_id: project?.division_id || null,
+          subdivision_id: project?.subdivision_id || null,
           project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
           ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
           ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
@@ -393,8 +372,8 @@ export default function Timesheet() {
           project_status: project?.project_status,
           project_code: project?.project_code || null,
           project_name: project?.project_name || null,
-          division_name: selectedTaskRequiresProject ? division?.name : null,
-          subdivision_name: selectedTaskRequiresProject ? subdivision?.name : null,
+          division_name: project?.division_name,
+          subdivision_name: project?.subdivision_name,
           task_category: task?.task_category || '',
           task_desc: task?.task_description || '',
           classification: task?.classification || '',
@@ -417,8 +396,8 @@ export default function Timesheet() {
     setRows(prev => [...prev, {
       project_id: selectedTaskRequiresProject ? newRowProject : null,
       task_id: newRowTask || null,
-      division_id: selectedTaskRequiresProject ? (newRowDivision || null) : null,
-      subdivision_id: selectedTaskRequiresProject ? (newRowSubdivision || null) : null,
+      division_id: project?.division_id || null,
+      subdivision_id: project?.subdivision_id || null,
       project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
       ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
       ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
@@ -426,8 +405,8 @@ export default function Timesheet() {
       project_status: project?.project_status,
       project_code: project?.project_code || null,
       project_name: project?.project_name || null,
-      division_name: selectedTaskRequiresProject ? division?.name : null,
-      subdivision_name: selectedTaskRequiresProject ? subdivision?.name : null,
+      division_name: project?.division_name,
+      subdivision_name: project?.subdivision_name,
       task_category: task?.task_category || '',
       task_desc: task?.task_description || '',
       classification: task?.classification || '',
@@ -472,8 +451,6 @@ export default function Timesheet() {
           all.push({
             project_id: row.project_id,
             task_id: row.task_id,
-            division_id: row.division_id,
-            subdivision_id: row.subdivision_id,
             project_description: row.project_description,
             ownership_id: row.ownership_id,
             work_date: date,
@@ -507,8 +484,6 @@ export default function Timesheet() {
             allEntries.push({
               project_id: row.project_id,
               task_id: row.task_id,
-              division_id: row.division_id,
-              subdivision_id: row.subdivision_id,
               project_description: row.project_description,
               ownership_id: row.ownership_id,
               work_date: date,
@@ -1054,7 +1029,7 @@ export default function Timesheet() {
                   return (
                     <tr key={`${row.project_id || 'null'}-${row.task_id}-${row.division_id}-${row.subdivision_id}-${row.project_description}-${row.ownership_id || 0}`} className="border-b border-surface-100 dark:border-surface-800/50 group hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
                       <td className="sticky left-0 z-10 bg-white dark:bg-surface-900 group-hover:bg-surface-50 dark:group-hover:bg-surface-850 px-4 py-2 transition-colors border-r border-surface-100 dark:border-surface-800/50">
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1 w-56 sm:w-64">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-surface-900 dark:text-white truncate">
                               {row.project_id 
@@ -1075,11 +1050,6 @@ export default function Timesheet() {
                                   <p className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate">
                                     {row.project_code} - {row.project_name} <ProjectStatus status={row.project_status} />
                                   </p>
-                                  {row.project_description && (
-                                    <p className="text-[11px] text-surface-600 dark:text-surface-400 truncate" title={row.project_description}>
-                                      📝 {row.project_description}
-                                    </p>
-                                  )}
                                   {row.ownership_label && (
                                     <p className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate" title={`Ownership: ${row.ownership_label}`}>
                                       🏷️ {row.ownership_label}
@@ -1089,6 +1059,11 @@ export default function Timesheet() {
                               ) : (
                                 <p className="text-xs font-bold text-purple-600 dark:text-purple-400 truncate">
                                   {row.task_category}{row.task_desc ? ` — ${row.task_desc}` : ''}
+                                </p>
+                              )}
+                              {row.project_description && (
+                                <p className="text-[11px] text-surface-600 dark:text-surface-400 whitespace-pre-wrap [overflow-wrap:anywhere]" title={row.project_description}>
+                                  📝 {row.project_description}
                                 </p>
                               )}
                               {(row.requires_project !== 0 || row.classification !== 'Non-Billable' ||
@@ -1223,7 +1198,7 @@ export default function Timesheet() {
       )}
 
       <Modal isOpen={viewDetails !== null} onClose={() => setViewDetails(null)} title="Timesheet details" size="lg">
-        {viewDetails && <TimesheetDetails value={viewDetails.details || {}} readOnly />}
+        {viewDetails && <TimesheetDetails value={viewDetails.details || {}} description={viewDetails.project_description} readOnly />}
       </Modal>
       {/* Add/Edit project row modal */}
       <Modal
@@ -1253,7 +1228,7 @@ export default function Timesheet() {
               setNewRowTask(value);
               const task = tasks.find(candidate => candidate.id === value);
               if (task?.requires_project === 0) {
-                setNewRowDivision(null); setNewRowSubdivision(null); setNewRowProject(null); setNewRowProjectDesc('');
+                setNewRowProject(null); setNewRowProjectDesc('');
               }
               if (task?.requires_project === 0 && task.classification === 'Non-Billable') setNewRowDetails({});
             }}
@@ -1272,30 +1247,6 @@ export default function Timesheet() {
 
           {selectedTaskRequiresProject && (
             <>
-              <SearchableSelect
-                label={selectedTaskIsNonBillable ? 'Division (optional)' : 'Division'}
-                options={divisions.filter(d => {
-                  if (user?.role !== 'employee') return true;
-                  const assigned = loadedData?.assignedDivisionIds || [];
-                  if (assigned.length) return assigned.includes(d.id);
-                  return !user?.supporting_category_name?.toLowerCase().includes('dedicated') || !user?.division_id || d.id === user.division_id;
-                }).map(d => ({ value: d.id, label: d.name }))}
-                value={newRowDivision}
-                onChange={value => { setNewRowDivision(value); setNewRowSubdivision(null); setNewRowProject(null); }}
-                placeholder="Search and select a division..."
-                clearable
-                id="add-row-division"
-              />
-              <SearchableSelect
-                label="Location (optional)"
-                options={modalSubdivisionOptions.map(s => ({ value: s.id, label: s.name }))}
-                value={newRowSubdivision}
-                onChange={value => { setNewRowSubdivision(value); setNewRowProject(null); }}
-                placeholder={!newRowDivision ? "Select a division first..." : "Search and select a location..."}
-                disabled={!newRowDivision || modalSubdivisionOptions.length === 0}
-                clearable
-                id="add-row-subdivision"
-              />
               <SearchableSelect
                 label={selectedTaskIsNonBillable ? 'Project Code (optional)' : 'Project Code *'}
                 options={modalProjectOptions.map(p => ({ value: p.id, label: `${p.project_code} — ${p.project_name}` }))}
@@ -1320,16 +1271,23 @@ export default function Timesheet() {
               )}
 
               <div>
-                <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">
-                  Project Description (optional)
+                <label htmlFor="add-row-project-desc" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">
+                  Description (optional)
                 </label>
-                <input
-                  className="input"
+                <textarea
+                  className="input resize-y whitespace-pre-wrap [overflow-wrap:anywhere]"
+                  rows={3}
+                  maxLength={descriptionMaxLength}
+                  aria-describedby="add-row-description-count"
+                  aria-invalid={newRowProjectDesc.length > descriptionMaxLength}
                   value={newRowProjectDesc}
                   onChange={(e) => setNewRowProjectDesc(e.target.value)}
-                  placeholder="Specific details about this project..."
+                  placeholder="Describe the work for this row..."
                   id="add-row-project-desc"
                 />
+                <p id="add-row-description-count" className="mt-1 text-xs text-surface-500" aria-live="polite" aria-atomic="true">
+                  {newRowProjectDesc.length} / {descriptionMaxLength} characters
+                </p>
               </div>
 
               {departmentOwnerships.length > 0 && (

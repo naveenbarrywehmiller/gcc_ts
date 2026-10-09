@@ -51,6 +51,7 @@ before(async () => {
   const insert = db.prepare('INSERT INTO users(name,email,password_hash,role) VALUES (?,?,?,?)');
   admin = Number(insert.run('Admin', 'admin@test.invalid', 'unused', 'admin').lastInsertRowid);
   employee = Number(insert.run('Employee', 'employee@test.invalid', 'unused', 'employee').lastInsertRowid);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
   server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}`;
 });

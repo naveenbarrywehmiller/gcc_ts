@@ -6,7 +6,7 @@ import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 
-export default function AdminSubdivisions() {
+export default function AdminSubdivisions({ division }) {
   const toast = useToast();
   const cache = useQueryClient();
   const [subdivisions, setSubdivisions] = useState([]);
@@ -20,26 +20,30 @@ export default function AdminSubdivisions() {
   const [form, setForm] = useState({ name: '', division_id: '' });
 
   const loadData = useCallback(() => {
-    return Promise.all([api.get('/subdivisions'), api.get('/divisions')])
+    return Promise.all([
+      api.get('/subdivisions', { params: { division_id: division?.id } }),
+      division ? Promise.resolve({ data: { divisions: [division] } }) : api.get('/divisions'),
+    ])
       .then(([subRes, divRes]) => {
         setSubdivisions(subRes.data.subdivisions);
         setDivisions(divRes.data.divisions);
       })
       .catch(() => toast.error('Failed to load data'))
       .finally(() => setLoading(false));
-  }, [toast]);
+  }, [toast, division]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   const filtered = subdivisions.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
-    const matchesDivision = filterDivisionId ? s.division_id === parseInt(filterDivisionId) : true;
+    const selectedDivision = division?.id || filterDivisionId;
+    const matchesDivision = selectedDivision ? s.division_id === Number(selectedDivision) : true;
     return matchesSearch && matchesDivision;
   });
 
   const openCreate = () => { 
     setEditing(null); 
-    setForm({ name: '', division_id: filterDivisionId || '' }); 
+    setForm({ name: '', division_id: division?.id || filterDivisionId || '' });
     setShowModal(true); 
   };
 
@@ -88,7 +92,7 @@ export default function AdminSubdivisions() {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-bold text-surface-900 dark:text-white">Location</h1>
+        <h2 className="min-w-0 text-lg font-bold text-surface-900 dark:text-white [overflow-wrap:anywhere]">{division ? `Locations in ${division.name}` : 'Locations'}</h2>
         <button onClick={openCreate} className="btn-primary btn-sm">
           <Plus className="w-4 h-4" /> Add Location
         </button>
@@ -106,7 +110,7 @@ export default function AdminSubdivisions() {
             className="input pl-9" 
           />
         </div>
-        <select 
+        {!division && <select
           className="input w-full sm:max-w-xs"
           aria-label="Filter locations by division"
           value={filterDivisionId} 
@@ -116,7 +120,7 @@ export default function AdminSubdivisions() {
           {divisions.map(d => (
             <option key={d.id} value={d.id}>{d.name}</option>
           ))}
-        </select>
+        </select>}
       </div>
 
       <div className="table-container">
@@ -124,21 +128,21 @@ export default function AdminSubdivisions() {
           <thead>
             <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-800">
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Location Name</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Division</th>
+              {!division && <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Division</th>}
               <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
             {filtered.map(s => (
               <tr key={s.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors">
-                <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">{s.name}</td>
-                <td className="px-4 py-3 text-sm text-surface-500">{s.division_name}</td>
+                <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200 whitespace-normal [overflow-wrap:anywhere]">{s.name}</td>
+                {!division && <td className="px-4 py-3 text-sm text-surface-500">{s.division_name}</td>}
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => openEdit(s)} className="btn-ghost btn-xs p-1.5">
+                    <button onClick={() => openEdit(s)} className="btn-ghost btn-xs p-1.5" aria-label={`Edit location ${s.name}`}>
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => handleDelete(s.id)} className="btn-ghost btn-xs p-1.5 text-red-500">
+                    <button onClick={() => handleDelete(s.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Deactivate location ${s.name}`}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -159,18 +163,20 @@ export default function AdminSubdivisions() {
         }>
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Location Name *</label>
+            <label htmlFor="location-name" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Location Name *</label>
             <input 
+              id="location-name"
               className="input" 
               value={form.name} 
               onChange={(e) => setForm({ ...form, name: e.target.value })} 
-              placeholder="e.g. Frontend" 
+              placeholder="e.g. Chennai"
               autoFocus
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division *</label>
+          {division ? <p className="text-sm [overflow-wrap:anywhere]">Division: {division.name}</p> : <div>
+            <label htmlFor="location-division" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division *</label>
             <select 
+              id="location-division"
               className="input" 
               value={form.division_id} 
               onChange={e => setForm({ ...form, division_id: e.target.value })}
@@ -180,7 +186,7 @@ export default function AdminSubdivisions() {
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
-          </div>
+          </div>}
         </div>
       </Modal>
     </div>

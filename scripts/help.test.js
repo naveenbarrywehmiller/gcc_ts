@@ -18,6 +18,7 @@ test('help endpoint returns only guides allowed for the authenticated role', asy
     users[role] = Number(db.prepare('INSERT INTO users(name,email,password_hash,role) VALUES (?,?,?,?)')
       .run(role, `${role.replace(' ', '')}@test.invalid`, 'unused', role).lastInsertRowid);
   }
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(users.employee, users.admin, users.admin);
   const server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   const url = `http://127.0.0.1:${server.address().port}/api/help?role=system%20admin`;

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }) {
@@ -48,7 +49,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
     full: 'max-w-6xl',
   };
 
-  return (
+  return createPortal(
     // Keep backdrop clicks inert; selection drags can end outside the popup.
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 modal-backdrop"
@@ -83,6 +84,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

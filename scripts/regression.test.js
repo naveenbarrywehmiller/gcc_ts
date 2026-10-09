@@ -43,6 +43,8 @@ before(async () => {
   db.prepare('INSERT INTO admin_divisions(user_id,division_id) VALUES (?,?)').run(admin, a);
   bootstrapAdmin(db, { BOOTSTRAP_ADMIN_EMAIL: 'bootstrap@test.invalid', BOOTSTRAP_ADMIN_PASSWORD: 'Unique-review-password-2026' });
   systemAdmin = db.prepare("SELECT id FROM users WHERE role = 'system admin'").get().id;
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(outsider, systemAdmin, systemAdmin);
   taskA = Number(db.prepare('INSERT INTO tasks(task_category, requires_project) VALUES (?,0)').run('Task A').lastInsertRowid);
   taskB = Number(db.prepare('INSERT INTO tasks(task_category, requires_project) VALUES (?,0)').run('Task B').lastInsertRowid);
   server = app.listen(0, '127.0.0.1');
@@ -96,6 +98,7 @@ test('recalled project timesheet saves separate task rows and can be resubmitted
   const divisionId = db.prepare('SELECT division_id FROM users WHERE id = ?').get(employee).division_id;
   const userId = Number(db.prepare('INSERT INTO users(name,email,password_hash,role,division_id) VALUES (?,?,?,?,?)')
     .run('recall employee', 'recall-employee@test.invalid', 'unused', 'employee', divisionId).lastInsertRowid);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(userId, admin, admin);
   const projectId = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)')
     .run('RECALL-TEST', 'Recall project', divisionId).lastInsertRowid);
   const entries = (first, second) => [

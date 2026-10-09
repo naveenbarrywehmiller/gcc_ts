@@ -17,7 +17,8 @@ const commonGuides = [
     description: 'Record hours and send a completed week for review.',
     steps: [
       'Choose a week with the arrows or calendar, then select Add Project to enter project or task details.',
-      'For project work, choose the division where the work was done. Employees can choose from the divisions assigned to them by an administrator; ask an administrator if a division is missing.',
+      'For project work, select a project. Its division and location are set by an administrator in Projects and filled in automatically. Ask your administrator if a project is missing.',
+      'Use Description (optional) for notes about your work, up to 500 characters. The live counter shows how much you have entered, and reviewers can read the description in expanded timesheet details.',
       'For a Non-Billable task that does not require a project, select the task and add the row; project and weekly detail fields are not needed.',
       'Enter hours on the appropriate days and select Save to keep work in progress.',
       'When the week is ready, select Submit Week. If a Recall action is available, use it to correct a submitted week.',
@@ -74,7 +75,7 @@ const adminGuides = [
       'Open a user to edit their details, or select Create User when your permissions allow it. Role and Dedicated/Flex are separate fields.',
       'For an admin or employee, check every division they need and mark one checked division as Primary. Admin assignments control management access; employee assignments control which divisions appear when booking project time. The same checkboxes apply to Dedicated and Flex users.',
       'Edit a user later to change their checked divisions, primary division, role, or Dedicated/Flex category. An admin can edit their own role and division access; saving a role change updates their permissions.',
-      'Use the assignment and history controls to manage or inspect users assigned to you.',
+      'Use the assignment and history controls to manage or inspect users assigned to you. Employees must be assigned to an active admin before they can sign in or enter time.',
     ],
   },
   {
@@ -84,7 +85,8 @@ const adminGuides = [
     description: 'Keep the options used by timesheets up to date.',
     steps: [
       'Use Projects to search, filter, add, or edit projects. The page also offers an Excel template, import, and export.',
-      'Use the Management links for tasks, divisions, locations, departments, work types, and other reference lists.',
+      'Set the division and location in each project. In Division, expand Locations for a division to add, edit, or deactivate its locations.',
+      'Use the Management links for tasks, divisions, departments, work types, and other reference lists.',
       'Check the record and your scope before changing or deactivating an item.',
     ],
   },

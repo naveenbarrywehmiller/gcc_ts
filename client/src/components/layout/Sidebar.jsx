@@ -54,7 +54,6 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     { to: '/admin/projects', icon: FolderKanban, label: 'Projects' },
     { to: '/admin/tasks', icon: ListTodo, label: 'Task Name/Number' },
     { to: '/admin/divisions', icon: Building2, label: 'Division' },
-    { to: '/admin/subdivisions', icon: Building2, label: 'Location' },
     { to: '/admin/departments', icon: Users, label: 'Departments' },
     { to: '/admin/supporting-categories', icon: Users, label: 'Dedicated/Flex' },
     { to: '/admin/activities', icon: Activity, label: 'Work Type' },

@@ -17,6 +17,15 @@ const api = axios.create({
 let isRefreshing = false;
 let failedQueue = [];
 
+function rememberAssignmentError(error) {
+  if (error.response?.data?.code !== 'ADMIN_ASSIGNMENT_REQUIRED') return false;
+  sessionStorage.setItem('loginError', error.response.data.error);
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
+  if (window.location.pathname !== '/login') window.location.href = '/login';
+  return true;
+}
+
 const processQueue = (error) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -45,6 +54,8 @@ api.interceptors.response.use(
     if (!originalRequest || ['/auth/login', '/auth/maintenance-login', '/auth/ms-callback', '/auth/refresh', '/auth/logout'].includes(originalRequest.url)) {
       return Promise.reject(error);
     }
+
+    if (rememberAssignmentError(error)) return Promise.reject(error);
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -76,6 +87,7 @@ api.interceptors.response.use(
       } catch (err) {
         isRefreshing = false;
         processQueue(err);
+        rememberAssignmentError(err);
         
         // Refresh token is expired or invalid
         localStorage.removeItem('user');

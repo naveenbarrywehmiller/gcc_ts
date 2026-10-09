@@ -10,6 +10,7 @@ const { canReviewTimesheet } = require('../utils/timesheetPermissions');
 
 const { serializeDetails } = require('../utils/timesheetDetails');
 const { projectScope, adminDivisionIds } = require('../utils/divisionScope');
+const { descriptionMaxLength } = require('../../../shared/timesheetLimits.json');
 const router = express.Router();
 
 // Normalize once before writes, including self-post and single-entry callers.
@@ -19,6 +20,25 @@ function normalizeDetails(req, res, next) {
     if (Array.isArray(entries)) for (const entry of entries) {
       if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return res.status(400).json({ error: 'Invalid timesheet entry' });
       entry.details_json = serializeDetails(entry.details);
+      if (entry.project_description != null &&
+          (typeof entry.project_description !== 'string' || entry.project_description.length > descriptionMaxLength)) {
+        return res.status(400).json({ error: `Description must be text of at most ${descriptionMaxLength} characters` });
+      }
+      if (entry.project_id) {
+        const project = db.prepare('SELECT division_id, subdivision_id FROM projects WHERE id = ?').get(entry.project_id);
+        if (!project) return res.status(400).json({ error: 'Project not found' });
+        if (entry.division_id && Number(entry.division_id) !== project.division_id) {
+          return res.status(400).json({ error: 'Division must match the selected project' });
+        }
+        if (entry.subdivision_id && Number(entry.subdivision_id) !== project.subdivision_id) {
+          return res.status(400).json({ error: 'Location must match the selected project' });
+        }
+        entry.division_id = project.division_id;
+        entry.subdivision_id = project.subdivision_id;
+      } else {
+        entry.division_id = null;
+        entry.subdivision_id = null;
+      }
       if (entry.project_id && req.user.role === 'admin') {
         const scope = projectScope(req.user);
         if (!db.prepare(`SELECT id FROM projects p WHERE p.id = ? AND ${scope.sql}`).get(entry.project_id, ...scope.params)) {
@@ -85,16 +105,6 @@ function checkDivisionAccess(userId, divisionId) {
 
   return { allowed: true }; // Unknown category, allow
 }
-
-function projectDivisionId(projectId, requestedDivisionId) {
-  const project = db.prepare('SELECT division_id FROM projects WHERE id = ?').get(projectId);
-  if (!project) throw Object.assign(new Error('Project not found'), { status: 400 });
-  if (project.division_id && requestedDivisionId && project.division_id !== Number(requestedDivisionId)) {
-    throw Object.assign(new Error('Division must match the selected project'), { status: 400 });
-  }
-  return project.division_id || requestedDivisionId || null;
-}
-
 
 // GET /api/timesheets - Get current user's timesheets for a week
 router.get('/', authenticate, (req, res) => {
@@ -238,7 +248,7 @@ router.post('/', authenticate, normalizeDetails, (req, res) => {
     return res.status(400).json({ error: 'Hours must be between 0 and 24' });
   }
 
-  const effectiveDivisionId = project_id ? projectDivisionId(project_id, division_id) : division_id || null;
+  const effectiveDivisionId = division_id || null;
   if (effectiveDivisionId) {
     const access = checkDivisionAccess(userId, effectiveDivisionId);
     if (!access.allowed) {
@@ -349,7 +359,7 @@ router.post('/batch', authenticate, normalizeDetails, (req, res) => {
         throw Object.assign(new Error('Each entry requires a date, project or task, and numeric hours between 0 and 24'), { status: 400 });
       }
 
-      const effectiveDivisionId = project_id ? projectDivisionId(project_id, division_id) : division_id || null;
+      const effectiveDivisionId = division_id || null;
       if (effectiveDivisionId) {
         const access = checkDivisionAccess(userId, effectiveDivisionId);
         if (!access.allowed) throw Object.assign(new Error(access.reason), { status: 403 });

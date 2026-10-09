@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TimesheetDescription from '../../components/TimesheetDescription';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -199,7 +200,7 @@ export default function ManagerApprovals() {
                                     )}
                                   </td>
                                   <td className="py-2 text-right font-medium">{entry.hours}h</td>
-                                  <td className="py-2 pl-4 truncate max-w-xs">{entry.description || '-'}</td>
+                                  <td className="py-2 pl-4"><div className="w-52 sm:w-72"><TimesheetDescription entry={entry} /></div></td>
                                 </tr>
                               ))}
                             </tbody>

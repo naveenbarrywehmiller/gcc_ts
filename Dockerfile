@@ -5,6 +5,7 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
 COPY client/ ./
+COPY shared/ /app/shared/
 RUN npm run build
 
 # Build server dependencies
@@ -23,6 +24,7 @@ COPY --from=builder /app/server/node_modules ./server/node_modules
 COPY package.json ./
 COPY server/package*.json ./server/
 COPY server/src ./server/src
+COPY shared/ ./shared/
 COPY server/ecosystem.config.js ./server/
 
 # Copy entrypoint

@@ -47,6 +47,7 @@ before(async () => {
   entry(employee, today, 'approved');
   entry(employee, today, 'rejected');
   entry(employee, today, 'draft');
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
