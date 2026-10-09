@@ -25,6 +25,8 @@ export default function AdminProjects() {
   const [form, setForm] = useState(null);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [actionError, setActionError] = useState('');
   const options = useQuery({ queryKey: ['project-options', user.id], queryFn: () => api.get('/projects/options').then(r => r.data) });
   const { data, isLoading, isError } = useQuery({ queryKey: ['admin-projects', user.id, filters, page], queryFn: () => api.get('/projects', { params: { ...filters, page, limit: 25 } }).then(r => r.data) });
   const divisions = options.data?.divisions || [];
@@ -69,11 +71,18 @@ export default function AdminProjects() {
     } catch (err) { setErrors([err.response?.data?.error || 'Import failed', ...(err.response?.data?.errors || [])]); }
     finally { setBusy(false); e.target.value = ''; }
   };
-  const deactivate = async p => {
-    if (!confirm(`Deactivate ${p.project_code}?`)) return;
+  const openAction = (project, type) => { setActionError(''); setPendingAction({ project, type }); };
+  const confirmAction = async () => {
+    if (!pendingAction || busy) return;
+    const { project, type } = pendingAction;
     setBusy(true);
-    try { await api.delete(`/projects/${p.id}`); refresh(); toast.success('Project deactivated'); }
-    catch (err) { toast.error(err.response?.data?.error || 'Unable to deactivate'); }
+    try {
+      await api.delete(`/projects/${project.id}${type === 'delete' ? '/permanent' : ''}`);
+      setPendingAction(null);
+      refresh();
+      if (data?.projects.length === 1 && page > 1 && (type === 'delete' || filters.active === '1')) setPage(page - 1);
+      toast.success(type === 'delete' ? 'Project permanently deleted' : 'Project deactivated');
+    } catch (err) { setActionError(err.response?.data?.error || `Unable to ${type === 'delete' ? 'delete' : 'deactivate'} project`); }
     finally { setBusy(false); }
   };
   return <div className="space-y-4">
@@ -102,7 +111,7 @@ export default function AdminProjects() {
       <tbody>{data?.projects.map(p => <tr key={p.id} className="border-t border-surface-200 dark:border-surface-700">
         <td className="p-3">{p.project_code}</td><td className="p-3">{p.project_name}</td><td className="p-3">{p.division_name || 'Unassigned'}</td><td className="p-3">{p.subdivision_name || '—'}</td>
         <td className="p-3"><ProjectStatus status={p.project_status} /></td><td className="p-3">{p.budget_hours ?? '—'}</td>
-        <td className="p-3"><button className="btn-secondary btn-sm mr-2" disabled={busy} onClick={() => setForm({ ...p })}>{p.can_edit ? 'Edit' : 'View'}</button>{p.can_edit && p.active === 1 && <button disabled={busy} className="text-red-600 text-xs" onClick={() => deactivate(p)}>Deactivate</button>}</td>
+        <td className="p-3"><div className="flex flex-wrap items-center gap-2"><button className="btn-secondary btn-sm" disabled={busy} onClick={() => setForm({ ...p })}>{p.can_edit ? 'Edit' : 'View'}</button>{p.can_edit && <>{p.active === 1 && <button disabled={busy} className="btn-ghost btn-sm" onClick={() => openAction(p, 'deactivate')}>Deactivate</button>}<button disabled={busy} className="btn-ghost btn-sm text-red-600 dark:text-red-400" onClick={() => openAction(p, 'delete')}>Delete</button></>}</div></td>
       </tr>)}{!data?.projects.length && <tr><td colSpan={7} className="p-6 text-center">{isLoading ? 'Loading…' : 'No matching projects'}</td></tr>}</tbody>
     </table></div>
     <div className="flex items-center justify-between"><span className="text-sm">{data?.total || 0} projects · Page {page} of {Math.max(1, Math.ceil((data?.total || 0) / 25))}</span><div className="flex gap-2"><button className="btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</button><button className="btn-secondary btn-sm" disabled={page * 25 >= (data?.total || 0)} onClick={() => setPage(p => p + 1)}>Next</button></div></div>
@@ -124,6 +133,13 @@ export default function AdminProjects() {
         <div><label className="block text-xs mb-1" htmlFor="project-location">Location<FieldHelp label="Location" /></label><select id="project-location" className="input" value={form.subdivision_id || ''} onChange={e => setForm({ ...form, subdivision_id: e.target.value })}><option value="">No location</option>{form.subdivision_id && !locations.some(s => s.id === Number(form.subdivision_id)) && <option value={form.subdivision_id}>{form.subdivision_name}</option>}{locations.filter(s => s.division_id === Number(form.division_id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         {form.id && <label className="flex gap-2 items-center"><input type="checkbox" checked={!!form.active} onChange={e => setForm({ ...form, active: e.target.checked })} />Active project</label>}
       </fieldset>{!readOnly && <button disabled={busy} className="btn-primary" type="submit">{busy ? 'Saving…' : 'Save Project'}</button>}</form>}
+    </Modal>
+    <Modal isOpen={!!pendingAction} onClose={() => !busy && setPendingAction(null)} title={pendingAction?.type === 'delete' ? 'Delete project permanently?' : 'Deactivate project?'} size="sm" footer={<><button type="button" className="btn-secondary" disabled={busy} onClick={() => setPendingAction(null)}>Cancel</button><button type="button" className="btn-danger" disabled={busy} onClick={confirmAction}>{busy ? 'Working…' : pendingAction?.type === 'delete' ? 'Delete project' : 'Deactivate project'}</button></>}>
+      {pendingAction && <div className="space-y-3 text-sm">
+        <p className="break-words">{pendingAction.project.project_code} — {pendingAction.project.project_name}</p>
+        <p className="text-red-700 dark:text-red-300">{pendingAction.type === 'delete' ? 'Warning: This permanently removes the project and cannot be undone. Projects with timesheet entries cannot be deleted; deactivate them instead.' : 'Deactivating this project removes it from active project lists. You can reactivate it later.'}</p>
+        {actionError && <p role="alert" className="text-red-700 dark:text-red-300">{actionError}</p>}
+      </div>}
     </Modal>
     <Modal isOpen={!!errors} onClose={() => setErrors(null)} title="Project import failed"><ul className="list-disc pl-5 space-y-2 text-sm">{errors?.map((error, i) => <li key={i}>{error}</li>)}</ul></Modal>
   </div>;

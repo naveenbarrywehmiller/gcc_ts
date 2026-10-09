@@ -259,3 +259,29 @@ test('project options use profile division as fallback and distinguish view filt
   assert.equal((await request(system, `/projects/${projectB}`, { project_name: 'System update' }, 'PUT')).status, 200);
   assert.equal((await request(system, `/projects/${projectB}`, undefined, 'DELETE')).status, 200);
 });
+
+test('project deletion respects division access and preserves timesheet history', async () => {
+  const create = db.prepare('INSERT INTO projects(project_code,project_name,division_id,active) VALUES (?,?,?,?)');
+  const own = Number(create.run('DELETE-OWN', 'Inactive project', divA, 0).lastInsertRowid);
+  const foreign = Number(create.run('DELETE-FOREIGN', 'Foreign project', divB, 1).lastInsertRowid);
+  const booked = Number(create.run('DELETE-BOOKED', 'Booked project', divA, 1).lastInsertRowid);
+  db.prepare("INSERT INTO timesheets(user_id,project_id,work_date,hours,status) VALUES (?,?,?,1,'draft')")
+    .run(employee, booked, '2026-10-01');
+
+  assert.equal((await request(employee, `/projects/${own}/permanent`, undefined, 'DELETE')).status, 403);
+  assert.equal((await request(admin, `/projects/${foreign}/permanent`, undefined, 'DELETE')).status, 403);
+  assert.equal(db.prepare('SELECT id FROM projects WHERE id = ?').get(foreign).id, foreign);
+  const conflict = await request(admin, `/projects/${booked}/permanent`, undefined, 'DELETE');
+  assert.equal(conflict.status, 409);
+  assert.match(conflict.body.error, /timesheet entries/);
+  assert.equal(db.prepare('SELECT id FROM projects WHERE id = ?').get(booked).id, booked);
+  assert.equal((await request(admin, `/projects/${booked}`, undefined, 'DELETE')).status, 200);
+  assert.equal(db.prepare('SELECT active FROM projects WHERE id = ?').get(booked).active, 0);
+
+  assert.equal((await request(admin, `/projects/${own}/permanent`, undefined, 'DELETE')).status, 200);
+  assert.equal((await request(system, `/projects/${foreign}/permanent`, undefined, 'DELETE')).status, 200);
+  assert.equal(db.prepare('SELECT id FROM projects WHERE id IN (?, ?)').all(own, foreign).length, 0);
+  assert.equal((await request(admin, `/projects/${own}/permanent`, undefined, 'DELETE')).status, 404);
+  assert.deepEqual(db.prepare("SELECT entity_id FROM audit_logs WHERE action = 'PERMANENT_DELETE_PROJECT' AND entity_id IN (?, ?) ORDER BY entity_id")
+    .all(own, foreign).map(row => row.entity_id), [own, foreign]);
+});

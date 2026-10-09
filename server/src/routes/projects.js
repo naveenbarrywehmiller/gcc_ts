@@ -103,6 +103,21 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   })();
   res.json({ project });
 });
+router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => {
+  const existing = getProject(req);
+  if (!existing) return res.status(404).json({ error: 'Project not found' });
+  if (!canManageProjectDivision(req.user, existing.division_id)) return res.status(403).json({ error: 'You can only delete projects in your assigned divisions' });
+  const deleted = db.transaction(() => {
+    const timesheet = db.prepare('SELECT id FROM timesheets WHERE project_id = ? LIMIT 1').get(existing.id);
+    if (timesheet) return false;
+    db.prepare('DELETE FROM projects WHERE id = ?').run(existing.id);
+    db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, ip_address) VALUES (?,?,?,?,?,?)')
+      .run(req.user.id, 'PERMANENT_DELETE_PROJECT', `Deleted project ${existing.project_code} (${existing.project_name})`, 'project', existing.id, req.ip);
+    return true;
+  })();
+  if (!deleted) return res.status(409).json({ error: 'This project has timesheet entries and cannot be permanently deleted. Deactivate it instead.' });
+  res.json({ message: 'Project permanently deleted' });
+});
 router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
   const existing = getProject(req);
   if (!existing) return res.status(404).json({ error: 'Project not found' });
