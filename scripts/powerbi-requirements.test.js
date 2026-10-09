@@ -22,8 +22,8 @@ before(async () => {
   db.prepare('INSERT INTO admin_divisions(user_id,division_id) VALUES (?,?)').run(admin,north);
   db.prepare("INSERT INTO planned_vacations(user_id,vacation_date) VALUES (?, '2026-10-01')").run(employee);
   db.prepare("INSERT INTO planned_vacations(user_id,vacation_date) VALUES (?, '2026-10-02')").run(other);
-  db.prepare("INSERT INTO division_updates(division_id,month,open_positions,new_joiners) VALUES (?, '2026-10',NULL,0)").run(north);
-  db.prepare("INSERT INTO division_updates(division_id,month,open_positions,new_joiners) VALUES (?, '2026-10',4,2)").run(south);
+  db.prepare("INSERT INTO division_updates(division_id,month,open_positions,new_joiners) VALUES (?, '2026-10',NULL,'No new joiners')").run(north);
+  db.prepare("INSERT INTO division_updates(division_id,month,open_positions,new_joiners) VALUES (?, '2026-10','Four open roles','Two engineers joined')").run(south);
   project=Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id) VALUES ('P1','Test',?)").run(north).lastInsertRowid);
   const insertEntry=db.prepare('INSERT INTO timesheets(user_id,project_id,work_date,hours,status,week_number,week_year,details_json) VALUES (?,?,?,?,?,?,?,?)');
   for(const date of ['2026-09-28','2026-09-29']) insertEntry.run(employee,project,date,8,'approved',40,2026,'{"fundamental_error_count":2}');
@@ -39,6 +39,9 @@ async function get(endpoint, identity='key', method='GET') {
   return {status:res.status,body:await res.json()};
 }
 test('staffing and planned vacation reads retain authentication, division scope, and read-only rules',async()=>{
+  const version=(await get('version')).body;
+  assert.equal(version.apiVersion,'2.0.0');
+  assert.equal(version.dashboardVersion,'2.0.0');
   for(const endpoint of ['staffing','planned-vacations']) {
     assert.equal((await get(endpoint,null)).status,401);
     assert.equal((await get(endpoint,employee)).status,403);
@@ -48,9 +51,10 @@ test('staffing and planned vacation reads retain authentication, division scope,
   }
   const staffing=(await get('staffing',admin)).body.data[0];
   assert.equal(staffing.openPositions,null);
-  assert.equal(staffing.newJoiners,0);
+  assert.equal(staffing.newJoiners,'No new joiners');
   assert.equal(staffing.date,'2026-10-01');
   assert.deepEqual(Object.keys(staffing).sort(),['id','divisionId','division','date','openPositions','newJoiners','updatedDate'].sort());
+  assert.equal((await get('staffing')).body.data[1].openPositions,'Four open roles');
   assert.equal((await get('planned-vacations',admin)).body.data[0].userId,employee);
 });
 test('weekly row identities collapse daily detail copies while retaining separate weeks and stable IDs',async()=>{

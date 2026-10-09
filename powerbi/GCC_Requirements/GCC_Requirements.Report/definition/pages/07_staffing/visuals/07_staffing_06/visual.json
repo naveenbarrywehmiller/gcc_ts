@@ -3,57 +3,112 @@
   "name": "07_staffing_06",
   "position": {
     "x": 24,
-    "y": 338,
+    "y": 474,
     "z": 5000,
-    "height": 116,
-    "width": 336,
+    "height": 542,
+    "width": 688,
     "tabOrder": 5000
   },
   "visual": {
-    "visualType": "card",
+    "visualType": "tableEx",
     "query": {
       "queryState": {
         "Values": {
           "projections": [
             {
               "field": {
-                "Measure": {
+                "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "_Measures"
+                      "Entity": "FactStaffing"
                     }
                   },
-                  "Property": "Open Positions"
+                  "Property": "date"
                 }
               },
-              "queryRef": "_Measures.Open Positions",
-              "nativeQueryRef": "Open Positions"
+              "queryRef": "FactStaffing.date",
+              "nativeQueryRef": "date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactStaffing"
+                    }
+                  },
+                  "Property": "division"
+                }
+              },
+              "queryRef": "FactStaffing.division",
+              "nativeQueryRef": "division"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactStaffing"
+                    }
+                  },
+                  "Property": "openPositions"
+                }
+              },
+              "queryRef": "FactStaffing.openPositions",
+              "nativeQueryRef": "openPositions"
             }
           ]
         }
       }
     },
     "objects": {
-      "categoryLabels": [
+      "values": [
         {
           "properties": {
-            "show": {
+            "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "11D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }
           }
         }
       ],
-      "labels": [
+      "columnHeaders": [
         {
           "properties": {
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "26D"
+                  "Value": "11D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "grid": [
+        {
+          "properties": {
+            "rowPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "6D"
                 }
               }
             }
@@ -75,7 +130,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Open Positions'"
+                  "Value": "'Open Position updates'"
                 }
               }
             },

@@ -82,6 +82,8 @@ def formatting(visual):
                 size = 88
             elif ref.endswith('employeeName') or ref.endswith('projectName'):
                 size = 120
+            elif name.startswith('07_staffing_') and ref in ('FactStaffing.openPositions', 'FactStaffing.newJoiners'):
+                size = 220
             elif ref.endswith('department') or ref.endswith('divisionName'):
                 size = 100
             else:
@@ -130,6 +132,17 @@ def build_page(page_name):
         else:
             place(pair[0], 112, width=150, advance=False)
             place(pair[1], 112, x=166, width=150)
+    if page_name == '07_staffing':
+        for v in visuals:
+            if v['visual']['visualType'] == 'tableEx':
+                place(v, 400)
+        place(named('_02'), 104)
+        place(named('_refresh_help'), 104)
+        for name, state in states.items():
+            if 'position' not in state:
+                raise ValueError('Visual omitted from phone layout: ' + name)
+            (folder / name / 'mobile.json').write_text(json.dumps(state, indent=2) + '\n', encoding='utf-8')
+        return
     place(named('_02'), 136 if overview else 104)
     for v in visuals:
         if v['visual']['visualType'] in ('clusteredColumnChart', 'clusteredBarChart', 'lineChart'):

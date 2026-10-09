@@ -365,17 +365,6 @@ table _Measures
 		displayFolder: 06 Improvement
 		lineageTag: 75b2d88e-f916-5d94-847d-fe3a472a06d0
 
-	/// Snapshot for last selected month. Blank if any selected division has no entry.
-	measure 'Open Positions' = VAR E=MAX(DimDate[Date]) VAR S=DATE(YEAR(E),MONTH(E),1) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),DimDate[Date]=S) RETURN IF(COUNTROWS(T)=COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[openPositions])))=0,SUMX(T,FactStaffing[openPositions]))
-		formatString: #,##0
-		displayFolder: 07 Staffing
-		lineageTag: a3c3b1c5-a3f1-51fd-bfa3-e223acadeea4
-
-	measure 'New Joiners' = VAR Months=SELECTCOLUMNS(SUMMARIZE(DimDate,DimDate[YearMonth]),"MonthStart",CALCULATE(DATE(YEAR(MIN(DimDate[Date])),MONTH(MIN(DimDate[Date])),1))) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),TREATAS(Months,DimDate[Date])) RETURN IF(COUNTROWS(T)=COUNTROWS(Months)*COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[newJoiners])))=0,SUMX(T,FactStaffing[newJoiners]))
-		formatString: #,##0
-		displayFolder: 07 Staffing
-		lineageTag: 773e3f94-2d07-5a90-b41c-03a0fb2015b1
-
 	measure 'Hours Scheduled' = IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SUM(FactPlan[scheduledHours]),KEEPFILTERS(FILTER(ALL(DimProject[division]),NOT ISCROSSFILTERED(DimDivision) || DimProject[division] IN VALUES(DimDivision[divisionName])))))
 		formatString: #,##0.0
 		displayFolder: 03 Capacity

@@ -200,7 +200,7 @@ After changing a server URL or key, update the relevant Service/gateway connecti
 | Old month or unexpectedly low hours | Check slicers and all filter levels, then refresh. Actual hours exclude drafts/rejected entries. |
 | Utilization is blank | Check hour-category mapping, available capacity and whether project/task filters make capacity unsupported. Open Input readiness. |
 | Delivery/quality KPI is blank | Check delivered dates, target dates and required register inputs. No data and zero performance have different meanings. |
-| Staffing KPI is blank | One or more selected divisions/months may lack staffing submissions. |
+| Staffing note is blank | Confirm the selected period and division, then check whether a narrative was submitted in the application. |
 | Desktop refresh works; Service fails | Check Service/gateway credentials, network reachability, connection mapping and refresh history. |
 | File edits do not appear in Desktop | Save pending Desktop work before external edits, then reopen the project to load them. Avoid saving an old open copy over newer file edits. |
 

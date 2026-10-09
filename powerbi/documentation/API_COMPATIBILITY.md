@@ -1,6 +1,6 @@
 # Power BI API Compatibility — GCC Timesheet
 
-> **Last Updated:** 2026-10-07
+> **Last Updated:** 2026-10-09
 
 ---
 
@@ -8,7 +8,8 @@
 
 | Power BI Dashboard Version | Required API Version | GCC Timesheet App Version | Status |
 |---------------------------|---------------------|--------------------------|--------|
-| v1.1.4 | v1.1.0 | v1.15.0+ | ✅ Current |
+| v2.0.0 | v2.0.0 | v1.21.0+ | ✅ Current |
+| v1.1.4 | v1.1.0 | v1.15.0–v1.20.0 | Legacy numeric staffing contract |
 | v1.1.0–v1.1.3 | v1.x | v1.3.0+ | ✅ Legacy |
 | v1.0.0 | v1.x | v1.3.0+ | ✅ Legacy |
 
@@ -16,9 +17,9 @@
 
 ## API Versioning Policy
 
-### Current: API v1.x
+### Current: API v2.0.0
 
-The Power BI REST API is served at `/api/powerbi/*` without explicit version prefixes. The current contract is **v1.x**.
+The Power BI REST API is served at `/api/powerbi/*` without explicit version prefixes. The current contract is **v2.0.0**. In `/staffing`, `openPositions` and `newJoiners` are nullable text rather than nullable counts. Existing numeric records migrate to text, preserving zero as `"0"`. Upgrade the application and saved PBIP together, then refresh the model in Desktop. Dashboard v1.1.4 expects numbers and cannot refresh against this contract.
 
 ### Backward Compatibility Rules
 
@@ -41,7 +42,7 @@ A **breaking change** triggers a new major API version (e.g., v2.x):
 
 ### When Breaking Changes Occur
 
-1. The old API version must be preserved for a transition period (if practical)
+1. Preserve the old API version for a transition period when practical. The staffing contract in v2.0.0 has no parallel v1 endpoint; update the report before refreshing it.
 2. A new Power BI Dashboard version must be released that supports the new API
 3. Documentation must clearly state the migration path
 4. The CHANGELOG must document the breaking change
@@ -169,4 +170,4 @@ New query parameters may be added in future minor versions.
 
 ---
 
-*GCC Timesheet Power BI API Compatibility v1.1.0*
+*GCC Timesheet Power BI API Compatibility v2.0.0*

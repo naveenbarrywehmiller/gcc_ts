@@ -2,9 +2,13 @@
 
 **[User guide: change source URL, password, refresh and report settings](../POWERBI_USER_GUIDE.md)** provides step-by-step maintenance instructions.
 
-Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. The saved project contains **16 tables, 72 DAX measures, 18 relationships, nine report pages and 116 visual containers**. Its semantic model is TMDL in `GCC_Requirements.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
+Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. The saved project contains **16 tables, 70 DAX measures, 18 relationships, nine report pages and 113 visual containers**. Its semantic model is TMDL in `GCC_Requirements.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
 
 **[Complete Power BI guide — POWERBI.md](../POWERBI.md)** includes every DAX formula, all 11 shared Power Query expressions, all 16 table queries, the full column/relationship dictionary, every visual and its field bindings, phone geometry, connection instructions, troubleshooting and missing inputs.
+
+## Staffing narratives — 2.0.0 (2026-10-09)
+
+The Staffing page displays separate Open Position and New Joiner text tables by division and month. The old count cards and monthly count charts were removed. Upgrade the application to v1.21.0, then reopen this PBIP and refresh its data. The reporting API v2.0.0 returns text for both staffing fields; an older numeric model cannot refresh them. The phone layout retains wrapped note values and internal table scrolling.
 
 ## Management overview design — 1.1.1 (2026-10-06)
 
@@ -28,7 +32,7 @@ The `DimEmployee[division]` field is each person's primary division. Admin and e
 
 ## Phone layouts
 
-All nine pages have native portrait phone layouts covering all 116 existing visuals. Open **View → Mobile layout** in Desktop and select a page tab. The layouts use a 324-unit canvas, full-width timestamp/dropdown controls, two-column KPI cards, readable wrapped headings/notes and full-width charts. The last-refresh timestamp is small muted text (9 pt label, 10 pt value), with a transparent background and no border/shadow on both desktop and phone views. Detail tables retain all columns with horizontal scrolling; input-readiness definitions wrap into narrow columns.
+All nine pages have native portrait phone layouts covering all 113 existing visuals. Open **View → Mobile layout** in Desktop and select a page tab. The layouts use a 324-unit canvas, full-width timestamp/dropdown controls, two-column KPI cards, readable wrapped headings/notes and full-width charts. The last-refresh timestamp is small muted text (9 pt label, 10 pt value), with a transparent background and no border/shadow on both desktop and phone views. Detail tables retain all columns with horizontal scrolling; input-readiness definitions wrap into narrow columns.
 
 On an actual phone, these layouts appear in the Power BI iOS/Android app in portrait after the report is published and shared. Ordinary web-browser and landscape viewing use the standard report layout. Service publication has not been performed. See [Microsoft's mobile layout overview](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-create-mobile-optimized-report-about).
 
@@ -40,7 +44,7 @@ On an actual phone, these layouts appear in the Power BI iOS/Android app in port
 4. Use **Home → Refresh → Data** to fetch the latest API data for all tables, then select the reporting month/division. Automatic refresh is **off**, as selected for this Desktop report. Every page shows a separate **Last refreshed (IST)** date/time card, including seconds. The saved month is **October 2026**, not a moving current-month selection. Review **Input readiness**, unmapped hours, weekly conflicts and missing project plan inputs.
 5. Save intended Desktop edits. Maintain the saved TMDL project; the original `scripts/build-powerbi.py` BIM scaffold refuses to overwrite it.
 
-The live server runs application **v1.15.0**, with reporting API **v1.1.0** verified on 2026-10-02. The canonical Desktop report was refreshed and saved on 2026-10-05 local date. Its saved header before the IST update showed **2026-10-06 06:25:03 UTC**; an aggregate query returned **10 daily rows, 72 raw hours and 32 actual/approved hours**. October utilization remains blank pending the requested task mapping. The overview headings and input-readiness descriptions were checked in Desktop; descriptions wrap without a horizontal scrollbar. No Power BI Service publication or automatic schedule is configured. A fresh clone needs its own local credentials and refresh.
+The live server was verified on 2026-10-02 at application **v1.15.0** and reporting API **v1.1.0**; this is historical evidence, not validation of the v2.0.0 staffing contract. The canonical Desktop report was refreshed and saved on 2026-10-05 local date. Its saved header before the IST update showed **2026-10-06 06:25:03 UTC**; an aggregate query returned **10 daily rows, 72 raw hours and 32 actual/approved hours**. October utilization remains blank pending the requested task mapping. The overview headings and input-readiness descriptions were checked in Desktop; descriptions wrap without a horizontal scrollbar. No Power BI Service publication or automatic schedule is configured. A fresh clone needs its own local credentials and refresh.
 
 The report uses **Indian Standard Time (IST, UTC+05:30)** for every viewer. The refresh timestamp and the reporting date used by fiscal/forecast calculations share the same IST clock; they do not change with a viewer's location or the refreshing computer's timezone. Source date-only business fields retain their original dates. The historical UTC refresh evidence above predates this update. **Reopen the canonical project, then use Home → Refresh → Data** to import the IST model; a production IST refresh/native preview is pending because Desktop automation was stopped with Escape.
 
@@ -50,6 +54,6 @@ Utilization remains blank until the live categories **SOP 1234** and **vgnn** ha
 
 ## Validation and sharing
 
-The saved TMDL deserializes through Desktop’s TOM library. Current validation passes **244 Microsoft schema documents** and visual field references. All 116 phone placements fit the canvas width without overlaps across nine pages. Native isolated synthetic testing previously evaluated all **72 measures** and passed **36 scenarios**, including UTC-to-IST conversion, midnight/year rollover, calendar/forecast boundaries and the refresh timestamp/header. The API/application checks are described in [validation evidence](../validation/README.md).
+The saved TMDL deserializes through Desktop’s TOM library as 16 tables and 70 measures. All 113 report visual field references resolve, and all 113 phone placements fit the canvas width without overlaps across nine pages. The full Microsoft schema check is currently blocked by HTTP 404 for the report's `visualContainer/2.13.0` schema URL. The previous native synthetic run evaluated the former 72-measure model; a new engine run and live Desktop refresh remain pending. See [validation evidence](../validation/README.md).
 
 GitHub stores source definitions, not credentials or imported production data. A clone needs connection and refresh. Pushing to GitHub updates the application through its Docker workflow; publishing the report, configuring a gateway and scheduling Power BI Service refresh are separate actions. See the complete guide before sharing an imported dataset: the model has no RLS roles.

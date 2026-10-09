@@ -15,10 +15,9 @@ module.exports = function workbookMigration(db) {
     }
     db.exec(`CREATE TABLE IF NOT EXISTS division_updates (
       id INTEGER PRIMARY KEY, division_id INTEGER NOT NULL REFERENCES divisions(id),
-      month TEXT NOT NULL, travel_visa TEXT, open_positions INTEGER, new_joiners INTEGER,
+      month TEXT NOT NULL, travel_visa TEXT, open_positions TEXT, new_joiners TEXT,
       updated_by INTEGER REFERENCES users(id), updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(division_id, month), CHECK(open_positions IS NULL OR open_positions >= 0),
-      CHECK(new_joiners IS NULL OR new_joiners >= 0)
+      UNIQUE(division_id, month)
     );
     CREATE INDEX IF NOT EXISTS idx_projects_division_status ON projects(division_id, project_status);
     CREATE INDEX IF NOT EXISTS idx_projects_normalized_code ON projects(LOWER(TRIM(project_code)));
@@ -28,5 +27,19 @@ module.exports = function workbookMigration(db) {
     CREATE TRIGGER IF NOT EXISTS projects_code_update BEFORE UPDATE OF project_code ON projects
     WHEN NEW.project_code != OLD.project_code AND EXISTS (SELECT 1 FROM projects WHERE id != NEW.id AND LOWER(TRIM(project_code)) = LOWER(TRIM(NEW.project_code)))
     BEGIN SELECT RAISE(ABORT, 'Project code already exists'); END;`);
+    const staffingType = db.prepare('PRAGMA table_info(division_updates)').all().find(c => c.name === 'open_positions')?.type;
+    if (staffingType !== 'TEXT') {
+      db.exec(`CREATE TABLE division_updates_text (
+        id INTEGER PRIMARY KEY, division_id INTEGER NOT NULL REFERENCES divisions(id),
+        month TEXT NOT NULL, travel_visa TEXT, open_positions TEXT, new_joiners TEXT,
+        updated_by INTEGER REFERENCES users(id), updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(division_id, month)
+      );
+      INSERT INTO division_updates_text(id, division_id, month, travel_visa, open_positions, new_joiners, updated_by, updated_at)
+        SELECT id, division_id, month, travel_visa, CAST(open_positions AS TEXT), CAST(new_joiners AS TEXT), updated_by, updated_at
+        FROM division_updates;
+      DROP TABLE division_updates;
+      ALTER TABLE division_updates_text RENAME TO division_updates;`);
+    }
   })();
 };

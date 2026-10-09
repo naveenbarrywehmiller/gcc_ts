@@ -42,9 +42,24 @@ after(() => { server?.close(); db.close(); fs.rmSync(temp, { recursive: true });
 
 test('migration preserves legacy data and is repeatable', () => {
   const migrate = require('../server/src/config/workbookMigration');
+  db.exec(`DROP TABLE division_updates;
+    CREATE TABLE division_updates (
+      id INTEGER PRIMARY KEY, division_id INTEGER NOT NULL REFERENCES divisions(id),
+      month TEXT NOT NULL, travel_visa TEXT, open_positions INTEGER, new_joiners INTEGER,
+      updated_by INTEGER REFERENCES users(id), updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(division_id, month), CHECK(open_positions IS NULL OR open_positions >= 0),
+      CHECK(new_joiners IS NULL OR new_joiners >= 0)
+    );`);
+  const legacyId = db.prepare("INSERT INTO division_updates(division_id,month,travel_visa,open_positions,new_joiners,updated_by) VALUES (?,'2026-08','Visa pending',5,0,?)").run(divA, admin).lastInsertRowid;
   migrate(db); migrate(db);
   assert.equal(db.prepare('SELECT project_name FROM projects WHERE id = ?').get(projectB).project_name, 'Other Division');
   assert.equal(db.prepare('SELECT project_status FROM projects WHERE id = ?').get(projectB).project_status, 'Inprogress');
+  const legacy = db.prepare('SELECT * FROM division_updates WHERE id = ?').get(legacyId);
+  assert.equal(legacy.travel_visa, 'Visa pending');
+  assert.equal(legacy.open_positions, '5');
+  assert.equal(legacy.new_joiners, '0');
+  assert.equal(legacy.updated_by, admin);
+  assert.equal(db.prepare('PRAGMA table_info(division_updates)').all().find(c => c.name === 'open_positions').type, 'TEXT');
 });
 test('admins read and export all projects but only modify their own divisions', async () => {
   const foreign = await request(admin, `/projects/${projectB}`, undefined, 'GET');
@@ -116,12 +131,15 @@ test('optional details survive batch, legacy saves and self-post; invalid values
 test('monthly records isolate divisions and retain travel when updating staffing', async () => {
   const body = { division_id: divA, month: '2026-09', travel_visa: 'Visa in progress' };
   assert.equal((await request(admin, '/division-updates', body, 'PUT')).status, 200);
-  const updated = await request(admin, '/division-updates', { division_id: divA, month: '2026-09', open_positions: 0, new_joiners: 2 }, 'PUT');
-  assert.equal(updated.body.record.travel_visa, 'Visa in progress'); assert.equal(updated.body.record.open_positions, 0);
+  const updated = await request(admin, '/division-updates', { division_id: divA, month: '2026-09', open_positions: '  Senior engineer, Bengaluru  ', new_joiners: 'Two engineers joined\nAutomation and VAVE' }, 'PUT');
+  assert.equal(updated.body.record.travel_visa, 'Visa in progress');
+  assert.equal(updated.body.record.open_positions, 'Senior engineer, Bengaluru');
+  assert.equal(updated.body.record.new_joiners, 'Two engineers joined\nAutomation and VAVE');
   assert.equal((await request(admin, '/division-updates', { ...body, new_joiners: 1.5 }, 'PUT')).status, 400);
+  assert.equal((await request(admin, '/division-updates', { ...body, new_joiners: 'x'.repeat(10001) }, 'PUT')).status, 400);
   assert.equal((await request(admin, `/division-updates?division_id=${divB}&month=2026-09`, undefined, 'GET')).status, 403);
   assert.equal((await request(employee, `/division-updates?division_id=${divA}&month=2026-09`, undefined, 'GET')).status, 403);
-  assert.equal((await request(admin, `/division-updates?division_id=${divA}&month=2026-08`, undefined, 'GET')).body.record, null);
+  assert.equal((await request(admin, `/division-updates?division_id=${divA}&month=2026-07`, undefined, 'GET')).body.record, null);
 });
 test('error logs restrict access, remove sensitive messages, rotate and retain newest event', async () => {
   const { recordSystemError, readSystemErrors, MAX_BYTES } = require('../server/src/utils/systemLog');

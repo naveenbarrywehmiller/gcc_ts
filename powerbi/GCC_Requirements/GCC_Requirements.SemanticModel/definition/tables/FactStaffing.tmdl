@@ -1,4 +1,4 @@
-/// One division/month. Open positions are a snapshot, new joiners a monthly flow. Blank differs from zero.
+/// One division/month. Open positions and new joiners are narrative updates; blank means no update was supplied.
 table FactStaffing
 	lineageTag: 4ba30aae-1c82-563f-aba2-f2f75b8b3f51
 
@@ -30,13 +30,13 @@ table FactStaffing
 		annotation UnderlyingDateTimeDataType = Date
 
 	column openPositions
-		dataType: int64
+		dataType: string
 		lineageTag: 27e66f1a-b33f-58c4-86bf-fffef09b6c24
 		summarizeBy: none
 		sourceColumn: openPositions
 
 	column newJoiners
-		dataType: int64
+		dataType: string
 		lineageTag: 91a1ae62-0132-517f-b51c-1284b166e73d
 		summarizeBy: none
 		sourceColumn: newJoiners
@@ -47,7 +47,7 @@ table FactStaffing
 				let
 				    Rows = fnApi("staffing"),
 				    Raw = Table.FromRecords(Rows, {"id", "divisionId", "division", "date", "openPositions", "newJoiners"}, MissingField.UseNull),
-				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"divisionId", Int64.Type}, {"division", type text}, {"date", type date}, {"openPositions", Int64.Type}, {"newJoiners", Int64.Type}}, "en-US"),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"divisionId", Int64.Type}, {"division", type text}, {"date", type date}, {"openPositions", type text}, {"newJoiners", type text}}, "en-US"),
 				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing FactStaffing key." else Typed
 				in Checked
 

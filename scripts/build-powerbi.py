@@ -133,7 +133,7 @@ table('FactWeeklyDetails',weekly_cols,f'''let
     Typed=Table.TransformColumnTypes(Flattened,{type_pairs},"en-US")
 in Typed''','One employee/week/project/task/row-dimension record, using the latest daily copy. Counts attributed to Monday. Conflicting copies block quality totals.')
 api_table('FactVacation','planned-vacations',[('id','int64'),('userId','int64'),('date','dateTime')], 'Planned full-day absence, not approved or actual leave.',key='id')
-api_table('FactStaffing','staffing',[('id','int64'),('divisionId','int64'),('division','string'),('date','dateTime'),('openPositions','int64'),('newJoiners','int64')], 'One division/month. Open positions are a snapshot, new joiners a monthly flow. Blank differs from zero.',key='id')
+api_table('FactStaffing','staffing',[('id','int64'),('divisionId','int64'),('division','string'),('date','dateTime'),('openPositions','string'),('newJoiners','string')], 'One division/month. Open positions and new joiners are narrative updates; blank means no update was supplied.',key='id')
 table('Settings',[('FiscalStartMonth','int64'),('DailyHours','double'),('DefectTarget','double'),('AsOfDate','dateTime'),('RefreshIST','string')], '''let
     Valid=if FiscalStartMonth<1 or FiscalStartMonth>12 or Number.RoundDown(FiscalStartMonth)<>FiscalStartMonth or DailyHours<=0 or DailyHours>24 then error "Invalid capacity settings." else true
 in if Valid then #table(type table [FiscalStartMonth=Int64.Type,DailyHours=number,DefectTarget=number,AsOfDate=date,RefreshIST=text],
@@ -206,7 +206,7 @@ coverage=[
 ('Products touched','Available','Distinct project products with submitted/approved work in selected dates; blank products excluded.'),
 ('Improvement / designed / developed','Available at weekly grain','Deduplicated weekly row details, attributed to Monday. Conflicting copies block counts.'),
 ('VAVE / Automation / COE / cost / additive','Needs improvement register','FactImprovement is an empty typed source contract; no fabricated classification or counts.'),
-('Open positions / new joiners','Available','Read-only staffing endpoint. Open positions at last selected month, joiners summed over selected months. Null stays unknown.'),
+('Open positions / new joiners','Available','Read-only staffing endpoint provides separate monthly text updates for each division. Blank means no text was submitted.'),
 ('Schedule alert ±3%','Provisional definition','Schedule days divided by planned project duration. Workbook mixes days and percent; definition needs owner confirmation.'),
 ('Defect alert ±5%','Provisional target','DefectTarget defaults to 0; red at >5 percentage points away. Confirm target and whether tolerance means relative percent.'),
 ('Platform / cohorts','Needs business mapping','Division is available; no separate platform master or cohort definition exists. Do not silently rename division as platform.')]
@@ -297,8 +297,6 @@ m('Defect Alert Color','IF(ISBLANK([Defect Density %]),"#64748B",IF(ABS([Defect 
 m('Products Touched',f'VAR IDs=CALCULATETABLE(VALUES(FactTimesheet[projectId]),FactTimesheet[status] IN {{"submitted","approved"}},{division_filter}) RETURN CALCULATE(DISTINCTCOUNT(DimProject[product]),KEEPFILTERS(TREATAS(IDs,DimProject[id])),DimProject[product]<>BLANK())','06 Improvement','#,##0')
 m('Additive Manufacturing',f'CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),FactImprovement[isAdditiveManufacturing]=TRUE(),{project_scope})','06 Improvement','#,##0')
 m('Improvement Initiatives',f'CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),{project_scope})','06 Improvement','#,##0')
-m('Open Positions','VAR E=MAX(DimDate[Date]) VAR S=DATE(YEAR(E),MONTH(E),1) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),DimDate[Date]=S) RETURN IF(COUNTROWS(T)=COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[openPositions])))=0,SUMX(T,FactStaffing[openPositions]))','07 Staffing','#,##0','Snapshot for last selected month. Blank if any selected division has no entry.')
-m('New Joiners','VAR Months=SELECTCOLUMNS(SUMMARIZE(DimDate,DimDate[YearMonth]),"MonthStart",CALCULATE(DATE(YEAR(MIN(DimDate[Date])),MONTH(MIN(DimDate[Date])),1))) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),TREATAS(Months,DimDate[Date])) RETURN IF(COUNTROWS(T)=COUNTROWS(Months)*COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[newJoiners])))=0,SUMX(T,FactStaffing[newJoiners]))','07 Staffing','#,##0')
 m('Hours Scheduled',f'IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SUM(FactPlan[scheduledHours]),{project_scope}))','03 Capacity')
 m('Remaining Forecast Hours',f'IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SUM(FactPlan[remainingForecastHours]),{project_scope}))','03 Capacity')
 m('Team Forecast Hours','VAR A=[As Of Date] RETURN IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE([Actual Hours],KEEPFILTERS(DimDate[Date]<A))+[Remaining Forecast Hours])','03 Capacity',description='Past actuals plus future remaining budget. Past and future do not overlap.')
@@ -400,11 +398,10 @@ cards(['Products Touched','Improvement Log Count','Designed','Developed'])
 chart('Improvement activity by week',C('DimDate','WeekStart'),['Improvement Log Count','Designed','Developed'])
 chart('Initiatives by category • source pending',C('FactImprovement','category'),['Improvement Initiatives'],x=728)
 grid('Weekly improvement details',[C('FactWeeklyDetails','date'),C('DimProject','projectCode'),C('FactWeeklyDetails','item_number'),C('FactWeeklyDetails','improvement_location'),M('Improvement Log Count'),M('Weekly Fundamental Errors'),M('Detail Conflicts')])
-page('07_staffing','GCC | Staffing','Open positions are the last selected month’s snapshot. New joiners are summed across selected months. Missing division/month submissions remain blank.')
-cards(['Open Positions','New Joiners','Active Team Strength','Contributing Employees'])
-chart('Monthly open positions',C('DimDate','YearMonth'),['Open Positions'])
-chart('Monthly new joiners',C('DimDate','YearMonth'),['New Joiners'],x=728)
-grid('Staffing submissions',[C('FactStaffing','date'),C('FactStaffing','division'),C('FactStaffing','openPositions'),C('FactStaffing','newJoiners')])
+page('07_staffing','GCC | Staffing','Monthly narrative updates by division. Select a period and division; blank notes mean no text was submitted.')
+cards(['Active Team Strength','Contributing Employees'])
+grid('Open Position updates',[C('FactStaffing','date'),C('FactStaffing','division'),C('FactStaffing','openPositions')],x=24,y=474,w=688,h=542)
+grid('New Joiner updates',[C('FactStaffing','date'),C('FactStaffing','division'),C('FactStaffing','newJoiners')],x=728,y=474,w=688,h=542)
 page('08_detail','GCC | Timesheet & training detail','Actual measures use submitted and approved records. This detailed table also exposes draft/rejected rows for reconciliation; filter status as needed.')
 cards(['Actual Hours','Approved Hours','Training Hours','Detail Conflicts'])
 grid('Timesheet detail',[C('FactTimesheet','id'),C('FactTimesheet','date'),C('DimEmployee','employeeName'),C('DimEmployee','department'),C('DimProject','projectCode'),C('DimTask','taskCategory'),C('FactTimesheet','status'),M('Raw Hours')],y=350,h=526)

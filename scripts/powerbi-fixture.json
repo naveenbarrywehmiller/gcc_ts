@@ -13,5 +13,5 @@
     {"id":3,"userId":2,"projectId":null,"taskId":2,"date":"2026-09-30","hours":8,"status":"submitted","division":"North","department":"Engineering","projectCategory":"Trainings/Webinars","weeklyRowKey":"weekly-test-2","weeklyDetails":{},"updatedDate":"2026-09-30T12:00:00"}
   ],
   "planned-vacations": [{"id":1,"userId":1,"date":"2026-10-01"}],
-  "staffing": [{"id":1,"divisionId":1,"division":"North","date":"2026-10-01","openPositions":0,"newJoiners":1}]
+  "staffing": [{"id":1,"divisionId":1,"division":"North","date":"2026-10-01","openPositions":"No open roles","newJoiners":"One engineer joined"}]
 }

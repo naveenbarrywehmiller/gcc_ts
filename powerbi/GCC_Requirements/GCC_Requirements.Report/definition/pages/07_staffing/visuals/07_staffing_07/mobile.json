@@ -7,7 +7,7 @@
           "fontSize": {
             "expr": {
               "Literal": {
-                "Value": "10D"
+                "Value": "11D"
               }
             }
           },
@@ -23,39 +23,131 @@
     ]
   },
   "objects": {
-    "labels": [
+    "values": [
       {
         "properties": {
           "fontSize": {
             "expr": {
               "Literal": {
-                "Value": "22D"
+                "Value": "10D"
+              }
+            }
+          },
+          "wordWrap": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
               }
             }
           }
         }
       }
     ],
-    "categoryLabels": [
+    "columnHeaders": [
       {
         "properties": {
-          "show": {
+          "fontSize": {
+            "expr": {
+              "Literal": {
+                "Value": "10D"
+              }
+            }
+          },
+          "wordWrap": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          },
+          "autoSizeColumnWidth": {
             "expr": {
               "Literal": {
                 "Value": "false"
               }
             }
+          },
+          "columnAdjustment": {
+            "expr": {
+              "Literal": {
+                "Value": "'fixedWidth'"
+              }
+            }
+          },
+          "defaultColumnWidth": {
+            "expr": {
+              "Literal": {
+                "Value": "84D"
+              }
+            }
           }
+        }
+      }
+    ],
+    "grid": [
+      {
+        "properties": {
+          "rowPadding": {
+            "expr": {
+              "Literal": {
+                "Value": "6D"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "columnWidth": [
+      {
+        "properties": {
+          "value": {
+            "expr": {
+              "Literal": {
+                "Value": "88D"
+              }
+            }
+          }
+        },
+        "selector": {
+          "metadata": "FactStaffing.date"
+        }
+      },
+      {
+        "properties": {
+          "value": {
+            "expr": {
+              "Literal": {
+                "Value": "84D"
+              }
+            }
+          }
+        },
+        "selector": {
+          "metadata": "FactStaffing.division"
+        }
+      },
+      {
+        "properties": {
+          "value": {
+            "expr": {
+              "Literal": {
+                "Value": "220D"
+              }
+            }
+          }
+        },
+        "selector": {
+          "metadata": "FactStaffing.newJoiners"
         }
       }
     ]
   },
   "position": {
-    "x": 166,
-    "y": 476,
-    "width": 150,
-    "height": 112,
-    "z": 7,
-    "tabOrder": 7
+    "x": 8,
+    "y": 1004,
+    "width": 308,
+    "height": 400,
+    "z": 9,
+    "tabOrder": 9
   }
 }

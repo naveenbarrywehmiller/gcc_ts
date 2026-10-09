@@ -40,8 +40,8 @@
     {
       "name": "07_staffing",
       "displayName": "GCC | Staffing",
-      "visuals": 14,
-      "height": 1940
+      "visuals": 11,
+      "height": 1636
     },
     {
       "name": "08_detail",
@@ -58,5 +58,5 @@
   ],
   "errors": [],
   "mobilePages": 9,
-  "mobileVisuals": 116
+  "mobileVisuals": 113
 }

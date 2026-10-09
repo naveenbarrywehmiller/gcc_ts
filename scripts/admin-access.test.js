@@ -47,8 +47,8 @@ test('profile and legacy division fallback works across monthly updates, history
     const opts = await request(actor, '/projects/options');
     assert.deepEqual(opts.body.divisions.map(d => d.id), [a]);
     assert.deepEqual(opts.body.division_update_divisions.map(d => d.id), [a]);
-    assert.equal((await request(actor, '/division-updates', { division_id: a, month: '2026-09', new_joiners: 1 }, 'PUT')).status, 200);
-    assert.equal((await request(actor, '/division-updates', { division_id: b, month: '2026-09', new_joiners: 1 }, 'PUT')).status, 403);
+    assert.equal((await request(actor, '/division-updates', { division_id: a, month: '2026-09', new_joiners: 'One engineer joined' }, 'PUT')).status, 200);
+    assert.equal((await request(actor, '/division-updates', { division_id: b, month: '2026-09', new_joiners: 'One engineer joined' }, 'PUT')).status, 403);
     const users = (await request(actor, '/admin-ownership/authorized-users')).body.users;
     assert(users.some(u => u.id === employee));
     assert(!users.some(u => u.id === foreign));

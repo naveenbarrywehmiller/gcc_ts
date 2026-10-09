@@ -1,8 +1,8 @@
 # GCC Timesheet — Power BI Dashboard
 
-> **Version:** 1.1.4
-> **API Compatibility:** Power BI API v1.x  
-> **Application Compatibility:** GCC Timesheet v1.3.0+
+> **Version:** 2.0.0
+> **API Compatibility:** Power BI API v2.0.0
+> **Application Compatibility:** GCC Timesheet v1.21.0+
 
 ---
 
@@ -41,7 +41,7 @@ Power BI connects **exclusively** via the REST API — never directly to the dat
 
 ## Quick Start
 
-The requirements-driven report is available at **[GCC_Requirements/GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip)**. Read the **[complete POWERBI.md guide](POWERBI.md)** for connection steps, every DAX formula and Power Query function, table/relationship definitions, every visual, missing inputs and troubleshooting. Its saved TMDL model has 16 tables and 72 measures, with nine native PBIR pages. It requires reporting API v1.1.0, included in application v1.15.0. The original model and PBIX described below remain separate compatibility artifacts; their header version and setup steps do not describe the new requirements project.
+The requirements-driven report is available at **[GCC_Requirements/GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip)**. Read the **[complete POWERBI.md guide](POWERBI.md)** for connection steps, every DAX formula and Power Query function, table/relationship definitions, every visual, missing inputs and troubleshooting. Its saved TMDL model has 16 tables and 70 measures, with nine native PBIR pages. It requires reporting API v2.0.0, included in application v1.21.0. The original model and PBIX described below remain separate compatibility artifacts; their header version and setup steps do not describe the new requirements project.
 
 1. **Generate API Key** on the server:
    ```bash
@@ -100,9 +100,9 @@ Power BI uses **independent Semantic Versioning**, separate from the GCC Timeshe
 
 | Component | Version |
 |-----------|---------|
-| GCC Timesheet Application | v1.3.0 |
-| Power BI Dashboard | v1.1.0 |
-| Power BI REST API | v1.x |
+| GCC Timesheet Application | v1.21.0 |
+| Power BI Dashboard | v2.0.0 |
+| Power BI REST API | v2.0.0 |
 
 ### Version Rules
 
@@ -164,4 +164,4 @@ Internal — Barry Wehmiller / GCC
 
 ---
 
-*GCC Timesheet Power BI Dashboard v1.1.0 — 2026-09-27*
+*GCC Timesheet Power BI Dashboard v2.0.0 — 2026-10-09*

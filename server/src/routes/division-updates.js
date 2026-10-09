@@ -23,13 +23,8 @@ router.put('/', (req, res) => {
   for (const key of ['travel_visa', 'open_positions', 'new_joiners']) {
     if (req.body[key] === undefined) continue;
     const value = req.body[key];
-    if (key === 'travel_visa') {
-      if (typeof value !== 'string' || value.length > 10000) return res.status(400).json({ error: 'Travel & VISA must be text up to 10000 characters' });
-      data[key] = value.trim();
-    } else {
-      if (value !== '' && value !== null && (typeof value === 'boolean' || !Number.isSafeInteger(Number(value)) || Number(value) < 0)) return res.status(400).json({ error: 'Counts must be nonnegative whole numbers' });
-      data[key] = value === '' || value === null ? null : Number(value);
-    }
+    if (typeof value !== 'string' || value.length > 10000) return res.status(400).json({ error: `${key.replaceAll('_', ' ')} must be text up to 10000 characters` });
+    data[key] = value.trim();
   }
   if (!Object.keys(data).length) return res.status(400).json({ error: 'No fields supplied' });
   const record = db.transaction(() => {

@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "07_staffing_09",
   "position": {
-    "x": 1080,
+    "x": 728,
     "y": 338,
     "z": 8000,
     "height": 116,
-    "width": 336,
+    "width": 688,
     "tabOrder": 8000
   },
   "visual": {

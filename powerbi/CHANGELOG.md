@@ -5,6 +5,16 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.0.0] — 2026-10-09
+
+### Changed
+- Open Position and New Joiners are separate narrative fields, matching the application's multiline inputs. The staffing API now returns text for `openPositions` and `newJoiners`; the prior numeric contract is incompatible.
+- Replaced staffing count cards and charts with two division/month note tables, including phone layouts. Retained the team strength and contributing employee cards.
+- Removed two count measures. Existing numeric submissions are migrated to their text equivalents, including zero.
+
+### Validation
+- Application tests cover text updates, legacy count migration, and reporting output. A live Desktop refresh is necessary to import updated records.
+
 ## [1.1.4] — 2026-10-07
 
 ### Clarified

@@ -2,6 +2,10 @@
 
 The deliverable is `../GCC_Requirements/GCC_Requirements.pbip`.
 
+## Staffing narratives (October 9, 2026)
+
+Application v1.21.0 and reporting API v2.0.0 convert Open Position and New Joiner values from counts to text. The migration test preserved legacy values, including zero, as strings; monthly update and scoped reporting tests passed. The saved TMDL deserialized with Desktop's TOM library (16 tables, 70 measures), and local checks resolved every field reference across 113 report visuals. All 113 phone placements passed the saved-layout checker with no overlaps or width violations. The full Microsoft schema validator remains blocked by HTTP 404 for the existing `visualContainer/2.13.0` schema URL. Desktop is not running, so the native synthetic engine test and refreshed report preview were not run for this version. The older validation JSON files below document the previous model and are not current calculation evidence.
+
 ## Multiple division assignment clarification (October 7, 2026)
 
 TMDL descriptions now identify the roster division as the selected primary division and state that additional checked divisions do not allocate capacity. Timesheet hours continue to follow their booked division. The saved model deserialized through Desktop's TOM library (16 tables, 72 measures); application and reporting API tests passed. DAX expressions, API payloads, and report visuals did not change. Existing native-engine calculations and the production refresh were not rerun for this description-only patch.

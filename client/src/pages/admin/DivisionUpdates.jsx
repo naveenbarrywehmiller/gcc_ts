@@ -22,7 +22,7 @@ function RecordForm({ record, divisionId, month, kind }) {
   };
   return <form onSubmit={save} className="space-y-4">
     {travel ? <div><label htmlFor="travel-visa" className="block text-sm mb-2">Travel &amp; VISA<FieldHelp label="Travel & VISA" /></label><textarea id="travel-visa" rows={7} maxLength={10000} className="input" value={form.travel_visa} onChange={e => setForm({ ...form, travel_visa: e.target.value })} /></div> :
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{[['open_positions', 'Open Position'], ['new_joiners', 'New Joiners']].map(([key, label]) => <div key={key}><label htmlFor={key} className="block text-sm mb-2">{label}<FieldHelp label="Open Position / New Joiners" /></label><input id={key} className="input" type="number" min="0" step="1" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>}
+      <div className="space-y-4">{[['open_positions', 'Open Position'], ['new_joiners', 'New Joiners']].map(([key, label]) => <div key={key}><label htmlFor={key} className="block text-sm mb-2">{label}<FieldHelp label="Open Position / New Joiners" /></label><textarea id={key} rows={7} maxLength={10000} className="input" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>}
     <button className="btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
     {record?.updated_at && <p className="text-xs text-surface-500">Last saved: {record.updated_at} UTC</p>}
   </form>;

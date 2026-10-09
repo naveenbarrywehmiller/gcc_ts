@@ -62,7 +62,7 @@ Choose a refresh schedule matching the timesheet approval process. Check refresh
 
 ## Source API and security
 
-The requirements project needs **reporting API v1.1.0**, included in application **v1.15.0**. `GET /api/powerbi/version` is the compatibility check. API and application versions are separate version numbers.
+The requirements project needs **reporting API v2.0.0**, included in application **v1.21.0**. `GET /api/powerbi/version` is the compatibility check. API and application versions are separate version numbers. The staffing fields changed from counts to text, so refresh the updated model only after upgrading the application.
 
 | Endpoint under `/api/powerbi/` | Used by | Response/grain |
 |---|---|---|
@@ -74,7 +74,7 @@ The requirements project needs **reporting API v1.1.0**, included in application
 | tasks | DimTask | Task category and Billable/Nonbillable classification |
 | timesheets | TimesheetRows, FactTimesheet, FactWeeklyDetails | Paginated daily entries with stable IDs and copied weekly metadata |
 | planned-vacations | FactVacation | Planned full-day employee/date absence |
-| staffing | FactStaffing | Division/month, open-position snapshot and new-joiner flow |
+| staffing | FactStaffing | Division/month, separate open-position and new-joiner text updates |
 | configured optional deliverable endpoint | FactDeliverable | Complete list, one unique deliverable ID |
 | configured optional improvement endpoint | FactImprovement | Complete list, one unique improvement ID |
 
@@ -92,7 +92,7 @@ The reporting routes enforce read-only GET/HEAD/OPTIONS behavior; POST/PUT/PATCH
 
 Regular administrator access scopes project/timesheet facts and the staffing/vacation routes using server division permissions; a system administrator or dedicated reporting key can access the broader reporting scope. Organization and roster dimensions can still be global. **API scoping is not Power BI row-level security.** This model has no RLS roles. Anyone granted access to the imported semantic model may see its imported authorized scope unless separate workspace permissions/RLS are configured. Choose the credential scope and report audience together.
 
-Server references: [routes](../server/src/routes/powerbi.js), [reporting queries](../server/src/services/powerBiService.js), [authentication middleware](../server/src/middleware/powerBiAuth.js). No schema migration was required for the added stable row fields, staffing and vacation reporting routes.
+Server references: [routes](../server/src/routes/powerbi.js), [reporting queries](../server/src/services/powerBiService.js), [authentication middleware](../server/src/middleware/powerBiAuth.js). The staffing text change migrates existing numeric entries to strings without losing their values.
 
 ## KPI rules and filters
 
@@ -113,7 +113,7 @@ Server references: [routes](../server/src/routes/powerbi.js), [reporting queries
 | Weekly activity | Latest unique weekly row counts; Monday attribution | Contradictory copies block totals; null counts are not manufactured zeros |
 | Products | Distinct nonblank products on projects with actual work | Separate from product-module, platform or cohort |
 | Improvement categories | Distinct initiative IDs from approved register | Empty until connected; weekly improvement log counts are separately available |
-| Staffing | Open positions = last selected month snapshot; joiners = flow across selected months | Blank if any required division/month submission or count is missing; explicit zero remains zero |
+| Staffing | Separate open-position and new-joiner narrative per division/month | Blank means no text was submitted; migrated zero is the text `0` |
 | Budget schedule | Even spread over project weekdays excluding holidays | Project demand estimate, not employee/task commitment |
 | Future forecast | Inprogress remaining budget after pre-refresh actuals, spread across remaining planned workdays | Hold/Completed get no future remaining forecast; no allocation history; overdue remaining effort shown separately |
 | Team forecast | Actuals before refresh + remaining schedule from refresh onward | Does not double count the same past/future dates; refresh needed to move the boundary |
@@ -122,7 +122,7 @@ Server references: [routes](../server/src/routes/powerbi.js), [reporting queries
 
 Division filtering uses different real grains: work hours follow `FactTimesheet[division]`, roster capacity follows the employee's selected **primary** division, and project measures follow project division. Admins may check several divisions for an admin or employee, regardless of Dedicated/Flex category. Those checks grant application access; they do not divide an employee's capacity among divisions. `GET /api/powerbi/users` still returns one roster row and its primary division per employee, while each timesheet entry supplies the division where work was booked. This preserves one-person-one-roster-count; a cross-division worker's hours can appear in a different division from their capacity. DimDivision is deliberately disconnected from employee/project facts; the relevant DAX measures apply the selected division explicitly. FactStaffing has a direct division relationship. Do not add ambiguous bidirectional relationships to make every table appear connected. Exact supported-division utilization for either Dedicated or Flex staff requires effective-dated allocation fractions or hours, which the checkboxes do not provide.
 
-Capacity, effort and project forecast return blank under unsupported employee/project/task filters as specified in their formulas. Roster strength is independent of date/project because it is the current active roster. Report slicers use normal page context; do not assume that selecting a month/division on one page has synchronized every other page. Weekly measures filter through Monday dates; staffing records use month-start dates while staffing card measures explicitly evaluate selected months.
+Capacity, effort and project forecast return blank under unsupported employee/project/task filters as specified in their formulas. Roster strength is independent of date/project because it is the current active roster. Report slicers use normal page context; do not assume that selecting a month/division on one page has synchronized every other page. Weekly measures filter through Monday dates; staffing records use month-start dates and display their text directly in filtered tables.
 
 ## Missing inputs and decisions
 
@@ -132,7 +132,7 @@ These gaps are represented as blanks/readiness information, not invented busines
 |---|---|---|---|
 | 1 | Approved task/category mapping | Monthly, Dedicated/Flex and FY utilization | Map normalized timesheet projectCategory labels to Productive/Training/Internal/Admin/Vacation/Holiday; confirm current two labels |
 | 1 | Fiscal calendar and standard hours | Capacity and FY metrics | Confirm start month, 8-hour day, weekdays, local business-day cut-off and holiday calendar |
-| 1 | Monthly staffing submissions | Open Positions/New Joiners | One entry per active division/month, explicitly distinguishing zero from unknown; live staffing list is currently empty |
+| 1 | Monthly staffing submissions | Open Position/New Joiner updates | One narrative entry per active division/month; distinguish an empty note from explicit text such as "No openings" |
 | 1 | Project budget/start/target/delivery inputs | Effort, schedule, delivery, forecast | Populate real master fields; confirm status semantics and the ±3% normalization |
 | 2 | Deliverable register | Defect Density, Fundamental/Information/Readable Errors, FTR and deliverable on-time | Unique IDs, dates, error counts and explicit hadRework flags; confirm FTR rule and defect target/tolerance |
 | 2 | Improvement register | VAVE/Automation/COE/cost/additive counts | Unique initiative IDs, project/date/category/product and explicit additive flag; agree category names |
@@ -166,7 +166,7 @@ M checks unique/nonempty register IDs and converts types. Full validation of for
 
 ## Saved project inventory
 
-Reference generated **2026-10-07** from the saved model/PBIR sources. Application version: **1.18.2**; required reporting API: **1.1.0**. Inventory: **16 tables, 72 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 116 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.
+Reference updated **2026-10-09** from the saved model/PBIR sources. Application version: **1.21.0**; required reporting API: **2.0.0**. Inventory: **16 tables, 70 DAX measures, 18 relationships, 11 shared M expressions, 9 pages and 113 visual containers**. Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks describe project metadata, not screenshots or production records.
 
 ```text
 powerbi/
@@ -334,23 +334,20 @@ Page ID: `06_improvement`. Visuals: **14**. Source: [page.json](GCC_Requirements
 
 ### GCC | Staffing
 
-Page ID: `07_staffing`. Visuals: **14**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/07_staffing/page.json).
+Page ID: `07_staffing`. Visuals: **11**. Source: [page.json](GCC_Requirements/GCC_Requirements.Report/definition/pages/07_staffing/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
 | 07_staffing_01 | Text | GCC \| Staffing | Static text | 8, 8 / 308 × 64 |
-| 07_staffing_02 | Text | Open positions are the last selected month’s snapshot. New joiners are summed across selected months. Missing division/month submissions remain blank. | Static text | 8, 716 / 308 × 104 |
+| 07_staffing_02 | Text | Monthly narrative updates by division. Select a period and division; blank notes mean no text was submitted. | Static text | 8, 1412 / 308 × 104 |
 | 07_staffing_03 | Slicer | Period • select a month | Values: `DimDate[YearMonth]` | 8, 140 / 308 × 104 |
 | 07_staffing_04 | Slicer | Division | Values: `DimDivision[divisionName]` | 8, 252 / 308 × 104 |
 | 07_staffing_05 | Slicer | Fiscal year • start-year label | Values: `DimDate[FiscalYear]` | 8, 364 / 308 × 104 |
-| 07_staffing_06 | Card | Open Positions | Values: `_Measures[Open Positions]` | 8, 476 / 150 × 112 |
-| 07_staffing_07 | Card | New Joiners | Values: `_Measures[New Joiners]` | 166, 476 / 150 × 112 |
-| 07_staffing_08 | Card | Active Team Strength | Values: `_Measures[Active Team Strength]` | 8, 596 / 150 × 112 |
-| 07_staffing_09 | Card | Contributing Employees | Values: `_Measures[Contributing Employees]` | 166, 596 / 150 × 112 |
-| 07_staffing_10 | Clustered column chart | Monthly open positions | Category: `DimDate[YearMonth]`; Y: `_Measures[Open Positions]` | 8, 828 / 308 × 288 |
-| 07_staffing_11 | Clustered column chart | Monthly new joiners | Category: `DimDate[YearMonth]`; Y: `_Measures[New Joiners]` | 8, 1124 / 308 × 288 |
-| 07_staffing_12 | Table | Staffing submissions | Values: `FactStaffing[date]`, `FactStaffing[division]`, `FactStaffing[openPositions]`, `FactStaffing[newJoiners]` | 8, 1532 / 308 × 400 |
-| 07_staffing_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1420 / 308 × 104 |
+| 07_staffing_06 | Table | Open Position updates | Values: `FactStaffing[date]`, `FactStaffing[division]`, `FactStaffing[openPositions]` | 8, 596 / 308 × 400 |
+| 07_staffing_07 | Table | New Joiner updates | Values: `FactStaffing[date]`, `FactStaffing[division]`, `FactStaffing[newJoiners]` | 8, 1004 / 308 × 400 |
+| 07_staffing_08 | Card | Active Team Strength | Values: `_Measures[Active Team Strength]` | 8, 476 / 150 × 112 |
+| 07_staffing_09 | Card | Contributing Employees | Values: `_Measures[Contributing Employees]` | 166, 476 / 150 × 112 |
+| 07_staffing_refresh_help | Text | Refresh all API data: Home > Refresh > Data.   Auto-refresh: Off (Desktop). | Static text | 8, 1524 / 308 × 104 |
 | 07_staffing_refresh_time | Card | Last refreshed (IST) | Values: `_Measures[Report Status]` | 8, 80 / 308 × 52 |
 
 
@@ -390,7 +387,7 @@ Page ID: `09_inputs`. Visuals: **6**. Source: [page.json](GCC_Requirements/GCC_R
 
 ## Phone layouts
 
-All **9 pages** have native portrait phone layouts; **116 existing visuals** are placed. The canvas is 324 units wide, with 8-unit side margins and gaps. Pages scroll vertically. The desktop report and the phone view share the same model, queries, filters and conditional alert colors. Phone formatting overrides do not change desktop typography or geometry.
+All **9 pages** have native portrait phone layouts; **113 existing visuals** are placed. The canvas is 324 units wide, with 8-unit side margins and gaps. Pages scroll vertically. The desktop report and the phone view share the same model, queries, filters and conditional alert colors. Phone formatting overrides do not change desktop typography or geometry.
 
 Open **View → Mobile layout** in Desktop, then choose a page tab to inspect/edit its phone view. The bottom phone icon also switches views. The last-refresh visual spans the phone width in a compact 52-unit area, with a 9 pt label, 10 pt IST timestamp and muted gray text. Its background is transparent, with no border or shadow, matching the desktop styling. Headings use 17 pt in a 64-unit box; filters are full-width 104-unit dropdowns; KPI cards use two columns, wrapped 10 pt titles and 22 pt values. A remaining odd KPI occupies the full width. Explanatory text uses 10.5 pt in a 104-unit box. Charts span the width with 10 pt axis/legend labels.
 
@@ -406,7 +403,7 @@ For access on an actual phone, publish the report to an approved Power BI worksp
 | GCC \| Capacity & forecast | 14 | 324 | 1764 |
 | GCC \| Dedicated & Flex teams | 14 | 324 | 1940 |
 | GCC \| Continuous improvement | 14 | 324 | 1940 |
-| GCC \| Staffing | 14 | 324 | 1940 |
+| GCC \| Staffing | 11 | 324 | 1636 |
 | GCC \| Timesheet & training detail | 12 | 324 | 1348 |
 | GCC \| Input readiness | 6 | 324 | 1200 |
 
@@ -571,7 +568,7 @@ Planned full-day absence, not approved or actual leave.
 
 ### FactStaffing columns
 
-One division/month. Open positions are a snapshot, new joiners a monthly flow. Blank differs from zero.
+One division/month. Open positions and new joiners are narrative updates; blank means no update was supplied.
 
 | Column | TOM type | Format / behavior |
 |---|---|---|
@@ -579,8 +576,8 @@ One division/month. Open positions are a snapshot, new joiners a monthly flow. B
 | divisionId | int64 | Summary: none |
 | division | string | Summary: none |
 | date | dateTime | Format: yyyy-mm-dd; Summary: none |
-| openPositions | int64 | Summary: none |
-| newJoiners | int64 | Summary: none |
+| openPositions | string | Summary: none |
+| newJoiners | string | Summary: none |
 
 
 ### Settings columns
@@ -1521,30 +1518,7 @@ CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),KEEPFILTERS(FILTER(ALL(D
 
 ### 07 Staffing
 
-
-#### Open Positions
-
-Snapshot for last selected month. Blank if any selected division has no entry.
-
-Format: `#,##0`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
-
-```dax
-Open Positions =
-VAR E=MAX(DimDate[Date]) VAR S=DATE(YEAR(E),MONTH(E),1) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),DimDate[Date]=S) RETURN IF(COUNTROWS(T)=COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[openPositions])))=0,SUMX(T,FactStaffing[openPositions]))
-```
-
-
-#### New Joiners
-
-Monthly joiner flow summed over selected months/divisions; blank when required submissions/counts are missing.
-
-Format: `#,##0`. Source: [TMDL measure table](GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
-
-```dax
-New Joiners =
-VAR Months=SELECTCOLUMNS(SUMMARIZE(DimDate,DimDate[YearMonth]),"MonthStart",CALCULATE(DATE(YEAR(MIN(DimDate[Date])),MONTH(MIN(DimDate[Date])),1))) VAR T=CALCULATETABLE(FactStaffing,REMOVEFILTERS(DimDate),TREATAS(Months,DimDate[Date])) RETURN IF(COUNTROWS(T)=COUNTROWS(Months)*COUNTROWS(VALUES(DimDivision[id])) && COUNTROWS(FILTER(T,ISBLANK(FactStaffing[newJoiners])))=0,SUMX(T,FactStaffing[newJoiners]))
-```
-
+Open Position and New Joiner narratives are shown directly from FactStaffing. No numeric staffing measure is calculated.
 
 ### 03 Capacity
 
@@ -1902,7 +1876,7 @@ GET staffing; one division/month submission.
 let
     Rows = fnApi("staffing"),
     Raw = Table.FromRecords(Rows, {"id", "divisionId", "division", "date", "openPositions", "newJoiners"}, MissingField.UseNull),
-    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"divisionId", Int64.Type}, {"division", type text}, {"date", type date}, {"openPositions", Int64.Type}, {"newJoiners", Int64.Type}}, "en-US"),
+    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"divisionId", Int64.Type}, {"division", type text}, {"date", type date}, {"openPositions", type text}, {"newJoiners", type text}}, "en-US"),
     Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing FactStaffing key." else Typed
 in Checked
 ```
@@ -2000,7 +1974,7 @@ in Typed
 Authored source-readiness definitions; static explanatory rows.
 
 ```powerquery
-#table(type table [Requirement=text,Status=text,Definition=text], {{"Monthly utilization","Available with assumptions","Submitted + approved work; training/internal/admin/leave/holiday excluded. Current active roster capacity, Mon–Fri. Unmapped task categories block result."},{"Yearly utilization from project start","Needs allocation history","Roster FY utilization is provided separately. Exact project-start utilization needs employee project allocations and employment start/end dates."},{"Defect density / FTR / F I R","Needs deliverable register","FactDeliverable requires unique IDs, delivered dates, error counts and rework flags. Weekly error counts are available separately."},{"Effort / schedule / on-time","Available at project grain","Budget vs project lifetime actuals for projects delivered in selected dates. Project delivery is not treated as a deliverable count."},{"Team strength / dedicated / flex","Available","Current active roster and distinct contributing employees are separate. Employee supportingCategory defines Dedicated/Flex."},{"Vacation / holidays / capacity","Available with assumptions","Historical recorded leave; future planned vacation. Capacity is a current-roster estimate, not historical contracted capacity."},{"Training / internal / admin hours","Available","Explicit HourCategoryMap. Edit mappings to match production task categories; do not infer from billable flag."},{"Forecast / scheduled hours","Available as estimate","Budget spread evenly across working dates. No resource assignment exists; department-specific demand is blank."},{"Products touched","Available","Distinct project products with submitted/approved work in selected dates; blank products excluded."},{"Improvement / designed / developed","Available at weekly grain","Deduplicated weekly row details, attributed to Monday. Conflicting copies block counts."},{"VAVE / Automation / COE / cost / additive","Needs improvement register","FactImprovement is an empty typed source contract; no fabricated classification or counts."},{"Open positions / new joiners","Available","Read-only staffing endpoint. Open positions at last selected month, joiners summed over selected months. Null stays unknown."},{"Schedule alert ±3%","Provisional definition","Schedule days divided by planned project duration. Workbook mixes days and percent; definition needs owner confirmation."},{"Defect alert ±5%","Provisional target","DefectTarget defaults to 0; red at >5 percentage points away. Confirm target and whether tolerance means relative percent."},{"Platform / cohorts","Needs business mapping","Division is available; no separate platform master or cohort definition exists. Do not silently rename division as platform."}})
+#table(type table [Requirement=text,Status=text,Definition=text], {{"Monthly utilization","Available with assumptions","Submitted + approved work; training/internal/admin/leave/holiday excluded. Current active roster capacity, Mon–Fri. Unmapped task categories block result."},{"Yearly utilization from project start","Needs allocation history","Roster FY utilization is provided separately. Exact project-start utilization needs employee project allocations and employment start/end dates."},{"Defect density / FTR / F I R","Needs deliverable register","FactDeliverable requires unique IDs, delivered dates, error counts and rework flags. Weekly error counts are available separately."},{"Effort / schedule / on-time","Available at project grain","Budget vs project lifetime actuals for projects delivered in selected dates. Project delivery is not treated as a deliverable count."},{"Team strength / dedicated / flex","Available","Current active roster and distinct contributing employees are separate. Employee supportingCategory defines Dedicated/Flex."},{"Vacation / holidays / capacity","Available with assumptions","Historical recorded leave; future planned vacation. Capacity is a current-roster estimate, not historical contracted capacity."},{"Training / internal / admin hours","Available","Explicit HourCategoryMap. Edit mappings to match production task categories; do not infer from billable flag."},{"Forecast / scheduled hours","Available as estimate","Budget spread evenly across working dates. No resource assignment exists; department-specific demand is blank."},{"Products touched","Available","Distinct project products with submitted/approved work in selected dates; blank products excluded."},{"Improvement / designed / developed","Available at weekly grain","Deduplicated weekly row details, attributed to Monday. Conflicting copies block counts."},{"VAVE / Automation / COE / cost / additive","Needs improvement register","FactImprovement is an empty typed source contract; no fabricated classification or counts."},{"Open positions / new joiners","Available","Read-only staffing endpoint provides separate monthly text updates for each division. Blank means no text was submitted."},{"Schedule alert ±3%","Provisional definition","Schedule days divided by planned project duration. Workbook mixes days and percent; definition needs owner confirmation."},{"Defect alert ±5%","Provisional target","DefectTarget defaults to 0; red at >5 percentage points away. Confirm target and whether tolerance means relative percent."},{"Platform / cohorts","Needs business mapping","Division is available; no separate platform master or cohort definition exists. Do not silently rename division as platform."}})
 ```
 
 
@@ -2037,16 +2011,16 @@ powershell.exe -NoProfile -File scripts/test-powerbi-model.ps1 -Port <DesktopEng
 python scripts/preview-powerbi-fixture.py
 ```
 
-The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries; the native test no longer requires PowerShell 7. The validator fetches/caches Microsoft schemas and resolves each visual field against the actual model. Visual JSON editor schema links use the published compatible 2.12.0 schema because the Store build's emitted 2.13.0 schema URL was unavailable during verification; visual content and native formatting are retained. Phone files use the compatible published visualContainerMobileState 2.7.0 schema; Desktop emitted 2.8.0, whose public schema URL returned HTTP 404. Both compatible formats passed Microsoft schema validation and opened in native Desktop. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
+The schema validator requires Windows Power BI Desktop's TOM library, Node, and the application's `client/node_modules` AJV dependency. `scripts/powerbi-runtime.ps1` detects a running Desktop instance, the standard MSI install or the Microsoft Store package. Use Windows PowerShell (`powershell.exe`) for Desktop's .NET Framework TOM/ADOMD libraries. The validator fetches Microsoft schemas and resolves each visual field against the actual model. The saved visual JSON currently references a `visualContainer/2.13.0` schema URL that returns HTTP 404, so full external schema validation is unavailable. The TMDL deserializes through Desktop's TOM library and local visual field/geometry checks pass. The native test needs a local Desktop engine port, creates a uniquely named isolated synthetic database and drops only that database in `finally`; it never refreshes or edits the user's report model. The preview script copies the project to a unique TEMP directory, replaces only the test copy's API/clock expressions and labels it **QA • SYNTHETIC DATA**. The production project remains connected to the real API.
 
 ### Evidence and limits
 
 | Check | Evidence | Scope |
 |---|---|---|
 | Current saved TMDL | Deserialized through installed Desktop TOM | Metadata syntax and saved format; no claim of successful production Desktop refresh |
-| Current report schema/fields | `validation/schema-validation.json`: 244 schema documents, zero errors | PBIR definitions including 116 native phone visual files and model field references |
-| Phone layout geometry | `validation/mobile-layout-validation.json`: 9 pages, 116 phone visuals, no overlaps or width violations | Prior native preview inspected overview, utilization and delivery, plus initial input-readiness rendering. Remaining native checks are pending; the user stopped Desktop automation with Escape. Actual phone app requires publication |
-| Native calculation fixtures | `validation/engine-validation.json`: 72 measures evaluated, 36 cases passed | Isolated synthetic Power Query processing and DAX, including UTC-to-IST conversion, midnight/year rollover, IST calendar/forecast boundaries and the previous Friday |
+| Current report fields | Local inspection: 113 visual definitions; every model field reference resolves | Full Microsoft schema check blocked by HTTP 404 for `visualContainer/2.13.0` |
+| Phone layout geometry | `validation/mobile-layout-validation.json`: 9 pages, 113 phone visuals, no overlaps or width violations | Saved geometry only; native phone preview and actual phone app still need inspection/publication |
+| Previous native calculation fixtures | `validation/engine-validation.json`: former 72-measure model evaluated, 36 cases passed | Historical synthetic evidence; a v2.0.0 engine run remains pending |
 | Layout/refresh update | Compact transparent timestamp text on all 9 desktop/phone pages, 116 visual containers, no overlapping/out-of-bounds visuals | Desktop compact styling rendered on Staffing before the IST edit; final IST native preview/production refresh is pending. Manual Desktop refresh selected |
 | Canonical Desktop refresh on 2026-10-05 local date | Ribbon Data refresh completed; UTC header `2026-10-06 06:25:03 UTC`; 10 daily rows, 72 raw hours, 32 actual/approved hours | Read-only aggregate query and native overview/input-readiness inspection; wrapped descriptions and Unicode symbols verified; project saved |
 | Application regression | 52 tests passed; existing reporting API suite 55 checks passed | Previous implementation verification; in-memory test databases |
@@ -2056,7 +2030,7 @@ The schema validator requires Windows Power BI Desktop's TOM library, Node, and 
 | Isolated live snapshot native processing | 16 tables, 72 measures evaluated, 4 daily entries/32 approved hours; October utilization blank | Authorized API response snapshot processed in an isolated native test model; not the cached canonical Desktop model |
 | Service deployment | No Power BI Service publication/gateway/schedule completed | GitHub application deployment is separate |
 
-The reporting endpoints are live in application v1.15.0. The canonical Desktop report was previously refreshed and saved using existing local credentials; its historical UTC header and aggregate results are recorded in `validation/desktop-refresh-validation.json`. The user confirmed IST for the report on 2026-10-06; this update is validated locally, and a new canonical IST import/native preview is pending. A fresh clone still needs its own credentials and refresh. Final business reconciliation, task mapping, staffing/register records, fiscal assumptions, allocation history and platform/cohort definitions remain substantive input gaps. Raw employee records and local imported cache are not shipped. See [validation evidence](validation/README.md).
+The v2.0.0 staffing contract is validated locally and requires application v1.21.0. The canonical Desktop report was previously refreshed and saved using existing local credentials; its historical UTC header and aggregate results are recorded in `validation/desktop-refresh-validation.json`. A new canonical import/native preview is pending. A fresh clone still needs its own credentials and refresh. Final business reconciliation, task mapping, staffing/register records, fiscal assumptions, allocation history and platform/cohort definitions remain substantive input gaps. Raw employee records and local imported cache are not shipped. See [validation evidence](validation/README.md).
 
 ### Troubleshooting
 
@@ -2067,13 +2041,13 @@ The reporting endpoints are live in application v1.15.0. The canonical Desktop r
 | HTTP 401 / 403 | Invalid/expired credentials or insufficient admin/division permission | Re-enter permitted credentials in Desktop/gateway; verify active account and server scope |
 | Old localhost source or stale imported values | Cached credentials/model or unapplied external edits | Verify ApiBaseUrl, review unsaved edits, reopen/apply external changes and refresh |
 | PackageSession / Pipe is broken | Desktop's current session failed while applying external changes | Preserve the saved source; open the canonical PBIP in a fresh Desktop window and use Home → Refresh → Data. This recovered the verified refresh without changing credentials |
-| Missing stable IDs/weeklyRowKey | Old reporting API | Verify `/api/powerbi/version` is 1.1.0 and update the application before refresh |
+| Missing stable IDs/weeklyRowKey or staffing text | Old reporting API | Verify `/api/powerbi/version` is 2.0.0 and update the application before refresh |
 | Pagination total changed | Source changed between pages | Retry after source is stable; do not accept a partial import |
 | Duplicate daily/deliverable/improvement ID | Broken source grain | Correct the source identity; keep contract checks enabled |
 | Utilization is blank | Unmapped actual hours, unavailable capacity or unsupported allocation filter | Inspect Unmapped Hours and mapping, roster/calendar/vacation; clear unsupported project/task context or provide allocations |
 | FY number differs from monthly | Different workbook numerator and FY-through-Friday window | Reconcile period and exclusions before comparing; exact project-start rate is not available |
 | Quality/FTR/categories blank | Optional registers empty or selected required fields unknown | Supply approved explicit register records; do not infer zero or rework=false |
-| Open Positions/New Joiners blank | Missing selected division/month staffing submission or null count | Enter real staffing submissions, including explicit zero when confirmed |
+| Open Position/New Joiner note blank | No text submitted for the selected division/month | Enter a narrative update, including explicit text such as "No openings" when applicable |
 | Weekly counts differ from daily monthly hours | Counts deduplicated and attributed to Monday | Reconcile weeklyRowKey and Monday month; inspect Detail Conflicts |
 | Forecast incomplete or no future demand | Missing budget/date, Hold/Completed status, exhausted budget or overdue target | Inspect Projects Missing Plan Inputs and Overdue Unscheduled Hours; correct source master fields |
 | Empty single-month trend | Saved October 2026 selection or no records in selected scope | Choose intended reporting month, clear filters for trends and confirm refresh timestamp |
