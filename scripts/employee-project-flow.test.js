@@ -46,6 +46,7 @@ before(async () => {
     .run(role, `${role.replace(' ', '')}@flow.test`, hash, role, division).lastInsertRowid);
   employee = user('employee'); admin = user('admin'); system = user('system admin'); manager = user('manager');
   project = Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id,subdivision_id) VALUES ('FLOW','Flow Project',?,?)").run(division, location).lastInsertRowid);
+  db.prepare("UPDATE projects SET billing_type = 'Billable' WHERE id = ?").run(project);
   task = Number(db.prepare("INSERT INTO tasks(task_category,classification,requires_project) VALUES ('Design','Billable',1)").run().lastInsertRowid);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
@@ -143,7 +144,7 @@ test('description length validation is atomic on every write path and preserves 
     ]) assert.equal((await request(actor, route, body)).status, 400, route);
   }
   assert.equal(db.prepare('SELECT hours FROM timesheets WHERE user_id = ? AND work_date = ?').get(employee, date).hours, 4);
-  assert.equal((await request(employee, '/timesheets', entry({ project_description: null }))).status, 200);
+  assert.equal((await request(employee, '/timesheets', entry({ project_description: null }))).status, 400);
   assert.equal((await request(employee, '/timesheets', entry())).status, 200);
 });
 

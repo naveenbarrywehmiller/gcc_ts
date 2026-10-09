@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/tasks
 router.get('/', authenticate, (req, res) => {
   const { search, classification, active } = req.query;
-  let query = 'SELECT * FROM tasks WHERE 1=1';
+  let query = 'SELECT id, classification, task_category, task_description, active, created_at, updated_at, 1 AS requires_project FROM tasks WHERE 1=1';
   const params = [];
 
   if (search) {
@@ -25,12 +25,12 @@ router.get('/', authenticate, (req, res) => {
 
 // POST /api/tasks
 router.post('/', authenticate, authorize('admin'), (req, res) => {
-  const { classification, task_category, task_description, requires_project } = req.body;
+  const { classification, task_category, task_description } = req.body;
   if (!task_category) return res.status(400).json({ error: 'Task category is required' });
 
   const result = db.prepare(
     'INSERT INTO tasks (classification, task_category, task_description, requires_project) VALUES (?, ?, ?, ?)'
-  ).run(classification || null, task_category.trim(), task_description || null, requires_project !== undefined ? (requires_project ? 1 : 0) : 1);
+  ).run(classification || null, task_category.trim(), task_description || null, 1);
 
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json({ task });
@@ -38,7 +38,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 
 // PUT /api/tasks/:id
 router.put('/:id', authenticate, authorize('admin'), (req, res) => {
-  const { classification, task_category, task_description, active, requires_project } = req.body;
+  const { classification, task_category, task_description, active } = req.body;
   const taskId = req.params.id;
 
   const existing = db.prepare('SELECT id FROM tasks WHERE id = ?').get(taskId);
@@ -51,10 +51,9 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   if (task_category !== undefined) { updateFields.push('task_category = ?'); params.push(task_category.trim()); }
   if (task_description !== undefined) { updateFields.push('task_description = ?'); params.push(task_description); }
   if (active !== undefined) { updateFields.push('active = ?'); params.push(active ? 1 : 0); }
-  if (requires_project !== undefined) { updateFields.push('requires_project = ?'); params.push(requires_project ? 1 : 0); }
 
   if (updateFields.length === 0) return res.status(400).json({ error: 'No fields to update' });
-  updateFields.push('updated_at = CURRENT_TIMESTAMP');
+  updateFields.push('requires_project = 1', 'updated_at = CURRENT_TIMESTAMP');
   params.push(taskId);
 
   db.prepare(`UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?`).run(...params);

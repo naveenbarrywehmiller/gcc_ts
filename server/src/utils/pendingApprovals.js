@@ -1,6 +1,6 @@
 const db = require('../config/db');
 const { projectScope } = require('./divisionScope');
-const { canReviewTimesheet } = require('./timesheetPermissions');
+const { canReceiveTimesheetReview } = require('./timesheetPermissions');
 
 // Count employee-weeks, including older submissions, within the reviewer's scope.
 function getPendingApprovals(actor) {
@@ -17,7 +17,7 @@ function getPendingApprovals(actor) {
     WHERE t.status = 'submitted' AND u.name != '[Deleted User]' AND ${scope.sql}
     GROUP BY t.user_id, t.week_year, t.week_number
     ORDER BY t.week_year, t.week_number, u.name
-  `).all(...scope.params).filter(row => canReviewTimesheet(actor, row.user_id));
+  `).all(...scope.params).filter(row => canReceiveTimesheetReview(actor, row.user_id));
 }
 
 module.exports = { getPendingApprovals };

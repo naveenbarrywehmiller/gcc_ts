@@ -561,7 +561,7 @@ class PowerBiService {
         COALESCE(tk.classification, '') as classification,
         tk.task_category as taskCategory,
         COALESCE(tk.task_description, '') as taskDescription,
-        CASE WHEN tk.requires_project = 1 THEN 1 ELSE 0 END as requiresProject,
+        1 as requiresProject,
         CASE WHEN tk.active = 1 THEN 'Active' ELSE 'Inactive' END as status,
         tk.active as active,
         tk.created_at as createdDate

@@ -60,11 +60,12 @@ router.get('/dashboard', authenticate, (req, res) => {
     const recentSubmissions = pendingWeeks.slice(0, 10).map(row => ({ ...row, name: row.user_name }));
 
     const hoursByDivision = db.prepare(`
-      SELECT u.division, COALESCE(SUM(t.hours), 0) as total_hours
+      SELECT COALESCE(d.name, NULLIF(TRIM(u.division), '')) AS division, COALESCE(SUM(t.hours), 0) as total_hours
       FROM timesheets t
       JOIN users u ON t.user_id = u.id
+      LEFT JOIN divisions d ON d.id = u.division_id
       WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
-      GROUP BY u.division
+      GROUP BY COALESCE(d.name, NULLIF(TRIM(u.division), ''))
       ORDER BY total_hours DESC
     `).all(monthStartDate, monthEndDate);
 

@@ -17,9 +17,9 @@ const commonGuides = [
     description: 'Record hours and send a completed week for review.',
     steps: [
       'Choose a week with the arrows or calendar, then select Add Project to enter project or task details.',
-      'For project work, select a project. Its division and location are set by an administrator in Projects and filled in automatically. Ask your administrator if a project is missing.',
-      'Use Description (optional) for notes about your work, up to 500 characters. The live counter shows how much you have entered, and reviewers can read the description in expanded timesheet details.',
-      'For a Non-Billable task that does not require a project, select the task and add the row; project and weekly detail fields are not needed.',
+      'Select a Project Code for every row. Its division and location are set by an administrator in Projects and filled in automatically. Ask your administrator if a project is missing.',
+      'Enter a required Description of your work, up to 500 characters. The live counter shows how much you have entered, and reviewers can read the description in expanded timesheet details.',
+      'Select Task Name/Number after the project. Tasks follow its Billable or Non-Billable Billing Type. Ask an administrator to classify the project if needed.',
       'Enter hours on the appropriate days and select Save to keep work in progress.',
       'When the week is ready, select Submit Week. If a Recall action is available, use it to correct a submitted week.',
       'If an approved week needs a change and you cannot recall it, contact your administrator.',

@@ -180,7 +180,6 @@ export default function Timesheet() {
             task_category: e.task_category,
             task_desc: e.task_desc,
             classification: e.classification,
-            requires_project: e.requires_project,
             hours: {},
             descriptions: {},
             status: e.status,
@@ -266,14 +265,8 @@ export default function Timesheet() {
     });
   }, [projects, loadedData, user]);
 
-  // Determine if the selected task requires a project
-  const selectedTaskRequiresProject = useMemo(() => {
-    if (!newRowTask) return true; // Default: show project fields
-    const task = tasks.find(t => t.id === newRowTask);
-    return task ? task.requires_project === 1 : true;
-  }, [newRowTask, tasks]);
-  const selectedTaskIsNonBillable = tasks.find(t => t.id === newRowTask)?.classification === 'Non-Billable';
-  const hideProjectlessNonBillableDetails = !!newRowTask && !selectedTaskRequiresProject && selectedTaskIsNonBillable;
+  const selectedProject = projects.find(p => p.id === newRowProject);
+  const modalTaskOptions = tasks.filter(t => selectedProject?.billing_type && t.classification === selectedProject.billing_type);
 
   // Cumulative hours for selected project (client-side calculation)
   const cumulativeHoursForProject = useMemo(() => {
@@ -305,45 +298,38 @@ export default function Timesheet() {
   };
 
   // Add or update a project row
-  const handleAddRow = () => {
+  const handleAddRow = async () => {
     if (newRowProjectDesc.length > descriptionMaxLength) {
       toast.warning(`Description must be at most ${descriptionMaxLength} characters`); return;
     }
-    if (!hideProjectlessNonBillableDetails) {
-      for (const { key, label, type } of fields) {
-        const value = newRowDetails[key];
-        if (type === 'number' && value !== undefined && value !== '' && (!Number.isSafeInteger(Number(value)) || Number(value) < 0)) {
-          toast.warning(`${label} must be a nonnegative whole number`); return;
-        }
+    for (const { key, label, type } of fields) {
+      const value = newRowDetails[key];
+      if (type === 'number' && value !== undefined && value !== '' && (!Number.isSafeInteger(Number(value)) || Number(value) < 0)) {
+        toast.warning(`${label} must be a nonnegative whole number`); return;
       }
     }
+    if (!modalProjectOptions.some(p => p.id === newRowProject)) { toast.warning('Please select a valid Project Code'); return; }
     if (!newRowTask) { toast.warning('Please select a task category'); return; }
-    if (selectedTaskRequiresProject && !selectedTaskIsNonBillable && !newRowProject) {
-      toast.warning('Please select a project category'); return;
-    }
+    if (!newRowProjectDesc.trim()) { toast.warning('Description is required'); return; }
+    if (!modalTaskOptions.some(t => t.id === newRowTask)) { toast.warning('Select a task matching the project Billing Type'); return; }
 
     const exists = rows.some((r, i) => {
       if (editingRowIdx !== null && i === editingRowIdx) return false;
-      if (selectedTaskRequiresProject && newRowProject) {
-        return r.project_id === newRowProject && r.task_id === (newRowTask || null);
-      } else {
-        // Projectless rows are saved by task_id, regardless of optional division.
-        return r.task_id === newRowTask && !r.project_id;
-      }
+      return r.project_id === newRowProject && r.task_id === newRowTask;
     });
     if (exists) { toast.warning('This exact row combination already exists'); return; }
 
-    const project = selectedTaskRequiresProject ? projects.find(p => p.id === newRowProject) : null;
+    const project = selectedProject;
     const task = tasks.find(t => t.id === newRowTask);
     const ownership = departmentOwnerships.find(o => o.id === newRowOwnership);
 
     if (editingRowIdx !== null) {
       const oldRow = rows[editingRowIdx];
-      const isChangedKey = oldRow.project_id !== (selectedTaskRequiresProject ? newRowProject : null) ||
+      const isChangedKey = oldRow.project_id !== newRowProject ||
                            oldRow.task_id !== (newRowTask || null);
 
       if (isChangedKey && Object.keys(oldRow.hours || {}).length > 0) {
-        // Remove old entries from DB by sending hours: 0
+        // Replace the old key atomically so validation failures preserve saved hours.
         const deleteOldEntries = Object.entries(oldRow.hours)
           .filter(([, h]) => h > 0)
           .map(([date]) => ({
@@ -353,7 +339,18 @@ export default function Timesheet() {
             hours: 0
           }));
         if (deleteOldEntries.length > 0) {
-          api.post('/timesheets/batch', { entries: deleteOldEntries }).catch(() => {});
+          const replacementEntries = deleteOldEntries.map(entry => ({
+            ...entry, project_id: newRowProject, task_id: newRowTask,
+            hours: oldRow.hours[entry.work_date], project_description: newRowProjectDesc,
+            description: oldRow.descriptions?.[entry.work_date] || null,
+            ownership_id: newRowOwnership, details: newRowDetails,
+          }));
+          try {
+            await api.post('/timesheets/batch', { entries: [...deleteOldEntries, ...replacementEntries] });
+          } catch (error) {
+            toast.error(error.response?.data?.error || 'Failed to update row');
+            return;
+          }
         }
       }
 
@@ -361,13 +358,13 @@ export default function Timesheet() {
         if (i !== editingRowIdx) return r;
         return {
           ...r,
-          project_id: selectedTaskRequiresProject ? newRowProject : null,
+          project_id: newRowProject,
           task_id: newRowTask || null,
           division_id: project?.division_id || null,
           subdivision_id: project?.subdivision_id || null,
-          project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
-          ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
-          ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
+          project_description: newRowProjectDesc,
+          ownership_id: newRowOwnership || null,
+          ownership_label: ownership?.label || null,
           details: { ...newRowDetails },
           project_status: project?.project_status,
           project_code: project?.project_code || null,
@@ -377,7 +374,6 @@ export default function Timesheet() {
           task_category: task?.task_category || '',
           task_desc: task?.task_description || '',
           classification: task?.classification || '',
-          requires_project: task?.requires_project,
         };
       }));
 
@@ -394,13 +390,13 @@ export default function Timesheet() {
     }
 
     setRows(prev => [...prev, {
-      project_id: selectedTaskRequiresProject ? newRowProject : null,
+      project_id: newRowProject,
       task_id: newRowTask || null,
       division_id: project?.division_id || null,
       subdivision_id: project?.subdivision_id || null,
-      project_description: selectedTaskRequiresProject ? (newRowProjectDesc || null) : null,
-      ownership_id: selectedTaskRequiresProject ? (newRowOwnership || null) : null,
-      ownership_label: selectedTaskRequiresProject ? (ownership?.label || null) : null,
+      project_description: newRowProjectDesc,
+      ownership_id: newRowOwnership || null,
+      ownership_label: ownership?.label || null,
       details: { ...newRowDetails },
       project_status: project?.project_status,
       project_code: project?.project_code || null,
@@ -410,7 +406,6 @@ export default function Timesheet() {
       task_category: task?.task_category || '',
       task_desc: task?.task_description || '',
       classification: task?.classification || '',
-      requires_project: task?.requires_project,
       hours: {},
       descriptions: {},
       status: 'draft',
@@ -480,6 +475,10 @@ export default function Timesheet() {
           // Auto-save: only send cells that changed
           if (isAutoSave && !dirtyKeys.has(cellKey)) return;
           const numHours = parseFloat(hours) || 0;
+          if (numHours > 0 && (!row.project_id || !row.project_description?.trim())) {
+            toast.warning('Each row requires a Project Code and Description. Edit the row before saving.');
+            throw new Error('Project Code and Description are required');
+          }
           if (numHours >= 0) {
             allEntries.push({
               project_id: row.project_id,
@@ -1066,10 +1065,7 @@ export default function Timesheet() {
                                   📝 {row.project_description}
                                 </p>
                               )}
-                              {(row.requires_project !== 0 || row.classification !== 'Non-Billable' ||
-                                Object.values(row.details || {}).some(value => value !== null && value !== undefined && value !== '')) && (
-                                <button type="button" className="text-xs text-brand-600 underline" onClick={() => setViewDetails(row)}>View details</button>
-                              )}
+                              <button type="button" className="text-xs text-brand-600 underline" onClick={() => setViewDetails(row)}>View details</button>
                           {row.task_category && (
                                 <p className="text-[10px] text-surface-400 truncate">
                                   Task: {row.task_category}
@@ -1221,90 +1217,72 @@ export default function Timesheet() {
       >
         <div className="space-y-4">
           <SearchableSelect
-            label="Task Name/Number *"
-            options={tasks.map(t => ({ value: t.id, label: `${t.task_category}${t.classification ? ` (${t.classification})` : ''}` }))}
-            value={newRowTask}
+            label="Project Code *"
+            options={modalProjectOptions.map(p => ({ value: p.id, label: `${p.project_code} — ${p.project_name}` }))}
+            value={newRowProject}
             onChange={value => {
-              setNewRowTask(value);
-              const task = tasks.find(candidate => candidate.id === value);
-              if (task?.requires_project === 0) {
-                setNewRowProject(null); setNewRowProjectDesc('');
-              }
-              if (task?.requires_project === 0 && task.classification === 'Non-Billable') setNewRowDetails({});
+              setNewRowProject(value);
+              const project = projects.find(p => p.id === value);
+              if (!tasks.some(t => t.id === newRowTask && t.classification === project?.billing_type)) setNewRowTask(null);
             }}
+            placeholder="Search and select a project..."
+            id="add-row-project"
+          />
+          <SearchableSelect
+            label="Task Name/Number *"
+            options={modalTaskOptions.map(t => ({ value: t.id, label: `${t.task_category} (${t.classification})` }))}
+            value={newRowTask}
+            onChange={setNewRowTask}
+            disabled={!selectedProject?.billing_type}
             placeholder="Select a task name/number..."
             id="add-row-task-category"
           />
+          {selectedProject && !selectedProject.billing_type && <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">An administrator must select this project's Billing Type before you can add time.</p>}
 
-          {newRowTask && !selectedTaskRequiresProject && (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/30 animate-fade-in">
-              <Info className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-purple-700 dark:text-purple-300">
-                This category does not require a project. Hours will be logged directly under <strong>{tasks.find(t => t.id === newRowTask)?.task_category}</strong>.
+          {newRowProject && cumulativeHoursForProject > 0 && (
+            <div className="flex items-center gap-2.5 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 animate-fade-in">
+              <Clock className="w-4 h-4 text-blue-500 shrink-0" />
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Hours already booked for this project: <strong className="text-blue-800 dark:text-blue-200">{cumulativeHoursForProject.toFixed(1)} hrs</strong>
+                <span className="text-blue-500 dark:text-blue-400 ml-1">(this week)</span>
               </p>
             </div>
           )}
 
-          {selectedTaskRequiresProject && (
-            <>
-              <SearchableSelect
-                label={selectedTaskIsNonBillable ? 'Project Code (optional)' : 'Project Code *'}
-                options={modalProjectOptions.map(p => ({ value: p.id, label: `${p.project_code} — ${p.project_name}` }))}
-                value={newRowProject}
-                onChange={value => {
-                  setNewRowProject(value);
-                  if (!value) { setNewRowProjectDesc(''); setNewRowOwnership(null); }
-                }}
-                placeholder="Search and select a project..."
-                clearable={selectedTaskIsNonBillable}
-                id="add-row-project"
-              />
+          <div>
+            <label htmlFor="add-row-project-desc" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">
+              Description *
+            </label>
+            <textarea
+              className="input resize-y whitespace-pre-wrap [overflow-wrap:anywhere]"
+              rows={3}
+              required
+              maxLength={descriptionMaxLength}
+              aria-describedby="add-row-description-count"
+              aria-invalid={newRowProjectDesc.length > descriptionMaxLength}
+              value={newRowProjectDesc}
+              onChange={(e) => setNewRowProjectDesc(e.target.value)}
+              placeholder="Describe the work for this row..."
+              id="add-row-project-desc"
+            />
+            <p id="add-row-description-count" className="mt-1 text-xs text-surface-500" aria-live="polite" aria-atomic="true">
+              {newRowProjectDesc.length} / {descriptionMaxLength} characters
+            </p>
+          </div>
 
-              {newRowProject && cumulativeHoursForProject > 0 && (
-                <div className="flex items-center gap-2.5 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 animate-fade-in">
-                  <Clock className="w-4 h-4 text-blue-500 shrink-0" />
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Hours already booked for this project: <strong className="text-blue-800 dark:text-blue-200">{cumulativeHoursForProject.toFixed(1)} hrs</strong>
-                    <span className="text-blue-500 dark:text-blue-400 ml-1">(this week)</span>
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="add-row-project-desc" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">
-                  Description (optional)
-                </label>
-                <textarea
-                  className="input resize-y whitespace-pre-wrap [overflow-wrap:anywhere]"
-                  rows={3}
-                  maxLength={descriptionMaxLength}
-                  aria-describedby="add-row-description-count"
-                  aria-invalid={newRowProjectDesc.length > descriptionMaxLength}
-                  value={newRowProjectDesc}
-                  onChange={(e) => setNewRowProjectDesc(e.target.value)}
-                  placeholder="Describe the work for this row..."
-                  id="add-row-project-desc"
-                />
-                <p id="add-row-description-count" className="mt-1 text-xs text-surface-500" aria-live="polite" aria-atomic="true">
-                  {newRowProjectDesc.length} / {descriptionMaxLength} characters
-                </p>
-              </div>
-
-              {departmentOwnerships.length > 0 && (
-                <SearchableSelect
-                  label="Ownership (optional)"
-                  options={departmentOwnerships.map(o => ({ value: o.id, label: o.label }))}
-                  value={newRowOwnership}
-                  onChange={setNewRowOwnership}
-                  placeholder="Select ownership type..."
-                  clearable
-                  id="add-row-ownership"
-                />
-              )}
-            </>
+          {departmentOwnerships.length > 0 && (
+            <SearchableSelect
+              label="Ownership (optional)"
+              options={departmentOwnerships.map(o => ({ value: o.id, label: o.label }))}
+              value={newRowOwnership}
+              onChange={setNewRowOwnership}
+              placeholder="Select ownership type..."
+              clearable
+              id="add-row-ownership"
+            />
           )}
           <ProjectStatus status={projects.find(p => p.id === newRowProject)?.project_status} />
-          {!hideProjectlessNonBillableDetails && <TimesheetDetails value={newRowDetails} onChange={setNewRowDetails} />}
+          <TimesheetDetails value={newRowDetails} onChange={setNewRowDetails} />
         </div>
       </Modal>
 

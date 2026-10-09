@@ -13,7 +13,7 @@ const save = source.slice(source.indexOf('  const handleSave ='), source.indexOf
 const date = '2026-09-28';
 
 function fixture(transport = async () => {}) {
-  let rows = [{ task_id: 1, project_id: null, hours: { [date]: 8 }, status: 'draft' }];
+  let rows = [{ task_id: 1, project_id: 1, project_description: 'Work performed', hours: { [date]: 8 }, status: 'draft' }];
   let timer;
   const requests = [];
   const context = vm.createContext({

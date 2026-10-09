@@ -135,7 +135,7 @@ function seed() {
   });
   seedProjects();
 
-  // Seed tasks (requires_project: 1 = needs project, 0 = standalone like Leave/Meeting)
+  // Every task requires a project; retain the legacy column for compatibility.
   const insertTask = db.prepare(`
     INSERT INTO tasks (classification, task_category, task_description, requires_project)
     VALUES (?, ?, ?, ?)
@@ -148,10 +148,10 @@ function seed() {
     insertTask.run('Billable', 'Testing', 'Writing and running tests', 1);
     insertTask.run('Billable', 'Design', 'UI/UX design work', 1);
     insertTask.run('Billable', 'Documentation', 'Writing technical documentation', 1);
-    insertTask.run('Non-Billable', 'Meeting', 'Team meetings and stand-ups', 0);
-    insertTask.run('Non-Billable', 'Training', 'Learning and training activities', 0);
-    insertTask.run('Non-Billable', 'Admin', 'Administrative tasks', 0);
-    insertTask.run('Non-Billable', 'Leave', 'Paid time off / sick leave', 0);
+    insertTask.run('Non-Billable', 'Meeting', 'Team meetings and stand-ups', 1);
+    insertTask.run('Non-Billable', 'Training', 'Learning and training activities', 1);
+    insertTask.run('Non-Billable', 'Admin', 'Administrative tasks', 1);
+    insertTask.run('Non-Billable', 'Leave', 'Paid time off / sick leave', 1);
   });
   seedTasks();
 

@@ -9,6 +9,7 @@
  */
 
 const config = require('../config/env');
+const { requireAssignedReviewer } = require('../utils/timesheetAssignment');
 
 // ─── Token cache ────────────────────────────────────────────────────────────
 let _tokenCache = null;
@@ -202,6 +203,8 @@ async function updateListItem(listKey, itemId, fields) {
  */
 async function syncTimesheetEntry(entry) {
   if (!config.enableSharepointSync) return;
+  // Bulk sync can replay old submissions after an assignment has been removed.
+  if (entry.status === 'submitted') requireAssignedReviewer(entry.user_id);
 
   const title = `${entry.user_email}_${entry.work_date}_${entry.project_code || entry.task_category || 'NOTASK'}`;
 
@@ -219,6 +222,7 @@ async function syncTimesheetEntry(entry) {
     Billable: !!entry.billable,
     Status: capitalizeStatus(entry.status),
   };
+  if (entry.status === 'submitted') fields.ApproverEmail = requireAssignedReviewer(entry.user_id).email;
 
   // Optional multiline-text column, configured only after it exists in SharePoint.
   const detailsField = process.env.SHAREPOINT_TIMESHEET_DETAILS_FIELD;
@@ -252,11 +256,18 @@ async function syncTimesheetEntry(entry) {
 async function updateTimesheetStatus(employeeEmail, weekNumber, weekYear, status, approverEmail = null, comments = null) {
   if (!config.enableSharepointSync) return;
 
+  let submittingUser;
+  if (status === 'submitted') {
+    submittingUser = require('../config/db').prepare('SELECT id FROM users WHERE email = ?').get(employeeEmail);
+    requireAssignedReviewer(submittingUser?.id ?? null);
+  }
+
   try {
     const filter = `EmployeeEmail eq '${employeeEmail}' and WeekNumber eq ${weekNumber} and WeekYear eq ${weekYear}`;
     const items = await getListItems('timesheets', filter, 'Id', 200);
 
     const fields = { Status: capitalizeStatus(status) };
+    if (status === 'submitted') approverEmail = requireAssignedReviewer(submittingUser.id).email;
     if (approverEmail) fields.ApproverEmail = approverEmail;
     if (comments) fields.ApproverComments = comments;
 

@@ -10,7 +10,7 @@ config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
 const jwt = require('../server/node_modules/jsonwebtoken');
-let server, base, a, b, system, admin, peer, manager, employee, foreign, unassigned, legacy, flexCategory, dedicatedCategory;
+let server, base, a, b, system, admin, peer, manager, employee, foreign, unassigned, legacy, flexCategory, dedicatedCategory, task;
 async function request(actor, route, body, method = 'GET') {
   const headers = { Authorization: `Bearer ${jwt.sign({ userId: actor }, config.jwtSecret)}` };
   const options = { method, headers };
@@ -37,6 +37,9 @@ before(async () => {
   for (const id of [manager, employee, foreign]) db.prepare("INSERT INTO timesheets(user_id,work_date,hours,week_number,week_year,status) VALUES (?,'2026-09-28',8,40,2026,'submitted')").run(id);
   db.prepare("INSERT INTO projects(project_code,project_name,division_id) VALUES ('AUDIT-A','A',?),('AUDIT-B','B',?)").run(a, b);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(manager, system, system);
+  db.exec("UPDATE projects SET billing_type = 'Billable'");
+  task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Billable')").run().lastInsertRowid);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -187,16 +190,16 @@ test('employee division checkboxes control which project divisions they can book
   }, 'PUT')).status, 200);
   assert.deepEqual((await request(employee, `/users/${employee}/divisions`)).body.divisions.map(d => d.id), [a, b]);
   assert.equal((await request(foreign, `/users/${employee}/divisions`)).status, 403);
-  assert.equal((await request(employee, '/timesheets', { project_id: projectB, division_id: b, work_date: '2026-10-01', hours: 1 }, 'POST')).status, 201);
-  assert.equal((await request(employee, '/timesheets', { project_id: projectB, division_id: a, work_date: '2026-10-02', hours: 1 }, 'POST')).status, 400);
+  assert.equal((await request(employee, '/timesheets', { task_id: task, project_description: 'Design work', project_id: projectB, division_id: b, work_date: '2026-10-01', hours: 1 }, 'POST')).status, 201);
+  assert.equal((await request(employee, '/timesheets', { task_id: task, project_description: 'Design work', project_id: projectB, division_id: a, work_date: '2026-10-02', hours: 1 }, 'POST')).status, 400);
   assert.equal((await request(system, `/users/${employee}`, { division_id: a, division_ids: [a] }, 'PUT')).status, 200);
-  assert.equal((await request(employee, '/timesheets', { project_id: projectB, division_id: b, work_date: '2026-10-02', hours: 1 }, 'POST')).status, 403);
-  assert.equal((await request(employee, '/timesheets', { project_id: projectA, division_id: a, work_date: '2026-10-02', hours: 1 }, 'POST')).status, 201);
+  assert.equal((await request(employee, '/timesheets', { task_id: task, project_description: 'Design work', project_id: projectB, division_id: b, work_date: '2026-10-02', hours: 1 }, 'POST')).status, 403);
+  assert.equal((await request(employee, '/timesheets', { task_id: task, project_description: 'Design work', project_id: projectA, division_id: a, work_date: '2026-10-02', hours: 1 }, 'POST')).status, 201);
   assert.equal((await request(employee, '/timesheets/batch', { entries: [
-    { project_id: projectB, division_id: b, work_date: '2026-10-03', hours: 1 },
+    { task_id: task, project_description: 'Design work', project_id: projectB, division_id: b, work_date: '2026-10-03', hours: 1 },
   ] }, 'POST')).status, 403);
   assert.equal((await request(system, `/users/${employee}`, { supporting_category_id: flexCategory, division_id: a, division_ids: [a] }, 'PUT')).status, 200);
-  assert.equal((await request(employee, '/timesheets', { project_id: projectB, division_id: b, work_date: '2026-10-03', hours: 1 }, 'POST')).status, 403);
+  assert.equal((await request(employee, '/timesheets', { task_id: task, project_description: 'Design work', project_id: projectB, division_id: b, work_date: '2026-10-03', hours: 1 }, 'POST')).status, 403);
   const created = await request(system, '/users', {
     name: 'Cross Division', email: 'cross@test.invalid', password: 'password123', role: 'employee',
     division_id: a, division_ids: [a, b], supporting_category_id: dedicatedCategory,

@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import AdminSubdivisions from './Subdivisions';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Search } from 'lucide-react';
 
 export default function SimpleListManager({ endpoint, title, fieldName = 'name', withLocations = false }) {
   const toast = useToast();
@@ -17,6 +17,10 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState('');
   const [expandedDivision, setExpandedDivision] = useState(null);
+  const [search, setSearch] = useState('');
+  const filteredItems = withLocations ? items.filter(item =>
+    [item[fieldName], item.id].some(value => String(value).toLowerCase().includes(search.trim().toLowerCase()))
+  ) : items;
 
   const load = useCallback(() => {
     api.get(endpoint).then(res => {
@@ -48,6 +52,10 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
           <Plus className="w-4 h-4" /> Add {itemLabel}
         </button>
       </div>
+      {withLocations && <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
+        <input type="search" aria-label="Search Divisions" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search Divisions..." className="input pl-9" />
+      </div>}
       <div className="card overflow-hidden">
         <div className="divide-y divide-surface-100 dark:divide-surface-800/50">
           {loading ? (
@@ -57,10 +65,10 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
                 <div className="skeleton h-4 w-20 rounded" />
               </div>
             ))
-          ) : items.length === 0 ? (
-            <div className="text-center py-8 text-sm text-surface-400">No items found</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-8 text-sm text-surface-400">{withLocations ? 'No divisions found' : 'No items found'}</div>
           ) : (
-            items.map(item => (
+            filteredItems.map(item => (
               <div key={item.id}>
                 <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2 hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors group">
                   <span className="min-w-0 text-sm font-medium text-surface-800 dark:text-surface-200 break-words">{item[fieldName]}</span>

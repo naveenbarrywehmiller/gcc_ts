@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
-import { Plus, Search, Edit2, Trash2, Check, X as XIcon } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 
 export default function AdminTasks() {
   const toast = useToast();
@@ -13,7 +13,7 @@ export default function AdminTasks() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ classification: '', task_category: '', task_description: '', requires_project: true });
+  const [form, setForm] = useState({ classification: '', task_category: '', task_description: '' });
 
   const load = useCallback(() => {
     api.get('/tasks').then(res => setTasks(res.data.tasks)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
@@ -26,8 +26,8 @@ export default function AdminTasks() {
     (t.task_description || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const openCreate = () => { setEditing(null); setForm({ classification: '', task_category: '', task_description: '', requires_project: true }); setShowModal(true); };
-  const openEdit = (t) => { setEditing(t); setForm({ classification: t.classification || '', task_category: t.task_category, task_description: t.task_description || '', requires_project: t.requires_project === 1 }); setShowModal(true); };
+  const openCreate = () => { setEditing(null); setForm({ classification: '', task_category: '', task_description: '' }); setShowModal(true); };
+  const openEdit = (t) => { setEditing(t); setForm({ classification: t.classification || '', task_category: t.task_category, task_description: t.task_description || '' }); setShowModal(true); };
 
   const handleSave = async () => {
     try {
@@ -61,7 +61,6 @@ export default function AdminTasks() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Classification</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Category</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Description</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Requires Project</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -75,17 +74,6 @@ export default function AdminTasks() {
                 </td>
                 <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">{t.task_category}</td>
                 <td className="px-4 py-3 text-sm text-surface-500">{t.task_description || '—'}</td>
-                <td className="px-4 py-3 text-center">
-                  {t.requires_project === 1 ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                      <Check className="w-3 h-3" /> Yes
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400">
-                      <XIcon className="w-3 h-3" /> No
-                    </span>
-                  )}
-                </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <button onClick={() => openEdit(t)} className="btn-ghost btn-xs p-1.5"><Edit2 className="w-3.5 h-3.5" /></button>
@@ -117,30 +105,6 @@ export default function AdminTasks() {
           <div>
             <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Description<FieldHelp label="Task Description" /></label>
             <textarea className="input" rows={3} value={form.task_description} onChange={e => setForm({ ...form, task_description: e.target.value })} placeholder="Task description" />
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-surface-50 dark:bg-surface-800/30 border border-surface-200 dark:border-surface-700">
-            <div>
-              <label className="block text-sm font-medium text-surface-700 dark:text-surface-300">Requires Project</label>
-              <p className="text-xs text-surface-400 dark:text-surface-500 mt-0.5">
-                When enabled, users must select a project for this task category. Disable for standalone categories like Leave, Meeting, etc.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setForm({ ...form, requires_project: !form.requires_project })}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
-                form.requires_project ? 'bg-brand-600' : 'bg-surface-300 dark:bg-surface-600'
-              }`}
-              role="switch"
-              aria-checked={form.requires_project}
-              id="requires-project-toggle"
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                  form.requires_project ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
           </div>
         </div>
       </Modal>

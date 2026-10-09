@@ -6,24 +6,24 @@ const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
 const timesheetRepo = require('../repositories/TimesheetRepository');
 
 const sp = require('../services/sharepoint');
-const { canReviewTimesheet } = require('../utils/timesheetPermissions');
+const { canReviewTimesheet, canReceiveTimesheetReview } = require('../utils/timesheetPermissions');
 
 const { serializeDetails } = require('../utils/timesheetDetails');
 const { projectScope, adminDivisionIds } = require('../utils/divisionScope');
-const { descriptionMaxLength } = require('../../../shared/timesheetLimits.json');
+const { validateTimesheetEntry, validateWeekEntries } = require('../utils/timesheetValidation');
+const { requireAssignedReviewer, assignedReviewer } = require('../utils/timesheetAssignment');
 const router = express.Router();
 
 // Normalize once before writes, including self-post and single-entry callers.
 function normalizeDetails(req, res, next) {
   if (req.method === 'POST' && ['/', '/batch', '/post'].includes(req.path)) {
-    const entries = req.body.entries || (req.path === '/' ? [req.body] : []);
+    const entries = req.path === '/' ? [req.body] : req.body.entries;
+    if (entries !== undefined && !Array.isArray(entries)) return res.status(400).json({ error: 'Entries array is required' });
     if (Array.isArray(entries)) for (const entry of entries) {
       if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return res.status(400).json({ error: 'Invalid timesheet entry' });
+      // Batch zero-hour requests remove existing drafts; they never save a row.
+      if (!(req.path === '/batch' && entry.hours === 0)) validateTimesheetEntry(entry);
       entry.details_json = serializeDetails(entry.details);
-      if (entry.project_description != null &&
-          (typeof entry.project_description !== 'string' || entry.project_description.length > descriptionMaxLength)) {
-        return res.status(400).json({ error: `Description must be text of at most ${descriptionMaxLength} characters` });
-      }
       if (entry.project_id) {
         const project = db.prepare('SELECT division_id, subdivision_id FROM projects WHERE id = ?').get(entry.project_id);
         if (!project) return res.status(400).json({ error: 'Project not found' });
@@ -229,7 +229,10 @@ router.get('/summary', authenticate, authorize('admin'), (req, res) => {
 
   query += ' GROUP BY u.id, t.status ORDER BY u.name ASC';
   const summaries = db.prepare(query).all(...params);
-  res.json({ summaries: summaries.map(summary => ({ ...summary, can_review: canReviewTimesheet(req.user, summary.user_id) })), weekRange: { startDate, endDate } });
+  res.json({ summaries: summaries
+    .filter(summary => summary.status !== 'submitted' || canReceiveTimesheetReview(req.user, summary.user_id))
+    .map(summary => ({ ...summary, can_review: summary.status === 'submitted'
+      ? canReceiveTimesheetReview(req.user, summary.user_id) : canReviewTimesheet(req.user, summary.user_id) })), weekRange: { startDate, endDate } });
 });
 
 // POST /api/timesheets - Create or update a single entry (upsert)
@@ -441,56 +444,61 @@ router.delete('/:id', authenticate, (req, res) => {
 });
 
 // POST /api/timesheets/submit - Submit week for approval
-router.post('/submit', authenticate, async (req, res) => {
-  const { week, year } = req.body;
-  const userId = req.user.id;
+router.post('/submit', authenticate, async (req, res, next) => {
+  try {
+    const { week, year } = req.body;
+    const userId = req.user.id;
 
-  if (!week || !year) {
-    return res.status(400).json({ error: 'Week and year are required' });
-  }
+    if (!week || !year) {
+      return res.status(400).json({ error: 'Week and year are required' });
+    }
 
-  const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
+    const { startDate, endDate } = getWeekDateRange(parseInt(week), parseInt(year));
 
-  const drafts = db.prepare(`
-    SELECT COUNT(*) as count, SUM(hours) as total_hours FROM timesheets
-    WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('draft', 'rejected', 'recalled')
-  `).get(userId, startDate, endDate);
+    const drafts = db.prepare(`
+      SELECT COUNT(*) as count, SUM(hours) as total_hours FROM timesheets
+      WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status IN ('draft', 'rejected', 'recalled')
+    `).get(userId, startDate, endDate);
 
-  if (drafts.count === 0) {
-    return res.status(400).json({ error: 'No draft/rejected/recalled entries found for this week' });
-  }
+    if (drafts.count === 0) {
+      return res.status(400).json({ error: 'No draft/rejected/recalled entries found for this week' });
+    }
 
-  // Use repository to handle SQLite + optional SharePoint sync
-  await timesheetRepo.submitWeek(userId, week, year);
+    // Use repository to handle SQLite + optional SharePoint sync
+    const reviewer = requireAssignedReviewer(userId);
+    await timesheetRepo.submitWeek(userId, week, year);
 
-  db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, ip_address) VALUES (?, ?, ?, ?, ?)').run(
-    userId, 'SUBMIT_TIMESHEET', `Submitted timesheet for Week ${week}, ${year}`, 'timesheet', req.ip
-  );
+    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, ip_address) VALUES (?, ?, ?, ?, ?)').run(
+      userId, 'SUBMIT_TIMESHEET', `Submitted timesheet for Week ${week}, ${year}`, 'timesheet', req.ip
+    );
 
-  // Trigger Power Automate Webhook if enabled
-  if (config.enablePowerAutomate && config.powerAutomateWebhookUrl) {
-    const user = db.prepare('SELECT name, email FROM users WHERE id = ?').get(userId);
+    // Trigger Power Automate Webhook if enabled
+    if (config.enablePowerAutomate && config.powerAutomateWebhookUrl) {
+      const user = db.prepare('SELECT name, email FROM users WHERE id = ?').get(userId);
 
-    // Fire and forget
-    fetch(config.powerAutomateWebhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        employeeEmail: user.email,
-        employeeName: user.name,
-        weekNumber: parseInt(week),
-        weekYear: parseInt(year),
-        weekStart: startDate,
-        weekEnd: endDate,
-        totalHours: drafts.total_hours,
-        timesheetUrl: `${req.protocol}://${req.get('host')}/timesheet`,
-        callbackUrl: `${req.protocol}://${req.get('host')}/api/timesheets/pa-callback`,
-        callbackSecret: config.powerAutomateCallbackSecret
-      })
-    }).catch(err => console.error('[Power Automate] Webhook failed:', err.message));
-  }
+      // Fire and forget
+      fetch(config.powerAutomateWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employeeEmail: user.email,
+          employeeName: user.name,
+          approverEmail: reviewer.email,
+          approverId: reviewer.id,
+          weekNumber: parseInt(week),
+          weekYear: parseInt(year),
+          weekStart: startDate,
+          weekEnd: endDate,
+          totalHours: drafts.total_hours,
+          timesheetUrl: `${req.protocol}://${req.get('host')}/timesheet`,
+          callbackUrl: `${req.protocol}://${req.get('host')}/api/timesheets/pa-callback`,
+          callbackSecret: config.powerAutomateCallbackSecret
+        })
+      }).catch(err => console.error('[Power Automate] Webhook failed:', err.message));
+    }
 
-  res.json({ message: 'Timesheet submitted for approval', count: drafts.count });
+    res.json({ message: 'Timesheet submitted for approval', count: drafts.count });
+  } catch (error) { next(error); }
 });
 
 // POST /api/timesheets/post - Admin: Self-post timesheet directly (if no other admin assigned)
@@ -564,6 +572,7 @@ router.post('/post', authenticate, authorize('admin'), normalizeDetails, (req, r
     }
 
     // Also approve any existing draft, submitted, rejected, or recalled entries for this week in DB
+    validateWeekEntries(userId, startDate, endDate, ['draft', 'submitted', 'rejected', 'recalled']);
     db.prepare(`
       UPDATE timesheets
       SET status = 'approved', admin_comment = ?, updated_at = CURRENT_TIMESTAMP
@@ -610,7 +619,7 @@ router.post('/approve', authenticate, authorize('admin', 'manager'), (req, res) 
   }
 
   const targetUserId = Number(user_id);
-  if (!Number.isInteger(targetUserId) || !canReviewTimesheet(req.user, targetUserId)) {
+  if (!Number.isInteger(targetUserId) || !canReceiveTimesheetReview(req.user, targetUserId)) {
     return res.status(403).json({ error: 'Not authorized to review this user' });
   }
 
@@ -652,7 +661,7 @@ router.post('/reject', authenticate, authorize('admin', 'manager'), (req, res) =
     return res.status(400).json({ error: 'User ID, week, and year are required' });
   }
 
-  if (!Number.isInteger(Number(user_id)) || !canReviewTimesheet(req.user, Number(user_id))) {
+  if (!Number.isInteger(Number(user_id)) || !canReceiveTimesheetReview(req.user, Number(user_id))) {
     return res.status(403).json({ error: 'Not authorized to review this user' });
   }
 
@@ -733,6 +742,10 @@ router.patch('/pa-callback', async (req, res) => {
 
   const user = db.prepare('SELECT id FROM users WHERE email = ?').get(employeeEmail);
   if (!user) return res.status(404).json({ error: 'User not found' });
+  const reviewer = assignedReviewer(user.id);
+  if (!reviewer || typeof approverEmail !== 'string' || reviewer.email.toLowerCase() !== approverEmail.toLowerCase()) {
+    return res.status(403).json({ error: 'Approval requires the active assigned reviewer' });
+  }
 
   const { startDate, endDate } = getWeekDateRange(parseInt(weekNumber), parseInt(weekYear));
 

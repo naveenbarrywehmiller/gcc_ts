@@ -8,6 +8,8 @@
 const db = require('../config/db');
 const sp = require('../services/sharepoint');
 const config = require('../config/env');
+const { requireAssignedReviewer } = require('../utils/timesheetAssignment');
+const { validateTimesheetEntry, validateWeekEntries } = require('../utils/timesheetValidation');
 
 class TimesheetRepository {
   /**
@@ -38,6 +40,8 @@ class TimesheetRepository {
    * Handles SQLite upsert and optional SharePoint dual-write.
    */
   async upsertEntry(userId, entry) {
+    validateTimesheetEntry(entry);
+    if (entry.status === 'submitted') requireAssignedReviewer(userId);
     const { id, project_id, task_id, work_date, hours, description, week_number, week_year, status, division_id, subdivision_id, project_description, ownership_id, billable } = entry;
 
     let timesheetId = id;
@@ -102,18 +106,23 @@ class TimesheetRepository {
     const { getWeekDateRange } = require('../utils/dateUtils');
     const { startDate, endDate } = getWeekDateRange(week, year);
 
-    const result = db.prepare(`
+    const { result, reviewer } = db.transaction(() => {
+      const reviewer = requireAssignedReviewer(userId);
+      validateWeekEntries(userId, startDate, endDate, ['draft', 'recalled', 'rejected']);
+      const result = db.prepare(`
       UPDATE timesheets 
       SET status = 'submitted', updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ? AND work_date BETWEEN ? AND ?
       AND status IN ('draft', 'recalled', 'rejected')
     `).run(userId, startDate, endDate);
+      return { result, reviewer };
+    })();
 
     if (result.changes === 0) return 0;
 
     if (config.enableSharepointSync) {
       const user = db.prepare('SELECT email FROM users WHERE id = ?').get(userId);
-      sp.updateTimesheetStatus(user.email, week, year, 'submitted').catch(err => {
+      sp.updateTimesheetStatus(user.email, week, year, 'submitted', reviewer.email).catch(err => {
         console.error(`[SharePoint] Failed to sync submit status for ${user.email} W${week}/${year}:`, err.message);
       });
     }

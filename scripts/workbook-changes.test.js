@@ -24,6 +24,7 @@ async function request(user, route, body, method = 'POST') {
   return { status: response.status, body: await response.json() };
 }
 function csv(text, division = divA) {
+  text = text.split('\n').map((line, i) => line + (i === 0 ? ',Billing Type' : ',Billable')).join('\n');
   const form = new FormData(); form.append('file', new Blob([text]), 'projects.csv');
   if (division) form.append('division_id', division);
   return form;
@@ -37,6 +38,7 @@ before(async () => {
   task = Number(db.prepare('INSERT INTO tasks(task_category,requires_project) VALUES (?,0)').run('Task').lastInsertRowid);
   projectB = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)').run('B-SECRET','Other Division',divB).lastInsertRowid);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
+  db.exec("UPDATE projects SET billing_type = 'Billable'; UPDATE tasks SET classification = 'Billable'");
   server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); base = `http://127.0.0.1:${server.address().port}/api`;
 });
 after(() => { server?.close(); db.close(); fs.rmSync(temp, { recursive: true }); });
@@ -74,13 +76,13 @@ test('admins read and export all projects but only modify their own divisions', 
   assert.equal(list.body.total, 1);
   assert.equal(list.body.projects[0].can_edit, false);
   assert.equal((await request(system, `/projects/${projectB}`, undefined, 'GET')).status, 200);
-  const result = await request(admin, '/projects', { project_code: 'A-ONE', project_name: 'Own', budget_hours: 0, project_status: 'Hold' });
+  const result = await request(admin, '/projects', { billing_type: 'Billable', project_code: 'A-ONE', project_name: 'Own', budget_hours: 0, project_status: 'Hold' });
   assert.equal(result.status, 201); assert.equal(result.body.project.division_id, divA); assert.equal(result.body.project.budget_hours, 0);
   assert.equal((await request(admin, `/projects/${result.body.project.id}`, { project_name: 'Updated own project' }, 'PUT')).status, 200);
   assert.equal((await request(admin, `/projects/${result.body.project.id}`, undefined, 'GET')).body.project.can_edit, true);
-  assert.equal((await request(admin, '/projects', { project_code: 'FORBIDDEN', project_name: 'Other', division_id: divB })).status, 403);
+  assert.equal((await request(admin, '/projects', { billing_type: 'Billable', project_code: 'FORBIDDEN', project_name: 'Other', division_id: divB })).status, 403);
   assert.equal((await request(admin, `/projects/${result.body.project.id}`, { division_id: divB }, 'PUT')).status, 403);
-  assert.equal((await request(employee, '/projects', { project_code:'NO', project_name:'No' })).status, 403);
+  assert.equal((await request(employee, '/projects', { billing_type: 'Billable', project_code:'NO', project_name:'No' })).status, 403);
   const exported = await request(admin, '/projects/export', undefined, 'GET');
   const book = new ExcelJS.Workbook(); await book.xlsx.load(exported.bytes);
   assert.equal(book.worksheets[0].rowCount, 3); assert.equal(book.worksheets[0].getCell('A2').value, 'A-ONE');
@@ -108,6 +110,7 @@ test('template headers round-trip with native Excel dates and project pagination
   const book = new ExcelJS.Workbook(); await book.xlsx.load(result.bytes);
   const sheet = book.worksheets[0]; assert.equal(sheet.rowCount, 1); assert.equal(sheet.getCell('N1').value, 'Status');
   sheet.addRow(['EXCEL', 'Excel Project', 'AX001', '', '', '', '', '', new Date('2026-09-28T00:00:00Z')]);
+  sheet.getCell('T2').value = 'Billable';
   sheet.getCell('I2').numFmt = 'yyyy-mm-dd';
   const form = new FormData(); form.append('file', new Blob([await book.xlsx.writeBuffer()]), 'native.xlsx');
   assert.equal((await request(admin, '/import/projects', form)).status, 200);
@@ -116,7 +119,7 @@ test('template headers round-trip with native Excel dates and project pagination
   assert.equal(page.body.projects.length, 1); assert.equal(page.body.total, 4);
 });
 test('optional details survive batch, legacy saves and self-post; invalid values roll back', async () => {
-  const entry = { task_id: task, work_date: '2026-09-28', hours: 8, details: { fundamental_error_count: 0, review_by: 'Reviewer', review_date: '2026-09-29', remarks: 'Keep me' } };
+  const entry = { project_id: db.prepare("SELECT id FROM projects WHERE project_code = 'A-ONE'").get().id, project_description: 'Work performed', task_id: task, work_date: '2026-09-28', hours: 8, details: { fundamental_error_count: 0, review_by: 'Reviewer', review_date: '2026-09-29', remarks: 'Keep me' } };
   assert.equal((await request(employee, '/timesheets/batch', { entries: [entry] })).status, 200);
   assert.equal((await request(employee, '/timesheets/batch', { entries: [{ ...entry, hours: 9, details: undefined }] })).status, 200);
   let saved = (await request(employee, '/timesheets?week=40&year=2026', undefined, 'GET')).body.entries[0];
@@ -155,7 +158,7 @@ test('error logs restrict access, remove sensitive messages, rotate and retain n
 
 
 test('weekly export deduplicates daily details and Power BI respects admin project scope', async () => {
-  const entry = { task_id: task, work_date: '2026-09-29', hours: 8, details: { fundamental_error_count: 0, review_by: 'Reviewer', review_date: '2026-09-29', remarks: 'Keep me' } };
+  const entry = { project_id: db.prepare("SELECT id FROM projects WHERE project_code = 'A-ONE'").get().id, project_description: 'Work performed', task_id: task, work_date: '2026-09-29', hours: 8, details: { fundamental_error_count: 0, review_by: 'Reviewer', review_date: '2026-09-29', remarks: 'Keep me' } };
   assert.equal((await request(employee, '/timesheets/batch', { entries: [entry] })).status, 200);
   const result = await request(system, '/reports/export?week=40&year=2026&format=excel', undefined, 'GET');
   assert.equal(result.status, 200);
@@ -174,7 +177,7 @@ test('Power Automate callback still authenticates with its callback secret', asy
   config.powerAutomateCallbackSecret = 'test-callback-secret';
   const result = await fetch(base + '/timesheets/pa-callback', {
     method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-callback-secret': 'test-callback-secret' },
-    body: JSON.stringify({ status: 'approved', employeeEmail: 'Employee@test.invalid', weekNumber: 40, weekYear: 2026 })
+    body: JSON.stringify({ status: 'approved', employeeEmail: 'Employee@test.invalid', approverEmail: 'Admin@test.invalid', weekNumber: 40, weekYear: 2026 })
   });
   assert.equal(result.status, 200);
 });
@@ -185,8 +188,8 @@ test('Excel project import validates active sidebar values with row errors and n
   async function upload(rows) {
     const book = new ExcelJS.Workbook();
     const sheet = book.addWorksheet('Projects');
-    sheet.addRow(['Project Code', 'Project Name', 'Work Type', 'Dedicated/Flex']);
-    rows.forEach(row => sheet.addRow(row));
+    sheet.addRow(['Project Code', 'Project Name', 'Work Type', 'Dedicated/Flex', 'Billing Type']);
+    rows.forEach(row => sheet.addRow([...row, 'Billable']));
     const form = new FormData();
     form.append('file', new Blob([await book.xlsx.writeBuffer()]), 'projects.xlsx');
     return request(admin, '/import/projects', form);
@@ -242,7 +245,7 @@ test('project options use profile division as fallback and distinguish view filt
   }
   const options = (await request(profileAdmin, '/projects/options', undefined, 'GET')).body;
   assert.deepEqual(options.division_update_divisions.map(d => d.id), [divA], 'monthly updates use the same profile fallback');
-  const created = await request(profileAdmin, '/projects', { project_code: 'PROFILE', project_name: 'Profile division', subdivision_id: locationA });
+  const created = await request(profileAdmin, '/projects', { billing_type: 'Billable', project_code: 'PROFILE', project_name: 'Profile division', subdivision_id: locationA });
   assert.equal(created.status, 201);
   assert.equal(created.body.project.division_id, divA);
   assert.equal(created.body.project.subdivision_id, locationA);
@@ -260,7 +263,7 @@ test('project options use profile division as fallback and distinguish view filt
   assert.deepEqual(noOptions.subdivisions, []);
   assert.equal(noOptions.filter_divisions.length, 2);
   assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, undefined, 'GET')).body.project.can_edit, false);
-  assert.equal((await request(unassignedAdmin, '/projects', { project_code: 'UNASSIGNED', project_name: 'No access', division_id: divA })).status, 403);
+  assert.equal((await request(unassignedAdmin, '/projects', { billing_type: 'Billable', project_code: 'UNASSIGNED', project_name: 'No access', division_id: divA })).status, 403);
   assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, { project_name: 'No access' }, 'PUT')).status, 403);
   assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, undefined, 'DELETE')).status, 403);
 

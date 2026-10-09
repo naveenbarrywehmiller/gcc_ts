@@ -14,7 +14,7 @@ const jwt = require('../server/node_modules/jsonwebtoken');
 const bcrypt = require('../server/node_modules/bcryptjs');
 const { bootstrapAdmin } = require('../server/src/config/bootstrapAdmin');
 const sp = require('../server/src/services/sharepoint');
-let server, base, admin, employee, manager, outsider, systemAdmin, taskA, taskB;
+let server, base, admin, employee, manager, outsider, systemAdmin, taskA, taskB, project;
 const date = '2026-09-28';
 const week = { week: 40, year: 2026 };
 
@@ -47,6 +47,9 @@ before(async () => {
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(outsider, systemAdmin, systemAdmin);
   taskA = Number(db.prepare('INSERT INTO tasks(task_category, requires_project) VALUES (?,0)').run('Task A').lastInsertRowid);
   taskB = Number(db.prepare('INSERT INTO tasks(task_category, requires_project) VALUES (?,0)').run('Task B').lastInsertRowid);
+  db.exec("UPDATE tasks SET classification = 'Billable'");
+  project = Number(db.prepare("INSERT INTO projects(project_code,project_name,billing_type,division_id) VALUES ('TEST','Test','Billable',?)").run(a).lastInsertRowid);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(manager, admin, admin);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -76,7 +79,7 @@ test('admin can change their own role but cannot create system admins, and remov
 });
 
 test('batch totals are atomic, include existing hours, and permit balanced redistribution', async () => {
-  const entries = hours => hours.map((h, i) => ({ task_id: i ? taskB : taskA, work_date: date, hours: h }));
+  const entries = hours => hours.map((h, i) => ({ project_id: project, project_description: 'Work performed', task_id: i ? taskB : taskA, work_date: date, hours: h }));
   assert.equal((await request(employee, '/timesheets/batch', { entries: entries([20, 20]) })).status, 400);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM timesheets WHERE user_id = ?').get(employee).n, 0);
   assert.equal((await request(employee, '/timesheets/batch', { entries: entries([8, 16]) })).status, 200);
@@ -101,9 +104,10 @@ test('recalled project timesheet saves separate task rows and can be resubmitted
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(userId, admin, admin);
   const projectId = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)')
     .run('RECALL-TEST', 'Recall project', divisionId).lastInsertRowid);
+  db.prepare("UPDATE projects SET billing_type = 'Billable' WHERE id = ?").run(projectId);
   const entries = (first, second) => [
-    { project_id: projectId, task_id: taskA, work_date: date, hours: first },
-    { project_id: projectId, task_id: taskB, work_date: date, hours: second },
+    { project_description: 'Work performed', project_id: projectId, task_id: taskA, work_date: date, hours: first },
+    { project_description: 'Work performed', project_id: projectId, task_id: taskB, work_date: date, hours: second },
   ];
 
   assert.equal((await request(userId, '/timesheets/batch', { entries: entries(2, 6) })).status, 200);
@@ -126,7 +130,7 @@ test('recalled project timesheet saves separate task rows and can be resubmitted
 
 test('managers can review their division but cannot review themselves or other divisions', async () => {
   for (const user of [employee, outsider, manager]) {
-    await request(user, '/timesheets/batch', { entries: [{ task_id: taskB, work_date: date, hours: 8 }] });
+    await request(user, '/timesheets/batch', { entries: [{ project_id: project, project_description: 'Work performed', task_id: taskB, work_date: date, hours: 8 }] });
     assert.equal((await request(user, '/timesheets/submit', week)).status, 200);
   }
   assert.equal((await request(manager, '/timesheets/approve', { ...week, user_id: employee })).status, 200);
@@ -146,10 +150,10 @@ test('SharePoint self-post completes and queues status sync; invalid totals roll
   sp.updateTimesheetStatus = async (...args) => { call = args; };
   config.enableSharepointSync = true;
   try {
-    const result = await request(admin, '/timesheets/post', { ...week, entries: [{ task_id: taskA, work_date: date, hours: 8 }] });
+    const result = await request(admin, '/timesheets/post', { ...week, entries: [{ project_id: project, project_description: 'Work performed', task_id: taskA, work_date: date, hours: 8 }] });
     assert.equal(result.status, 200);
     assert.equal(call[3], 'approved');
-    assert.equal((await request(admin, '/timesheets/post', { ...week, entries: [{ task_id: taskB, work_date: date, hours: 20 }] })).status, 400);
+    assert.equal((await request(admin, '/timesheets/post', { ...week, entries: [{ project_id: project, project_description: 'Work performed', task_id: taskB, work_date: date, hours: 20 }] })).status, 400);
     assert.equal(db.prepare('SELECT SUM(hours) AS n FROM timesheets WHERE user_id = ?').get(admin).n, 8);
   } finally { config.enableSharepointSync = false; sp.updateTimesheetStatus = original; }
 });

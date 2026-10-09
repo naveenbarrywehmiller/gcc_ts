@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { canManageDivision } = require('./divisionScope');
+const { assignedReviewer } = require('./timesheetAssignment');
 
 function canReviewTimesheet(actor, targetUserId) {
   if (actor.role === 'system admin') return true;
@@ -14,4 +15,9 @@ function canReviewTimesheet(actor, targetUserId) {
   return canManageDivision(actor, target.division_id);
 }
 
-module.exports = { canReviewTimesheet };
+function canReceiveTimesheetReview(actor, targetUserId) {
+  if (!assignedReviewer(targetUserId)) return false;
+  return canReviewTimesheet(actor, targetUserId);
+}
+
+module.exports = { canReviewTimesheet, canReceiveTimesheetReview };

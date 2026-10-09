@@ -48,6 +48,7 @@ before(async () => {
   entry(employee, today, 'rejected');
   entry(employee, today, 'draft');
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
+  db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(manager, system, system);
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -61,7 +62,7 @@ test('pending approvals count employee-weeks across years and respect admin scop
   assert.equal(dashboard.recentSubmissions[0].week_year, 2020);
   assert.equal(dashboard.recentSubmissions[0].total_hours, 16);
   assert(!dashboard.recentSubmissions.some(row => row.user_id === outsider));
-  assert.equal((await get(system)).stats.pendingApprovals, 4);
+  assert.equal((await get(system)).stats.pendingApprovals, 3);
   assert.equal((await get(unassigned)).stats.pendingApprovals, 0);
 });
 

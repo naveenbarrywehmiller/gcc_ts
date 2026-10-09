@@ -123,6 +123,14 @@ export default function AdminProjects() {
         <div><label className="block text-xs mb-1" htmlFor="project-division">Division<FieldHelp label="Division" /></label><select id="project-division" className="input" value={form.division_id || ''} onChange={e => setForm({ ...form, division_id: e.target.value, division: '', subdivision_id: '' })}><option value="">Select division</option>{form.division_id && !divisions.some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{form.division_name || form.division}</option>}{divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
         <div><label className="block text-xs mb-1" htmlFor="project-location">Location<FieldHelp label="Location" /></label><select id="project-location" className="input" disabled={!form.division_id} value={form.subdivision_id || ''} onChange={e => setForm({ ...form, subdivision_id: e.target.value })}><option value="">No location</option>{form.subdivision_id && !locations.some(s => s.id === Number(form.subdivision_id)) && <option value={form.subdivision_id}>{form.subdivision_name}</option>}{locations.filter(s => s.division_id === Number(form.division_id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         {fields.map(([key, label, type = 'text']) => <div key={key}><label htmlFor={`project-${key}`} className="block text-xs font-medium mb-1">{label}{['project_code', 'project_name'].includes(key) ? ' *' : ''}<FieldHelp label={label} /></label><input id={`project-${key}`} className="input" type={type} min={type === 'number' ? 0 : undefined} step={type === 'number' ? 'any' : undefined} maxLength={1000} required={['project_code', 'project_name'].includes(key)} value={form[key] ?? ''} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}
+        <div>
+          <label htmlFor="project-billing-type" className="block text-xs font-medium mb-1">Billing Type *</label>
+          <select id="project-billing-type" className="input" required value={form.billing_type || ''} onChange={e => setForm({ ...form, billing_type: e.target.value })}>
+            <option value="">Select Billing Type</option>
+            <option value="Billable">Billable</option>
+            <option value="Non-Billable">Non-Billable</option>
+          </select>
+        </div>
         {dropdowns.map(([key, label, items]) => <div key={key}>
           <label htmlFor={`project-${key}`} className="block text-xs font-medium mb-1">{label}<FieldHelp label={label} /></label>
           <select id={`project-${key}`} className="input" disabled={options.isLoading || options.isError} value={form[key] || ''} onChange={e => setForm({ ...form, [key]: e.target.value })}>
