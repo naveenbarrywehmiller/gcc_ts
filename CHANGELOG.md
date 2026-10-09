@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.20.0...v1.21.0) (2026-10-09)
+
+
+### Features
+
+* replace staffing counts with narrative updates ([db56e8a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/db56e8a592bc167de2a6181ac695956add43a96f))
+
 ## [1.20.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.19.2...v1.20.0) (2026-10-09)
 
 
