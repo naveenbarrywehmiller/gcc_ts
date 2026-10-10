@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.24.0...v1.24.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* show holidays and highlight selected vacation dates ([02cf9c6](https://github.com/naveenbarrywehmiller/gcc_ts/commit/02cf9c67a6f47481d29774f72c3590aefb868df8))
+
 ## [1.24.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.23.0...v1.24.0) (2026-10-10)
 
 
