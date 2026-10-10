@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.25.0...v1.25.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* use packaged client field definitions for report builds ([985bc31](https://github.com/naveenbarrywehmiller/gcc_ts/commit/985bc31fd11ffa7f9629957787282059f66a2b81))
+
 ## [1.25.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.24.1...v1.25.0) (2026-10-10)
 
 
