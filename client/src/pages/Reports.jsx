@@ -26,7 +26,7 @@ import {
   displayRange,
   reportParams,
 } from '../utils/reportDates';
-import detailFields from '../../../server/src/config/timesheetFields.json';
+import detailFields from '../data/timesheetFields.json';
 
 const tabs = [
   { id: 'weekly', label: 'Weekly Summary', icon: Calendar },
