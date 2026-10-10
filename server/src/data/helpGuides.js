@@ -57,7 +57,10 @@ const managerGuides = [
   { id: 'manager-reports', title: 'Team vacation and reports', path: '/reports',
     description: 'Review your division’s plans and recorded work.', steps: [
       'Use Team view in Planned Vacation to read saved plans in your assigned division. Edit your own dates in My view.',
-      'Open Reports to filter and export records within your assigned division.',
+      'Open Reports to choose a date range and review Weekly Summary, Utilization, Project Hours, Missing Hours or Trends within your assigned division.',
+      'Use More filters for customer, task, location and billing. Select hours or View entries to inspect the underlying records.',
+      'Capacity uses active users, eight-hour weekdays and company holidays through today. Planned vacation is not recorded leave. Clear activity filters for missing-hours checks.',
+      'Excel and PDF download the selected report view with its filters and totals.',
     ] },
   {
     id: 'team-approvals',
@@ -116,8 +119,11 @@ const adminGuides = [
     path: '/reports',
     description: 'Review recorded work and administrative activity.',
     steps: [
-      'Open Reports, choose a date range, and apply the available filters.',
-      'Use the Excel or PDF export buttons when you need a copy of the current report.',
+      'Open Reports and choose a date range of up to 366 days. Weekly Summary, Utilization, Project Hours, Missing Hours and Trends use the same dates and filters.',
+      'Use More filters for customer, task, location and billing. Select hours or View entries to inspect daily records, descriptions and weekly details.',
+      'Coverage includes all logged hours; billable utilization includes billable hours only. Targets use active users, eight-hour weekdays and company holidays through today.',
+      'Missing Hours flags daily shortfalls and unsubmitted completed weeks. Planned vacation is not recorded leave. Full employee records are required for capacity checks.',
+      'Excel or PDF downloads the selected report view with its filters and totals. Excel also includes underlying entries and deduplicated weekly details.',
       'Use Audit Log to review recorded administrative changes.',
     ],
   },

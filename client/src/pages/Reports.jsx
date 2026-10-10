@@ -1,550 +1,1234 @@
-import { useAuth } from '../contexts/auth';
-import { useState, useEffect, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import api from '../services/api';
+import {
+  BarChart3,
+  Download,
+  FileText,
+  Calendar,
+  Users,
+  FolderKanban,
+  AlertCircle,
+  TrendingUp,
+  ChevronDown,
+  ChevronRight,
+  Filter,
+  RotateCcw,
+} from 'lucide-react';
+import { useAuth } from '../contexts/auth';
 import { useToast } from '../contexts/toast';
+import api from '../services/api';
+import Modal from '../components/ui/Modal';
 import { LoadingSkeleton } from '../components/ui/Skeleton';
 import {
-  BarChart3, Download, ChevronDown, ChevronRight, Users, FolderKanban,
-  Calendar, Filter, FileText, Clock
-} from 'lucide-react';
+  presetDates,
+  rangeError,
+  displayDate,
+  displayRange,
+  reportParams,
+} from '../utils/reportDates';
+import detailFields from '../../../server/src/config/timesheetFields.json';
 
-// ── Date helpers ────────────────────────────────────────────────────────────
+const tabs = [
+  { id: 'weekly', label: 'Weekly Summary', icon: Calendar },
+  { id: 'utilization', label: 'Utilization', icon: Users },
+  { id: 'projects', label: 'Project Hours', icon: FolderKanban },
+  { id: 'missing', label: 'Missing Hours', icon: AlertCircle },
+  { id: 'trends', label: 'Trends', icon: TrendingUp },
+];
+const presets = [
+  ['this-week', 'This Week'],
+  ['this-month', 'This Month'],
+  ['last-month', 'Last Month'],
+  ['last-3-months', 'Last 3 Months'],
+  ['custom', 'Custom'],
+];
+const emptyFilters = {
+  division_id: '',
+  user_id: '',
+  project_id: '',
+  customer: '',
+  task_id: '',
+  location_id: '',
+  status: '',
+  billing_type: '',
+};
+const hours = (value) => `${Number(value || 0).toFixed(1)}h`;
+const pct = (value) => (value === null || value === undefined ? '—' : `${value}%`);
+const th =
+  'px-4 py-3 text-left text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase whitespace-nowrap';
+const td = 'px-4 py-3 text-sm align-top';
+const linkStyle =
+  'min-h-[44px] inline-flex items-center text-left text-brand-600 dark:text-brand-400 font-medium hover:underline';
 
-function toISO(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function ErrorState({ message, retry }) {
+  return (
+    <div className="card p-5 space-y-3" role="alert">
+      <p className="text-sm text-red-700 dark:text-red-300">{message}</p>
+      {retry && (
+        <button className="btn-secondary btn-sm" onClick={retry}>
+          Retry
+        </button>
+      )}
+    </div>
+  );
 }
-
-function getMonday(d) {
-  const day = d.getDay() || 7; // Sunday = 7
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - day + 1);
-  return monday;
+function Empty({ children = 'No records match these filters.' }) {
+  return (
+    <div className="card p-6 text-center text-sm text-surface-500 dark:text-surface-400">
+      {children}
+    </div>
+  );
 }
-
-function getPresetDates(preset) {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let start, end;
-
-  switch (preset) {
-    case 'this-week': {
-      const mon = getMonday(today);
-      start = mon;
-      end = new Date(mon);
-      end.setDate(mon.getDate() + 6);
-      break;
-    }
-    case 'this-month':
-      start = new Date(today.getFullYear(), today.getMonth(), 1);
-      end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      break;
-    case 'last-month':
-      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      end = new Date(today.getFullYear(), today.getMonth(), 0);
-      break;
-    case 'last-3-months':
-      start = new Date(today.getFullYear(), today.getMonth() - 3, 1);
-      end = new Date(today.getFullYear(), today.getMonth(), 0);
-      break;
-    default:
-      return null;
-  }
-  return { startDate: toISO(start), endDate: toISO(end) };
+function ReportTable({ headers, children, label }) {
+  return (
+    <div className="table-container" role="region" aria-label={label} tabIndex={0}>
+      <table className="w-full bg-white dark:bg-surface-900">
+        <thead>
+          <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-800">
+            {headers.map((h, i) => (
+              <th scope="col" className={th} key={i}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-surface-100 dark:divide-surface-800">{children}</tbody>
+      </table>
+    </div>
+  );
 }
-
-function formatDateRange(startDate, endDate) {
-  if (!startDate || !endDate) return '';
-  const s = new Date(startDate);
-  const e = new Date(endDate);
-  const opts = { month: 'short', day: 'numeric', year: 'numeric' };
-  return `${s.toLocaleDateString('en-US', opts)} — ${e.toLocaleDateString('en-US', opts)}`;
+function Metric({ label, value, children, onClick }) {
+  const content = (
+    <>
+      <p className="text-xs font-medium text-surface-500 dark:text-surface-400">{label}</p>
+      <p className="mt-2 text-2xl font-bold break-words text-surface-900 dark:text-white">
+        {value}
+      </p>
+      {children && (
+        <div className="mt-2 text-xs text-surface-500 dark:text-surface-400">{children}</div>
+      )}
+    </>
+  );
+  return onClick ? (
+    <button className="card p-4 text-left hover:border-brand-400" onClick={onClick}>
+      {content}
+    </button>
+  ) : (
+    <div className="card p-4">{content}</div>
+  );
 }
-
-
-
-// ── Main Reports component ──────────────────────────────────────────────────
+function Statuses({ values }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {Object.entries(values)
+        .filter(([, h]) => h > 0)
+        .map(([status, h]) => (
+          <span className={`badge-${status}`} key={status}>
+            {status} {hours(h)}
+          </span>
+        ))}
+    </div>
+  );
+}
+function Rate({ value, coverage = false }) {
+  if (value === null || value === undefined) return <span>—</span>;
+  const color = coverage
+    ? value >= 90
+      ? 'bg-emerald-500'
+      : value >= 70
+        ? 'bg-amber-500'
+        : 'bg-red-500'
+    : 'bg-brand-600';
+  return (
+    <div className="flex items-center gap-2 min-w-[140px]">
+      <div
+        className="flex-1 h-2 rounded bg-surface-100 dark:bg-surface-800 overflow-hidden"
+        aria-hidden="true"
+      >
+        <div className={`h-full rounded ${color}`} style={{ width: `${Math.min(value, 100)}%` }} />
+      </div>
+      <span className="text-xs font-semibold whitespace-nowrap">{pct(value)}</span>
+    </div>
+  );
+}
+function Billing({ summary }) {
+  const items = [
+    ['Billable', summary.billable_hours, 'bg-brand-600'],
+    ['Non-billable', summary.non_billable_hours, 'bg-violet-500'],
+    ['Unclassified', summary.unclassified_hours, 'bg-surface-400'],
+  ];
+  return (
+    <section className="card p-4 space-y-4" aria-label="Billing breakdown">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {items.map(([label, value, color]) => (
+          <div className="flex items-center gap-2 min-w-0" key={label}>
+            <span className={`w-3 h-3 rounded shrink-0 ${color}`} aria-hidden="true" />
+            <div>
+              <p className="text-xs text-surface-500 dark:text-surface-400">{label}</p>
+              <p className="text-lg font-semibold">
+                {hours(value)}{' '}
+                <span className="text-xs font-normal text-surface-500 dark:text-surface-400">
+                  ({summary.total_hours ? Math.round((value / summary.total_hours) * 100) : 0}%)
+                </span>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div
+        className="flex h-3 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden"
+        aria-hidden="true"
+      >
+        {items.map(([label, value, color]) => (
+          <div
+            key={label}
+            className={color}
+            style={{ width: `${summary.total_hours ? (value / summary.total_hours) * 100 : 0}%` }}
+          />
+        ))}
+      </div>
+      <p className="text-xs text-surface-500 dark:text-surface-400">
+        Billing uses task classification, then project billing type. Historical hours without a
+        classification stay Unclassified.
+      </p>
+    </section>
+  );
+}
+function FilterSelect({ label, value, onChange, children }) {
+  const plural =
+    label === 'Employee'
+      ? 'employees'
+      : label === 'Billing'
+        ? 'billing types'
+        : label === 'Status'
+          ? 'statuses'
+          : `${label.toLowerCase()}s`;
+  return (
+    <label className="block min-w-0">
+      <span className="block text-xs text-surface-500 dark:text-surface-400 mb-1">{label}</span>
+      <select
+        className="input-sm w-full"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={`Filter by ${label.toLowerCase()}`}
+      >
+        <option value="">All {plural}</option>
+        {children}
+      </select>
+    </label>
+  );
+}
 
 export default function Reports() {
-  const toast = useToast();
-  const { user } = useAuth();
-  const [tab, setTab] = useState('weekly');
-  const [preset, setPreset] = useState('this-month');
-  const [startDate, setStartDate] = useState(() => getPresetDates('this-month').startDate);
-  const [endDate, setEndDate] = useState(() => getPresetDates('this-month').endDate);
-  const [divisionFilter, setDivisionFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [userFilter, setUserFilter] = useState('');
-
+  const { user } = useAuth(),
+    toast = useToast();
+  const [tab, setTab] = useState('weekly'),
+    [preset, setPreset] = useState('this-month');
+  const [dates, setDates] = useState(() => presetDates('this-month'));
+  const [filters, setFilters] = useState(emptyFilters),
+    [grain, setGrain] = useState('week');
+  const [exporting, setExporting] = useState(''),
+    [drill, setDrill] = useState(null),
+    [moreFilters, setMoreFilters] = useState(false);
+  const invalidRange = rangeError(dates.start_date, dates.end_date);
+  const params = reportParams({ ...dates, ...filters, grain });
+  const options = useQuery({
+    queryKey: ['report-options', user.id, user.role],
+    queryFn: async ({ signal }) => (await api.get('/reports/options', { signal })).data,
+    staleTime: 60000,
+  });
+  const report = useQuery({
+    queryKey: ['report-analysis', user.id, user.role, params],
+    queryFn: async ({ signal }) => (await api.get('/reports/analysis', { params, signal })).data,
+    enabled: !invalidRange,
+  });
+  const data = report.data;
+  const changeFilter = (key, value) =>
+    setFilters((previous) => ({
+      ...previous,
+      [key]: value,
+      ...(key === 'division_id' ? { user_id: '', location_id: '' } : {}),
+    }));
+  const openEntries = (title, extra = {}) =>
+    setDrill({ title, params: reportParams({ ...params, ...extra }) });
   const selectPreset = (value) => {
     setPreset(value);
-    const dates = getPresetDates(value);
-    if (dates) { setStartDate(dates.startDate); setEndDate(dates.endDate); }
+    if (value !== 'custom') setDates(presetDates(value));
   };
-
-  const { data: filterData } = useQuery({
-    queryKey: ['report-filters', user.id, user.role],
-    queryFn: async () => (await api.get('/reports/options')).data,
-    staleTime: Infinity,
-  });
-
-  const divisions = filterData?.divisions || [];
-  const users = filterData?.users || [];
-
-  const { data, isLoading: loading, isError } = useQuery({
-    queryKey: ['report', user.id, user.role, tab, startDate, endDate, divisionFilter, userFilter, statusFilter],
-    queryFn: async () => {
-      if (tab === 'projects') {
-        let params = `start_date=${startDate}&end_date=${endDate}`;
-        if (divisionFilter) params += `&division=${divisionFilter}`;
-        if (userFilter) params += `&user_id=${userFilter}`;
-        if (statusFilter) params += `&status=${statusFilter}`;
-        const res = await api.get(`/reports/project-hours-detail?${params}`);
-        return res.data;
-      }
-
-      const year = new Date(startDate).getFullYear();
-      const month = new Date(startDate).getMonth() + 1;
-      let endpoint, params;
-
-      if (tab === 'weekly') {
-        endpoint = '/reports/weekly-summary';
-        params = `month=${month}&year=${year}`;
-        if (divisionFilter) params += `&division=${divisionFilter}`;
-        if (userFilter) params += `&user_id=${userFilter}`;
-        if (statusFilter) params += `&status=${statusFilter}`;
-      } else {
-        endpoint = '/reports/utilization';
-        params = `month=${month}&year=${year}`;
-        if (divisionFilter) params += `&division=${divisionFilter}`;
-      }
-
-      const res = await api.get(`${endpoint}?${params}`);
-      return res.data;
-    },
-    enabled: !!startDate && !!endDate,
-  });
-
-  useEffect(() => {
-    if (isError) toast.error('Failed to load report');
-  }, [isError, toast]);
-
-  // ── Export ────────────────────────────────────────────────────────────────
-
-  const triggerDownload = (blob, filename) => {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    link.parentNode.removeChild(link);
-  };
-
-  const handleExport = async (format) => {
+  const download = async (format, extra = {}, view = tab) => {
+    setExporting(format);
     try {
-      let endpoint = '';
-      let params = '';
-      let filename = `report_${startDate}_to_${endDate}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-      
-      if (tab === 'projects') {
-        endpoint = '/reports/project-hours-detail';
-        params = `start_date=${startDate}&end_date=${endDate}`;
-        if (divisionFilter) params += `&division=${divisionFilter}`;
-        if (userFilter) params += `&user_id=${userFilter}`;
-        if (statusFilter) params += `&status=${statusFilter}`;
-        filename = `project_hours_${startDate}_to_${endDate}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-      } else {
-        endpoint = '/reports/export';
-        const year = new Date(startDate).getFullYear();
-        const month = new Date(startDate).getMonth() + 1;
-        params = `month=${month}&year=${year}`;
-        if (divisionFilter) params += `&division=${divisionFilter}`;
-        if (userFilter) params += `&user_id=${userFilter}`;
-        if (statusFilter) params += `&status=${statusFilter}`;
-        filename = `timesheet_report_${year}_${month}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-      }
-
-      const res = await api.get(`${endpoint}?${params}&format=${format}`, { responseType: 'blob' });
-      triggerDownload(res.data, filename);
+      const res = await api.get('/reports/export', {
+        params: { ...params, ...extra, view, format },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(res.data),
+        anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `${view}_${extra.start_date || dates.start_date}_to_${extra.end_date || dates.end_date}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       toast.success(`${format === 'excel' ? 'Excel' : 'PDF'} exported`);
     } catch {
       toast.error(`Failed to export ${format === 'excel' ? 'Excel' : 'PDF'}`);
+    } finally {
+      setExporting('');
     }
   };
-
-  const exportToExcel = () => handleExport('excel');
-  const exportToPDF = () => handleExport('pdf');
-
-  // ── Presets ───────────────────────────────────────────────────────────────
-
-  const presets = [
-    { id: 'this-week', label: 'This Week' },
-    { id: 'this-month', label: 'This Month' },
-    { id: 'last-month', label: 'Last Month' },
-    { id: 'last-3-months', label: 'Last 3 Months' },
-    { id: 'custom', label: 'Custom' },
-  ];
-
-  const tabs = [
-    { id: 'weekly', label: 'Weekly Summary', icon: Calendar },
-    { id: 'utilization', label: 'Utilization', icon: Users },
-    { id: 'projects', label: 'Project Hours', icon: FolderKanban },
-  ];
-
+  const available = options.data || {};
+  const matchingUsers = (available.users || []).filter(
+    (u) => !filters.division_id || String(u.division_id) === filters.division_id
+  );
+  const matchingLocations = (available.locations || []).filter(
+    (s) => !filters.division_id || String(s.division_id) === filters.division_id
+  );
+  const advancedCount = ['customer', 'task_id', 'location_id', 'billing_type'].filter(
+    (key) => filters[key]
+  ).length;
   return (
-    <div className="space-y-5 animate-fade-in">
-      {/* Header */}
+    <div className="space-y-5 animate-fade-in min-w-0">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-brand-500" />
-          <h1 className="text-xl font-bold text-surface-900 dark:text-white">Reports</h1>
+        <div>
+          <h1 className="flex items-center gap-2 text-xl font-bold">
+            <BarChart3 className="w-5 h-5 text-brand-500" />
+            Reports
+          </h1>
+          <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">
+            Team time, billing, capacity and submission gaps.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={exportToExcel} className="btn-secondary btn-sm">
-            <Download className="w-4 h-4" /> Excel
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="btn-secondary btn-sm"
+            disabled={!!invalidRange || !data || report.isFetching || !!exporting}
+            onClick={() => download('excel')}
+          >
+            <Download className="w-4 h-4" />
+            {exporting === 'excel' ? 'Exporting…' : 'Excel'}
           </button>
-          <button onClick={exportToPDF} className="btn-secondary btn-sm">
-            <FileText className="w-4 h-4" /> PDF
+          <button
+            className="btn-secondary btn-sm"
+            disabled={!!invalidRange || !data || report.isFetching || !!exporting}
+            onClick={() => download('pdf')}
+          >
+            <FileText className="w-4 h-4" />
+            {exporting === 'pdf' ? 'Exporting…' : 'PDF'}
           </button>
         </div>
       </div>
-
-      {/* Date presets + custom range */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
-        <div className="flex flex-wrap max-w-full gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg">
-          {presets.map(p => (
+      <section className="card p-4 space-y-4" aria-label="Report dates and filters">
+        <div className="flex flex-wrap gap-1">
+          {presets.map(([id, label]) => (
             <button
-              key={p.id}
-              onClick={() => selectPreset(p.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
-                preset === p.id
-                  ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm'
-                  : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
-              }`}
+              className={`btn btn-sm ${preset === id ? 'bg-brand-600 text-white' : 'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300'}`}
+              aria-pressed={preset === id}
+              key={id}
+              onClick={() => selectPreset(id)}
             >
-              {p.label}
+              {label}
             </button>
           ))}
         </div>
         {preset === 'custom' && (
-          <div className="flex flex-wrap items-center gap-2 max-w-full">
-            <input
-              type="date"
-              aria-label="Report start date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="input-sm w-36"
-            />
-            <span className="text-surface-400 text-xs">to</span>
-            <input
-              type="date"
-              aria-label="Report end date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="input-sm w-36"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 max-w-xl gap-3">
+            <label className="text-xs text-surface-500 dark:text-surface-400">
+              Start date
+              <input
+                type="date"
+                className="input mt-1"
+                aria-label="Report start date"
+                min="1900-01-01"
+                max="9998-12-31"
+                value={dates.start_date}
+                onChange={(e) =>
+                  setDates((previous) => ({ ...previous, start_date: e.target.value }))
+                }
+              />
+            </label>
+            <label className="text-xs text-surface-500 dark:text-surface-400">
+              End date
+              <input
+                type="date"
+                className="input mt-1"
+                aria-label="Report end date"
+                min="1900-01-01"
+                max="9998-12-31"
+                value={dates.end_date}
+                onChange={(e) =>
+                  setDates((previous) => ({ ...previous, end_date: e.target.value }))
+                }
+              />
+            </label>
           </div>
         )}
-        <span className="text-xs text-surface-400">
-          <Clock className="w-3 h-3 inline mr-1" />
-          {formatDateRange(startDate, endDate)}
-        </span>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Filter className="w-4 h-4 text-surface-400" />
-        <select className="input-sm w-36" aria-label="Filter by division" value={divisionFilter} onChange={(e) => setDivisionFilter(e.target.value)}>
-          <option value="">All Divisions</option>
-          {divisions.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
-        </select>
-        {(tab === 'weekly' || tab === 'projects') && (
+        <p className="text-sm text-surface-600 dark:text-surface-300" aria-live="polite">
+          {invalidRange || displayRange(dates.start_date, dates.end_date)}
+        </p>
+        <div className="flex flex-wrap gap-2 items-center justify-between">
+          <span className="flex gap-2 items-center text-xs font-semibold text-surface-500 dark:text-surface-400">
+            <Filter className="w-4 h-4" />
+            Filters
+          </span>
+          <button className="btn-ghost btn-sm" onClick={() => setFilters(emptyFilters)}>
+            <RotateCcw className="w-3 h-3" />
+            Reset filters
+          </button>
+        </div>
+        {options.isPending && (
+          <p className="text-xs text-surface-500 dark:text-surface-400" role="status">
+            Loading filters…
+          </p>
+        )}
+        {options.isError ? (
+          <ErrorState message="Could not load report filters." retry={options.refetch} />
+        ) : (
           <>
-            <select className="input-sm w-36" aria-label="Filter by user" value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
-              <option value="">All Users</option>
-              {users.filter(u => u.active).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </select>
-            {tab !== 'projects' && (
-              <select className="input-sm w-32" aria-label="Filter by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="">All Status</option>
-                <option value="draft">Draft</option>
-                <option value="submitted">Submitted</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="recalled">Recalled</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <FilterSelect
+                label="Division"
+                value={filters.division_id}
+                onChange={(v) => changeFilter('division_id', v)}
+              >
+                {(available.divisions || []).map((d) => (
+                  <option value={d.id} key={d.id}>
+                    {d.name}
+                    {!d.active ? ' (inactive)' : ''}
+                  </option>
+                ))}
+              </FilterSelect>
+              <FilterSelect
+                label="Employee"
+                value={filters.user_id}
+                onChange={(v) => changeFilter('user_id', v)}
+              >
+                {matchingUsers.map((u) => (
+                  <option value={u.id} key={u.id}>
+                    {u.name}
+                    {!u.active ? ' (inactive)' : ''}
+                  </option>
+                ))}
+              </FilterSelect>
+              <FilterSelect
+                label="Project"
+                value={filters.project_id}
+                onChange={(v) => changeFilter('project_id', v)}
+              >
+                {(available.projects || []).map((p) => (
+                  <option value={p.id} key={p.id}>
+                    {p.project_code} — {p.project_name}
+                    {!p.active ? ' (inactive)' : ''}
+                  </option>
+                ))}
+              </FilterSelect>
+              <FilterSelect
+                label="Status"
+                value={filters.status}
+                onChange={(v) => changeFilter('status', v)}
+              >
+                {['draft', 'submitted', 'approved', 'rejected', 'recalled'].map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </FilterSelect>
+            </div>
+            <button
+              className="btn-ghost btn-sm"
+              aria-label="More report filters"
+              aria-expanded={moreFilters}
+              aria-controls="advanced-report-filters"
+              onClick={() => setMoreFilters((value) => !value)}
+            >
+              {moreFilters ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+              More filters{advancedCount > 0 ? ` (${advancedCount} active)` : ''}
+            </button>
+            {moreFilters && (
+              <div
+                id="advanced-report-filters"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+              >
+                <FilterSelect
+                  label="Customer"
+                  value={filters.customer}
+                  onChange={(v) => changeFilter('customer', v)}
+                >
+                  {(available.customers || []).map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </FilterSelect>
+                <FilterSelect
+                  label="Task"
+                  value={filters.task_id}
+                  onChange={(v) => changeFilter('task_id', v)}
+                >
+                  {(available.tasks || []).map((t) => (
+                    <option value={t.id} key={t.id}>
+                      {t.task_category}
+                      {!t.active ? ' (inactive)' : ''}
+                    </option>
+                  ))}
+                </FilterSelect>
+                <FilterSelect
+                  label="Location"
+                  value={filters.location_id}
+                  onChange={(v) => changeFilter('location_id', v)}
+                >
+                  {matchingLocations.map((s) => (
+                    <option value={s.id} key={s.id}>
+                      {s.name}
+                      {!s.active ? ' (inactive)' : ''}
+                    </option>
+                  ))}
+                </FilterSelect>
+                <FilterSelect
+                  label="Billing"
+                  value={filters.billing_type}
+                  onChange={(v) => changeFilter('billing_type', v)}
+                >
+                  {['Billable', 'Non-Billable', 'Unclassified'].map((b) => (
+                    <option key={b}>{b}</option>
+                  ))}
+                </FilterSelect>
+              </div>
             )}
           </>
         )}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg max-w-full w-fit">
-        {tabs.map(t => (
+      </section>
+      <div
+        className="flex flex-wrap gap-1 p-1 rounded-lg bg-surface-100 dark:bg-surface-800"
+        aria-label="Report views"
+      >
+        {tabs.map((t) => (
           <button
+            className={`btn btn-sm ${tab === t.id ? 'bg-white dark:bg-surface-700 shadow-sm text-surface-900 dark:text-white' : 'text-surface-600 dark:text-surface-300'}`}
+            aria-pressed={tab === t.id}
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-all ${
-              tab === t.id
-                ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm'
-                : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}
           >
             <t.icon className="w-4 h-4" />
             {t.label}
           </button>
         ))}
       </div>
-
-      {/* Content */}
-      {loading ? (
+      {invalidRange ? (
+        <ErrorState message={invalidRange} />
+      ) : report.isError ? (
+        <ErrorState
+          message={report.error?.response?.data?.error || 'Failed to load report.'}
+          retry={report.refetch}
+        />
+      ) : report.isLoading ? (
         <LoadingSkeleton />
-      ) : tab === 'weekly' ? (
-        <WeeklySummaryReport data={data} />
-      ) : tab === 'utilization' ? (
-        <UtilizationReport data={data} />
       ) : (
-        <ProjectHoursReport data={data} startDate={startDate} endDate={endDate} />
+        data && (
+          <>
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+              <Metric
+                label="Total hours"
+                value={hours(data.summary.total_hours)}
+                onClick={() => openEntries('All matching entries')}
+              >
+                {data.summary.employees} active users in the employee selection
+              </Metric>
+              <Metric
+                label="Approved hours"
+                value={hours(data.summary.approved_hours)}
+                onClick={
+                  data.summary.approved_hours > 0
+                    ? () => openEntries('Approved entries', { status: 'approved' })
+                    : undefined
+                }
+              >
+                Approved time in the selected range
+              </Metric>
+              <Metric
+                label="Pending approval"
+                value={hours(data.summary.pending_hours)}
+                onClick={
+                  data.summary.pending_hours > 0
+                    ? () => openEntries('Submitted entries', { status: 'submitted' })
+                    : undefined
+                }
+              >
+                Submitted time awaiting approval
+              </Metric>
+              <Metric
+                label={
+                  data.capacity.available
+                    ? 'No entries through today'
+                    : 'No matching entries through today'
+                }
+                value={data.summary.no_entries}
+                onClick={() => setTab('missing')}
+              >
+                Active users ·{' '}
+                {data.period.expected_through
+                  ? `through ${displayDate(data.period.expected_through)}`
+                  : 'selected range has not started'}
+              </Metric>
+            </div>
+            <Billing summary={data.summary} />
+            {tab === 'weekly' && <WeeklyReport data={data.weekly} openEntries={openEntries} />}
+            {tab === 'utilization' && <UtilizationReport data={data} openEntries={openEntries} />}
+            {tab === 'projects' && (
+              <ProjectReport key={JSON.stringify(params)} data={data} openEntries={openEntries} />
+            )}
+            {tab === 'missing' && <MissingReport data={data} openEntries={openEntries} />}
+            {tab === 'trends' && (
+              <TrendsReport
+                data={data}
+                grain={grain}
+                setGrain={setGrain}
+                openEntries={openEntries}
+              />
+            )}
+            <p className="text-xs text-surface-500 dark:text-surface-400">
+              Downloads contain the selected report view, its totals and filters. Excel also
+              includes underlying entries and weekly details.
+            </p>
+          </>
+        )
+      )}
+      <EntryDetails
+        drill={drill}
+        close={() => setDrill(null)}
+        user={user}
+        exportEntries={(format) => download(format, drill.params, 'details')}
+        exporting={exporting}
+      />
+    </div>
+  );
+}
+
+function WeeklyReport({ data, openEntries }) {
+  if (!data.rows.length) return <Empty />;
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-surface-500 dark:text-surface-400">
+        Weeks use ISO year and week number. Select hours to see entries; each status is shown
+        separately.
+      </p>
+      <ReportTable
+        label="Weekly hours"
+        headers={['Employee', 'Division', ...data.weeks.map((w) => w.key), 'Total']}
+      >
+        {data.rows.map((u) => (
+          <tr key={u.user_id}>
+            <td className={`${td} min-w-[170px]`}>
+              <button
+                className={linkStyle}
+                onClick={() => openEntries(`${u.name} — entries`, { user_id: u.user_id })}
+              >
+                {u.name}
+              </button>
+              <p className="text-xs text-surface-500 dark:text-surface-400 break-all">{u.email}</p>
+            </td>
+            <td className={td}>{u.division || '—'}</td>
+            {data.weeks.map((w) => (
+              <td key={w.key} className={`${td} min-w-[150px]`}>
+                {u.weeks[w.key] ? (
+                  <>
+                    <button
+                      className={linkStyle}
+                      onClick={() =>
+                        openEntries(`${u.name} — ${w.key}`, {
+                          user_id: u.user_id,
+                          start_date: w.start_date,
+                          end_date: w.end_date,
+                        })
+                      }
+                    >
+                      {hours(u.weeks[w.key].total_hours)}
+                    </button>
+                    <Statuses values={u.weeks[w.key].status_hours} />
+                  </>
+                ) : (
+                  '—'
+                )}
+              </td>
+            ))}
+            <td className={`${td} font-semibold whitespace-nowrap`}>{hours(u.total_hours)}</td>
+          </tr>
+        ))}
+        <tr className="font-semibold bg-surface-50 dark:bg-surface-800/50">
+          <td className={td}>Grand Total</td>
+          <td />
+          {data.weeks.map((w) => (
+            <td className={td} key={w.key}>
+              {hours(w.total_hours)}
+            </td>
+          ))}
+          <td className={td}>{hours(data.rows.reduce((s, u) => s + u.total_hours, 0))}</td>
+        </tr>
+      </ReportTable>
+    </div>
+  );
+}
+function CapacityNote({ data }) {
+  return (
+    <div className="card p-4 text-sm space-y-2">
+      <p>
+        {data.capacity.available
+          ? `Targets cover ${data.capacity.working_days} working days through ${data.period.expected_through ? displayDate(data.period.expected_through) : 'the start of this range'}.`
+          : data.capacity.reason}
+      </p>
+      <p className="text-xs text-surface-500 dark:text-surface-400">{data.capacity.note}</p>
+    </div>
+  );
+}
+function UtilizationReport({ data, openEntries }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Metric
+          label="Expected per active user"
+          value={data.capacity.available ? hours(data.capacity.expected_hours_per_person) : '—'}
+        />
+        <Metric label="Logged-hours coverage" value={pct(data.summary.coverage_pct)}>
+          All logged time ÷ expected hours
+        </Metric>
+        <Metric label="Billable utilization" value={pct(data.summary.billable_utilization_pct)}>
+          Billable time ÷ expected hours
+        </Metric>
+      </div>
+      <CapacityNote data={data} />
+      {!data.utilization.length ? (
+        <Empty>
+          No active users in this employee selection. Historical entries remain available in Weekly
+          Summary and Project Hours.
+        </Empty>
+      ) : (
+        <ReportTable
+          label="Employee utilization"
+          headers={[
+            'Employee',
+            'Division',
+            'Days logged',
+            'Logged hours',
+            'Expected hours',
+            'Coverage',
+            'Billable utilization',
+          ]}
+        >
+          {data.utilization.map((u) => (
+            <tr key={u.id}>
+              <td className={`${td} min-w-[170px]`}>
+                <button
+                  className={linkStyle}
+                  disabled={!data.period.expected_through}
+                  onClick={() =>
+                    openEntries(`${u.name} — elapsed entries`, {
+                      user_id: u.id,
+                      end_date: data.period.expected_through || data.period.start_date,
+                    })
+                  }
+                >
+                  {u.name}
+                </button>
+                <p className="text-xs text-surface-500 dark:text-surface-400">{u.email}</p>
+              </td>
+              <td className={td}>{u.division || '—'}</td>
+              <td className={td}>{u.days_logged}</td>
+              <td className={`${td} whitespace-nowrap`}>{hours(u.total_hours)}</td>
+              <td className={td}>{u.expected_hours === null ? '—' : hours(u.expected_hours)}</td>
+              <td className={td}>
+                <Rate value={u.utilization_pct} coverage />
+              </td>
+              <td className={td}>
+                <Rate value={u.billable_utilization_pct} />
+              </td>
+            </tr>
+          ))}
+        </ReportTable>
       )}
     </div>
   );
 }
-
-// ── Weekly Summary (unchanged) ──────────────────────────────────────────────
-
-function WeeklySummaryReport({ data }) {
-  if (!data?.summary?.length) {
-    return <div className="card p-8 text-center text-sm text-surface-400">No weekly summary data available</div>;
-  }
-  const userMap = {};
-  data.summary.forEach(s => {
-    if (!userMap[s.user_id]) userMap[s.user_id] = { name: s.user_name, email: s.email, division: s.division, weeks: {} };
-    const key = `W${s.week_number}`;
-    if (!userMap[s.user_id].weeks[key]) userMap[s.user_id].weeks[key] = { hours: 0, status: s.status, days: 0 };
-    userMap[s.user_id].weeks[key].hours += s.total_hours;
-    userMap[s.user_id].weeks[key].days += s.days_worked;
-    userMap[s.user_id].weeks[key].status = s.status;
-  });
-  const weekSet = new Set();
-  data.summary.forEach(s => weekSet.add(`W${s.week_number}`));
-  const weeks = [...weekSet].sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
-  const users = Object.values(userMap);
-
+function ProjectReport({ data, openEntries }) {
+  const [expanded, setExpanded] = useState({});
+  const keyOf = (p) => p.project_id || 'no-project';
+  const projectFilter = (p) => (p.project_id ? { project_id: p.project_id } : { projectless: '1' });
+  if (!data.projects.length) return <Empty />;
   return (
-    <div className="table-container">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-800">
-            <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase sticky left-0 bg-surface-50 dark:bg-surface-800/50">Employee</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase">Division</th>
-            {weeks.map(w => <th key={w} className="text-center px-3 py-3 text-xs font-semibold text-surface-500 uppercase">{w}</th>)}
-            <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase">Total</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
-          {users.map((u, i) => {
-            const total = weeks.reduce((sum, w) => sum + (u.weeks[w]?.hours || 0), 0);
-            return (
-              <tr key={i} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors">
-                <td className="px-4 py-3 sticky left-0 bg-white dark:bg-surface-900">
-                  <p className="text-sm font-medium">{u.name}</p>
-                  <p className="text-xs text-surface-400">{u.email}</p>
-                </td>
-                <td className="px-4 py-3 text-sm text-surface-500">{u.division || '—'}</td>
-                {weeks.map(w => {
-                  const wd = u.weeks[w];
-                  return <td key={w} className="px-3 py-3 text-center">{wd ? <div><span className="text-sm font-semibold">{wd.hours.toFixed(1)}</span><div className="mt-0.5"><span className={`text-[9px] px-1.5 py-0.5 rounded-full badge-${wd.status}`}>{wd.status}</span></div></div> : <span className="text-xs text-surface-300">—</span>}</td>;
-                })}
-                <td className="px-4 py-3 text-right"><span className="text-sm font-bold text-brand-600 dark:text-brand-400">{total.toFixed(1)}h</span></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-surface-500 dark:text-surface-400">
+          {data.projects.length} projects ·{' '}
+          {new Set(data.projects.flatMap((p) => p.contributors.map((c) => c.user_id))).size}{' '}
+          contributors
+        </p>
+        <div className="flex gap-2">
+          <button
+            className="btn-secondary btn-sm"
+            onClick={() =>
+              setExpanded(Object.fromEntries(data.projects.map((p) => [keyOf(p), true])))
+            }
+          >
+            Expand all
+          </button>
+          <button className="btn-secondary btn-sm" onClick={() => setExpanded({})}>
+            Collapse all
+          </button>
+        </div>
+      </div>
+      <ReportTable
+        label="Project hours and contributors"
+        headers={['Project', 'Customer', 'Division', 'Contributors', 'Hours', 'Share', 'Entries']}
+      >
+        {data.projects.map((p) => (
+          <Fragment key={keyOf(p)}>
+            <tr>
+              <td className={`${td} min-w-[220px]`}>
+                <button
+                  className={`${linkStyle} gap-2`}
+                  aria-expanded={!!expanded[keyOf(p)]}
+                  aria-label={`Contributors for ${p.project_code}`}
+                  onClick={() =>
+                    setExpanded((previous) => ({ ...previous, [keyOf(p)]: !previous[keyOf(p)] }))
+                  }
+                >
+                  {expanded[keyOf(p)] ? (
+                    <ChevronDown className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 shrink-0" />
+                  )}
+                  {p.project_code}
+                </button>
+                <p className="text-xs text-surface-500 dark:text-surface-400">{p.project_name}</p>
+              </td>
+              <td className={td}>{p.customer_name || '—'}</td>
+              <td className={td}>{p.division || '—'}</td>
+              <td className={td}>{p.contributors.length}</td>
+              <td className={`${td} font-semibold whitespace-nowrap`}>{hours(p.total_hours)}</td>
+              <td className={td}>
+                {data.summary.total_hours
+                  ? Math.round((p.total_hours / data.summary.total_hours) * 100)
+                  : 0}
+                %
+              </td>
+              <td className={td}>
+                <button
+                  className={linkStyle}
+                  aria-label={`View entries for ${p.project_code}`}
+                  onClick={() => openEntries(`${p.project_code} — entries`, projectFilter(p))}
+                >
+                  View entries
+                </button>
+              </td>
+            </tr>
+            {expanded[keyOf(p)] &&
+              p.contributors.map((c) => (
+                <tr className="bg-surface-50 dark:bg-surface-800/40" key={c.user_id}>
+                  <td colSpan={4} className={`${td} pl-8`}>
+                    <p className="font-medium">{c.name}</p>
+                    <p className="text-xs text-surface-500 dark:text-surface-400">{c.email}</p>
+                  </td>
+                  <td className={td}>{hours(c.hours)}</td>
+                  <td className={td}>
+                    {p.total_hours ? Math.round((c.hours / p.total_hours) * 100) : 0}% of project
+                  </td>
+                  <td className={td}>
+                    <button
+                      className={linkStyle}
+                      aria-label={`View ${c.name} entries for ${p.project_code}`}
+                      onClick={() =>
+                        openEntries(`${c.name} — ${p.project_code}`, {
+                          ...projectFilter(p),
+                          user_id: c.user_id,
+                        })
+                      }
+                    >
+                      View entries
+                    </button>
+                  </td>
+                </tr>
+              ))}
+          </Fragment>
+        ))}
+        <tr className="font-semibold bg-surface-50 dark:bg-surface-800/50">
+          <td colSpan={4} className={td}>
+            Grand Total
+          </td>
+          <td className={td}>{hours(data.summary.total_hours)}</td>
+          <td colSpan={2} />
+        </tr>
+      </ReportTable>
     </div>
   );
 }
-
-// ── Utilization (unchanged) ─────────────────────────────────────────────────
-
-function UtilizationReport({ data }) {
-  if (!data?.utilization?.length) return <div className="card p-8 text-center text-sm text-surface-400">No utilization data available</div>;
+function MissingReport({ data, openEntries }) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="card p-4 text-center"><p className="text-2xl font-bold">{data.utilization.length}</p><p className="text-xs text-surface-400">Employees</p></div>
-        <div className="card p-4 text-center"><p className="text-2xl font-bold">{data.workingDays}</p><p className="text-xs text-surface-400">Working Days</p></div>
-        <div className="card p-4 text-center"><p className="text-2xl font-bold">{data.expectedHours}h</p><p className="text-xs text-surface-400">Expected Hours</p></div>
-        <div className="card p-4 text-center"><p className="text-2xl font-bold text-brand-600">{data.utilization.length > 0 ? Math.round(data.utilization.reduce((s, u) => s + u.utilization_pct, 0) / data.utilization.length) : 0}%</p><p className="text-xs text-surface-400">Avg Utilization</p></div>
-      </div>
-      <div className="table-container">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-surface-50 dark:bg-surface-800/50 border-b">
-              <th className="text-left px-4 py-3 text-xs font-semibold uppercase sticky left-0 bg-surface-50 dark:bg-surface-800/50">Employee</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold uppercase">Division</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase">Days</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase">Hours</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase">Expected</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase w-48">Utilization</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
-            {data.utilization.map(u => (
-              <tr key={u.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30">
-                <td className="px-4 py-3 sticky left-0 bg-white dark:bg-surface-900"><p className="text-sm font-medium">{u.name}</p><p className="text-xs text-surface-400">{u.email}</p></td>
-                <td className="px-4 py-3 text-sm text-surface-500">{u.division || '—'}</td>
-                <td className="px-4 py-3 text-sm text-right">{u.days_logged}</td>
-                <td className="px-4 py-3 text-sm font-semibold text-right">{u.total_hours.toFixed(1)}</td>
-                <td className="px-4 py-3 text-sm text-right text-surface-400">{u.expected_hours}</td>
-                <td className="px-4 py-3"><div className="flex items-center gap-3"><div className="flex-1 h-2 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden"><div className={`h-full rounded-full ${u.utilization_pct >= 90 ? 'bg-emerald-500' : u.utilization_pct >= 70 ? 'bg-amber-500' : u.utilization_pct > 0 ? 'bg-red-500' : 'bg-surface-300'}`} style={{ width: `${Math.min(u.utilization_pct, 100)}%` }} /></div><span className="text-xs font-semibold w-10 text-right">{u.utilization_pct}%</span></div></td>
+      <CapacityNote data={data} />
+      {!data.capacity.available ? (
+        <Empty>{data.capacity.reason}</Empty>
+      ) : !data.missing.length ? (
+        <Empty>No missing hours or unsubmitted time through the selected elapsed date.</Empty>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Metric label="Users needing attention" value={data.missing.length} />
+            <Metric
+              label="Daily hours shortfall"
+              value={hours(data.missing.reduce((s, u) => s + u.missing_hours, 0))}
+            />
+            <Metric
+              label="Unsubmitted hours"
+              value={hours(data.missing.reduce((s, u) => s + u.unsubmitted_hours, 0))}
+            >
+              Draft, rejected and recalled time
+            </Metric>
+          </div>
+          <ReportTable
+            label="Missing hours and submissions"
+            headers={[
+              'Employee',
+              'Expected',
+              'Logged',
+              'Missing hours',
+              'Unsubmitted',
+              'Submission gaps',
+              'Dates',
+            ]}
+          >
+            {data.missing.map((u) => (
+              <tr key={u.user_id}>
+                <td className={`${td} min-w-[170px]`}>
+                  <button
+                    className={linkStyle}
+                    onClick={() => openEntries(`${u.name} — entries`, { user_id: u.user_id })}
+                  >
+                    {u.name}
+                  </button>
+                  <p className="text-xs text-surface-500 dark:text-surface-400">
+                    {u.division || '—'}
+                  </p>
+                </td>
+                <td className={`${td} whitespace-nowrap`}>{hours(u.expected_hours)}</td>
+                <td className={`${td} whitespace-nowrap`}>{hours(u.logged_hours)}</td>
+                <td
+                  className={`${td} font-semibold text-amber-700 dark:text-amber-400 whitespace-nowrap`}
+                >
+                  {hours(u.missing_hours)}
+                </td>
+                <td className={`${td} whitespace-nowrap`}>{hours(u.unsubmitted_hours)}</td>
+                <td className={`${td} min-w-[150px]`}>
+                  {u.awaiting_submission_weeks.join(', ') || '—'}
+                  <p className="text-xs text-surface-500 dark:text-surface-400">
+                    Completed weeks only
+                  </p>
+                </td>
+                <td className={`${td} min-w-[200px]`}>
+                  <details>
+                    <summary className="cursor-pointer min-h-[44px] flex items-center text-brand-600 dark:text-brand-400">
+                      {u.missing_dates.length} missing · {u.short_dates.length} short days
+                    </summary>
+                    <ul className="text-xs space-y-1 mt-2">
+                      {u.missing_dates.map((d) => (
+                        <li key={d}>{displayDate(d)} — no hours</li>
+                      ))}
+                      {u.short_dates.map((d) => (
+                        <li key={d}>{displayDate(d)} — below 8h</li>
+                      ))}
+                    </ul>
+                  </details>
+                </td>
               </tr>
             ))}
-          </tbody>
-        </table>
+          </ReportTable>
+        </>
+      )}
+    </div>
+  );
+}
+function TrendsReport({ data, grain, setGrain, openEntries }) {
+  const previous = data.comparison.summary;
+  const max = Math.max(1, ...data.trends.map((t) => t.total_hours));
+  return (
+    <div className="space-y-4">
+      <div className="card p-4 space-y-3">
+        <h2 className="font-semibold">Compared with the previous period</h2>
+        <p className="text-xs text-surface-500 dark:text-surface-400">
+          {displayRange(data.comparison.period.start_date, data.comparison.period.end_date)} ·{' '}
+          {data.comparison.note}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {[
+            ['Total hours', hours(data.summary.total_hours), hours(previous.total_hours)],
+            ['Billable hours', hours(data.summary.billable_hours), hours(previous.billable_hours)],
+            ['Coverage', pct(data.summary.coverage_pct), pct(previous.coverage_pct)],
+            [
+              'Billable utilization',
+              pct(data.summary.billable_utilization_pct),
+              pct(previous.billable_utilization_pct),
+            ],
+          ].map(([label, current, old]) => (
+            <div key={label}>
+              <p className="text-xs text-surface-500 dark:text-surface-400">{label}</p>
+              <p className="text-xl font-bold mt-1">{current}</p>
+              <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">Previous: {old}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-sm">
+          Hours change:{' '}
+          {data.comparison.hours_change_pct === null
+            ? 'No previous hours to compare'
+            : `${data.comparison.hours_change_pct > 0 ? '+' : ''}${data.comparison.hours_change_pct}%`}
+        </p>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-semibold">Hours over time</h2>
+        <label className="flex flex-wrap items-center gap-2 text-xs">
+          Group by
+          <select
+            aria-label="Trend grouping"
+            className="input-sm w-auto"
+            value={grain}
+            onChange={(e) => setGrain(e.target.value)}
+          >
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+          </select>
+        </label>
+      </div>
+      <div className="card p-4 space-y-3" aria-label="Hours trend chart">
+        {data.trends.map((t) => (
+          <div
+            className="grid grid-cols-1 sm:grid-cols-[100px_1fr_80px] gap-1 sm:gap-3 items-center"
+            key={t.key}
+          >
+            <button
+              className={`${linkStyle} text-xs`}
+              onClick={() =>
+                openEntries(`${t.key} — entries`, {
+                  start_date: t.start_date,
+                  end_date: t.end_date,
+                })
+              }
+            >
+              {t.key}
+            </button>
+            <div
+              className="h-5 rounded bg-surface-100 dark:bg-surface-800 overflow-hidden"
+              aria-hidden="true"
+            >
+              <div
+                className="h-full bg-brand-600 rounded"
+                style={{ width: `${(t.total_hours / max) * 100}%` }}
+              />
+            </div>
+            <span className="text-xs sm:text-right">{hours(t.total_hours)}</span>
+          </div>
+        ))}
+      </div>
+      <ReportTable
+        label="Trend totals"
+        headers={[
+          'Period',
+          'Hours',
+          'Billable',
+          'Non-billable',
+          'Unclassified',
+          'Approved',
+          'Coverage',
+          'Billable utilization',
+        ]}
+      >
+        {data.trends.map((t) => (
+          <tr key={t.key}>
+            <td className={`${td} whitespace-nowrap`}>
+              <button
+                className={linkStyle}
+                onClick={() =>
+                  openEntries(`${t.key} — entries`, {
+                    start_date: t.start_date,
+                    end_date: t.end_date,
+                  })
+                }
+              >
+                {t.key}
+              </button>
+            </td>
+            <td className={td}>{hours(t.total_hours)}</td>
+            <td className={td}>{hours(t.billable_hours)}</td>
+            <td className={td}>{hours(t.non_billable_hours)}</td>
+            <td className={td}>{hours(t.unclassified_hours)}</td>
+            <td className={td}>{hours(t.approved_hours)}</td>
+            <td className={td}>{pct(t.coverage_pct)}</td>
+            <td className={td}>{pct(t.billable_utilization_pct)}</td>
+          </tr>
+        ))}
+      </ReportTable>
+      <CapacityNote data={data} />
     </div>
   );
 }
 
-// ── Project Hours Report (NEW — expandable per-user breakdown) ───────────────
-
-function ProjectHoursReport({ data, startDate, endDate }) {
-  const [expanded, setExpanded] = useState({});
-
-  if (!data?.projects?.length) {
-    return <div className="card p-8 text-center text-sm text-surface-400">No project data for {formatDateRange(startDate, endDate)}</div>;
-  }
-
-  const toggleExpand = (code) => {
-    setExpanded(prev => ({ ...prev, [code]: !prev[code] }));
-  };
-
-  const expandAll = () => {
-    const all = {};
-    data.projects.forEach(p => { all[p.project_code] = true; });
-    setExpanded(all);
-  };
-
-  const collapseAll = () => setExpanded({});
-
-
-
+function EntryDetails({ drill, close, user, exportEntries, exporting }) {
+  return (
+    <Modal
+      isOpen={!!drill}
+      onClose={close}
+      title={drill?.title || 'Report entries'}
+      size="full"
+      footer={
+        <>
+          <button
+            className="btn-secondary btn-sm"
+            disabled={!drill || !!exporting}
+            onClick={() => exportEntries('excel')}
+          >
+            Export entries to Excel
+          </button>
+          <button
+            className="btn-secondary btn-sm"
+            disabled={!drill || !!exporting}
+            onClick={() => exportEntries('pdf')}
+          >
+            Export entries to PDF
+          </button>
+          <button className="btn-secondary btn-sm" onClick={close}>
+            Close
+          </button>
+        </>
+      }
+    >
+      {drill && <EntryPage key={JSON.stringify(drill.params)} drill={drill} user={user} />}
+    </Modal>
+  );
+}
+function EntryPage({ drill, user }) {
+  const [page, setPage] = useState(1);
+  const query = useQuery({
+    queryKey: ['report-entries', user.id, user.role, drill.params, page],
+    queryFn: async ({ signal }) =>
+      (await api.get('/reports/entries', { params: { ...drill.params, page }, signal })).data,
+  });
   return (
     <div className="space-y-4">
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-surface-900 dark:text-white">{data.projects.length}</p>
-          <p className="text-xs text-surface-400">Projects</p>
-        </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-surface-900 dark:text-white">
-            {new Set(data.projects.flatMap(p => p.contributors.map(c => c.user_id))).size}
-          </p>
-          <p className="text-xs text-surface-400">Contributors</p>
-        </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-brand-600 dark:text-brand-400">{data.grand_total_hours.toFixed(1)}</p>
-          <p className="text-xs text-surface-400">Total Hours</p>
-        </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-surface-900 dark:text-white">{formatDateRange(startDate, endDate)}</p>
-          <p className="text-xs text-surface-400">Period</p>
-        </div>
-      </div>
-
-      {/* Expand / collapse all */}
-      <div className="flex items-center gap-2">
-        <button onClick={expandAll} className="text-xs text-brand-500 hover:text-brand-600 font-medium">Expand All</button>
-        <span className="text-surface-300">|</span>
-        <button onClick={collapseAll} className="text-xs text-brand-500 hover:text-brand-600 font-medium">Collapse All</button>
-      </div>
-
-      {/* Table */}
-      <div className="table-container">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-800">
-              <th className="w-8 px-2 py-3" />
-              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase">Project</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase">Customer</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase hidden sm:table-cell">Division</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase">Contributors</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase">Hours</th>
-              <th className="px-4 py-3 text-xs font-semibold text-surface-500 uppercase w-40 hidden sm:table-cell">Share</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
-            {data.projects.map(p => {
-              const pct = data.grand_total_hours > 0 ? Math.round((p.total_hours / data.grand_total_hours) * 100) : 0;
-              const isOpen = expanded[p.project_code];
-              return (
-                <Fragment key={p.project_code}>
-                  {/* Project row */}
-                  <tr
-                    onClick={() => toggleExpand(p.project_code)}
-                    className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors cursor-pointer"
-                  >
-                    <td className="px-2 py-3 text-surface-400">
-                      {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-mono font-semibold text-brand-600 dark:text-brand-400">{p.project_code}</p>
-                      <p className="text-sm font-medium text-surface-800 dark:text-surface-200">{p.project_name}</p>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-surface-500">{p.customer_name || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-surface-500 hidden sm:table-cell">{p.division || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-surface-600 dark:text-surface-400 text-right">{p.contributors.length}</td>
-                    <td className="px-4 py-3 text-sm font-semibold text-surface-900 dark:text-white text-right">{p.total_hours.toFixed(1)}</td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-brand-500 to-violet-500 rounded-full" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-xs text-surface-500 w-8 text-right">{pct}%</span>
+      <p className="text-sm text-surface-500 dark:text-surface-400">
+        {displayRange(drill.params.start_date, drill.params.end_date)}
+      </p>
+      {query.isLoading ? (
+        <LoadingSkeleton />
+      ) : query.isError ? (
+        <ErrorState message="Could not load entries." retry={query.refetch} />
+      ) : (
+        <>
+          <p className="text-sm">{query.data.total} matching entries</p>
+          {!query.data.data.length ? (
+            <Empty>No entries in this selection.</Empty>
+          ) : (
+            <div className="space-y-3">
+              {query.data.data.map((r) => (
+                <article className="card p-4 space-y-3" key={r.id}>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold break-words">{r.employee_name}</p>
+                      <p className="text-xs text-surface-500 dark:text-surface-400">
+                        {displayDate(r.work_date)} · {r.week_year}-W
+                        {String(r.week_number).padStart(2, '0')}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="font-bold">{hours(r.hours)}</span>
+                      <span className={`badge-${r.status}`}>{r.status}</span>
+                    </div>
+                  </div>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                    {[
+                      [
+                        'Project',
+                        `${r.project_code || 'No project'}${r.project_name ? ` — ${r.project_name}` : ''}`,
+                      ],
+                      ['Task', r.task_category],
+                      ['Customer', r.customer_name],
+                      ['Employee division', r.employee_division],
+                      ['Location', r.subdivision_name],
+                      ['Billing', r.classification],
+                    ].map(([label, value]) => (
+                      <div className="min-w-0" key={label}>
+                        <dt className="text-surface-500 dark:text-surface-400">{label}</dt>
+                        <dd className="mt-1 break-words">{value || '—'}</dd>
                       </div>
-                    </td>
-                  </tr>
-
-                  {/* Expanded contributor rows */}
-                  {isOpen && p.contributors.map(c => (
-                    <tr key={c.user_id} className="bg-surface-50/50 dark:bg-surface-800/20">
-                      <td />
-                      <td colSpan={2} className="px-4 py-2">
-                        <div className="flex items-center gap-2 ml-6">
-                          <div className="w-5 h-5 rounded-full bg-brand-100 dark:bg-brand-800 flex items-center justify-center text-[10px] font-bold text-brand-600 dark:text-brand-300">
-                            {c.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-surface-700 dark:text-surface-300">{c.name}</p>
-                            <p className="text-[10px] text-surface-400">{c.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 hidden sm:table-cell" />
-                      <td className="px-4 py-2 text-xs text-surface-400 text-right">
-                        {p.total_hours > 0 ? Math.round((c.hours / p.total_hours) * 100) : 0}% of project
-                      </td>
-                      <td className="px-4 py-2 text-xs font-semibold text-brand-600 dark:text-brand-400 text-right">{c.hours.toFixed(1)}h</td>
-                      <td className="px-4 py-2 hidden sm:table-cell" />
-                    </tr>
-                  ))}
-                </Fragment>
-              );
-            })}
-          </tbody>
-          <tfoot>
-            <tr className="bg-surface-50 dark:bg-surface-800/30 border-t-2 border-surface-200 dark:border-surface-700">
-              <td className="px-2 py-3" />
-              <td colSpan={4} className="px-4 py-3 text-sm font-bold text-surface-700 dark:text-surface-300">Grand Total</td>
-              <td className="px-4 py-3 text-sm font-bold text-brand-600 dark:text-brand-400 text-right">{data.grand_total_hours.toFixed(1)}h</td>
-              <td className="hidden sm:table-cell" />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+                    ))}
+                  </dl>
+                  {r.project_description && (
+                    <div>
+                      <p className="text-xs text-surface-500 dark:text-surface-400">Description</p>
+                      <p className="text-sm whitespace-pre-wrap break-words mt-1">
+                        {r.project_description}
+                      </p>
+                    </div>
+                  )}
+                  {r.description && (
+                    <div>
+                      <p className="text-xs text-surface-500 dark:text-surface-400">Daily note</p>
+                      <p className="text-sm whitespace-pre-wrap break-words mt-1">
+                        {r.description}
+                      </p>
+                    </div>
+                  )}
+                  <WeeklyDetails json={r.details_json} />
+                </article>
+              ))}
+            </div>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs text-surface-500 dark:text-surface-400">
+              Page {page} of {Math.max(1, Math.ceil(query.data.total / query.data.page_size))}
+            </span>
+            <div className="flex gap-2">
+              <button
+                className="btn-secondary btn-sm"
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Previous
+              </button>
+              <button
+                className="btn-secondary btn-sm"
+                disabled={page * query.data.page_size >= query.data.total}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
+  );
+}
+function WeeklyDetails({ json }) {
+  let details;
+  try {
+    details = JSON.parse(json || '{}');
+  } catch {
+    return null;
+  }
+  const fields = detailFields.filter(
+    (f) => details?.[f.key] !== null && details?.[f.key] !== undefined && details?.[f.key] !== ''
+  );
+  if (!fields.length) return null;
+  return (
+    <details>
+      <summary className="text-xs cursor-pointer min-h-[44px] flex items-center text-brand-600 dark:text-brand-400">
+        Weekly details
+      </summary>
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mt-2">
+        {fields.map((f) => (
+          <div className="min-w-0" key={f.key}>
+            <dt className="text-surface-500 dark:text-surface-400">{f.label}</dt>
+            <dd className="mt-1 break-words">{String(details[f.key])}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
   );
 }

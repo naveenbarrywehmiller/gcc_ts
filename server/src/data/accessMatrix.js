@@ -52,7 +52,7 @@ for (const area of ['Travel & Visa', 'Open Position / New Joiners']) {
 add('Holidays', 'View and export the selected calendar year', 'catalogView', 'Companywide');
 add('Holidays', 'Add, edit and import holidays', 'catalogEdit', 'Companywide', 'All-day calendar import keeps existing dates and skips timed/cancelled events. Changes affect working-hour targets.');
 add('Holidays', 'Delete holidays', 'catalogDelete', 'Companywide');
-add('Reports', 'View weekly, utilization and project-hour reports', 'reports', divisions, 'Filters cannot expand your access. Project reports also restrict project divisions.');
+add('Reports', 'View weekly, utilization, project-hour, missing-hours and trend reports with entry details', 'reports', divisions, 'Filters cannot expand your access. Employee and project divisions limit report records. Capacity requires complete employee time.');
 add('Reports', 'Export reports to Excel or PDF', 'reports', divisions, 'Downloads use the same access limits as on-screen reports.');
 add('Audit Log', 'View, search and filter activity history', 'audit', divisions, 'Division visibility uses the scope saved at the event. Global and older events without a reliable scope are visible only to System Admins. Logs cannot be edited or deleted here.');
 add('Maintenance', 'Enable/disable maintenance', 'system', 'Whole system');
