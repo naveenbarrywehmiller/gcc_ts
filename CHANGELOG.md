@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.24.1...v1.25.0) (2026-10-10)
+
+
+### Features
+
+* upgrade reports with analytics, filters, drilldowns and exports ([91b8b80](https://github.com/naveenbarrywehmiller/gcc_ts/commit/91b8b80d527c00bdeb75ec7b5dd45742086d926f))
+
 ## [1.24.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.24.0...v1.24.1) (2026-10-10)
 
 
