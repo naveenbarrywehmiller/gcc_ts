@@ -1,7 +1,8 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
-const { adminDivisionIds } = require('../utils/divisionScope');
+const { authenticate } = require('../middleware/auth');
+const { reportingScope } = require('../utils/divisionScope');
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 router.use(authenticate);
@@ -13,18 +14,9 @@ function validDate(value) {
 }
 
 // Match the existing division-ID scope, including legacy profiles with a division name only.
-function teamScope(user) {
-  if (user.role === 'system admin') return { sql: '1=1', params: [] };
-  const ids = adminDivisionIds(user);
-  return {
-    sql: ids.length ? `COALESCE(u.division_id, (
-      SELECT d.id FROM divisions d WHERE LOWER(TRIM(d.name)) = LOWER(TRIM(u.division)) AND d.active = 1
-    )) IN (${ids.map(() => '?').join(',')})` : '0=1',
-    params: ids,
-  };
-}
+const teamScope = user => reportingScope(user, 'u');
 
-router.get('/employees', authorize('admin'), (req, res) => {
+router.get('/employees', permit('teamVacation'), (req, res) => {
   const scope = teamScope(req.user);
   const employees = db.prepare(`SELECT u.id, u.name, COALESCE(d.name, u.division) AS division_name
     FROM users u LEFT JOIN divisions d ON d.id = u.division_id
@@ -39,8 +31,8 @@ router.get('/', (req, res) => {
     return res.status(400).json({ error: 'Choose a valid date range of up to 366 days.' });
   }
   if (!['mine', 'team'].includes(view)) return res.status(400).json({ error: 'Invalid vacation view.' });
-  if (view === 'team' && !['admin', 'system admin'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Only admins can view team vacation plans.' });
+  if (view === 'team' && !['admin', 'manager', 'system admin'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'You do not have access to team vacation plans.' });
   }
   const scope = view === 'team' ? teamScope(req.user) : { sql: 'u.id = ?', params: [req.user.id] };
   let employeeFilter = '';

@@ -1,3 +1,5 @@
+import MatrixHelp from './pages/MatrixHelp';
+import { hasPermission } from './utils/permissions';
 import DivisionUpdates from './pages/admin/DivisionUpdates';
 import ErrorLogs from './pages/admin/ErrorLogs';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -28,6 +30,12 @@ import SystemMaintenance from './pages/admin/SystemMaintenance';
 // We'll create ManagerApprovals shortly
 import ManagerApprovals from './pages/manager/ManagerApprovals';
 
+function PermissionRoute({ permission, children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return hasPermission(user, permission) ? children : <Navigate to="/" replace />;
+}
+
 function AdminRoute({ children }) {
   const { isAdmin, user, loading } = useAuth();
   if (loading) return null;
@@ -57,26 +65,27 @@ function AppRoutes() {
         <Route path="/timesheet" element={<Timesheet />} />
         <Route path="/planned-vacation" element={<PlannedVacation />} />
         <Route path="/help" element={<Help />} />
+        <Route path="/admin/matrix-help" element={<PermissionRoute permission="matrixView"><MatrixHelp /></PermissionRoute>} />
         
         {/* Manager Routes */}
         <Route path="/manager/approvals" element={<ManagerRoute><ManagerApprovals /></ManagerRoute>} />
 
         {/* Admin Routes */}
-        <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
+        <Route path="/reports" element={<PermissionRoute permission="reports"><Reports /></PermissionRoute>} />
         <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
         <Route path="/admin/projects" element={<AdminRoute><AdminProjects /></AdminRoute>} />
         <Route path="/admin/tasks" element={<AdminRoute><AdminTasks /></AdminRoute>} />
-        <Route path="/admin/divisions" element={<AdminRoute><AdminDivisions /></AdminRoute>} />
-        <Route path="/admin/subdivisions" element={<AdminRoute><Navigate to="/admin/divisions" replace /></AdminRoute>} />
-        <Route path="/admin/departments" element={<AdminRoute><AdminDepartments /></AdminRoute>} />
-        <Route path="/admin/supporting-categories" element={<AdminRoute><AdminSupportingCategories /></AdminRoute>} />
-        <Route path="/admin/activities" element={<AdminRoute><AdminActivities /></AdminRoute>} />
-        <Route path="/admin/holidays" element={<AdminRoute><AdminHolidays /></AdminRoute>} />
+        <Route path="/admin/divisions" element={<PermissionRoute permission="catalogView"><AdminDivisions /></PermissionRoute>} />
+        <Route path="/admin/subdivisions" element={<PermissionRoute permission="catalogView"><Navigate to="/admin/divisions" replace /></PermissionRoute>} />
+        <Route path="/admin/departments" element={<PermissionRoute permission="catalogView"><AdminDepartments /></PermissionRoute>} />
+        <Route path="/admin/supporting-categories" element={<PermissionRoute permission="catalogView"><AdminSupportingCategories /></PermissionRoute>} />
+        <Route path="/admin/activities" element={<PermissionRoute permission="catalogView"><AdminActivities /></PermissionRoute>} />
+        <Route path="/admin/holidays" element={<PermissionRoute permission="catalogView"><AdminHolidays /></PermissionRoute>} />
         <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
         <Route path="/admin/audit" element={<AdminRoute><AdminAuditLog /></AdminRoute>} />
         
-        <Route path="/admin/travel" element={<AdminRoute><DivisionUpdates kind="travel" /></AdminRoute>} />
-        <Route path="/admin/staffing" element={<AdminRoute><DivisionUpdates kind="staffing" /></AdminRoute>} />
+        <Route path="/admin/travel" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="travel" /></PermissionRoute>} />
+        <Route path="/admin/staffing" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="staffing" /></PermissionRoute>} />
         <Route path="/admin/error-logs" element={<SystemAdminRoute><ErrorLogs /></SystemAdminRoute>} />
         {/* System Admin Routes */}
         <Route path="/admin/system" element={<SystemAdminRoute><SystemMaintenance /></SystemAdminRoute>} />

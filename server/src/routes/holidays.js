@@ -1,13 +1,15 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const multer = require('multer');
 const { calendarYear, parseHolidays, exportHolidays } = require('../utils/holidayCalendar');
 
+const { permit } = require('../middleware/permissions');
+const { catalogAudit } = require('../middleware/catalogAudit');
 const router = express.Router();
 const uploadCalendar = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 1 } }).single('file');
 
-router.get('/export', authenticate, authorize('admin'), (req, res) => {
+router.get('/export', authenticate, permit('catalogView'), (req, res) => {
   let year;
   try { year = calendarYear(req.query.year); }
   catch (err) { return res.status(400).json({ error: err.message }); }
@@ -17,7 +19,7 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
   res.send(exportHolidays(holidays));
 });
 
-router.post('/import', authenticate, authorize('admin'), (req, res, next) => {
+router.post('/import', authenticate, permit('catalogEdit'), catalogAudit('holidays', 'holiday'), (req, res, next) => {
   uploadCalendar(req, res, err => {
     if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'Calendar file must be under 2 MB' : 'Upload one .ics file' });
     next();
@@ -53,7 +55,7 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // POST /api/holidays
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('catalogEdit'), catalogAudit('holidays', 'holiday'), (req, res) => {
   const { date, name } = req.body;
   if (!date || !name) return res.status(400).json({ error: 'Date and name are required' });
 
@@ -70,7 +72,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/holidays/:id
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('catalogEdit'), catalogAudit('holidays', 'holiday'), (req, res) => {
   const { date, name } = req.body;
   const id = req.params.id;
 
@@ -85,7 +87,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // DELETE /api/holidays/:id
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('catalogDelete'), catalogAudit('holidays', 'holiday'), (req, res) => {
   const id = req.params.id;
   const existing = db.prepare('SELECT id FROM holidays WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Holiday not found' });

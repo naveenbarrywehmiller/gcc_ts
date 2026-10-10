@@ -1,8 +1,14 @@
 const express = require('express');
 const { authenticate } = require('../middleware/auth');
+const { permit } = require('../middleware/permissions');
 const { commonGuides, managerGuides, adminGuides, systemAdminGuides } = require('../data/helpGuides');
 
 const router = express.Router();
+
+router.get('/matrix', authenticate, permit('matrixView'), (req, res) => {
+  res.set('Cache-Control', 'private, no-store');
+  res.json(require('../data/accessMatrix'));
+});
 
 function groupsForRole(role) {
   if (!['employee', 'manager', 'admin', 'system admin'].includes(role)) return null;

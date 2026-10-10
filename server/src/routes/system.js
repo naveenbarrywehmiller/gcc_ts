@@ -4,13 +4,14 @@ const fs = require('fs');
 const { exec } = require('child_process');
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // Only system admins can access these routes
 router.use(authenticate);
-router.use(authorize('system admin'));
+router.use(permit('system'));
 
 const maintenanceFile = path.join(__dirname, '..', '..', '.maintenance');
 

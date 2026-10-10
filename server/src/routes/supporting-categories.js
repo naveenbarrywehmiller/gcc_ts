@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit, protectCatalogStatus } = require('../middleware/permissions');
+const { catalogAudit } = require('../middleware/catalogAudit');
 const router = express.Router();
 
 // GET /api/supporting-categories - List all supporting categories
@@ -23,17 +25,13 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // POST /api/supporting-categories
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('catalogEdit'), catalogAudit('supporting_categories', 'supporting_category'), (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Category name is required' });
 
   try {
     const result = db.prepare('INSERT INTO supporting_categories (name) VALUES (?)').run(name.trim());
     const category = db.prepare('SELECT * FROM supporting_categories WHERE id = ?').get(result.lastInsertRowid);
-
-    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
-      req.user.id, 'CREATE_SUPPORTING_CATEGORY', `Created supporting category: ${name}`, 'supporting_category', result.lastInsertRowid, req.ip
-    );
 
     res.status(201).json({ category });
   } catch (err) {
@@ -45,7 +43,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/supporting-categories/:id
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('catalogEdit'), protectCatalogStatus, catalogAudit('supporting_categories', 'supporting_category'), (req, res) => {
   const { name, active } = req.body;
   const id = req.params.id;
 
@@ -60,7 +58,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // DELETE /api/supporting-categories/:id
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('catalogDelete'), catalogAudit('supporting_categories', 'supporting_category'), (req, res) => {
   const id = req.params.id;
   const existing = db.prepare('SELECT id FROM supporting_categories WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Supporting category not found' });

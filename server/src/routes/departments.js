@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit, protectCatalogStatus } = require('../middleware/permissions');
+const { catalogAudit } = require('../middleware/catalogAudit');
 const router = express.Router();
 
 // GET /api/departments - List all departments (with ownerships)
@@ -30,17 +32,13 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // POST /api/departments
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('catalogEdit'), catalogAudit('departments', 'department'), (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Department name is required' });
 
   try {
     const result = db.prepare('INSERT INTO departments (name) VALUES (?)').run(name.trim());
     const department = db.prepare('SELECT * FROM departments WHERE id = ?').get(result.lastInsertRowid);
-
-    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
-      req.user.id, 'CREATE_DEPARTMENT', `Created department: ${name}`, 'department', result.lastInsertRowid, req.ip
-    );
 
     res.status(201).json({ department });
   } catch (err) {
@@ -52,7 +50,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/departments/:id
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('catalogEdit'), protectCatalogStatus, catalogAudit('departments', 'department'), (req, res) => {
   const { name, active } = req.body;
   const id = req.params.id;
 
@@ -67,7 +65,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // DELETE /api/departments/:id
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('catalogDelete'), catalogAudit('departments', 'department'), (req, res) => {
   const id = req.params.id;
   const existing = db.prepare('SELECT id FROM departments WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Department not found' });

@@ -1,3 +1,5 @@
+import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
 import FieldHelp from '../../components/ui/FieldHelp';
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,6 +11,9 @@ import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Search } from 'lucide-reac
 
 export default function SimpleListManager({ endpoint, title, fieldName = 'name', withLocations = false }) {
   const toast = useToast();
+  const { user } = useAuth();
+  const canEdit = hasPermission(user, 'catalogEdit');
+  const canDelete = hasPermission(user, 'catalogDelete');
   const cache = useQueryClient();
   const itemLabel = title === 'Divisions' ? 'Division' : title;
   const [items, setItems] = useState([]);
@@ -48,9 +53,9 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">{title}<FieldHelp label={itemLabel} /></h1>
-        <button onClick={() => { setEditing(null); setName(''); setShowModal(true); }} className="btn-primary btn-sm">
+        {canEdit && <button onClick={() => { setEditing(null); setName(''); setShowModal(true); }} className="btn-primary btn-sm">
           <Plus className="w-4 h-4" /> Add {itemLabel}
-        </button>
+        </button>}
       </div>
       {withLocations && <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
@@ -77,12 +82,12 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
                       onClick={() => setExpandedDivision(expandedDivision === item.id ? null : item.id)}>
                       Locations {expandedDivision === item.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>}
-                    <button onClick={() => { setEditing(item); setName(item[fieldName]); setShowModal(true); }} className="btn-ghost btn-xs p-1.5" aria-label={`Edit ${item[fieldName]}`}>
+                    {canEdit && <button onClick={() => { setEditing(item); setName(item[fieldName]); setShowModal(true); }} className="btn-ghost btn-xs p-1.5" aria-label={`Edit ${item[fieldName]}`}>
                       <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => handleDelete(item.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Delete ${item[fieldName]}`}>
+                    </button>}
+                    {canDelete && <button onClick={() => handleDelete(item.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Delete ${item[fieldName]}`}>
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </button>}
                   </div>
                 </div>
                 {withLocations && expandedDivision === item.id && <div id={`division-locations-${item.id}`} className="border-t border-surface-200 dark:border-surface-800 p-3 sm:p-4 bg-surface-50 dark:bg-surface-950/30">
@@ -94,7 +99,7 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? `Edit ${itemLabel}` : `Add ${itemLabel}`}
+      <Modal isOpen={showModal && canEdit} onClose={() => setShowModal(false)} title={editing ? `Edit ${itemLabel}` : `Add ${itemLabel}`}
         footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} className="btn-primary btn-sm">{editing ? 'Update' : 'Create'}</button></>}>
         <div>
           <label htmlFor="simple-list-name" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Name *</label>

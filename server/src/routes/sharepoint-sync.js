@@ -8,14 +8,15 @@
 
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const sp = require('../services/sharepoint');
 const config = require('../config/env');
 
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // GET /api/sharepoint-sync/status — Check configuration and connectivity
-router.get('/status', authenticate, authorize('admin'), async (req, res) => {
+router.get('/status', authenticate, permit('sharepoint'), async (req, res) => {
   const status = {
     enabled: config.enableSharepointSync,
     siteUrl: config.sharepointSiteUrl || '(not configured)',
@@ -39,7 +40,7 @@ router.get('/status', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // POST /api/sharepoint-sync/week — Sync all entries for a specific week
-router.post('/week', authenticate, authorize('admin'), async (req, res) => {
+router.post('/week', authenticate, permit('sharepoint'), async (req, res) => {
   if (!config.enableSharepointSync) {
     return res.status(400).json({ error: 'SharePoint sync is disabled. Set ENABLE_SHAREPOINT_SYNC=true in .env' });
   }
@@ -88,7 +89,7 @@ router.post('/week', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // POST /api/sharepoint-sync/full — Sync all approved timesheets (use with caution — can be slow)
-router.post('/full', authenticate, authorize('admin'), async (req, res) => {
+router.post('/full', authenticate, permit('sharepoint'), async (req, res) => {
   if (!config.enableSharepointSync) {
     return res.status(400).json({ error: 'SharePoint sync is disabled. Set ENABLE_SHAREPOINT_SYNC=true in .env' });
   }

@@ -274,7 +274,7 @@ export default function AdminUsers() {
 
   const hasDivisionChoices = form.role === 'admin' || form.role === 'employee';
   const editingOwnAdmin = editing?.id === currentUser?.id && editing?.role === 'admin';
-  const availableDivisions = isSystemAdmin || editingOwnAdmin
+  const availableDivisions = isSystemAdmin
     ? divisions
     : form.role === 'employee'
       ? divisions.filter(d => managedDivisions.some(managed => managed.id === d.id) || originalDivisionIds.includes(d.id))
@@ -591,13 +591,13 @@ export default function AdminUsers() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="user-form-role" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Role</label>
-              <select id="user-form-role" className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <select id="user-form-role" disabled={!isSystemAdmin} className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="employee">Employee</option>
-                <option value="manager">Manager</option>
-                {(isSystemAdmin || editingOwnAdmin || form.role === 'admin') && <option value="admin">Admin</option>}
-                {(isSystemAdmin || editingOwnAdmin) && <option value="system admin">System Admin</option>}
+                {(isSystemAdmin || form.role === 'manager') && <option value="manager">Manager</option>}
+                {(isSystemAdmin || form.role === 'admin') && <option value="admin">Admin</option>}
+                {isSystemAdmin && <option value="system admin">System Admin</option>}
               </select>
-              {editingOwnAdmin && <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">Changing your role updates your access after saving.</p>}
+              {!isSystemAdmin && <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">Only a System Admin can change privileged roles.</p>}
             </div>
             <div>
               <label htmlFor="user-form-supporting-category" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Dedicated/Flex<FieldHelp label="Dedicated / Flex" /></label>
@@ -611,7 +611,7 @@ export default function AdminUsers() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className={hasDivisionChoices ? 'sm:col-span-2 min-w-0' : 'min-w-0'}>
               {hasDivisionChoices ? (
-                <fieldset>
+                <fieldset disabled={editingOwnAdmin && !isSystemAdmin}>
                   <legend className="text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Divisions *</legend>
                   <p className="text-xs text-surface-500 dark:text-surface-400 mb-2">{form.role === 'admin' ? 'Select the divisions this admin can manage.' : 'Select the divisions this employee can book time in.'} Mark one as the primary division.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

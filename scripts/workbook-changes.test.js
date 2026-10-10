@@ -64,7 +64,7 @@ test('migration preserves legacy data and is repeatable', () => {
   assert.equal(legacy.updated_by, admin);
   assert.equal(db.prepare('PRAGMA table_info(division_updates)').all().find(c => c.name === 'open_positions').type, 'TEXT');
 });
-test('admins read and export all projects but only modify their own divisions', async () => {
+test('admins read project choices but export and modify only their own divisions', async () => {
   const foreign = await request(admin, `/projects/${projectB}`, undefined, 'GET');
   assert.equal(foreign.status, 200);
   assert.equal(foreign.body.project.can_edit, false);
@@ -85,12 +85,12 @@ test('admins read and export all projects but only modify their own divisions', 
   assert.equal((await request(employee, '/projects', { billing_type: 'Billable', project_code:'NO', project_name:'No' })).status, 403);
   const exported = await request(admin, '/projects/export', undefined, 'GET');
   const book = new ExcelJS.Workbook(); await book.xlsx.load(exported.bytes);
-  assert.equal(book.worksheets[0].rowCount, 3); assert.equal(book.worksheets[0].getCell('A2').value, 'A-ONE');
-  assert.equal(book.worksheets[0].getCell('A3').value, 'B-SECRET');
+  assert.equal(book.worksheets[0].rowCount, 2); assert.equal(book.worksheets[0].getCell('A2').value, 'A-ONE');
+  assert(!JSON.stringify(book.worksheets[0].getSheetValues()).includes('B-SECRET'));
   const filtered = await request(admin, `/projects/export?division_id=${divB}`, undefined, 'GET');
   const filteredBook = new ExcelJS.Workbook(); await filteredBook.xlsx.load(filtered.bytes);
-  assert.equal(filteredBook.worksheets[0].rowCount, 2);
-  assert.equal(filteredBook.worksheets[0].getCell('A2').value, 'B-SECRET');
+  assert.equal(filteredBook.worksheets[0].rowCount, 1);
+  assert(!JSON.stringify(filteredBook.worksheets[0].getSheetValues()).includes('B-SECRET'));
   assert.deepEqual(db.prepare('SELECT project_name, division_id, active FROM projects WHERE id = ?').get(projectB), {
     project_name: 'Other Division', division_id: divB, active: 1,
   });
@@ -133,14 +133,15 @@ test('optional details survive batch, legacy saves and self-post; invalid values
   assert.equal((await request(admin, '/timesheets/batch', { entries: [entry] })).status, 400);
 });
 test('monthly records isolate divisions and retain travel when updating staffing', async () => {
+  assert.equal((await request(admin, '/division-updates', { division_id: divA, month: '2026-09', travel_visa: 'Denied' }, 'PUT')).status, 403);
   const body = { division_id: divA, month: '2026-09', travel_visa: 'Visa in progress' };
-  assert.equal((await request(admin, '/division-updates', body, 'PUT')).status, 200);
-  const updated = await request(admin, '/division-updates', { division_id: divA, month: '2026-09', open_positions: '  Senior engineer, Bengaluru  ', new_joiners: 'Two engineers joined\nAutomation and VAVE' }, 'PUT');
+  assert.equal((await request(system, '/division-updates', body, 'PUT')).status, 200);
+  const updated = await request(system, '/division-updates', { division_id: divA, month: '2026-09', open_positions: '  Senior engineer, Bengaluru  ', new_joiners: 'Two engineers joined\nAutomation and VAVE' }, 'PUT');
   assert.equal(updated.body.record.travel_visa, 'Visa in progress');
   assert.equal(updated.body.record.open_positions, 'Senior engineer, Bengaluru');
   assert.equal(updated.body.record.new_joiners, 'Two engineers joined\nAutomation and VAVE');
-  assert.equal((await request(admin, '/division-updates', { ...body, new_joiners: 1.5 }, 'PUT')).status, 400);
-  assert.equal((await request(admin, '/division-updates', { ...body, new_joiners: 'x'.repeat(10001) }, 'PUT')).status, 400);
+  assert.equal((await request(system, '/division-updates', { ...body, new_joiners: 1.5 }, 'PUT')).status, 400);
+  assert.equal((await request(system, '/division-updates', { ...body, new_joiners: 'x'.repeat(10001) }, 'PUT')).status, 400);
   assert.equal((await request(admin, `/division-updates?division_id=${divB}&month=2026-09`, undefined, 'GET')).status, 403);
   assert.equal((await request(employee, `/division-updates?division_id=${divA}&month=2026-09`, undefined, 'GET')).status, 403);
   assert.equal((await request(admin, `/division-updates?division_id=${divA}&month=2026-07`, undefined, 'GET')).body.record, null);

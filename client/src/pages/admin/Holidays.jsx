@@ -2,14 +2,20 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import Modal from '../../components/ui/Modal';
-import { Plus, Trash2, Calendar as CalIcon } from 'lucide-react';
+import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
+import { Plus, Edit2, Trash2, Calendar as CalIcon } from 'lucide-react';
 
 export default function AdminHolidays() {
   const toast = useToast();
+  const { user } = useAuth();
+  const canEdit = hasPermission(user, 'catalogEdit');
+  const canDelete = hasPermission(user, 'catalogDelete');
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
   const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ date: '', name: '' });
   const fileRef = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -22,8 +28,9 @@ export default function AdminHolidays() {
   const handleSave = async () => {
     if (!form.date || !form.name) { toast.error('Date and name are required'); return; }
     try {
-      await api.post('/holidays', form);
-      toast.success('Holiday added');
+      if (editing) await api.put(`/holidays/${editing.id}`, form);
+      else await api.post('/holidays', form);
+      toast.success(editing ? 'Holiday updated' : 'Holiday added');
       setShowModal(false); setForm({ date: '', name: '' }); load();
     } catch (err) { toast.error(err.response?.data?.error || 'Failed'); }
   };
@@ -79,9 +86,9 @@ export default function AdminHolidays() {
         </div>
         <div className="flex flex-wrap gap-2">
           <input ref={fileRef} type="file" accept=".ics,text/calendar" hidden onChange={importCalendar} />
-          <button disabled={busy} onClick={() => fileRef.current.click()} className="btn-secondary btn-sm">Import .ics</button>
+          {canEdit && <button disabled={busy} onClick={() => fileRef.current.click()} className="btn-secondary btn-sm">Import .ics</button>}
           <button disabled={busy || loading} onClick={exportCalendar} className="btn-secondary btn-sm">Export .ics</button>
-          <button onClick={() => setShowModal(true)} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Holiday</button>
+          {canEdit && <button onClick={() => { setEditing(null); setForm({ date: '', name: '' }); setShowModal(true); }} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Holiday</button>}
         </div>
       </div>
       <p className="text-xs text-surface-500">Import and export use the selected year. Import includes all-day and recurring holidays, skips timed events, and keeps existing dates unchanged.</p>
@@ -107,9 +114,12 @@ export default function AdminHolidays() {
                       </span>
                       <span className="text-sm text-surface-700 dark:text-surface-300 break-words">{h.name}</span>
                     </div>
-                    <button onClick={() => handleDelete(h.id)} aria-label={`Delete ${h.name}`} className="opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center text-red-400 hover:text-red-600 transition-all">
+                    <div className="flex shrink-0">
+                    {canEdit && <button onClick={() => { setEditing(h); setForm({ date: h.date, name: h.name }); setShowModal(true); }} aria-label={`Edit ${h.name}`} className="btn-ghost min-w-[44px] min-h-[44px] p-2"><Edit2 className="w-3.5 h-3.5" /></button>}
+                    {canDelete && <button onClick={() => handleDelete(h.id)} aria-label={`Delete ${h.name}`} className="opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center text-red-400 hover:text-red-600 transition-all">
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </button>}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -118,8 +128,8 @@ export default function AdminHolidays() {
         </div>
       )}
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Holiday"
-        footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} className="btn-primary btn-sm">Add</button></>}>
+      <Modal isOpen={showModal && canEdit} onClose={() => setShowModal(false)} title={editing ? 'Edit Holiday' : 'Add Holiday'}
+        footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} className="btn-primary btn-sm">{editing ? 'Update' : 'Add'}</button></>}>
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Date *</label>

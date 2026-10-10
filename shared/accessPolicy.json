@@ -1,0 +1,26 @@
+{
+  "roles": ["system admin", "manager", "admin", "employee"],
+  "permissions": {
+    "signedIn": ["system admin", "manager", "admin", "employee"],
+    "matrixView": ["system admin", "manager", "admin"],
+    "catalogView": ["system admin", "manager", "admin"],
+    "catalogEdit": ["system admin", "manager"],
+    "catalogDelete": ["system admin"],
+    "divisionUpdateView": ["system admin", "manager", "admin"],
+    "divisionUpdateEdit": ["system admin", "manager"],
+    "reports": ["system admin", "manager", "admin"],
+    "teamVacation": ["system admin", "manager", "admin"],
+    "users": ["system admin", "admin"],
+    "projects": ["system admin", "admin"],
+    "tasks": ["system admin", "admin"],
+    "approvals": ["system admin", "manager", "admin"],
+    "selfPost": ["system admin", "admin"],
+    "recallOthers": ["system admin", "admin"],
+    "deleteOthersDrafts": ["system admin", "admin"],
+    "audit": ["system admin", "admin"],
+    "system": ["system admin"],
+    "accessGrants": ["system admin"],
+    "sharepoint": ["system admin", "admin"],
+    "powerbi": ["system admin", "admin"]
+  }
+}

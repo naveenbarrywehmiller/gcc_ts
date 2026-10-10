@@ -7,19 +7,20 @@
 
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { canReviewTimesheet } = require('../utils/timesheetPermissions');
 const { getPendingApprovals } = require('../utils/pendingApprovals');
 
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // Get timesheets needing approval for the manager's team
-router.get('/pending-approvals', authenticate, authorize('manager', 'admin'), (req, res) => {
+router.get('/pending-approvals', authenticate, permit('approvals'), (req, res) => {
   res.json({ weeks: getPendingApprovals(req.user) });
 });
 
 // Get details for a specific week for a specific user
-router.get('/week-details/:userId/:year/:week', authenticate, authorize('manager', 'admin'), (req, res) => {
+router.get('/week-details/:userId/:year/:week', authenticate, permit('approvals'), (req, res) => {
   const { userId, year, week } = req.params;
 
   if (!canReviewTimesheet(req.user, Number(userId))) {

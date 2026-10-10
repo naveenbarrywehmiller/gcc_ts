@@ -76,13 +76,15 @@ test('admins only see their division scope; system admins see all, and team filt
   assert.equal((await request('system', '/employees')).body.employees.length, 8);
 });
 
-test('unauthenticated access and employee/manager team access are blocked', async () => {
+test('unauthenticated access and employee team access are blocked; Managers have scoped team reads', async () => {
   assert.equal((await request(null, query)).status, 401);
   assert.equal((await request(null, '', 'PATCH', { changes: [change('2026-09-30')] })).status, 401);
-  for (const user of ['employee', 'manager']) {
+  for (const user of ['employee']) {
     assert.equal((await request(user, query + '&view=team')).status, 403);
     assert.equal((await request(user, '/employees')).status, 403);
   }
+  assert.equal((await request('manager', query + '&view=team')).status, 200);
+  assert.equal((await request('manager', '/employees')).status, 200);
 });
 
 test('invalid writes fail atomically; leap days and edits across years work', async () => {

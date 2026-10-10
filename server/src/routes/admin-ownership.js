@@ -11,16 +11,17 @@
 
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { projectScope, canManageDivision } = require('../utils/divisionScope');
 
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // ============================================================
 // GET /api/admin-ownership/my-users
 // Returns users assigned to the current admin, scoped by divisions
 // ============================================================
-router.get('/my-users', authenticate, authorize('admin'), (req, res) => {
+router.get('/my-users', authenticate, permit('users'), (req, res) => {
   const adminId = req.user.id;
   const scope = projectScope(req.user, 'u');
   const users = db.prepare(`
@@ -102,7 +103,7 @@ router.get('/my-admin', authenticate, (req, res) => {
 // POST /api/admin-ownership/assign/:userId
 // Assign a user to the current admin (from session, not client)
 // ============================================================
-router.post('/assign/:userId', authenticate, authorize('admin'), (req, res) => {
+router.post('/assign/:userId', authenticate, permit('users'), (req, res) => {
   const adminId = req.user.id; // ALWAYS from session
   const targetUserId = parseInt(req.params.userId);
 
@@ -178,7 +179,7 @@ router.post('/assign/:userId', authenticate, authorize('admin'), (req, res) => {
 // POST /api/admin-ownership/release/:userId
 // Release a user from the current admin's ownership
 // ============================================================
-router.post('/release/:userId', authenticate, authorize('admin'), (req, res) => {
+router.post('/release/:userId', authenticate, permit('users'), (req, res) => {
   const adminId = req.user.id;
   const targetUserId = parseInt(req.params.userId);
 
@@ -219,7 +220,7 @@ router.post('/release/:userId', authenticate, authorize('admin'), (req, res) => 
 // Admin: View timesheet history for their authorized users
 // Enforces division-scoped access
 // ============================================================
-router.get('/timesheet-history', authenticate, authorize('admin'), (req, res) => {
+router.get('/timesheet-history', authenticate, permit('users'), (req, res) => {
   const adminId = req.user.id;
   const { user_id, week, year, month, status, division_id, assigned_only } = req.query;
 
@@ -303,7 +304,7 @@ router.get('/timesheet-history', authenticate, authorize('admin'), (req, res) =>
 // GET /api/admin-ownership/authorized-users
 // Get all users the current admin can see (for dropdowns/filters)
 // ============================================================
-router.get('/authorized-users', authenticate, authorize('admin'), (req, res) => {
+router.get('/authorized-users', authenticate, permit('users'), (req, res) => {
   const scope = projectScope(req.user, 'u');
   const users = db.prepare(`
     SELECT u.id, u.name, u.email, u.employee_id, u.division_id,

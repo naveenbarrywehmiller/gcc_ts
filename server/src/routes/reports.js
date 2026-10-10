@@ -1,11 +1,12 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
 
-const { projectScope } = require('../utils/divisionScope');
+const { reportingScope, reportingDivisionIds } = require('../utils/divisionScope');
+const { permit } = require('../middleware/permissions');
 const { getPendingApprovals } = require('../utils/pendingApprovals');
 const { expectedWeekHours } = require('../utils/workingHours');
 const detailFields = require('../config/timesheetFields.json');
@@ -29,63 +30,30 @@ router.get('/dashboard', authenticate, (req, res) => {
   const pendingWeeks = getPendingApprovals(req.user);
   const period = { month: currentMonth, weekStartDate, weekEndDate };
 
+  const userScope = reportingScope(req.user, 'u');
+  const projectScope = reportingScope(req.user, 'p');
+  let teamSummary;
+  if (['admin', 'manager', 'system admin'].includes(req.user.role)) {
+    const countUsers = extra => db.prepare(`SELECT COUNT(*) AS count FROM users u WHERE u.active = 1 AND ${userScope.sql} ${extra}`).get(...userScope.params).count;
+    const hours = (start, end) => db.prepare(`SELECT COALESCE(SUM(t.hours), 0) AS total FROM timesheets t JOIN users u ON u.id = t.user_id
+      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}`).get(start, end, ...userScope.params).total;
+    const activeUsers = (start, end) => db.prepare(`SELECT COUNT(DISTINCT u.id) AS count FROM timesheets t JOIN users u ON u.id = t.user_id
+      WHERE u.active = 1 AND u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}`).get(start, end, ...userScope.params).count;
+    teamSummary = {
+      totalRegistered: countUsers(''),
+      totalProjects: db.prepare(`SELECT COUNT(*) AS count FROM projects p WHERE p.active = 1 AND ${projectScope.sql}`).get(...projectScope.params).count,
+      activeThisMonth: activeUsers(monthStartDate, monthEndDate), activeThisWeek: activeUsers(weekStartDate, weekEndDate),
+      onlineNow: countUsers("AND u.last_seen_at > datetime('now', '-5 minutes')"),
+      monthlyHours: hours(monthStartDate, monthEndDate), weeklyHours: hours(weekStartDate, weekEndDate),
+      pendingApprovals: pendingWeeks.length, currentWeek, currentWeekYear,
+    };
+  }
   if (isAdmin) {
-    const totalRegistered = db.prepare('SELECT COUNT(*) as count FROM users WHERE active = 1').get();
-    const totalProjects = db.prepare('SELECT COUNT(*) as count FROM projects WHERE active = 1').get();
-    const activeThisMonth = db.prepare(`
-      SELECT COUNT(DISTINCT t.user_id) as count FROM timesheets t
-      JOIN users u ON t.user_id = u.id
-      WHERE u.name != '[Deleted User]' AND u.active = 1 AND t.work_date BETWEEN ? AND ?
-    `).get(monthStartDate, monthEndDate);
-    const activeThisWeek = db.prepare(`
-      SELECT COUNT(DISTINCT t.user_id) as count FROM timesheets t
-      JOIN users u ON t.user_id = u.id
-      WHERE u.name != '[Deleted User]' AND u.active = 1 AND t.work_date BETWEEN ? AND ?
-    `).get(weekStartDate, weekEndDate);
-    const onlineNow = db.prepare(`
-      SELECT COUNT(*) as count FROM users
-      WHERE active = 1 AND last_seen_at > datetime('now', '-5 minutes')
-    `).get();
-    const monthlyHours = db.prepare(`
-      SELECT COALESCE(SUM(t.hours), 0) as total FROM timesheets t
-      JOIN users u ON t.user_id = u.id
-      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
-    `).get(monthStartDate, monthEndDate);
-    const weeklyHours = db.prepare(`
-      SELECT COALESCE(SUM(t.hours), 0) as total FROM timesheets t
-      JOIN users u ON t.user_id = u.id
-      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
-    `).get(weekStartDate, weekEndDate);
-
-    const recentSubmissions = pendingWeeks.slice(0, 10).map(row => ({ ...row, name: row.user_name }));
-
-    const hoursByDivision = db.prepare(`
-      SELECT COALESCE(d.name, NULLIF(TRIM(u.division), '')) AS division, COALESCE(SUM(t.hours), 0) as total_hours
-      FROM timesheets t
-      JOIN users u ON t.user_id = u.id
-      LEFT JOIN divisions d ON d.id = u.division_id
-      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
-      GROUP BY COALESCE(d.name, NULLIF(TRIM(u.division), ''))
-      ORDER BY total_hours DESC
-    `).all(monthStartDate, monthEndDate);
-
-    res.json({
-      stats: {
-        totalRegistered: totalRegistered.count,
-        activeThisMonth: activeThisMonth.count,
-        activeThisWeek: activeThisWeek.count,
-        onlineNow: onlineNow.count,
-        totalProjects: totalProjects.count,
-        pendingApprovals: pendingWeeks.length,
-        monthlyHours: monthlyHours.total,
-        weeklyHours: weeklyHours.total,
-        currentWeek,
-        currentWeekYear,
-      },
-      recentSubmissions,
-      hoursByDivision,
-      period,
-    });
+    const hoursByDivision = db.prepare(`SELECT COALESCE(d.name, NULLIF(TRIM(u.division), '')) AS division, COALESCE(SUM(t.hours), 0) AS total_hours
+      FROM timesheets t JOIN users u ON u.id = t.user_id LEFT JOIN divisions d ON d.id = u.division_id
+      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}
+      GROUP BY COALESCE(d.name, NULLIF(TRIM(u.division), '')) ORDER BY total_hours DESC`).all(monthStartDate, monthEndDate, ...userScope.params);
+    res.json({ stats: teamSummary, recentSubmissions: pendingWeeks.slice(0, 10).map(row => ({ ...row, name: row.user_name })), hoursByDivision, period });
   } else {
     const myMonthlyHours = db.prepare(`
       SELECT COALESCE(SUM(hours), 0) as total FROM timesheets 
@@ -148,13 +116,22 @@ router.get('/dashboard', authenticate, (req, res) => {
       recentEntries,
       hoursByProject,
       period,
-      ...(req.user.role === 'manager' ? { teamPendingApprovals: pendingWeeks.length } : {}),
+      ...(req.user.role === 'manager' ? { teamPendingApprovals: pendingWeeks.length, teamSummary } : {}),
     });
   }
 });
 
+router.get('/options', authenticate, permit('reports'), (req, res) => {
+  const scope = reportingScope(req.user, 'u');
+  const ids = reportingDivisionIds(req.user);
+  const divisions = db.prepare('SELECT id, name FROM divisions WHERE active = 1 ORDER BY name').all()
+    .filter(d => req.user.role === 'system admin' || ids.includes(d.id));
+  const users = db.prepare(`SELECT u.id, u.name FROM users u WHERE u.name != '[Deleted User]' AND ${scope.sql} ORDER BY u.name`).all(...scope.params);
+  res.json({ divisions, users });
+});
+
 // GET /api/reports/utilization
-router.get('/utilization', authenticate, authorize('admin'), (req, res) => {
+router.get('/utilization', authenticate, permit('reports'), (req, res) => {
   const { month, year, week, division } = req.query;
 
   if (!year) {
@@ -208,6 +185,8 @@ router.get('/utilization', authenticate, authorize('admin'), (req, res) => {
     params.push(division);
   }
 
+  const scope = reportingScope(req.user, 'u');
+  query += ` AND ${scope.sql}`; params.push(...scope.params);
   query += ' GROUP BY u.id ORDER BY u.name ASC';
   const utilization = db.prepare(query).all(...params);
 
@@ -222,7 +201,7 @@ router.get('/utilization', authenticate, authorize('admin'), (req, res) => {
 });
 
 // GET /api/reports/project-hours
-router.get('/project-hours', authenticate, authorize('admin'), (req, res) => {
+router.get('/project-hours', authenticate, permit('reports'), (req, res) => {
   const { month, year, week, division } = req.query;
 
   let startDate, endDate;
@@ -250,8 +229,12 @@ router.get('/project-hours', authenticate, authorize('admin'), (req, res) => {
     params.push(startDate, endDate);
   }
 
+  const contributionScope = reportingScope(req.user, 'u');
+  query += ` AND t.user_id IN (SELECT u.id FROM users u WHERE ${contributionScope.sql})`;
+  params.push(...contributionScope.params);
+
   // WHERE clause must come after all JOINs and before GROUP BY
-  const scope = projectScope(req.user);
+  const scope = reportingScope(req.user, 'p');
   query += ` WHERE p.active = 1 AND ${scope.sql}`;
   params.push(...scope.params);
   if (division) {
@@ -265,7 +248,7 @@ router.get('/project-hours', authenticate, authorize('admin'), (req, res) => {
 });
 
 // GET /api/reports/project-hours-detail - Project totals with per-user breakdown + flexible dates
-router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res) => {
+router.get('/project-hours-detail', authenticate, permit('reports'), (req, res) => {
   const { start_date, end_date, month, year, week, division, user_id, status } = req.query;
 
   let startDate, endDate;
@@ -284,7 +267,8 @@ router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res)
   }
 
   // Single query: project + user aggregation, then group in JS
-  const scope = projectScope(req.user);
+  const scope = reportingScope(req.user, 'p');
+  const contributorScope = reportingScope(req.user, 'u');
   const rows = db.prepare(`
     SELECT p.id as project_id, p.project_code, p.project_name, p.customer_name, p.division,
            u.id as user_id, u.name as user_name, u.email as user_email,
@@ -298,7 +282,7 @@ router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res)
       ${division ? 'AND u.division = ?' : ''}
       ${user_id ? 'AND t.user_id = ?' : ''}
       ${status ? 'AND t.status = ?' : ''}
-      AND ${scope.sql}
+      AND ${scope.sql} AND ${contributorScope.sql}
     GROUP BY p.id, u.id
     ORDER BY p.project_code, user_hours DESC
   `);
@@ -309,6 +293,7 @@ router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res)
   if (status) params.push(status);
 
   params.push(...scope.params);
+  params.push(...contributorScope.params);
   const rowsData = rows.all(...params);
 
   // Group by project
@@ -410,7 +395,7 @@ router.get('/project-hours-detail', authenticate, authorize('admin'), (req, res)
 });
 
 // GET /api/reports/weekly-summary - Weekly hours summary for a month
-router.get('/weekly-summary', authenticate, authorize('admin'), (req, res) => {
+router.get('/weekly-summary', authenticate, permit('reports'), (req, res) => {
   const { month, year, division, user_id, status } = req.query;
 
   if (!month || !year) {
@@ -445,6 +430,8 @@ router.get('/weekly-summary', authenticate, authorize('admin'), (req, res) => {
     params.push(status);
   }
 
+  const scope = reportingScope(req.user, 'u');
+  query += ` AND ${scope.sql}`; params.push(...scope.params);
   query += ' GROUP BY u.id, t.week_number, t.week_year, t.status ORDER BY u.name, t.week_number';
   const summary = db.prepare(query).all(...params);
   res.json({ summary });
@@ -452,7 +439,7 @@ router.get('/weekly-summary', authenticate, authorize('admin'), (req, res) => {
 
 // GET /api/reports/export - Export data to JSON (frontend converts to Excel/PDF)
 // Now respects all active filters from the Reports page
-router.get('/export', authenticate, authorize('admin'), (req, res) => {
+router.get('/export', authenticate, permit('reports'), (req, res) => {
   const { month, year, week, division, user_id, status, subdivision } = req.query;
 
   let startDate, endDate;
@@ -505,9 +492,10 @@ router.get('/export', authenticate, authorize('admin'), (req, res) => {
     params.push(subdivision);
   }
 
-  const scope = projectScope(req.user);
-  query += ` AND (p.id IS NULL OR ${scope.sql})`;
-  params.push(...scope.params);
+  const scope = reportingScope(req.user, 'p');
+  const employeeScope = reportingScope(req.user, 'u');
+  query += ` AND ${employeeScope.sql} AND (p.id IS NULL OR ${scope.sql})`;
+  params.push(...employeeScope.params, ...scope.params);
   query += ' ORDER BY u.name, t.week_number, t.work_date, p.project_code';
   const data = db.prepare(query).all(...params);
 

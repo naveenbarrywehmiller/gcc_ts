@@ -525,6 +525,7 @@ function migrate() {
   if (!db.prepare('PRAGMA table_info(projects)').all().some(column => column.name === 'billing_type')) {
     db.exec("ALTER TABLE projects ADD COLUMN billing_type TEXT CHECK(billing_type IN ('Billable', 'Non-Billable'))");
   }
+  require('./auditScopeMigration')(db);
   require('./bootstrapAdmin').bootstrapAdmin(db);
 
   console.log('✅ Database migrations complete.');

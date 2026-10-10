@@ -4,9 +4,9 @@ Employee time tracking, team approvals, administration, and reporting in one app
 
 [Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
-**Releases:** [Application v1.20.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.20.0) · [Power BI v1.1.4](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v1.1.4) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v1.1.4/gcc-requirements-powerbi-v1.1.4.zip))
+**Releases:** [Application v1.24.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.24.0) · [Power BI v1.1.4](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v1.1.4) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v1.1.4/gcc-requirements-powerbi-v1.1.4.zip))
 
-**Current source versions:** Application v1.21.0 · Power BI v2.0.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing staffing data.
+**Current source versions:** Application v1.24.0 · Power BI v2.0.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing staffing data.
 
 **Frontend development:** All UI changes must follow the permanent [Responsive Web Design Rules](RESPONSIVE_WEB_DESIGN_RULES.md). The [responsive audit](docs/RESPONSIVE_AUDIT.md) records the current implementation and validation baseline.
 
@@ -26,7 +26,7 @@ Employee time tracking, team approvals, administration, and reporting in one app
 | Power BI | Read-only reporting API, dedicated API-key authentication, filtering/pagination, and a requirements-based report/model project |
 | Microsoft 365 | Optional Entra ID SSO, SharePoint synchronization, and Power Automate approvals |
 | Operations | System-admin maintenance, online database download, database upload/restore, token generation, and error-log viewing |
-| Help | In-app guides for employee, manager, admin, and system admin roles, filtered by the signed-in user's permissions |
+| Help | Role-specific guides and Management → Matrix help with 64 functions for Managers, Admins and System Admins |
 | Interface | Dark mode, responsive screens, notifications, and server date/time display in IST with a 12-hour clock |
 
 ### Roles and access
@@ -36,11 +36,11 @@ There are **four roles**: `employee`, `manager`, `admin`, and `system admin`.
 | Role | Typical access |
 | --- | --- |
 | Employee | Own dashboard, timesheets, and planned vacation |
-| Manager | Employee features plus manager approvals, subject to backend scope checks |
-| Admin | Administration and reports, scoped to assigned divisions where applicable |
+| Manager | Personal features, approvals, shared settings edits, division monthly updates, scoped reports and team vacation reads |
+| Admin | Users/projects/tasks administration, scoped reports and audit, and read-only shared settings/monthly updates |
 | System admin | Full role access, system maintenance, database operations, and error logs |
 
-The backend checks permissions independently of the UI. Administrative reports are not available to every authenticated employee.
+The backend checks permissions independently of the UI. Matrix help is hidden and blocked for Employees. See [the detailed permissions matrix](docs/PERMISSIONS_MATRIX.md) for function-level access, assigned division scope and audit migration behavior.
 
 ### Timesheet workflow
 

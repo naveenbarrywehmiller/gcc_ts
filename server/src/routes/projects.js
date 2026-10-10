@@ -1,10 +1,12 @@
 const express = require('express');
 const ExcelJS = require('exceljs');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { projectDivisionIds, canManageProjectDivision } = require('../utils/projectPermissions');
-const { adminDivisionIds } = require('../utils/divisionScope');
+const { reportingDivisionIds } = require('../utils/divisionScope');
+const { reportingScope } = require('../utils/divisionScope');
 const { columns, validateProject } = require('../utils/projectFields');
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 const select = `SELECT p.*, d.name AS division_name, s.name AS subdivision_name FROM projects p
   LEFT JOIN divisions d ON d.id = p.division_id LEFT JOIN subdivisions s ON s.id = p.subdivision_id`;
@@ -21,7 +23,7 @@ function filter(query) {
   }
   return { sql, params };
 }
-router.get('/options', authenticate, authorize('admin'), (req, res) => {
+router.get('/options', authenticate, permit('reports'), (req, res) => {
   const ids = projectDivisionIds(req.user);
   const filter_divisions = db.prepare('SELECT * FROM divisions WHERE active = 1 ORDER BY name').all();
   const filter_subdivisions = db.prepare('SELECT * FROM subdivisions WHERE active = 1 ORDER BY name').all();
@@ -32,18 +34,19 @@ router.get('/options', authenticate, authorize('admin'), (req, res) => {
   const activities = db.prepare('SELECT id, name FROM activities WHERE active = 1 ORDER BY name').all();
   const supporting_categories = db.prepare('SELECT id, name FROM supporting_categories WHERE active = 1 ORDER BY name').all();
   // Monthly division updates use the same effective division assignments.
-  const assignedIds = adminDivisionIds(req.user);
+  const assignedIds = reportingDivisionIds(req.user);
   const division_update_divisions = filter_divisions.filter(d => req.user.role === 'system admin' || assignedIds.includes(d.id));
   res.json({ divisions, subdivisions, filter_divisions, filter_subdivisions, division_update_divisions, activities, supporting_categories });
 });
-router.get('/export', authenticate, authorize('admin'), async (req, res, next) => {
+router.get('/export', authenticate, permit('projects'), async (req, res, next) => {
   try {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Projects');
     sheet.columns = columns.map(([key, header]) => ({ key, header, width: 24 }));
     if (req.query.template !== 'true') {
       const { sql, params } = filter(req.query);
-      db.prepare(select + sql + ' ORDER BY p.project_code').all(...params)
+      const scope = reportingScope(req.user, 'p');
+      db.prepare(select + sql + ` AND ${scope.sql} ORDER BY p.project_code`).all(...params, ...scope.params)
         .forEach(p => sheet.addRow({ ...p, division: p.division_name, location: p.subdivision_name }));
     }
     sheet.getRow(1).font = { bold: true };
@@ -77,10 +80,10 @@ router.get('/:id', authenticate, (req, res) => {
   res.json({ project: { ...project, can_edit: canManageProjectDivision(req.user, project.division_id) } });
 });
 function audit(req, action, id) {
-  db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, ip_address) VALUES (?,?,?,?,?,?)')
-    .run(req.user.id, action, `Project ${id}`, 'project', id, req.ip);
+  db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, division_id, ip_address) VALUES (?,?,?,?,?,?,?)')
+    .run(req.user.id, action, `Project ${id}`, 'project', id, db.prepare('SELECT division_id FROM projects WHERE id = ?').get(id)?.division_id || null, req.ip);
 }
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('projects'), (req, res) => {
   const project = db.transaction(() => {
     const data = validateProject(req.body, req.user);
     const keys = Object.keys(data);
@@ -90,7 +93,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
   })();
   res.status(201).json({ project });
 });
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('projects'), (req, res) => {
   const existing = getProject(req);
   if (!existing) return res.status(404).json({ error: 'Project not found' });
   if (!canManageProjectDivision(req.user, existing.division_id)) return res.status(403).json({ error: 'You can only edit projects in your assigned divisions' });
@@ -103,7 +106,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   })();
   res.json({ project });
 });
-router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id/permanent', authenticate, permit('projects'), (req, res) => {
   const existing = getProject(req);
   if (!existing) return res.status(404).json({ error: 'Project not found' });
   if (!canManageProjectDivision(req.user, existing.division_id)) return res.status(403).json({ error: 'You can only delete projects in your assigned divisions' });
@@ -111,14 +114,14 @@ router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => 
     const timesheet = db.prepare('SELECT id FROM timesheets WHERE project_id = ? LIMIT 1').get(existing.id);
     if (timesheet) return false;
     db.prepare('DELETE FROM projects WHERE id = ?').run(existing.id);
-    db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, ip_address) VALUES (?,?,?,?,?,?)')
-      .run(req.user.id, 'PERMANENT_DELETE_PROJECT', `Deleted project ${existing.project_code} (${existing.project_name})`, 'project', existing.id, req.ip);
+    db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, division_id, ip_address) VALUES (?,?,?,?,?,?,?)')
+      .run(req.user.id, 'PERMANENT_DELETE_PROJECT', `Deleted project ${existing.project_code} (${existing.project_name})`, 'project', existing.id, existing.division_id, req.ip);
     return true;
   })();
   if (!deleted) return res.status(409).json({ error: 'This project has timesheet entries and cannot be permanently deleted. Deactivate it instead.' });
   res.json({ message: 'Project permanently deleted' });
 });
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('projects'), (req, res) => {
   const existing = getProject(req);
   if (!existing) return res.status(404).json({ error: 'Project not found' });
   if (!canManageProjectDivision(req.user, existing.division_id)) return res.status(403).json({ error: 'You can only deactivate projects in your assigned divisions' });

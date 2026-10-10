@@ -1,11 +1,18 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit } = require('../middleware/permissions');
+const { reportingDivisionIds } = require('../utils/divisionScope');
 const router = express.Router();
+function auditScope(user) {
+  if (user.role === 'system admin') return { sql: '1=1', params: [] };
+  const ids = reportingDivisionIds(user);
+  return { sql: ids.length ? `al.division_id IN (${ids.map(() => '?').join(',')})` : '0=1', params: ids };
+}
 
 // GET /api/audit - List audit logs with filtering and pagination
-router.get('/', authenticate, authorize('admin'), (req, res) => {
+router.get('/', authenticate, permit('audit'), (req, res) => {
   const { action, user_id, entity_type, from_date, to_date, search, page = 1, limit = 50 } = req.query;
 
   let countQuery = `SELECT COUNT(*) as total FROM audit_logs al LEFT JOIN users u ON al.user_id = u.id WHERE 1=1`;
@@ -15,7 +22,9 @@ router.get('/', authenticate, authorize('admin'), (req, res) => {
     LEFT JOIN users u ON al.user_id = u.id
     WHERE 1=1
   `;
-  const params = [];
+  const scope = auditScope(req.user);
+  query += ` AND ${scope.sql}`; countQuery += ` AND ${scope.sql}`;
+  const params = [...scope.params];
 
   if (action) {
     query += ' AND al.action = ?';
@@ -70,9 +79,16 @@ router.get('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // GET /api/audit/actions - Get list of distinct action types
-router.get('/actions', authenticate, authorize('admin'), (req, res) => {
-  const actions = db.prepare('SELECT DISTINCT action FROM audit_logs ORDER BY action ASC').all();
+router.get('/actions', authenticate, permit('audit'), (req, res) => {
+  const scope = auditScope(req.user);
+  const actions = db.prepare(`SELECT DISTINCT action FROM audit_logs al WHERE ${scope.sql} ORDER BY action`).all(...scope.params);
   res.json({ actions: actions.map(a => a.action) });
+});
+
+router.get('/users', authenticate, permit('audit'), (req, res) => {
+  const scope = auditScope(req.user);
+  const users = db.prepare(`SELECT DISTINCT u.id, u.name FROM audit_logs al JOIN users u ON u.id = al.user_id WHERE ${scope.sql} ORDER BY u.name`).all(...scope.params);
+  res.json({ users });
 });
 
 module.exports = router;

@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit, protectCatalogStatus } = require('../middleware/permissions');
+const { catalogAudit } = require('../middleware/catalogAudit');
 const router = express.Router();
 
 // ===== DIVISIONS =====
@@ -13,7 +15,7 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // POST /api/divisions
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('catalogEdit'), catalogAudit('divisions', 'division'), (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Division name is required' });
 
@@ -30,7 +32,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/divisions/:id
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('catalogEdit'), protectCatalogStatus, catalogAudit('divisions', 'division'), (req, res) => {
   const { name, active } = req.body;
   const id = req.params.id;
 
@@ -45,7 +47,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // DELETE /api/divisions/:id
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('catalogDelete'), catalogAudit('divisions', 'division'), (req, res) => {
   const id = req.params.id;
   const existing = db.prepare('SELECT id FROM divisions WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Division not found' });

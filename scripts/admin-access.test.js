@@ -46,12 +46,13 @@ before(async () => {
 });
 after(() => { server?.close(); db.close(); });
 
-test('profile and legacy division fallback works across monthly updates, history, reporting and approvals', async () => {
+test('profile and legacy division fallback works across read-only monthly updates, history, reporting and approvals', async () => {
+  assert.equal((await request(manager, '/division-updates', { division_id: a, month: '2026-09', new_joiners: 'One engineer joined' }, 'PUT')).status, 200);
   for (const actor of [admin, legacy]) {
     const opts = await request(actor, '/projects/options');
     assert.deepEqual(opts.body.divisions.map(d => d.id), [a]);
     assert.deepEqual(opts.body.division_update_divisions.map(d => d.id), [a]);
-    assert.equal((await request(actor, '/division-updates', { division_id: a, month: '2026-09', new_joiners: 'One engineer joined' }, 'PUT')).status, 200);
+    assert.equal((await request(actor, '/division-updates', { division_id: a, month: '2026-09', new_joiners: 'One engineer joined' }, 'PUT')).status, 403);
     assert.equal((await request(actor, '/division-updates', { division_id: b, month: '2026-09', new_joiners: 'One engineer joined' }, 'PUT')).status, 403);
     const users = (await request(actor, '/admin-ownership/authorized-users')).body.users;
     assert(users.some(u => u.id === employee));
@@ -112,39 +113,18 @@ test('admins cannot bypass the division selection flow or edit other admin crede
   assert.deepEqual(db.prepare('SELECT division_id FROM admin_divisions WHERE user_id = ? ORDER BY division_id').all(peer), original);
 });
 
-test('Dedicated and Flex Team admins can edit their own division checkboxes without changing another admin', async () => {
+test('Dedicated and Flex admins can retain system-granted divisions but cannot expand their own access', async () => {
   assert.ok(flexCategory && dedicatedCategory);
-  const before = db.prepare('SELECT division_id, supporting_category_id FROM users WHERE id = ?').get(admin);
-  assert.equal((await request(admin, `/users/${admin}`, {
-    supporting_category_id: dedicatedCategory, division_id: a, division_ids: [a, b],
-  }, 'PUT')).status, 200);
-  assert.deepEqual((await request(admin, '/projects/options')).body.divisions.map(d => d.id), [a, b]);
-  assert.equal((await request(admin, `/users/${admin}`, {
-    supporting_category_id: flexCategory, division_id: a, division_ids: [a, b],
-  }, 'PUT')).status, 200);
-  assert.deepEqual((await request(admin, '/projects/options')).body.divisions.map(d => d.id), [a, b]);
+  for (const category of [dedicatedCategory, flexCategory]) {
+    assert.equal((await request(admin, `/users/${admin}`, { supporting_category_id: category, division_id: a, division_ids: [a, b] }, 'PUT')).status, 403);
+    assert.equal((await request(admin, `/users/${admin}`, { supporting_category_id: category, division_id: a, division_ids: [a] }, 'PUT')).status, 200);
+    assert.deepEqual((await request(admin, '/projects/options')).body.divisions.map(d => d.id), [a]);
+  }
+  assert.equal((await request(system, `/users/${admin}/divisions`, { division_ids: [a, b] }, 'PUT')).status, 200);
+  assert.equal((await request(admin, `/users/${admin}`, { supporting_category_id: flexCategory, division_id: a, division_ids: [a, b] }, 'PUT')).status, 200);
   assert.deepEqual((await request(admin, `/users/${admin}/divisions`)).body.divisions.map(d => d.id), [a, b]);
-
-  assert.equal((await request(admin, `/users/${admin}`, {
-    division_id: b, division_ids: [b],
-  }, 'PUT')).status, 200);
-  assert.deepEqual((await request(admin, '/projects/options')).body.divisions.map(d => d.id), [b]);
-
-  const unchanged = db.prepare('SELECT division_id, supporting_category_id FROM users WHERE id = ?').get(admin);
-  assert.equal((await request(admin, `/users/${admin}`, {
-    division_id: a, division_ids: [a, 999999],
-  }, 'PUT')).status, 400);
-  assert.deepEqual(db.prepare('SELECT division_id, supporting_category_id FROM users WHERE id = ?').get(admin), unchanged);
   assert.equal((await request(admin, `/users/${peer}`, { division_id: a, division_ids: [a] }, 'PUT')).status, 403);
-  assert.equal((await request(admin, `/users/${admin}`, { role: 'invalid role', division_id: b }, 'PUT')).status, 400);
-
-  assert.equal((await request(admin, `/users/${admin}`, {
-    supporting_category_id: dedicatedCategory, division_id: b, division_ids: [b],
-  }, 'PUT')).status, 200);
-  assert.deepEqual((await request(admin, `/users/${admin}/divisions`)).body.divisions.map(d => d.id), [b]);
-  assert.equal((await request(admin, `/users/${admin}`, { division_id: a }, 'PUT')).status, 403);
-  assert.equal(before.division_id, a);
-  assert.equal((await request(system, `/users/${admin}`, { division_id: a }, 'PUT')).status, 200);
+  assert.equal((await request(system, `/users/${admin}/divisions`, { division_ids: [a] }, 'PUT')).status, 200);
 });
 
 test('user management checks both the original and destination division on every mutation', async () => {
@@ -209,12 +189,12 @@ test('employee division checkboxes control which project divisions they can book
   assert.deepEqual((await request(created.body.user.id, `/users/${created.body.user.id}/divisions`)).body.divisions.map(d => d.id), [a, b]);
 });
 
-test('an admin can change their own role and division, and access follows the saved role', async () => {
-  assert.equal((await request(admin, `/users/${admin}`, { role: 'manager', division_id: b }, 'PUT')).status, 200);
-  assert.equal(db.prepare('SELECT role, division_id FROM users WHERE id = ?').get(admin).role, 'manager');
+test('only system admins change administrator roles and session access follows the saved role', async () => {
+  assert.equal((await request(admin, `/users/${admin}`, { role: 'manager', division_id: b }, 'PUT')).status, 403);
+  assert.equal((await request(admin, `/users/${admin}`, { role: 'system admin', division_id: a }, 'PUT')).status, 403);
+  assert.equal((await request(system, `/users/${admin}`, { role: 'manager', division_id: b }, 'PUT')).status, 200);
   assert.equal((await request(admin, '/users')).status, 403);
   assert.equal((await request(system, `/users/${admin}`, { role: 'admin', division_id: a }, 'PUT')).status, 200);
-  assert.equal((await request(admin, `/users/${admin}`, { role: 'system admin', division_id: a }, 'PUT')).status, 200);
   assert.equal((await request(admin, '/users')).status, 200);
-  assert.equal((await request(admin, '/system/maintenance')).status, 200);
+  assert.equal((await request(admin, '/system/maintenance')).status, 403);
 });

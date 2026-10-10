@@ -12,6 +12,7 @@ const { serializeDetails } = require('../utils/timesheetDetails');
 const { projectScope, adminDivisionIds } = require('../utils/divisionScope');
 const { validateTimesheetEntry, validateWeekEntries } = require('../utils/timesheetValidation');
 const { requireAssignedReviewer, assignedReviewer } = require('../utils/timesheetAssignment');
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // Normalize once before writes, including self-post and single-entry callers.
@@ -502,7 +503,7 @@ router.post('/submit', authenticate, async (req, res, next) => {
 });
 
 // POST /api/timesheets/post - Admin: Self-post timesheet directly (if no other admin assigned)
-router.post('/post', authenticate, authorize('admin'), normalizeDetails, (req, res) => {
+router.post('/post', authenticate, permit('selfPost'), normalizeDetails, (req, res) => {
   const { week, year, comment, entries: incomingEntries } = req.body;
   const userId = req.user.id;
 
@@ -611,7 +612,7 @@ router.post('/post', authenticate, authorize('admin'), normalizeDetails, (req, r
 });
 
 // POST /api/timesheets/approve - Admin: Approve weekly timesheets
-router.post('/approve', authenticate, authorize('admin', 'manager'), (req, res) => {
+router.post('/approve', authenticate, permit('approvals'), (req, res) => {
   const { user_id, week, year, comment } = req.body;
 
   if (!user_id || !week || !year) {
@@ -646,15 +647,15 @@ router.post('/approve', authenticate, authorize('admin', 'manager'), (req, res) 
     WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status = 'submitted'
   `).run(comment || null, targetUserId, startDate, endDate);
 
-  db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
-    req.user.id, 'APPROVE_TIMESHEET', `Approved timesheet for user ${targetUserId}, Week ${week} ${year}`, 'timesheet', comment || null, req.ip
+  db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, division_id, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+    req.user.id, 'APPROVE_TIMESHEET', `Approved timesheet for user ${targetUserId}, Week ${week} ${year}`, 'timesheet', comment || null, db.prepare('SELECT division_id FROM users WHERE id = ?').get(targetUserId)?.division_id || null, req.ip
   );
 
   res.json({ message: 'Timesheet approved', updated: result.changes });
 });
 
 // POST /api/timesheets/reject - Reject weekly timesheets
-router.post('/reject', authenticate, authorize('admin', 'manager'), (req, res) => {
+router.post('/reject', authenticate, permit('approvals'), (req, res) => {
   const { user_id, week, year, comment } = req.body;
 
   if (!user_id || !week || !year) {
@@ -672,8 +673,8 @@ router.post('/reject', authenticate, authorize('admin', 'manager'), (req, res) =
     WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status = 'submitted'
   `).run(comment || null, user_id, startDate, endDate);
 
-  db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
-    req.user.id, 'REJECT_TIMESHEET', `Rejected timesheet for user ${user_id}, Week ${week} ${year}`, 'timesheet', comment || null, req.ip
+  db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, division_id, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+    req.user.id, 'REJECT_TIMESHEET', `Rejected timesheet for user ${user_id}, Week ${week} ${year}`, 'timesheet', comment || null, db.prepare('SELECT division_id FROM users WHERE id = ?').get(user_id)?.division_id || null, req.ip
   );
 
   res.json({ message: 'Timesheet rejected', updated: result.changes });
@@ -717,8 +718,8 @@ router.post('/recall', authenticate, async (req, res) => {
     }
 
     const action = isAdmin ? 'ADMIN_RECALL_TIMESHEET' : 'EMPLOYEE_RECALL_TIMESHEET';
-    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
-      req.user.id, action, `Recalled timesheet for user ${targetUserId}, Week ${week} ${year}. Reason: ${comment || 'N/A'}`, 'timesheet', comment || null, req.ip
+    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, new_value, division_id, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      req.user.id, action, `Recalled timesheet for user ${targetUserId}, Week ${week} ${year}. Reason: ${comment || 'N/A'}`, 'timesheet', comment || null, db.prepare('SELECT division_id FROM users WHERE id = ?').get(targetUserId)?.division_id || null, req.ip
     );
 
     res.json({ message: 'Timesheet recalled for correction', updated: changed });

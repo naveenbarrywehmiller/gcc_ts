@@ -1,3 +1,4 @@
+import { hasPermission } from '../../utils/permissions';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
@@ -5,7 +6,7 @@ import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
 import FieldHelp from '../../components/ui/FieldHelp';
 
-function RecordForm({ record, divisionId, month, kind }) {
+function RecordForm({ record, divisionId, month, kind, canEdit }) {
   const [form, setForm] = useState({ travel_visa: record?.travel_visa || '', open_positions: record?.open_positions ?? '', new_joiners: record?.new_joiners ?? '' });
   const [busy, setBusy] = useState(false);
   const toast = useToast();
@@ -21,15 +22,16 @@ function RecordForm({ record, divisionId, month, kind }) {
     finally { setBusy(false); }
   };
   return <form onSubmit={save} className="space-y-4">
-    {travel ? <div><label htmlFor="travel-visa" className="block text-sm mb-2">Travel &amp; VISA<FieldHelp label="Travel & VISA" /></label><textarea id="travel-visa" rows={7} maxLength={10000} className="input" value={form.travel_visa} onChange={e => setForm({ ...form, travel_visa: e.target.value })} /></div> :
-      <div className="space-y-4">{[['open_positions', 'Open Position'], ['new_joiners', 'New Joiners']].map(([key, label]) => <div key={key}><label htmlFor={key} className="block text-sm mb-2">{label}<FieldHelp label="Open Position / New Joiners" /></label><textarea id={key} rows={7} maxLength={10000} className="input" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>}
-    <button className="btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+    {travel ? <div><label htmlFor="travel-visa" className="block text-sm mb-2">Travel &amp; VISA<FieldHelp label="Travel & VISA" /></label><textarea id="travel-visa" readOnly={!canEdit} rows={7} maxLength={10000} className="input" value={form.travel_visa} onChange={e => setForm({ ...form, travel_visa: e.target.value })} /></div> :
+      <div className="space-y-4">{[['open_positions', 'Open Position'], ['new_joiners', 'New Joiners']].map(([key, label]) => <div key={key}><label htmlFor={key} className="block text-sm mb-2">{label}<FieldHelp label="Open Position / New Joiners" /></label><textarea id={key} readOnly={!canEdit} rows={7} maxLength={10000} className="input" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>}
+    {canEdit ? <button className="btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button> : <p className="text-sm text-surface-500">Read-only. A Manager or System Admin can update this record.</p>}
     {record?.updated_at && <p className="text-xs text-surface-500">Last saved: {record.updated_at} UTC</p>}
   </form>;
 }
 
 export default function DivisionUpdates({ kind }) {
   const { user } = useAuth();
+  const canEdit = hasPermission(user, 'divisionUpdateEdit');
   const [divisionId, setDivisionId] = useState('');
   const [month, setMonth] = useState(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; });
   const options = useQuery({ queryKey: ['project-options', user.id], queryFn: () => api.get('/projects/options').then(r => r.data) });
@@ -42,6 +44,6 @@ export default function DivisionUpdates({ kind }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="text-sm">Division<select className="input mt-1" value={selected} onChange={e => setDivisionId(e.target.value)}><option value="">Select division</option>{divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="text-sm">Month<input type="month" className="input mt-1" value={month} onChange={e => setMonth(e.target.value)} /></label></div>
     {(query.isError || options.isError) && <p role="alert" className="text-red-600">Unable to load this record. Please refresh.</p>}
     {query.isLoading && <p>Loading…</p>}
-    {selected && month && query.data && !query.isError && <RecordForm key={`${selected}:${month}:${kind}`} record={query.data.record} divisionId={selected} month={month} kind={kind} />}
+    {selected && month && query.data && !query.isError && <RecordForm key={`${selected}:${month}:${kind}`} record={query.data.record} divisionId={selected} month={month} kind={kind} canEdit={canEdit} />}
   </div>;
 }

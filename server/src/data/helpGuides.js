@@ -1,3 +1,10 @@
+const matrixGuide = { id: 'matrix-help', title: 'Matrix help', path: '/admin/matrix-help',
+    description: 'Understand permissions for every role and function.', steps: [
+      'Open Matrix help under Management to compare all four roles.',
+      'Search for a function, filter by area, or select Show functions available to me.',
+      'Read each scope and rule before using a management action.',
+    ] };
+
 const commonGuides = [
   {
     id: 'dashboard',
@@ -40,6 +47,18 @@ const commonGuides = [
 ];
 
 const managerGuides = [
+  matrixGuide,
+  { id: 'manager-settings', title: 'Shared settings and monthly records', path: '/admin/divisions',
+    description: 'Maintain reference lists and division updates.', steps: [
+      'Use Management to add or edit Divisions, Locations, Departments, ownerships, Dedicated/Flex, Work Type and Holidays. Shared changes apply companywide.',
+      'Only a System Admin can delete or deactivate shared settings.',
+      'Use Travel & VISA and Open Position / New Joiners to maintain monthly records in your assigned division.',
+    ] },
+  { id: 'manager-reports', title: 'Team vacation and reports', path: '/reports',
+    description: 'Review your division’s plans and recorded work.', steps: [
+      'Use Team view in Planned Vacation to read saved plans in your assigned division. Edit your own dates in My view.',
+      'Open Reports to filter and export records within your assigned division.',
+    ] },
   {
     id: 'team-approvals',
     title: 'Team Approvals',
@@ -54,6 +73,7 @@ const managerGuides = [
 ];
 
 const adminGuides = [
+  matrixGuide,
   {
     id: 'admin-approvals',
     title: 'Approvals',
@@ -74,7 +94,7 @@ const adminGuides = [
       'Search or filter by division, department, supporting category, role, or status.',
       'Open a user to edit their details, or select Create User when your permissions allow it. Role and Dedicated/Flex are separate fields.',
       'For an admin or employee, check every division they need and mark one checked division as Primary. Admin assignments control management access; employee assignments control which divisions appear when booking project time. The same checkboxes apply to Dedicated and Flex users.',
-      'Edit a user later to change their checked divisions, primary division, role, or Dedicated/Flex category. An admin can edit their own role and division access; saving a role change updates their permissions.',
+      'Edit a user later to change their checked divisions, primary division, role, or Dedicated/Flex category. Only a System Admin can change privileged roles or administrator division access. Admins cannot expand their own access.',
       'Use the assignment and history controls to manage or inspect users assigned to you. Employees must be assigned to an active admin before they can sign in or enter time.',
     ],
   },
@@ -85,8 +105,8 @@ const adminGuides = [
     description: 'Keep the options used by timesheets up to date.',
     steps: [
       'Use Projects to search, filter, add, or edit projects. The page also offers an Excel template, import, and export.',
-      'Set the division and location in each project. In Division, expand Locations for a division to add, edit, or deactivate its locations.',
-      'Use the Management links for tasks, divisions, departments, work types, and other reference lists.',
+      'Set the division and location in each project. Managers and System Admins maintain locations in Division; Admins can view the existing locations.',
+      'Admins maintain Task Name/Number. Divisions, Departments, Dedicated/Flex and Work Type are read-only for Admins; Managers and System Admins maintain these lists.',
       'Check the record and your scope before changing or deactivating an item.',
     ],
   },
@@ -108,7 +128,7 @@ const adminGuides = [
     description: 'Maintain the calendar used when reviewing working days.',
     steps: [
       'Select the year to review its holidays.',
-      'Add a holiday individually, or use Import .ics to bring in a calendar file.',
+      'Managers and System Admins can add or edit holidays and import .ics files. Admins can view and export the calendar.',
       'Use Export .ics when you need a copy of the holiday calendar.',
     ],
   },
@@ -119,7 +139,7 @@ const adminGuides = [
     description: 'Keep travel and staffing updates current.',
     steps: [
       'Open Travel & VISA or Open Position / New Joiners from Management.',
-      'Review the information for your division and select Save after editing.',
+      'Choose a division and month. Managers and System Admins can edit; Admins have read-only access.',
     ],
   },
 ];

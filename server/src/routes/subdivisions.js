@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit, protectCatalogStatus } = require('../middleware/permissions');
+const { catalogAudit } = require('../middleware/catalogAudit');
 const router = express.Router();
 
 // GET /api/subdivisions - List subdivisions (optionally filtered by division_id)
@@ -45,7 +47,7 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 // POST /api/subdivisions
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('catalogEdit'), catalogAudit('subdivisions', 'subdivision'), (req, res) => {
   const { name, division_id } = req.body;
   if (!name || !division_id) {
     return res.status(400).json({ error: 'Name and division are required' });
@@ -68,10 +70,6 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
       WHERE s.id = ?
     `).get(result.lastInsertRowid);
 
-    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
-      req.user.id, 'CREATE_SUBDIVISION', `Created subdivision: ${name} in division ${division_id}`, 'subdivision', result.lastInsertRowid, req.ip
-    );
-
     res.status(201).json({ subdivision });
   } catch (err) {
     if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
@@ -82,7 +80,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/subdivisions/:id
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('catalogEdit'), protectCatalogStatus, catalogAudit('subdivisions', 'subdivision'), (req, res) => {
   const { name, division_id, active } = req.body;
   const id = req.params.id;
 
@@ -115,7 +113,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // DELETE /api/subdivisions/:id
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('catalogDelete'), catalogAudit('subdivisions', 'subdivision'), (req, res) => {
   const id = req.params.id;
   const existing = db.prepare('SELECT id FROM subdivisions WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Subdivision not found' });

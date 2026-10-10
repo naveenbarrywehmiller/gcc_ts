@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit, protectCatalogStatus } = require('../middleware/permissions');
+const { catalogAudit } = require('../middleware/catalogAudit');
 const router = express.Router();
 
 // GET /api/activities
@@ -11,7 +13,7 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // POST /api/activities
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('catalogEdit'), catalogAudit('activities', 'activity'), (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Activity name is required' });
 
@@ -28,7 +30,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/activities/:id
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('catalogEdit'), protectCatalogStatus, catalogAudit('activities', 'activity'), (req, res) => {
   const { name, active } = req.body;
   const id = req.params.id;
 
@@ -43,7 +45,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // DELETE /api/activities/:id
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('catalogDelete'), catalogAudit('activities', 'activity'), (req, res) => {
   const id = req.params.id;
   const existing = db.prepare('SELECT id FROM activities WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Activity not found' });

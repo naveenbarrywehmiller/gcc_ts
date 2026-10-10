@@ -7,8 +7,21 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
   const onCloseRef = useRef(onClose);
+  const returnFocusRef = useRef(null);
 
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  useEffect(() => {
+    // Remember the opener before a child with autoFocus receives focus on mount.
+    const rememberOutsideFocus = event => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest('[role="dialog"]')?.getAttribute('aria-labelledby') !== titleId) {
+        returnFocusRef.current = target;
+      }
+    };
+    rememberOutsideFocus({ target: document.activeElement });
+    document.addEventListener('focusin', rememberOutsideFocus);
+    return () => document.removeEventListener('focusin', rememberOutsideFocus);
+  }, [titleId]);
   useEffect(() => {
     if (isOpen) {
       const previousOverflow = document.body.style.overflow;
@@ -22,7 +35,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   useEffect(() => {
     if (!isOpen) return;
 
-    const previousFocus = document.activeElement;
+    const previousFocus = returnFocusRef.current || document.activeElement;
     closeRef.current?.focus();
     const handleKeys = (event) => {
       if (event.key === 'Escape') onCloseRef.current();
@@ -36,7 +49,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     document.addEventListener('keydown', handleKeys);
-    return () => { document.removeEventListener('keydown', handleKeys); previousFocus?.focus?.(); };
+    return () => { document.removeEventListener('keydown', handleKeys); if (previousFocus?.isConnected) previousFocus.focus?.(); };
   }, [isOpen]);
 
   if (!isOpen) return null;

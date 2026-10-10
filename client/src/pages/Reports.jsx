@@ -1,3 +1,4 @@
+import { useAuth } from '../contexts/auth';
 import { useState, useEffect, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
@@ -66,6 +67,7 @@ function formatDateRange(startDate, endDate) {
 
 export default function Reports() {
   const toast = useToast();
+  const { user } = useAuth();
   const [tab, setTab] = useState('weekly');
   const [preset, setPreset] = useState('this-month');
   const [startDate, setStartDate] = useState(() => getPresetDates('this-month').startDate);
@@ -81,14 +83,8 @@ export default function Reports() {
   };
 
   const { data: filterData } = useQuery({
-    queryKey: ['report-filters'],
-    queryFn: async () => {
-      const [dRes, uRes] = await Promise.all([
-        api.get('/divisions'),
-        api.get('/users'),
-      ]);
-      return { divisions: dRes.data.divisions, users: uRes.data.users };
-    },
+    queryKey: ['report-filters', user.id, user.role],
+    queryFn: async () => (await api.get('/reports/options')).data,
     staleTime: Infinity,
   });
 
@@ -96,7 +92,7 @@ export default function Reports() {
   const users = filterData?.users || [];
 
   const { data, isLoading: loading, isError } = useQuery({
-    queryKey: ['report', tab, startDate, endDate, divisionFilter, userFilter, statusFilter],
+    queryKey: ['report', user.id, user.role, tab, startDate, endDate, divisionFilter, userFilter, statusFilter],
     queryFn: async () => {
       if (tab === 'projects') {
         let params = `start_date=${startDate}&end_date=${endDate}`;

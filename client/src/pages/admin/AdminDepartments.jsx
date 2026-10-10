@@ -1,3 +1,5 @@
+import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
@@ -6,6 +8,9 @@ import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Tag, X } from 'lucide-r
 
 export default function AdminDepartments() {
   const toast = useToast();
+  const { user } = useAuth();
+  const canEdit = hasPermission(user, 'catalogEdit');
+  const canDelete = hasPermission(user, 'catalogDelete');
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -113,9 +118,9 @@ export default function AdminDepartments() {
             Manage departments and their ownership details
           </p>
         </div>
-        <button onClick={() => { setEditing(null); setName(''); setShowModal(true); }} className="btn-primary btn-sm">
+        {canEdit && <button onClick={() => { setEditing(null); setName(''); setShowModal(true); }} className="btn-primary btn-sm">
           <Plus className="w-4 h-4" /> Add Department
-        </button>
+        </button>}
       </div>
 
       <div className="card overflow-hidden">
@@ -137,7 +142,7 @@ export default function AdminDepartments() {
               return (
                 <div key={dept.id} className="transition-colors">
                   {/* Department Row */}
-                  <div className="px-4 py-3 flex items-center justify-between hover:bg-surface-50 dark:hover:bg-surface-800/30 group">
+                  <div className="px-4 py-3 flex flex-wrap gap-2 items-center justify-between hover:bg-surface-50 dark:hover:bg-surface-800/30 group">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <button
                         onClick={() => toggleExpand(dept.id)}
@@ -150,7 +155,7 @@ export default function AdminDepartments() {
                         }
                       </button>
                       <div className="min-w-0">
-                        <span className="text-sm font-medium text-surface-800 dark:text-surface-200">
+                        <span className="text-sm font-medium text-surface-800 dark:text-surface-200 [overflow-wrap:anywhere]">
                           {dept.name}
                         </span>
                         {ownerships.length > 0 && (
@@ -174,20 +179,20 @@ export default function AdminDepartments() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
-                      <button
+                      {canEdit && <button
                         onClick={() => { setEditing(dept); setName(dept.name); setShowModal(true); }}
                         className="btn-ghost btn-xs p-1.5"
                         title="Edit department name"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </button>}
+                      {canDelete && <button
                         onClick={() => handleDeleteDept(dept.id)}
                         className="btn-ghost btn-xs p-1.5 text-red-500"
                         title="Deactivate department"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </button>}
                     </div>
                   </div>
 
@@ -195,16 +200,16 @@ export default function AdminDepartments() {
                   {isExpanded && (
                     <div className="bg-surface-50/50 dark:bg-surface-800/20 border-t border-surface-100 dark:border-surface-800/50
                       px-4 py-3 ml-8 animate-fade-in">
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex flex-wrap gap-2 items-center justify-between mb-3">
                         <h3 className="text-xs font-semibold text-surface-600 dark:text-surface-400 uppercase tracking-wider">
                           Ownership Details
                         </h3>
-                        <button
+                        {canEdit && <button
                           onClick={() => { setAddingOwnership(dept.id); setNewOwnershipLabel(''); }}
                           className="btn-secondary btn-xs gap-1"
                         >
                           <Plus className="w-3 h-3" /> Add
-                        </button>
+                        </button>}
                       </div>
 
                       {ownerships.length === 0 && addingOwnership !== dept.id && (
@@ -223,9 +228,9 @@ export default function AdminDepartments() {
                                 group/item hover:border-surface-300 dark:hover:border-surface-600 transition-colors"
                             >
                               {editingOwnership === o.id ? (
-                                <div className="flex items-center gap-2 flex-1">
+                                <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
                                   <input
-                                    className="input text-sm flex-1"
+                                    className="input text-sm flex-1 min-w-0 basis-full sm:basis-32" aria-label="Ownership label"
                                     value={editOwnershipLabel}
                                     onChange={e => setEditOwnershipLabel(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') handleEditOwnership(o.id); if (e.key === 'Escape') setEditingOwnership(null); }}
@@ -241,20 +246,20 @@ export default function AdminDepartments() {
                                     <span className="text-sm text-surface-700 dark:text-surface-300 truncate">{o.label}</span>
                                   </div>
                                   <div className="flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover/item:opacity-100 focus-within:opacity-100 transition-opacity">
-                                    <button
+                                    {canEdit && <button
                                       onClick={() => { setEditingOwnership(o.id); setEditOwnershipLabel(o.label); }}
                                       className="btn-ghost btn-xs p-1"
                                       title="Edit"
                                     >
                                       <Edit2 className="w-3 h-3" />
-                                    </button>
-                                    <button
+                                    </button>}
+                                    {canDelete && <button
                                       onClick={() => handleDeleteOwnership(o.id)}
                                       className="btn-ghost btn-xs p-1 text-red-500 hover:text-red-600"
                                       title="Remove"
                                     >
                                       <X className="w-3 h-3" />
-                                    </button>
+                                    </button>}
                                   </div>
                                 </>
                               )}
@@ -265,9 +270,9 @@ export default function AdminDepartments() {
 
                       {/* Add ownership inline form */}
                       {addingOwnership === dept.id && (
-                        <div className="flex items-center gap-2 mt-2 animate-fade-in">
+                        <div className="flex flex-wrap items-center gap-2 mt-2 animate-fade-in">
                           <input
-                            className="input text-sm flex-1"
+                            className="input text-sm flex-1 min-w-0 basis-full sm:basis-32" aria-label="Ownership label"
                             value={newOwnershipLabel}
                             onChange={e => setNewOwnershipLabel(e.target.value)}
                             placeholder="e.g. Design, development. Ownership lies with GCC"
@@ -278,12 +283,12 @@ export default function AdminDepartments() {
                             autoFocus
                           />
                           <button onClick={() => handleAddOwnership(dept.id)} className="btn-primary btn-xs">Add</button>
-                          <button
+                          {canEdit && <button
                             onClick={() => { setAddingOwnership(null); setNewOwnershipLabel(''); }}
                             className="btn-ghost btn-xs"
                           >
                             Cancel
-                          </button>
+                          </button>}
                         </div>
                       )}
                     </div>
@@ -297,7 +302,7 @@ export default function AdminDepartments() {
 
       {/* Department Create/Edit Modal */}
       <Modal
-        isOpen={showModal}
+        isOpen={showModal && canEdit}
         onClose={() => setShowModal(false)}
         title={editing ? 'Edit Department' : 'Add Department'}
         footer={

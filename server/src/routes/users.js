@@ -2,12 +2,13 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
 const { validateRoleAssignment } = require('../utils/userRoles');
 const { normalizeUserReferences } = require('../utils/userReferences');
-const { canManageUser, canManageDivision } = require('../utils/divisionScope');
+const { canManageUser, canManageDivision, adminDivisionIds, userDivisionId } = require('../utils/divisionScope');
 
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // Admin account credentials and division grants control access across the app.
@@ -24,12 +25,10 @@ router.use('/:id', authenticate, (req, res, next) => {
     }
     return next();
   }
-  const selfAdminEdit = req.user.id === target.id && target.role === 'admin';
-  const selfDivisionAssignment = selfAdminEdit && (Array.isArray(input.division_ids) || (input.role !== undefined && input.role !== target.role));
-  if ((!selfAdminEdit && input.role !== undefined && input.role !== target.role) ||
-      (!selfDivisionAssignment && input.division_id !== undefined && (Number(input.division_id) || null) !== target.division_id) ||
+  if ((input.role !== undefined && input.role !== target.role) ||
+      (input.division_id !== undefined && (Number(input.division_id) || null) !== userDivisionId(target)) ||
       (input.division !== undefined && input.division !== target.division)) {
-    return res.status(403).json({ error: 'Only this admin or a system admin can change the administrator role or division' });
+    return res.status(403).json({ error: 'Only a system admin can change an administrator role or division' });
   }
   next();
 });
@@ -67,15 +66,17 @@ function validateUserDivisions({ division_ids, division_id, role, actor, targetI
   if (!['admin', 'employee'].includes(role)) {
     return { status: 400, error: 'Multiple divisions require an admin or employee account' };
   }
-  const isSelfAdmin = actor.role === 'admin' && actor.id === Number(targetId) && role === 'admin';
-  const isSelfDemotion = actor.role === 'admin' && actor.id === Number(targetId) && role === 'employee';
-  if (role === 'admin' && actor.role !== 'system admin' && !isSelfAdmin) {
-    return { status: 403, error: 'You can only edit your own divisions' };
-  }
   const ids = [...new Set(division_ids.map(Number))];
   if (ids.some(id => !Number.isSafeInteger(id) || id <= 0 ||
       !db.prepare('SELECT id FROM divisions WHERE id = ? AND active = 1').get(id))) {
     return { status: 400, error: 'Select valid active divisions' };
+  }
+  if (role === 'admin' && actor.role !== 'system admin') {
+    const current = targetId && db.prepare('SELECT id, role, division_id, division FROM users WHERE id = ?').get(targetId);
+    const assigned = current ? adminDivisionIds(current) : [];
+    if (!current || current.id !== actor.id || assigned.length !== ids.length || ids.some(id => !assigned.includes(id))) {
+      return { status: 403, error: 'Only a system admin can change administrator division access' };
+    }
   }
   if (!ids.includes(Number(division_id))) return { status: 400, error: 'Primary division must be selected' };
   const previouslyAssigned = targetId && role === 'employee'
@@ -88,7 +89,7 @@ function validateUserDivisions({ division_ids, division_id, role, actor, targetI
       for (const row of db.prepare('SELECT id FROM divisions WHERE active = 1').all()) previouslyAssigned.add(row.id);
     }
   }
-  if (role === 'employee' && actor.role !== 'system admin' && !isSelfDemotion &&
+  if (role === 'employee' && actor.role !== 'system admin' &&
       ids.some(id => !canManageDivision(actor, id) && !previouslyAssigned.has(id))) {
     return { status: 403, error: 'Select only divisions assigned to you' };
   }
@@ -105,7 +106,7 @@ function replaceUserDivisions(userId, role, ids) {
 }
 
 // GET /api/users/generate-password - Generate a random secure password
-router.get('/generate-password', authenticate, authorize('admin'), (req, res) => {
+router.get('/generate-password', authenticate, permit('users'), (req, res) => {
   const length = parseInt(req.query.length) || 14;
   const password = generatePassword(Math.max(8, Math.min(length, 32)));
   res.json({ password });
@@ -126,7 +127,7 @@ router.get('/active-count', authenticate, (req, res) => {
 });
 
 // GET /api/users - List all users (with enhanced filtering and sorting)
-router.get('/', authenticate, authorize('admin'), (req, res) => {
+router.get('/', authenticate, permit('users'), (req, res) => {
   const { search, division, division_id, department_id, supporting_category_id, role, active, sort_by, sort_dir } = req.query;
   let query = `
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
@@ -195,7 +196,7 @@ router.get('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // GET /api/users/:id
-router.get('/:id', authenticate, authorize('admin'), (req, res) => {
+router.get('/:id', authenticate, permit('users'), (req, res) => {
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
            u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
@@ -233,7 +234,7 @@ router.get('/:id/divisions', authenticate, (req, res) => {
 });
 
 // PUT /api/users/:id/divisions - Assign divisions to an admin user
-router.put('/:id/divisions', authenticate, authorize('system admin'), (req, res) => {
+router.put('/:id/divisions', authenticate, permit('accessGrants'), (req, res) => {
   const userId = req.params.id;
   const { division_ids } = req.body;
 
@@ -275,7 +276,7 @@ router.put('/:id/divisions', authenticate, authorize('system admin'), (req, res)
 });
 
 // POST /api/users - Create user
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('users'), (req, res) => {
   req.body = normalizeUserReferences(req.body);
   const { name, email, password, role, division, core, team_type, division_id, division_ids, department_id, supporting_category_id, employee_id } = req.body;
 
@@ -340,7 +341,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/users/:id - Update user
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('users'), (req, res) => {
   req.body = normalizeUserReferences(req.body);
   const { name, email, password, role, division, core, team_type, active, division_id, division_ids, department_id, supporting_category_id, employee_id } = req.body;
   const userId = req.params.id;
@@ -357,7 +358,8 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
   }
 
   if (role !== undefined && role !== existing.role) {
-    const roleError = validateRoleAssignment(req.user, role, { selfAdminChange: req.user.id === existing.id && existing.role === 'admin' });
+    if (req.user.role !== 'system admin' && existing.role !== 'employee') return res.status(403).json({ error: 'Only a system admin can change privileged roles' });
+    const roleError = validateRoleAssignment(req.user, role);
     if (roleError) return res.status(roleError.status).json({ error: roleError.error });
   }
 
@@ -456,7 +458,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // POST /api/users/:id/reset-password - Admin: Reset a user's password
-router.post('/:id/reset-password', authenticate, authorize('admin'), (req, res) => {
+router.post('/:id/reset-password', authenticate, permit('users'), (req, res) => {
   const userId = req.params.id;
   const { password } = req.body;
 
@@ -482,7 +484,7 @@ router.post('/:id/reset-password', authenticate, authorize('admin'), (req, res) 
 });
 
 // POST /api/users/:id/toggle-active - Toggle user active/inactive status
-router.post('/:id/toggle-active', authenticate, authorize('admin'), (req, res) => {
+router.post('/:id/toggle-active', authenticate, permit('users'), (req, res) => {
   const userId = req.params.id;
 
   if (parseInt(userId) === req.user.id) {
@@ -522,14 +524,14 @@ router.post('/:id/toggle-active', authenticate, authorize('admin'), (req, res) =
 // IMPORTANT: This route MUST be defined before DELETE /:id to avoid Express route shadowing.
 // Anonymizes the user record to preserve timesheet history and report integrity.
 // Old timesheet entries will show "[Deleted User]" instead of the original name.
-router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id/permanent', authenticate, permit('users'), (req, res) => {
   const userId = req.params.id;
 
   if (parseInt(userId) === req.user.id) {
     return res.status(400).json({ error: 'Cannot delete your own account' });
   }
 
-  const existing = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT id, name, email, role, division_id FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
 
   if (existing.role === 'system admin') {
@@ -561,10 +563,10 @@ router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => 
       WHERE id = ?
     `).run(anonEmail, userId);
 
-    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
+    db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, division_id, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
       req.user.id, 'PERMANENT_DELETE_USER',
       `Permanently deleted user: ${existing.name} (${existing.email}, ID: ${userId}) — anonymized; all linked records preserved (${hasTimesheets.count} timesheet entries)`,
-      'user', userId, req.ip
+      'user', userId, existing.division_id, req.ip
     );
   });
 
@@ -579,7 +581,7 @@ router.delete('/:id/permanent', authenticate, authorize('admin'), (req, res) => 
 
 // DELETE /api/users/:id - Soft delete (deactivate)
 // NOTE: This MUST come after /:id/permanent to avoid Express route shadowing.
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('users'), (req, res) => {
   const userId = req.params.id;
 
   if (parseInt(userId) === req.user.id) {

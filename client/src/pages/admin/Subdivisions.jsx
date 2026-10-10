@@ -1,3 +1,5 @@
+import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
@@ -8,6 +10,9 @@ import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 
 export default function AdminSubdivisions({ division }) {
   const toast = useToast();
+  const { user } = useAuth();
+  const canEdit = hasPermission(user, 'catalogEdit');
+  const canDelete = hasPermission(user, 'catalogDelete');
   const cache = useQueryClient();
   const [subdivisions, setSubdivisions] = useState([]);
   const [divisions, setDivisions] = useState([]);
@@ -93,9 +98,9 @@ export default function AdminSubdivisions({ division }) {
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="min-w-0 text-lg font-bold text-surface-900 dark:text-white [overflow-wrap:anywhere]">{division ? `Locations in ${division.name}` : 'Locations'}</h2>
-        <button onClick={openCreate} className="btn-primary btn-sm">
+        {canEdit && <button onClick={openCreate} className="btn-primary btn-sm">
           <Plus className="w-4 h-4" /> Add Location
-        </button>
+        </button>}
       </div>
       
       <div className="flex flex-wrap gap-4 items-center">
@@ -139,12 +144,12 @@ export default function AdminSubdivisions({ division }) {
                 {!division && <td className="px-4 py-3 text-sm text-surface-500">{s.division_name}</td>}
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => openEdit(s)} className="btn-ghost btn-xs p-1.5" aria-label={`Edit location ${s.name}`}>
+                    {canEdit && <button onClick={() => openEdit(s)} className="btn-ghost btn-xs p-1.5" aria-label={`Edit location ${s.name}`}>
                       <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => handleDelete(s.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Deactivate location ${s.name}`}>
+                    </button>}
+                    {canDelete && <button onClick={() => handleDelete(s.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Deactivate location ${s.name}`}>
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </button>}
                   </div>
                 </td>
               </tr>
@@ -154,7 +159,7 @@ export default function AdminSubdivisions({ division }) {
         {filtered.length === 0 && <div className="text-center py-8 text-sm text-surface-400">No locations found</div>}
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Location' : 'Create Location'}
+      <Modal isOpen={showModal && canEdit} onClose={() => setShowModal(false)} title={editing ? 'Edit Location' : 'Create Location'}
         footer={
           <>
             <button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button>

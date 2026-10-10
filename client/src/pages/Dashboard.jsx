@@ -49,6 +49,7 @@ export default function Dashboard() {
   const expectedHours = stats.expectedWeeklyHours ?? 0;
   const completion = expectedHours > 0 ? Math.round(weeklyHours / expectedHours * 100) : null;
   const breakdown = isAdmin ? data.hoursByDivision : data.hoursByProject;
+  const scopeLabel = user.role === 'system admin' ? 'All divisions' : 'Assigned divisions';
   const maxHours = Math.max(1, ...(breakdown ?? []).map(item => item.total_hours));
 
   return (
@@ -99,12 +100,21 @@ export default function Dashboard() {
         </Link>
       )}
 
+      {isManager && data.teamSummary && <section className="card p-4 sm:p-5">
+        <h2 className="font-semibold">Assigned division summary</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3 text-sm">
+          <p><span className="block text-surface-500">Active people</span><strong>{data.teamSummary.totalRegistered}</strong></p>
+          <p><span className="block text-surface-500">Team week hours</span><strong>{data.teamSummary.weeklyHours.toFixed(1)}h</strong></p>
+          <p><span className="block text-surface-500">Team month hours</span><strong>{data.teamSummary.monthlyHours.toFixed(1)}h</strong></p>
+        </div>
+      </section>}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {isAdmin ? <>
-          <StatCard icon={FolderKanban} label="Active projects" value={stats.totalProjects} color="violet" desc="Organization total" to="/admin/projects" />
+          <StatCard icon={FolderKanban} label="Active projects" value={stats.totalProjects} color="violet" desc={scopeLabel} to="/admin/projects" />
           <StatCard icon={ClipboardCheck} label="Pending approvals" value={stats.pendingApprovals} color="amber" desc="Timesheets you can review · All weeks" to={approvalUrl} />
-          <StatCard icon={Clock} label="Week hours" value={`${weeklyHours.toFixed(1)}h`} color="emerald" desc={`Organization · Week ${stats.currentWeek}`} />
-          <StatCard icon={BarChart3} label="Month hours" value={`${stats.monthlyHours.toFixed(1)}h`} color="blue" desc={`Organization · ${monthName}`} />
+          <StatCard icon={Clock} label="Week hours" value={`${weeklyHours.toFixed(1)}h`} color="emerald" desc={`${scopeLabel} · Week ${stats.currentWeek}`} />
+          <StatCard icon={BarChart3} label="Month hours" value={`${stats.monthlyHours.toFixed(1)}h`} color="blue" desc={`${scopeLabel} · ${monthName}`} />
         </> : <>
           <StatCard icon={Clock} label="This week" value={`${weeklyHours.toFixed(1)}h`} color="brand" desc={`Week ${stats.currentWeek}`} to={timesheetUrl} />
           <StatCard icon={BarChart3} label="This month" value={`${stats.monthlyHours.toFixed(1)}h`} color="violet" desc={monthName} />
@@ -160,7 +170,7 @@ export default function Dashboard() {
 
         <section className="card p-5 min-w-0">
           <h2 className="text-sm font-semibold text-surface-900 dark:text-white">{isAdmin ? 'Hours by division' : 'Hours by project'}</h2>
-          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1 mb-4">This month · {monthName}{isAdmin ? ' · Organization' : ' · Includes non-project time'}</p>
+          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1 mb-4">This month · {monthName}{isAdmin ? ` · ${scopeLabel}` : ' · Includes non-project time'}</p>
           <div className="space-y-4">
             {breakdown?.length > 0 ? breakdown.map((item, i) => (
               <HoursBar key={i} label={isAdmin ? item.division || 'Unassigned' : item.project_code} sublabel={isAdmin ? null : item.project_name} hours={item.total_hours} maxHours={maxHours} />

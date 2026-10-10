@@ -1,7 +1,8 @@
 const express = require('express');
 const db = require('../config/db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
+const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // GET /api/tasks
@@ -24,7 +25,7 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // POST /api/tasks
-router.post('/', authenticate, authorize('admin'), (req, res) => {
+router.post('/', authenticate, permit('tasks'), (req, res) => {
   const { classification, task_category, task_description } = req.body;
   if (!task_category) return res.status(400).json({ error: 'Task category is required' });
 
@@ -37,7 +38,7 @@ router.post('/', authenticate, authorize('admin'), (req, res) => {
 });
 
 // PUT /api/tasks/:id
-router.put('/:id', authenticate, authorize('admin'), (req, res) => {
+router.put('/:id', authenticate, permit('tasks'), (req, res) => {
   const { classification, task_category, task_description, active } = req.body;
   const taskId = req.params.id;
 
@@ -62,7 +63,7 @@ router.put('/:id', authenticate, authorize('admin'), (req, res) => {
 });
 
 // DELETE /api/tasks/:id
-router.delete('/:id', authenticate, authorize('admin'), (req, res) => {
+router.delete('/:id', authenticate, permit('tasks'), (req, res) => {
   const taskId = req.params.id;
   const existing = db.prepare('SELECT id FROM tasks WHERE id = ?').get(taskId);
   if (!existing) return res.status(404).json({ error: 'Task not found' });

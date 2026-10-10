@@ -27,4 +27,27 @@ function canManageUser(actor, target) {
     (actor.id === target.id || (!['admin', 'system admin'].includes(target.role) && canManageDivision(actor, userDivisionId(target)))));
 }
 
-module.exports = { adminDivisionIds, canManageDivision, projectScope, userDivisionId, canManageUser };
+// Reporting and team reads must fail closed for every non-system role.
+function reportingDivisionIds(user) {
+  if (user.role === 'admin') return adminDivisionIds(user);
+  if (user.role === 'manager') {
+    const id = userDivisionId(user);
+    return id ? [Number(id)] : [];
+  }
+  return [];
+}
+
+function reportingScope(user, alias = 'u') {
+  if (user.role === 'system admin') return { sql: '1=1', params: [] };
+  const ids = reportingDivisionIds(user);
+  const field = `COALESCE(${alias}.division_id, (SELECT id FROM divisions WHERE LOWER(TRIM(name)) = LOWER(TRIM(${alias}.division)) AND active = 1))`;
+  return { sql: ids.length ? `${field} IN (${ids.map(() => '?').join(',')})` : '0=1', params: ids };
+}
+
+function canEditDivisionUpdate(user, divisionId) {
+  return user.role === 'system admin' ||
+    (user.role === 'manager' && reportingDivisionIds(user).includes(Number(divisionId)));
+}
+
+module.exports = { adminDivisionIds, canManageDivision, projectScope, userDivisionId, canManageUser,
+  reportingDivisionIds, reportingScope, canEditDivisionUpdate };

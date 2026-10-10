@@ -1,3 +1,4 @@
+import { hasPermission } from '../utils/permissions';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarDays, ChevronLeft, ChevronRight, Save, Palmtree } from 'lucide-react';
@@ -9,7 +10,8 @@ import { addDays, calendarDays, formatDate, shiftPeriod, todayDate, weekInfo, we
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function PlannedVacation() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const canViewTeam = hasPermission(user, 'teamVacation');
   const toast = useToast();
   const cache = useQueryClient();
   const [anchor, setAnchor] = useState(todayDate);
@@ -35,7 +37,7 @@ export default function PlannedVacation() {
   });
   const employees = useQuery({
     queryKey: ['planned-vacation-employees', user.id],
-    enabled: isAdmin && team,
+    enabled: canViewTeam && team,
     queryFn: () => api.get('/planned-vacations/employees').then(response => response.data.employees),
   });
   const byDate = new Map();
@@ -104,7 +106,7 @@ export default function PlannedVacation() {
         </h1>
         <p className="mt-1 text-sm text-surface-500">Plan your days away and share them with your admin. Planning only; no approval is required.</p>
       </div>
-      {isAdmin && <div className="flex rounded-lg border border-surface-200 dark:border-surface-700 p-1 gap-1" aria-label="Vacation view">
+      {canViewTeam && <div className="flex rounded-lg border border-surface-200 dark:border-surface-700 p-1 gap-1" aria-label="Vacation view">
         {[['mine', 'My vacation'], ['team', 'Team vacation']].map(([value, label]) => <button key={value}
           className={view === value ? 'btn-primary btn-sm' : 'btn-ghost btn-sm'} aria-pressed={view === value}
           disabled={saving || (changeCount > 0 && view !== value)} onClick={() => setView(value)}>{label}</button>)}
@@ -195,7 +197,7 @@ export default function PlannedVacation() {
       </form>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-surface-200 dark:border-surface-700 pt-4">
         <div aria-live="polite" className="text-sm"><span className="font-medium">{changeCount ? `${changeCount} date changes ready to save` : 'All changes saved'}</span>
-          <p className="text-xs text-surface-500 mt-1">Save before leaving this page{isAdmin ? ' or switching to the team view' : ''}.</p>
+          <p className="text-xs text-surface-500 mt-1">Save before leaving this page{canViewTeam ? ' or switching to the team view' : ''}.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button className="btn-ghost" disabled={!changeCount || saving} onClick={() => setPending({})}>Discard changes</button>
