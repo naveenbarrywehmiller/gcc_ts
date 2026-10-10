@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.23.0...v1.24.0) (2026-10-10)
+
+
+### Features
+
+* enforce management permissions and add matrix help ([eec5cf9](https://github.com/naveenbarrywehmiller/gcc_ts/commit/eec5cf99b32312650b57d658b04b8685f4e0e85a))
+
 ## [1.23.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.22.0...v1.23.0) (2026-10-09)
 
 
