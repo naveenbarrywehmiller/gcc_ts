@@ -1,7 +1,7 @@
 import { hasPermission } from '../utils/permissions';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, ChevronLeft, ChevronRight, Save, Palmtree } from 'lucide-react';
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Save, Palmtree } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../contexts/auth';
 import { useToast } from '../contexts/toast';
@@ -35,6 +35,10 @@ export default function PlannedVacation() {
       params: { start, end, view, ...(team && employee ? { employee_id: employee } : {}) },
     }).then(response => response.data.plans),
   });
+  const holidays = useQuery({
+    queryKey: ['vacation-holidays', user.id],
+    queryFn: () => api.get('/holidays').then(response => response.data.holidays),
+  });
   const employees = useQuery({
     queryKey: ['planned-vacation-employees', user.id],
     enabled: canViewTeam && team,
@@ -45,6 +49,7 @@ export default function PlannedVacation() {
     if (!byDate.has(plan.vacation_date)) byDate.set(plan.vacation_date, []);
     byDate.get(plan.vacation_date).push(plan);
   }
+  const holidaysByDate = new Map((holidays.data || []).map(holiday => [holiday.date, holiday]));
 
   function queueChanges(next) {
     if (Object.keys(next).length > 366) {
@@ -146,8 +151,10 @@ export default function PlannedVacation() {
         <span aria-live="polite">{plans.isFetching ? 'Loading plans…' : `${plans.data?.length || 0} saved ${team ? 'employee-days' : 'days'} in view`}</span>
       </div>
       {plans.isError && <p role="alert" className="px-5 pb-3 text-sm text-red-600">Unable to load vacation plans. <button className="underline" onClick={() => plans.refetch()}>Retry</button></p>}
+      {holidays.isPending && <p role="status" className="px-5 pb-3 text-sm text-surface-500">Loading holidays…</p>}
+      {holidays.isError && <p role="alert" className="px-5 pb-3 text-sm text-red-600">Unable to load holidays. <button className="underline" onClick={() => holidays.refetch()}>Retry holidays</button></p>}
       <div className="overflow-x-auto">
-        <div className="min-w-[720px]" aria-busy={plans.isFetching}>
+        <div className="min-w-[720px]" aria-busy={plans.isFetching || holidays.isFetching}>
           <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] bg-surface-50 dark:bg-surface-800/50 border-y border-surface-200 dark:border-surface-700">
             <span className="p-3 text-xs font-semibold text-surface-500">Week</span>
             {weekdays.map(day => <span key={day} className="p-3 text-xs font-semibold text-surface-500">{day}</span>)}
@@ -165,21 +172,24 @@ export default function PlannedVacation() {
                 const saved = entries.length > 0;
                 const selected = !team && (pending[date] ?? saved);
                 const changed = !team && Object.hasOwn(pending, date);
+                const holiday = holidaysByDate.get(date);
                 const otherMonth = mode === 'month' && date.slice(0, 7) !== anchor.slice(0, 7);
                 const content = <>
-                  <div className="flex items-center justify-between gap-1 mb-3">
-                    <span className={`text-sm font-semibold ${date === today ? 'rounded-full bg-brand-600 text-white px-2 py-1' : otherMonth ? 'text-surface-400' : ''}`}>{formatDate(date, { month: 'short', day: 'numeric' })}</span>
-                    {date === today && <span className="text-[10px] text-brand-600 dark:text-brand-400">Today</span>}
+                  <div className="flex flex-wrap items-center justify-between gap-1 mb-3">
+                    <span className={`text-sm font-semibold ${date === today ? `rounded-full px-2 py-1 ${selected ? 'bg-white text-brand-900' : 'bg-brand-600 text-white'}` : otherMonth && !selected ? 'text-surface-400' : ''}`}>{formatDate(date, { month: 'short', day: 'numeric' })}</span>
+                    {date === today && <span className={`text-[10px] ${selected ? 'text-brand-100' : 'text-brand-600 dark:text-brand-400'}`}>Today</span>}
                   </div>
+                  {holiday && <span className="mb-2 block rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900 dark:bg-amber-900 dark:text-amber-100 break-words">Holiday · {holiday.name}</span>}
                   {team ? <div className="space-y-1">{entries.map(entry => <div key={entry.id} className="rounded bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 text-xs px-2 py-1 break-words">{entry.employee_name}</div>)}</div> :
-                    <span className={`block text-xs ${selected ? 'text-brand-700 dark:text-brand-300 font-medium' : 'text-surface-400'}`}>
-                      {selected ? (changed ? 'Selected · unsaved' : 'Planned vacation') : changed ? 'Removal · unsaved' : 'Select day'}
+                    <span className={`flex items-start gap-1.5 text-xs ${selected ? 'text-white font-semibold' : 'text-surface-400'}`}>
+                      {selected && <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                      <span>{selected ? (changed ? 'Selected · unsaved' : 'Planned vacation') : changed ? 'Removal · unsaved' : 'Select day'}</span>
                     </span>}
                 </>;
-                const className = `p-3 text-left border-r last:border-r-0 border-surface-200 dark:border-surface-700 ${mode === 'week' ? 'min-h-[220px]' : 'min-h-[112px]'} ${selected ? 'bg-brand-50 dark:bg-brand-950/30' : index >= 5 || otherMonth ? 'bg-surface-50 dark:bg-surface-800/30' : ''}`;
+                const className = `min-w-0 p-3 text-left border-r last:border-r-0 border-surface-200 dark:border-surface-700 ${mode === 'week' ? 'min-h-[220px]' : 'min-h-[112px]'} ${selected ? 'bg-brand-700 text-white ring-2 ring-inset ring-brand-900 dark:ring-brand-300' : holiday ? 'bg-amber-50 dark:bg-amber-950/30' : index >= 5 || otherMonth ? 'bg-surface-50 dark:bg-surface-800/30' : ''}`;
                 return team ? <div key={date} className={className}>{content}</div> :
-                  <button key={date} className={`${className} transition-colors hover:bg-brand-100 dark:hover:bg-brand-950/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:-outline-offset-2 disabled:cursor-wait`}
-                    aria-label={formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} aria-pressed={selected}
+                  <button key={date} className={`${className} transition-colors ${selected ? 'hover:bg-brand-800' : 'hover:bg-brand-100 dark:hover:bg-brand-950/60'} focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:-outline-offset-2 disabled:cursor-wait`}
+                    aria-label={`${formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}${holiday ? `, Holiday: ${holiday.name}` : ''}`} aria-pressed={selected}
                     disabled={saving || plans.isPending || plans.isError} onClick={() => toggleDate(date)}>{content}</button>;
               })}
             </div>;
