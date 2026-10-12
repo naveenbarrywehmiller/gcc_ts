@@ -1,5 +1,13 @@
 # Responsive design audit
 
+## Reports Last Week preset (October 12, 2026)
+
+Last Week appears immediately after This Week and selects the previous Monday–Sunday with local calendar-date arithmetic. Existing report filters remain selected and apply to all views, entry details and downloads.
+
+Headed Chromium against the actual API with an isolated in-memory database passed all 21 required sizes plus the six landscape sizes below (27 sizes) for the updated Reports preset controls. Checks covered document overflow, button clipping/overlap, keyboard focus, button order, selected state, the October 5–11 range for October 12, retained division/employee filters, all five report tabs and the date/filter parameters of Excel/PDF downloads. Manager, Admin and System Admin views also passed mobile and laptop checks. Representative mobile, tablet, laptop and ultrawide screenshots were inspected. No API errors or browser exceptions occurred; only synthetic data was used. Firefox, Safari and physical devices were not tested.
+
+All 18 reporting tests, lint, production build and `git diff --check` passed. Date cases cover Monday and Sunday, rollover to the next week, year boundaries, leap-day weeks and a daylight-saving boundary week. Vite retains the existing JavaScript chunk warning.
+
 ## Viewer role and user registration counts (October 12, 2026)
 
 Viewer has companywide read access to business pages, with existing filters and report Excel/PDF downloads. Personal timesheet navigation and routes are unavailable; project details, approval details, team vacation, shared settings and monthly records expose read controls only. Users adds six registration cards: total plus all five roles. Counts include active and inactive accounts, exclude anonymized deleted accounts and stay companywide when filters are selected. Selecting a role card filters the directory. Only System Admins can assign Viewer.

@@ -37,6 +37,7 @@ const tabs = [
 ];
 const presets = [
   ['this-week', 'This Week'],
+  ['last-week', 'Last Week'],
   ['this-month', 'This Month'],
   ['last-month', 'Last Month'],
   ['last-3-months', 'Last 3 Months'],

@@ -4,9 +4,10 @@ export function dateISO(date) {
 }
 export function presetDates(preset, now = new Date()) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (preset === 'this-week') {
+  if (preset === 'this-week' || preset === 'last-week') {
     const start = new Date(today);
     start.setDate(start.getDate() - (start.getDay() || 7) + 1);
+    if (preset === 'last-week') start.setDate(start.getDate() - 7);
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
     return { start_date: dateISO(start), end_date: dateISO(end) };

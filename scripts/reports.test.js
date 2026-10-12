@@ -502,6 +502,17 @@ test('client presets and date formatting preserve local days across month and ye
     start_date: '2020-12-28',
     end_date: '2021-01-03',
   });
+  for (const [date, start_date, end_date] of [
+    [[2026, 10, 12], '2026-10-05', '2026-10-11'],
+    [[2026, 10, 18], '2026-10-05', '2026-10-11'],
+    [[2026, 10, 19], '2026-10-12', '2026-10-18'],
+    [[2021, 1, 1], '2020-12-21', '2020-12-27'],
+    [[2024, 3, 4], '2024-02-26', '2024-03-03'],
+    [[2026, 11, 2], '2026-10-26', '2026-11-01'],
+  ]) {
+    assert.deepEqual(helpers.presetDates('last-week', new Date(date[0], date[1] - 1, date[2], 23, 30)),
+      { start_date, end_date }, date.join('-'));
+  }
   assert.deepEqual(helpers.presetDates('last-3-months', new Date(2021, 0, 10)), {
     start_date: '2020-10-01',
     end_date: '2020-12-31',

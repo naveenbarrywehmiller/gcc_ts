@@ -4,7 +4,7 @@ Updated October 12, 2026.
 
 ## Views and filters
 
-Reports provides Weekly Summary, Utilization, Project Hours, Missing Hours and Trends. All views and downloads use the selected inclusive start/end dates. Presets support this week, this month, last month and the last three complete months; custom ranges support up to 366 days. Dates are handled as calendar dates rather than parsing UTC midnight into a local month.
+Reports provides Weekly Summary, Utilization, Project Hours, Missing Hours and Trends. All views and downloads use the selected inclusive start/end dates. Presets support this week, last week, this month, last month and the last three complete months; custom ranges support up to 366 days. Last Week selects the previous Monday–Sunday, immediately before the current week. Dates are handled as calendar dates rather than parsing UTC midnight into a local month.
 
 Division, Employee, Project and Status are the primary filters. More filters exposes Customer, Task, Location and Billing. The button shows how many advanced filters remain active when collapsed. Reset filters clears both groups. Filters apply to every view, comparisons, entry details and downloads.
 
