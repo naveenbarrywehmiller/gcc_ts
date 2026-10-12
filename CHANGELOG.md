@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.25.1...v1.26.0) (2026-10-12)
+
+
+### Features
+
+* add companywide Viewer access and user role counts ([e5b320a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e5b320a8490328c114473bfefc32b13a9fb94e11))
+
 ## [1.25.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.25.0...v1.25.1) (2026-10-10)
 
 
