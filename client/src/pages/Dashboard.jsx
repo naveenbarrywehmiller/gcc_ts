@@ -14,6 +14,8 @@ const formatDate = value => new Date(`${value}T00:00:00`).toLocaleDateString('en
 
 export default function Dashboard() {
   const { user, isAdmin, isManager } = useAuth();
+  const isViewer = user.role === 'viewer';
+  const divisionOverview = isAdmin || isViewer;
   const { data, isPending, isError, isFetching, refetch } = useQuery({
     queryKey: ['dashboard', user?.id],
     queryFn: async () => (await api.get('/reports/dashboard')).data,
@@ -21,6 +23,7 @@ export default function Dashboard() {
   const { data: adminData, isPending: adminPending, isError: adminError } = useQuery({
     queryKey: ['my-admin'],
     queryFn: async () => (await api.get('/admin-ownership/my-admin')).data,
+    enabled: !isViewer,
   });
 
   if (isPending) return <CardSkeleton count={4} />;
@@ -48,8 +51,8 @@ export default function Dashboard() {
   const weeklyHours = stats.weeklyHours ?? 0;
   const expectedHours = stats.expectedWeeklyHours ?? 0;
   const completion = expectedHours > 0 ? Math.round(weeklyHours / expectedHours * 100) : null;
-  const breakdown = isAdmin ? data.hoursByDivision : data.hoursByProject;
-  const scopeLabel = user.role === 'system admin' ? 'All divisions' : 'Assigned divisions';
+  const breakdown = divisionOverview ? data.hoursByDivision : data.hoursByProject;
+  const scopeLabel = ['system admin', 'viewer'].includes(user.role) ? 'All divisions' : 'Assigned divisions';
   const maxHours = Math.max(1, ...(breakdown ?? []).map(item => item.total_hours));
 
   return (
@@ -60,16 +63,16 @@ export default function Dashboard() {
           <p className="text-sm text-surface-600 dark:text-surface-300 mt-1">{weekDescription} · {stats.currentWeekYear}</p>
           <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-surface-500 dark:text-surface-400">
             {user?.employee_id && <span className="inline-flex items-center gap-1"><Hash className="w-3 h-3" />Employee ID: {user.employee_id}</span>}
-            <span className="inline-flex items-center gap-1"><UserCheck className="w-3 h-3" />Admin: {adminPending ? 'Loading…' : adminError ? 'Unavailable' : adminData?.admin?.name ?? 'Not assigned'}</span>
+            {!isViewer && <span className="inline-flex items-center gap-1"><UserCheck className="w-3 h-3" />Admin: {adminPending ? 'Loading…' : adminError ? 'Unavailable' : adminData?.admin?.name ?? 'Not assigned'}</span>}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link to={timesheetUrl} className={isAdmin || isManager ? 'btn-secondary' : 'btn-primary'}><Clock className="w-4 h-4" />Open Timesheet</Link>
-          {(isAdmin || isManager) && <Link to={approvalUrl} className="btn-primary"><ClipboardCheck className="w-4 h-4" />Review Approvals</Link>}
+          {!isViewer && <Link to={timesheetUrl} className={isAdmin || isManager ? 'btn-secondary' : 'btn-primary'}><Clock className="w-4 h-4" />Open Timesheet</Link>}
+          {(divisionOverview || isManager) && <Link to={approvalUrl} className="btn-primary"><ClipboardCheck className="w-4 h-4" />{isViewer ? 'View Approvals' : 'Review Approvals'}</Link>}
         </div>
       </div>
 
-      {!isAdmin && data.recalledWeeks?.length > 0 && (
+      {!divisionOverview && data.recalledWeeks?.length > 0 && (
         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <RotateCcw className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -110,9 +113,9 @@ export default function Dashboard() {
       </section>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {isAdmin ? <>
+        {divisionOverview ? <>
           <StatCard icon={FolderKanban} label="Active projects" value={stats.totalProjects} color="violet" desc={scopeLabel} to="/admin/projects" />
-          <StatCard icon={ClipboardCheck} label="Pending approvals" value={stats.pendingApprovals} color="amber" desc="Timesheets you can review · All weeks" to={approvalUrl} />
+          <StatCard icon={ClipboardCheck} label="Pending approvals" value={stats.pendingApprovals} color="amber" desc={isViewer ? 'All divisions · All weeks' : 'Timesheets you can review · All weeks'} to={approvalUrl} />
           <StatCard icon={Clock} label="Week hours" value={`${weeklyHours.toFixed(1)}h`} color="emerald" desc={`${scopeLabel} · Week ${stats.currentWeek}`} />
           <StatCard icon={BarChart3} label="Month hours" value={`${stats.monthlyHours.toFixed(1)}h`} color="blue" desc={`${scopeLabel} · ${monthName}`} />
         </> : <>
@@ -136,15 +139,15 @@ export default function Dashboard() {
         <section className="card p-5 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-surface-900 dark:text-white">{isAdmin ? 'Pending timesheets' : 'Recent entries'}</h2>
-              <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">{isAdmin ? 'Oldest weeks first · Up to 10 in your review scope' : 'Your latest entries across all weeks'}</p>
+              <h2 className="text-sm font-semibold text-surface-900 dark:text-white">{divisionOverview ? 'Pending timesheets' : 'Recent entries'}</h2>
+              <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">{divisionOverview ? `Oldest weeks first · Up to 10 ${isViewer ? 'across all divisions' : 'in your review scope'}` : 'Your latest entries across all weeks'}</p>
             </div>
-            <Link to={isAdmin ? approvalUrl : timesheetUrl} className="text-sm font-medium text-brand-700 dark:text-brand-300">{isAdmin ? 'Review approvals' : 'Open timesheet'} →</Link>
+            <Link to={divisionOverview ? approvalUrl : timesheetUrl} className="text-sm font-medium text-brand-700 dark:text-brand-300">{isViewer ? 'View approvals' : isAdmin ? 'Review approvals' : 'Open timesheet'} →</Link>
           </div>
           <div className="space-y-2">
-            {isAdmin ? (
+            {divisionOverview ? (
               data.recentSubmissions?.length > 0 ? data.recentSubmissions.map(item => (
-                <Link key={`${item.user_id}-${item.week_year}-${item.week_number}`} to={weekLink('/admin/approvals', item.week_number, item.week_year)}
+                <Link key={`${item.user_id}-${item.week_year}-${item.week_number}`} to={isViewer ? approvalUrl : weekLink('/admin/approvals', item.week_number, item.week_year)}
                   className="flex flex-wrap items-center justify-between gap-3 py-3 px-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-surface-800 dark:text-surface-200 break-words">{item.name}</p>
@@ -152,7 +155,7 @@ export default function Dashboard() {
                   </div>
                   <span className="flex items-center gap-2 shrink-0 text-sm font-semibold text-surface-900 dark:text-white">{item.total_hours.toFixed(1)}h <ArrowRight className="w-4 h-4 text-surface-500" /></span>
                 </Link>
-              )) : <p className="text-sm text-surface-500 dark:text-surface-400 py-6 text-center">You’re all caught up. No timesheets awaiting your review.</p>
+              )) : <p className="text-sm text-surface-500 dark:text-surface-400 py-6 text-center">{isViewer ? 'No timesheets awaiting approval.' : 'You’re all caught up. No timesheets awaiting your review.'}</p>
             ) : (
               data.recentEntries?.length > 0 ? data.recentEntries.slice(0, 8).map(entry => (
                 <Link key={entry.id} to={weekLink('/timesheet', entry.week_number, entry.week_year)}
@@ -169,11 +172,11 @@ export default function Dashboard() {
         </section>
 
         <section className="card p-5 min-w-0">
-          <h2 className="text-sm font-semibold text-surface-900 dark:text-white">{isAdmin ? 'Hours by division' : 'Hours by project'}</h2>
-          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1 mb-4">This month · {monthName}{isAdmin ? ` · ${scopeLabel}` : ' · Includes non-project time'}</p>
+          <h2 className="text-sm font-semibold text-surface-900 dark:text-white">{divisionOverview ? 'Hours by division' : 'Hours by project'}</h2>
+          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1 mb-4">This month · {monthName}{divisionOverview ? ` · ${scopeLabel}` : ' · Includes non-project time'}</p>
           <div className="space-y-4">
             {breakdown?.length > 0 ? breakdown.map((item, i) => (
-              <HoursBar key={i} label={isAdmin ? item.division || 'Unassigned' : item.project_code} sublabel={isAdmin ? null : item.project_name} hours={item.total_hours} maxHours={maxHours} />
+              <HoursBar key={i} label={divisionOverview ? item.division || 'Unassigned' : item.project_code} sublabel={divisionOverview ? null : item.project_name} hours={item.total_hours} maxHours={maxHours} />
             )) : <p className="text-sm text-surface-500 dark:text-surface-400 py-6 text-center">No hours recorded this month.</p>}
           </div>
         </section>

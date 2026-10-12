@@ -1,6 +1,6 @@
 const matrixGuide = { id: 'matrix-help', title: 'Matrix help', path: '/admin/matrix-help',
     description: 'Understand permissions for every role and function.', steps: [
-      'Open Matrix help under Management to compare all four roles.',
+      'Open Matrix help under Management to compare all five roles.',
       'Search for a function, filter by area, or select Show functions available to me.',
       'Read each scope and rule before using a management action.',
     ] };
@@ -48,6 +48,13 @@ const commonGuides = [
 
 const managerGuides = [
   matrixGuide,
+  { id: 'manager-directories', title: 'Users, projects and tasks', path: '/admin/users',
+    description: 'Browse records across all divisions.', steps: [
+      'Open Users to search, filter and sort accounts from all divisions.',
+      'Open Projects to search all divisions, view project details and export project data.',
+      'Open Task Name/Number to search shared tasks and filter active or inactive records.',
+      'Directory access is read-only. Admins and System Admins maintain accounts, projects and tasks.',
+    ] },
   { id: 'manager-settings', title: 'Shared settings and monthly records', path: '/admin/divisions',
     description: 'Maintain reference lists and division updates.', steps: [
       'Use Management to add or edit Divisions, Locations, Departments, ownerships, Dedicated/Flex, Work Type and Holidays. Shared changes apply companywide.',
@@ -55,9 +62,9 @@ const managerGuides = [
       'Use Travel & VISA and Open Position / New Joiners to maintain monthly records in your assigned division.',
     ] },
   { id: 'manager-reports', title: 'Team vacation and reports', path: '/reports',
-    description: 'Review your division’s plans and recorded work.', steps: [
+    description: 'Review your division’s vacation plans and companywide reports.', steps: [
       'Use Team view in Planned Vacation to read saved plans in your assigned division. Edit your own dates in My view.',
-      'Open Reports to choose a date range and review Weekly Summary, Utilization, Project Hours, Missing Hours or Trends within your assigned division.',
+      'Open Reports to choose a date range and review Weekly Summary, Utilization, Project Hours, Missing Hours or Trends across all divisions, including entry details and downloads.',
       'Use More filters for customer, task, location and billing. Select hours or View entries to inspect the underlying records.',
       'Capacity uses active users, eight-hour weekdays and company holidays through today. Planned vacation is not recorded leave. Clear activity filters for missing-hours checks.',
       'Excel and PDF download the selected report view with its filters and totals.',
@@ -186,4 +193,33 @@ const systemAdminGuides = [
 ];
 
 
-module.exports = { commonGuides, managerGuides, adminGuides, systemAdminGuides };
+const viewerGuides = [
+  { id: 'viewer-dashboard', title: 'Dashboard', path: '/', description: 'Read hours and pending approval totals across all divisions.', steps: [
+    'Open Dashboard to see companywide week and month hours, active projects and pending approvals.',
+    'Select View Approvals to expand submitted timesheet details. Viewer accounts cannot approve, reject, recall or enter time.',
+  ] },
+  { id: 'viewer-directories', title: 'Users, projects and tasks', path: '/admin/users', description: 'Search and filter companywide directories.', steps: [
+    'Open Users to see the total registered accounts and counts for each role, including active and inactive users. Anonymized deleted accounts are excluded.',
+    'Select a role count or use search, division, department, category, role and status filters. The registration counts stay companywide while the list is filtered.',
+    'Open Projects to filter all divisions, inspect project details and export data. Open Task Name/Number to search and filter active or inactive tasks.',
+    'Viewer accounts have read-only access; a System Admin can create an account or assign the Viewer role.',
+  ] },
+  { id: 'viewer-reports', title: 'Reports', path: '/reports', description: 'Read and download filtered reports across all divisions.', steps: [
+    'Choose a date range and report view. Select a division, employee or project, or leave them at All for companywide results.',
+    'Use More filters for customer, task, location and billing. Select hours or View entries to read underlying records.',
+    'Download Excel or PDF to export the selected view with its current filters and totals.',
+    'Capacity and missing-hours checks require complete employee time. Clear activity filters when checking missing hours.',
+  ] },
+  { id: 'viewer-vacation', title: 'Planned Vacation', path: '/planned-vacation', description: 'Read saved vacation plans across all divisions.', steps: [
+    'Select a week or month, date and employee to filter the team calendar.',
+    'Viewer accounts can read plans but cannot add, remove or save dates.',
+  ] },
+  { id: 'viewer-settings', title: 'Settings, monthly records and audit', path: '/admin/divisions', description: 'Browse business settings and history.', steps: [
+    'Use Management to read shared reference lists and the selected holiday year.',
+    'Choose any division and month in Travel & VISA or Open Position / New Joiners to read saved monthly records.',
+    'Use Audit Log to search and filter activity history across all divisions. Viewer accounts cannot change business records.',
+  ] },
+  matrixGuide,
+];
+
+module.exports = { commonGuides, managerGuides, adminGuides, systemAdminGuides, viewerGuides };

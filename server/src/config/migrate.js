@@ -13,7 +13,7 @@ function migrate() {
       name TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee','system admin')),
+      role TEXT NOT NULL DEFAULT 'employee' CHECK(role IN ('admin','manager','employee','system admin','viewer')),
       division TEXT,
       core TEXT,
       team_type TEXT,
@@ -525,6 +525,7 @@ function migrate() {
   if (!db.prepare('PRAGMA table_info(projects)').all().some(column => column.name === 'billing_type')) {
     db.exec("ALTER TABLE projects ADD COLUMN billing_type TEXT CHECK(billing_type IN ('Billable', 'Non-Billable'))");
   }
+  require('./viewerRoleMigration')(db);
   require('./auditScopeMigration')(db);
   require('./bootstrapAdmin').bootstrapAdmin(db);
 

@@ -4,9 +4,9 @@ Employee time tracking, team approvals, administration, and reporting in one app
 
 [Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
-**Releases:** [Application v1.24.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.24.0) · [Power BI v1.1.4](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v1.1.4) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v1.1.4/gcc-requirements-powerbi-v1.1.4.zip))
+**Releases:** [Application v1.26.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.26.0) · [Power BI v1.1.4](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v1.1.4) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v1.1.4/gcc-requirements-powerbi-v1.1.4.zip))
 
-**Current source versions:** Application v1.24.0 · Power BI v2.0.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing staffing data.
+**Current source versions:** Application v1.26.0 · Power BI v2.0.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing staffing data.
 
 **Frontend development:** All UI changes must follow the permanent [Responsive Web Design Rules](RESPONSIVE_WEB_DESIGN_RULES.md). The [responsive audit](docs/RESPONSIVE_AUDIT.md) records the current implementation and validation baseline.
 
@@ -26,21 +26,24 @@ Employee time tracking, team approvals, administration, and reporting in one app
 | Power BI | Read-only reporting API, dedicated API-key authentication, filtering/pagination, and a requirements-based report/model project |
 | Microsoft 365 | Optional Entra ID SSO, SharePoint synchronization, and Power Automate approvals |
 | Operations | System-admin maintenance, online database download, database upload/restore, token generation, and error-log viewing |
-| Help | Role-specific guides and Management → Matrix help with 64 functions for Managers, Admins and System Admins |
+| Help | Role-specific guides and Management → Matrix help for Managers, Admins, System Admins and Viewers |
 | Interface | Dark mode, responsive screens, notifications, and server date/time display in IST with a 12-hour clock |
 
 ### Roles and access
 
-There are **four roles**: `employee`, `manager`, `admin`, and `system admin`.
+There are **five roles**: `employee`, `manager`, `admin`, `system admin`, and `viewer`.
 
 | Role | Typical access |
 | --- | --- |
 | Employee | Own dashboard, timesheets, and planned vacation |
-| Manager | Personal features, approvals, shared settings edits, division monthly updates, scoped reports and team vacation reads |
+| Manager | Personal features, approvals, shared settings edits, division monthly updates, companywide user/project/task reads and reports, and scoped team vacation reads |
 | Admin | Users/projects/tasks administration, scoped reports and audit, and read-only shared settings/monthly updates |
 | System admin | Full role access, system maintenance, database operations, and error logs |
+| Viewer | Read all business pages across all divisions, use filters and download reports; no timesheet entry or business edits |
 
 The backend checks permissions independently of the UI. Matrix help is hidden and blocked for Employees. See [the detailed permissions matrix](docs/PERMISSIONS_MATRIX.md) for function-level access, assigned division scope and audit migration behavior.
+
+Only a System Admin can assign the Viewer role, because it grants companywide visibility. The Users page shows total registered accounts and counts for every role, including active and inactive accounts and excluding anonymized deleted accounts. Counts stay companywide when the directory is filtered; selecting a role count filters the list. Startup migrations preserve existing user IDs and linked records while adding Viewer to the database role constraint.
 
 ### Timesheet workflow
 

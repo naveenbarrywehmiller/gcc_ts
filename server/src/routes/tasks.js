@@ -16,8 +16,10 @@ router.get('/', authenticate, (req, res) => {
     params.push(`%${search}%`, `%${search}%`);
   }
   if (classification) { query += ' AND classification = ?'; params.push(classification); }
-  if (active !== undefined) { query += ' AND active = ?'; params.push(parseInt(active)); }
-  else { query += ' AND active = 1'; }
+  if (active !== 'all') {
+    if (active !== undefined) { query += ' AND active = ?'; params.push(parseInt(active)); }
+    else { query += ' AND active = 1'; }
+  }
 
   query += ' ORDER BY classification, task_category ASC';
   const tasks = db.prepare(query).all(...params);

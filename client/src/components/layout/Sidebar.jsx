@@ -43,16 +43,16 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/timesheet', icon: Clock, label: 'Timesheet' },
+    ...(hasPermission(user, 'timesheetEntry') ? [{ to: '/timesheet', icon: Clock, label: 'Timesheet' }] : []),
     { to: '/planned-vacation', icon: Calendar, label: 'Planned Vacation' },
     { to: '/help', icon: CircleHelp, label: 'Help' },
   ];
 
   const managementItems = [
-    { to: isAdmin ? '/admin/approvals' : '/manager/approvals', icon: ClipboardCheck, label: 'Approvals', permission: 'approvals' },
-    { to: '/admin/users', icon: Users, label: 'Users', permission: 'users' },
-    { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projects' },
-    { to: '/admin/tasks', icon: ListTodo, label: 'Task Name/Number', permission: 'tasks' },
+    { to: isAdmin ? '/admin/approvals' : '/manager/approvals', icon: ClipboardCheck, label: 'Approvals', permission: 'approvalsView' },
+    { to: '/admin/users', icon: Users, label: 'Users', permission: 'usersView' },
+    { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projectsView' },
+    { to: '/admin/tasks', icon: ListTodo, label: 'Task Name/Number', permission: 'tasksView' },
     { to: '/admin/divisions', icon: Building2, label: 'Division', permission: 'catalogView' },
     { to: '/admin/departments', icon: Users, label: 'Departments', permission: 'catalogView' },
     { to: '/admin/supporting-categories', icon: Users, label: 'Dedicated/Flex', permission: 'catalogView' },

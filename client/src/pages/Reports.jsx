@@ -296,7 +296,9 @@ export default function Reports() {
             Reports
           </h1>
           <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">
-            Team time, billing, capacity and submission gaps.
+            {['manager', 'system admin', 'viewer'].includes(user.role)
+              ? 'Companywide time, billing, capacity and submission gaps.'
+              : 'Time, billing, capacity and submission gaps in your assigned divisions.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -50,6 +50,17 @@ function authenticate(req, res, next) {
 
     req.user = user;
 
+    if (user.role === 'viewer' && req.baseUrl === '/api/timesheets') {
+      return res.status(403).json({ error: 'Viewer accounts view timesheet records through Reports and Approvals' });
+    }
+
+    // Viewer sessions cannot mutate business records, including personal timesheets.
+    // Authentication actions remain available so Viewers can secure their own account.
+    if (user.role === 'viewer' && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) &&
+        !(req.baseUrl === '/api/auth' && ['/change-password', '/logout', '/refresh'].includes(req.path))) {
+      return res.status(403).json({ error: 'Viewer accounts have read-only access' });
+    }
+
     // Track live activity — update last_seen_at (throttled: max once per 60s per user)
     const now = Date.now();
     if (!req.user._lastSeenUpdate || now - req.user._lastSeenUpdate > 60000) {

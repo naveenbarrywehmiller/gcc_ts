@@ -25,13 +25,13 @@ router.get('/employees', permit('teamVacation'), (req, res) => {
 });
 
 router.get('/', (req, res) => {
-  const { start, end, view = 'mine', employee_id } = req.query;
+  const { start, end, view = req.user.role === 'viewer' ? 'team' : 'mine', employee_id } = req.query;
   if (!validDate(start) || !validDate(end) || start > end ||
       (Date.parse(end) - Date.parse(start)) / 86400000 > 365) {
     return res.status(400).json({ error: 'Choose a valid date range of up to 366 days.' });
   }
   if (!['mine', 'team'].includes(view)) return res.status(400).json({ error: 'Invalid vacation view.' });
-  if (view === 'team' && !['admin', 'manager', 'system admin'].includes(req.user.role)) {
+  if (view === 'team' && !['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role)) {
     return res.status(403).json({ error: 'You do not have access to team vacation plans.' });
   }
   const scope = view === 'team' ? teamScope(req.user) : { sql: 'u.id = ?', params: [req.user.id] };
@@ -54,7 +54,7 @@ router.get('/', (req, res) => {
 });
 
 // Apply only explicit date edits. Never replace a whole week or write timesheet data.
-router.patch('/', (req, res) => {
+router.patch('/', permit('vacationEdit'), (req, res) => {
   const { changes } = req.body || {};
   if (!Array.isArray(changes) || changes.length < 1 || changes.length > 366 ||
       changes.some(change => !change || !validDate(change.date) || typeof change.planned !== 'boolean') ||

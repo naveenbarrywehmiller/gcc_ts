@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import TimesheetHistoryModal from '../../components/TimesheetHistoryModal';
@@ -12,11 +13,13 @@ import { Plus, Search, Edit2, Trash2, UserCheck, UserX, Dice5, Eye, EyeOff, Copy
 export default function AdminUsers() {
   const toast = useToast();
   const { user: currentUser, isSystemAdmin } = useAuth();
+  const canManage = hasPermission(currentUser, 'users');
   const cache = useQueryClient();
   const [managedDivisions, setManagedDivisions] = useState([]);
   const canEditAccount = user => user.can_manage;
   const canViewHistory = user => isSystemAdmin || managedDivisions.some(d => d.id === user.division_id);
   const [users, setUsers] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [divisions, setDivisions] = useState([]);
   const [, setSubdivisions] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -89,6 +92,7 @@ export default function AdminUsers() {
       api.get('/projects/options')
     ]).then(([uRes, divRes, subRes, deptRes, scRes, optionsRes]) => {
       setUsers(uRes.data.users);
+      setSummary(uRes.data.summary);
       setDivisions(divRes.data.divisions);
       setSubdivisions(subRes.data.subdivisions);
       setDepartments(deptRes.data.departments);
@@ -330,7 +334,7 @@ export default function AdminUsers() {
   // Helper to determine admin display
   const getAdminDisplay = (user) => {
     if (!user.admin_id) {
-      if (user.id === currentUser?.id) {
+      if (user.id === currentUser?.id && hasPermission(currentUser, 'selfPost')) {
         return <span className="text-emerald-600 dark:text-emerald-400 italic font-medium" title="No admin assigned — you can self-post your timesheet">Not Assigned (Self)</span>;
       }
       return <span className="text-surface-400 italic">Not Assigned</span>;
@@ -348,15 +352,28 @@ export default function AdminUsers() {
             {activeCount} Active • {inactiveCount} Inactive
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        {canManage && <div className="flex flex-wrap items-center gap-2">
           <button onClick={openAllAssignedHistory} className="btn-secondary btn-sm" id="view-assigned-history-btn" title="View timesheets for all your assigned users across all weeks">
             <History className="w-4 h-4" /> Assigned Timesheets (All Weeks)
           </button>
           <button disabled={!isSystemAdmin && managedDivisions.length === 0} onClick={openCreate} className="btn-primary btn-sm" id="create-user-btn">
             <Plus className="w-4 h-4" /> Add User
           </button>
-        </div>
+        </div>}
       </div>
+      {!canManage && <p className="text-sm text-surface-500">View users across all divisions. Account changes are handled by Admins and System Admins.</p>}
+
+      <section aria-label="Registered users by role" className="space-y-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+          {[[null, 'Total registered'], ['system admin', 'System Admins'], ['manager', 'Managers'], ['admin', 'Admins'], ['employee', 'Employees'], ['viewer', 'Viewers']].map(([role, label]) =>
+            <button key={role || 'total'} type="button" className={`card p-3 sm:p-4 text-left min-h-[88px] hover:border-brand-400 ${filters.role === (role || '') ? 'border-brand-500' : ''}`}
+              aria-pressed={filters.role === (role || '')} onClick={() => setFilters(previous => ({ ...previous, role: role || '' }))}>
+              <span className="block text-xs text-surface-500 break-words">{label}</span>
+              <strong className="block mt-2 text-2xl">{summary ? (role ? summary.by_role[role] || 0 : summary.total) : '—'}</strong>
+            </button>)}
+        </div>
+        <p className="text-xs text-surface-500">Companywide registrations include active and inactive accounts. Select a role to filter the list. Showing {users.length}{summary ? ` of ${summary.total}` : ''} registered users.</p>
+      </section>
 
       {/* Filters */}
       <div className="bg-surface-50 dark:bg-surface-800/50 p-4 rounded-xl border border-surface-200 dark:border-surface-700 space-y-4">
@@ -388,6 +405,7 @@ export default function AdminUsers() {
             <option value="">All Roles</option>
             <option value="employee">Employee</option>
             <option value="manager">Manager</option>
+            <option value="viewer">Viewer</option>
             <option value="admin">Admin</option>
             <option value="system admin">System Admin</option>
           </select>
@@ -428,7 +446,7 @@ export default function AdminUsers() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Department</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Admin</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Status</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>
+                {canManage && <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
@@ -459,7 +477,7 @@ export default function AdminUsers() {
                       <span className="inline-flex items-center gap-1 text-xs text-surface-400"><UserX className="w-3.5 h-3.5" /> Inactive</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  {canManage && <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {/* Admin ownership actions — for other active users */}
                       {user.id !== currentUser?.id && user.active && canViewHistory(user) && (
@@ -505,7 +523,7 @@ export default function AdminUsers() {
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  </td>
+                  </td>}
                 </tr>
               ))}
             </tbody>
@@ -596,6 +614,7 @@ export default function AdminUsers() {
                 {(isSystemAdmin || form.role === 'manager') && <option value="manager">Manager</option>}
                 {(isSystemAdmin || form.role === 'admin') && <option value="admin">Admin</option>}
                 {isSystemAdmin && <option value="system admin">System Admin</option>}
+                {(isSystemAdmin || form.role === 'viewer') && <option value="viewer">Viewer</option>}
               </select>
               {!isSystemAdmin && <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">Only a System Admin can change privileged roles.</p>}
             </div>

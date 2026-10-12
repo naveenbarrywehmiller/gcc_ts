@@ -11,7 +11,7 @@ router.use((req, res, next) => {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(data.month || '') || !Number.isSafeInteger(Number(data.division_id)) || Number(data.division_id) <= 0) {
     return res.status(400).json({ error: 'Select a division and month' });
   }
-  if (req.user.role !== 'system admin' && !reportingDivisionIds(req.user).includes(Number(data.division_id))) return res.status(403).json({ error: 'Division access denied' });
+  if (!['system admin', 'viewer'].includes(req.user.role) && !reportingDivisionIds(req.user).includes(Number(data.division_id))) return res.status(403).json({ error: 'Division access denied' });
   if (!db.prepare('SELECT id FROM divisions WHERE id = ? AND active = 1').get(data.division_id)) return res.status(400).json({ error: 'Invalid division' });
   next();
 });

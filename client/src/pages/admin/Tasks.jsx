@@ -2,22 +2,27 @@ import FieldHelp from '../../components/ui/FieldHelp';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
+import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
 import Modal from '../../components/ui/Modal';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 
 export default function AdminTasks() {
   const toast = useToast();
+  const { user } = useAuth();
+  const canManage = hasPermission(user, 'tasks');
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [active, setActive] = useState('1');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ classification: '', task_category: '', task_description: '' });
 
   const load = useCallback(() => {
-    api.get('/tasks').then(res => setTasks(res.data.tasks)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
-  }, [toast]);
+    api.get('/tasks', { params: { active } }).then(res => setTasks(res.data.tasks)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
+  }, [toast, active]);
   useEffect(() => { load(); }, [load]);
 
   const filtered = tasks.filter(t =>
@@ -48,11 +53,17 @@ export default function AdminTasks() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">Task Name/Number</h1>
-        <button onClick={openCreate} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Task</button>
+        {canManage && <button onClick={openCreate} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Task</button>}
       </div>
-      <div className="relative max-w-sm">
+      {!canManage && <p className="text-sm text-surface-500">View shared tasks used across all divisions.</p>}
+      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="relative w-full sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
         <input type="text" aria-label="Search tasks" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks..." className="input pl-9" />
+      </div>
+      <select aria-label="Filter active tasks" className="input sm:max-w-xs" value={active} onChange={e => setActive(e.target.value)}>
+        <option value="1">Active tasks</option><option value="0">Inactive tasks</option><option value="all">All tasks</option>
+      </select>
       </div>
       <div className="table-container">
         <table className="w-full">
@@ -61,7 +72,8 @@ export default function AdminTasks() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Classification</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Category</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Description</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Status</th>
+              {canManage && <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100 dark:divide-surface-800/50">
@@ -74,12 +86,13 @@ export default function AdminTasks() {
                 </td>
                 <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">{t.task_category}</td>
                 <td className="px-4 py-3 text-sm text-surface-500">{t.task_description || '—'}</td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-sm text-surface-500">{t.active ? 'Active' : 'Inactive'}</td>
+                {canManage && <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => openEdit(t)} className="btn-ghost btn-xs p-1.5"><Edit2 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => handleDelete(t.id)} className="btn-ghost btn-xs p-1.5 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => openEdit(t)} className="btn-ghost btn-xs p-1.5" aria-label={`Edit ${t.task_category}`}><Edit2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => handleDelete(t.id)} className="btn-ghost btn-xs p-1.5 text-red-500" aria-label={`Deactivate ${t.task_category}`}><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
-                </td>
+                </td>}
               </tr>
             ))}
           </tbody>

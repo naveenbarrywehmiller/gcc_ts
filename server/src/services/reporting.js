@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { reportingScope, reportingDivisionIds } = require('../utils/divisionScope');
+const { reportScope, reportingDivisionIds, hasCompanywideReportAccess } = require('../utils/divisionScope');
 const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
 
 const DAY = 86400000;
@@ -99,7 +99,7 @@ function parseReportQuery(query) {
 }
 
 function employeeWhere(actor, filters) {
-  const scope = reportingScope(actor, 'u');
+  const scope = reportScope(actor, 'u');
   const conditions = ["u.name != '[Deleted User]'", scope.sql];
   const params = [...scope.params];
   if (filters.user_id) {
@@ -120,7 +120,7 @@ function employeeWhere(actor, filters) {
 }
 function entryWhere(actor, filters, start, end) {
   const employee = employeeWhere(actor, filters);
-  const project = reportingScope(actor, 'p');
+  const project = reportScope(actor, 'p');
   const conditions = [
     't.work_date BETWEEN ? AND ?',
     employee.sql,
@@ -158,13 +158,14 @@ const analysisColumns = `t.user_id, t.project_id, t.work_date, t.hours, t.status
   p.project_code, p.project_name, p.customer_name, COALESCE(pd.name, p.division) AS project_division, ${billing} AS classification`;
 
 function options(actor) {
-  const scope = reportingScope(actor, 'u'),
-    projectScope = reportingScope(actor, 'p');
+  const scope = reportScope(actor, 'u'),
+    projectScope = reportScope(actor, 'p');
   const ids = reportingDivisionIds(actor);
+  const companywide = hasCompanywideReportAccess(actor);
   const divisions = db
     .prepare('SELECT id, name, active FROM divisions ORDER BY name')
     .all()
-    .filter((d) => actor.role === 'system admin' || ids.includes(d.id));
+    .filter((d) => companywide || ids.includes(d.id));
   const users = db
     .prepare(
       `SELECT u.id, u.name, u.active, ${employeeDivision} AS division,
@@ -180,10 +181,10 @@ function options(actor) {
   const locations = db
     .prepare('SELECT id, name, division_id, active FROM subdivisions ORDER BY name')
     .all()
-    .filter((s) => actor.role === 'system admin' || ids.includes(s.division_id));
-  // Tasks are a shared catalog, but an actor with no reporting divisions receives no options.
+    .filter((s) => companywide || ids.includes(s.division_id));
+  // Unassigned Admins receive no report options; Managers have companywide reads.
   const tasks =
-    actor.role === 'system admin' || ids.length
+    companywide || ids.length
       ? db
           .prepare(
             'SELECT id, task_category, classification, active FROM tasks ORDER BY task_category'
@@ -290,11 +291,11 @@ function analysis(actor, spec, today = todayDate()) {
   const employee = employeeWhere(actor, spec.filters);
   const people = db
     .prepare(
-      `SELECT u.id, u.name, u.email, u.active, ${employeeDivision} AS division
+      `SELECT u.id, u.name, u.email, u.active, u.role, ${employeeDivision} AS division
     FROM users u LEFT JOIN divisions d ON d.id = u.division_id WHERE ${employee.sql} ORDER BY u.name`
     )
     .all(...employee.params);
-  const activePeople = people.filter((u) => u.active);
+  const activePeople = people.filter((u) => u.active && u.role !== 'viewer');
   const holidaySet = new Set(
     db
       .prepare('SELECT date FROM holidays WHERE date BETWEEN ? AND ?')
@@ -304,7 +305,7 @@ function analysis(actor, spec, today = todayDate()) {
   const through = spec.end < today ? spec.end : today;
   const dates = workingDates(spec.start, through, holidaySet);
   const fullSelection = capacityAllowed(spec.filters);
-  const projectAccess = reportingScope(actor, 'p');
+  const projectAccess = reportScope(actor, 'p');
   // An employee may book to another division. Do not call that invisible time a missing submission.
   const outsideScopeQuery = fullSelection
     ? db.prepare(
@@ -543,7 +544,7 @@ function analysis(actor, spec, today = todayDate()) {
       reason: capacityAvailable ? null : capacityReason,
       working_days: dates.length,
       expected_hours_per_person: dates.length * 8,
-      note: 'Capacity uses current active users, 8-hour weekdays and company holidays through today. Planned vacation is not recorded leave. Missing hours are daily shortfalls; extra hours on another day do not cancel them.',
+      note: 'Capacity uses current active users who can enter time, excluding Viewers, 8-hour weekdays and company holidays through today. Planned vacation is not recorded leave. Missing hours are daily shortfalls; extra hours on another day do not cancel them.',
     },
     weekly: {
       weeks: [...weeks.values()],

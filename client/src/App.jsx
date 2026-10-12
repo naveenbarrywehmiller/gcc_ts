@@ -50,31 +50,25 @@ function SystemAdminRoute({ children }) {
   return user?.role === 'system admin' ? children : <Navigate to="/" replace />;
 }
 
-function ManagerRoute({ children }) {
-  const { isAdmin, isManager, loading } = useAuth();
-  if (loading) return null;
-  return (isAdmin || isManager) ? children : <Navigate to="/" replace />;
-}
-
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/timesheet" element={<Timesheet />} />
+        <Route path="/timesheet" element={<PermissionRoute permission="timesheetEntry"><Timesheet /></PermissionRoute>} />
         <Route path="/planned-vacation" element={<PlannedVacation />} />
         <Route path="/help" element={<Help />} />
         <Route path="/admin/matrix-help" element={<PermissionRoute permission="matrixView"><MatrixHelp /></PermissionRoute>} />
         
         {/* Manager Routes */}
-        <Route path="/manager/approvals" element={<ManagerRoute><ManagerApprovals /></ManagerRoute>} />
+        <Route path="/manager/approvals" element={<PermissionRoute permission="approvalsView"><ManagerApprovals /></PermissionRoute>} />
 
         {/* Admin Routes */}
         <Route path="/reports" element={<PermissionRoute permission="reports"><Reports /></PermissionRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-        <Route path="/admin/projects" element={<AdminRoute><AdminProjects /></AdminRoute>} />
-        <Route path="/admin/tasks" element={<AdminRoute><AdminTasks /></AdminRoute>} />
+        <Route path="/admin/users" element={<PermissionRoute permission="usersView"><AdminUsers /></PermissionRoute>} />
+        <Route path="/admin/projects" element={<PermissionRoute permission="projectsView"><AdminProjects /></PermissionRoute>} />
+        <Route path="/admin/tasks" element={<PermissionRoute permission="tasksView"><AdminTasks /></PermissionRoute>} />
         <Route path="/admin/divisions" element={<PermissionRoute permission="catalogView"><AdminDivisions /></PermissionRoute>} />
         <Route path="/admin/subdivisions" element={<PermissionRoute permission="catalogView"><Navigate to="/admin/divisions" replace /></PermissionRoute>} />
         <Route path="/admin/departments" element={<PermissionRoute permission="catalogView"><AdminDepartments /></PermissionRoute>} />
@@ -82,7 +76,7 @@ function AppRoutes() {
         <Route path="/admin/activities" element={<PermissionRoute permission="catalogView"><AdminActivities /></PermissionRoute>} />
         <Route path="/admin/holidays" element={<PermissionRoute permission="catalogView"><AdminHolidays /></PermissionRoute>} />
         <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
-        <Route path="/admin/audit" element={<AdminRoute><AdminAuditLog /></AdminRoute>} />
+        <Route path="/admin/audit" element={<PermissionRoute permission="audit"><AdminAuditLog /></PermissionRoute>} />
         
         <Route path="/admin/travel" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="travel" /></PermissionRoute>} />
         <Route path="/admin/staffing" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="staffing" /></PermissionRoute>} />

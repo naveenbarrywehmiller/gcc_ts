@@ -14,7 +14,7 @@ const jwt = require('../server/node_modules/jsonwebtoken');
 
 test('help endpoint returns only guides allowed for the authenticated role', async () => {
   const users = {};
-  for (const role of ['employee', 'manager', 'admin', 'system admin']) {
+  for (const role of ['employee', 'manager', 'admin', 'system admin', 'viewer']) {
     users[role] = Number(db.prepare('INSERT INTO users(name,email,password_hash,role) VALUES (?,?,?,?)')
       .run(role, `${role.replace(' ', '')}@test.invalid`, 'unused', role).lastInsertRowid);
   }
@@ -30,6 +30,7 @@ test('help endpoint returns only guides allowed for the authenticated role', asy
       manager: ['everyday', 'manager'],
       admin: ['everyday', 'admin'],
       'system admin': ['everyday', 'admin', 'system-admin'],
+      viewer: ['viewer'],
     };
     for (const [role, groupIds] of Object.entries(expected)) {
       const token = jwt.sign({ userId: users[role] }, config.jwtSecret);

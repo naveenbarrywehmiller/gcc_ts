@@ -193,7 +193,8 @@ test('only system admins change administrator roles and session access follows t
   assert.equal((await request(admin, `/users/${admin}`, { role: 'manager', division_id: b }, 'PUT')).status, 403);
   assert.equal((await request(admin, `/users/${admin}`, { role: 'system admin', division_id: a }, 'PUT')).status, 403);
   assert.equal((await request(system, `/users/${admin}`, { role: 'manager', division_id: b }, 'PUT')).status, 200);
-  assert.equal((await request(admin, '/users')).status, 403);
+  assert.equal((await request(admin, '/users')).status, 200);
+  assert.equal((await request(admin, `/users/${employee}`, { name: 'Denied manager edit' }, 'PUT')).status, 403);
   assert.equal((await request(system, `/users/${admin}`, { role: 'admin', division_id: a }, 'PUT')).status, 200);
   assert.equal((await request(admin, '/users')).status, 200);
   assert.equal((await request(admin, '/system/maintenance')).status, 403);

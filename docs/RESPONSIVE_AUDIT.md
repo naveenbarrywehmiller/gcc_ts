@@ -1,5 +1,25 @@
 # Responsive design audit
 
+## Viewer role and user registration counts (October 12, 2026)
+
+Viewer has companywide read access to business pages, with existing filters and report Excel/PDF downloads. Personal timesheet navigation and routes are unavailable; project details, approval details, team vacation, shared settings and monthly records expose read controls only. Users adds six registration cards: total plus all five roles. Counts include active and inactive accounts, exclude anonymized deleted accounts and stay companywide when filters are selected. Selecting a role card filters the directory. Only System Admins can assign Viewer.
+
+Headless Chromium with the actual API and an isolated in-memory database passed 486 page/dialog viewport checks: 17 Viewer pages and the read-only project dialog at the same 21 required sizes and six landscape sizes listed below (27 sizes). The System Admin user form with Viewer selected passed bounds and overflow checks at all 27 sizes. Manager, Admin and System Admin user-count layouts also passed mobile and laptop checks. Checks covered document overflow, role-card overlap, read-only fields and controls, mobile navigation, companywide selections, report Excel/PDF downloads, role-card/user filters, project/task filters, approval search/details, vacation employee/date filters, division/month selections, settings search, audit search, matrix filtering and the direct-timesheet redirect.
+
+Representative mobile, tablet, laptop and ultrawide screenshots were visually inspected. All 17 Viewer pages also passed a final API/browser-error and read-only-request check. Browser fixtures and migration tests do not use production data. Firefox, Safari and physical devices were not tested.
+
+`npm test` passed 112 Node tests and 55 Power BI checks. Coverage includes Viewer authentication and SSO, password changes, all five filtered report download views, direct API mutation rejection, counts independent of filters, historical time after a role changes to Viewer, exclusion from capacity and missing-hours targets, and preservation of user IDs, foreign-key links, columns, indexes, triggers and sequences during migration. `npm run lint`, `npm run build` and `git diff --check` passed. Vite retains the existing JavaScript chunk warning.
+
+## Manager companywide read access (October 12, 2026)
+
+Managers can browse Users, Projects and Task Name/Number across all divisions and read companywide reports, entry details and exports. Directory navigation and page guards use separate view permissions; account, project and task mutation controls are hidden for Managers. Project details use the existing read-only dialog. The task directory adds active/inactive/all filtering. Matrix help and Manager Help describe the resulting access. Dashboard team summaries, approvals, team vacation and monthly division records retain their assigned-division scope.
+
+Headless Chromium against the actual local API with an isolated in-memory database passed 162 page/viewport checks: Users, Projects, Tasks, Reports, Matrix help and Help at all 21 required sizes, plus 568×320, 667×375, 844×390, 1024×768, 1180×820 and 1366×1024 (27 sizes). Every size also passed read-only project dialog bounds, disabled fields and Escape close checks. Checks covered document overflow, populated records from two divisions, Manager navigation, hidden mutation controls and the shared task status filter. Representative mobile, laptop and ultrawide screenshots were visually inspected.
+
+Functional checks covered user division filtering, foreign-division report entry details, project Excel downloads, report Excel/PDF downloads, Manager access without a profile division, Admin and System Admin management controls, Admin report scope, and Employee route/sidebar restrictions. The Users view was rechecked at all 27 sizes after restricting the self-post hint to authorized roles. There were no browser exceptions or API errors. Browser actions only read isolated fixtures; production data and credentials were not used. Firefox, Safari and physical devices were not tested.
+
+`npm test` passed 103 Node tests and 55 Power BI checks. The permission tests verify companywide Manager reads and 403 responses for account, project and task mutations, while preserving Admin report scope and existing team/approval rules. `npm run lint`, `npm run build` and `git diff --check` passed. Vite retains the existing JavaScript chunk warning.
+
 Date: October 7, 2026
 
 ## Application map

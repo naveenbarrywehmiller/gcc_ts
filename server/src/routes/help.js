@@ -1,7 +1,7 @@
 const express = require('express');
 const { authenticate } = require('../middleware/auth');
 const { permit } = require('../middleware/permissions');
-const { commonGuides, managerGuides, adminGuides, systemAdminGuides } = require('../data/helpGuides');
+const { commonGuides, managerGuides, adminGuides, systemAdminGuides, viewerGuides } = require('../data/helpGuides');
 
 const router = express.Router();
 
@@ -11,6 +11,7 @@ router.get('/matrix', authenticate, permit('matrixView'), (req, res) => {
 });
 
 function groupsForRole(role) {
+  if (role === 'viewer') return [{ id: 'viewer', title: 'Viewer help', description: 'Companywide read access, filters and report downloads.', guides: viewerGuides }];
   if (!['employee', 'manager', 'admin', 'system admin'].includes(role)) return null;
 
   const groups = [

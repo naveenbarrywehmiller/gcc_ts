@@ -12,11 +12,12 @@ const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
 export default function PlannedVacation() {
   const { user } = useAuth();
   const canViewTeam = hasPermission(user, 'teamVacation');
+  const canEdit = hasPermission(user, 'vacationEdit');
   const toast = useToast();
   const cache = useQueryClient();
   const [anchor, setAnchor] = useState(todayDate);
   const [mode, setMode] = useState('week');
-  const [view, setView] = useState('mine');
+  const [view, setView] = useState(canEdit ? 'mine' : 'team');
   const [employee, setEmployee] = useState('');
   const [pending, setPending] = useState({});
   const [saving, setSaving] = useState(false);
@@ -109,10 +110,10 @@ export default function PlannedVacation() {
         <h1 className="text-2xl font-bold text-surface-900 dark:text-white flex items-center gap-3">
           <Palmtree className="w-7 h-7 text-brand-600" />Planned Vacation
         </h1>
-        <p className="mt-1 text-sm text-surface-500">Plan your days away and share them with your admin. Planning only; no approval is required.</p>
+        <p className="mt-1 text-sm text-surface-500">{canEdit ? 'Plan your days away and share them with your admin. Planning only; no approval is required.' : 'View saved vacation plans across all divisions.'}</p>
       </div>
       {canViewTeam && <div className="flex rounded-lg border border-surface-200 dark:border-surface-700 p-1 gap-1" aria-label="Vacation view">
-        {[['mine', 'My vacation'], ['team', 'Team vacation']].map(([value, label]) => <button key={value}
+        {(canEdit ? [['mine', 'My vacation'], ['team', 'Team vacation']] : [['team', 'Team vacation']]).map(([value, label]) => <button key={value}
           className={view === value ? 'btn-primary btn-sm' : 'btn-ghost btn-sm'} aria-pressed={view === value}
           disabled={saving || (changeCount > 0 && view !== value)} onClick={() => setView(value)}>{label}</button>)}
       </div>}
@@ -125,7 +126,7 @@ export default function PlannedVacation() {
           {(employees.data || []).map(person => <option key={person.id} value={person.id}>{person.name}{person.division_name ? ` · ${person.division_name}` : ''}</option>)}
         </select>
       </div>
-      <p className="text-sm text-surface-500 pb-2">{user.role === 'system admin' ? 'Showing plans across all divisions.' : 'Showing plans in your assigned divisions.'} Use the calendar to choose the date period.</p>
+      <p className="text-sm text-surface-500 pb-2">{['system admin', 'viewer'].includes(user.role) ? 'Showing plans across all divisions.' : 'Showing plans in your assigned divisions.'} Use the calendar to choose the date period.</p>
       {employees.isError && <p role="alert" className="text-red-600 text-sm">Unable to load employee filters. <button className="underline" onClick={() => employees.refetch()}>Retry</button></p>}
     </div>}
 

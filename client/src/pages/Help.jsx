@@ -36,7 +36,7 @@ function GuideGroup({ id, title, description, guides }) {
 
 export default function Help() {
   const { user } = useAuth();
-  const roleLabel = user?.role === 'employee' ? 'User' : user?.role === 'system admin' ? 'System admin' : user?.role === 'admin' ? 'Admin' : 'Manager';
+  const roleLabel = user?.role === 'employee' ? 'User' : user?.role === 'system admin' ? 'System admin' : user?.role === 'admin' ? 'Admin' : user?.role === 'viewer' ? 'Viewer' : 'Manager';
   const { data, isPending, isError, isFetching, refetch } = useQuery({
     queryKey: ['help', user?.id, user?.role],
     queryFn: async () => (await api.get('/help')).data,

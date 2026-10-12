@@ -21,7 +21,7 @@ const people = {};
 const spec = (extra) =>
   parseReportQuery({ start_date: '2020-12-28', end_date: '2021-01-10', ...extra });
 const actor = (key) => db.prepare('SELECT * FROM users WHERE id = ?').get(people[key]);
-const current = (extra) => analysis(actor('manager'), spec(extra), '2021-01-06');
+const current = (extra) => analysis(actor('admin'), spec(extra), '2021-01-06');
 
 async function get(key, path) {
   const response = await fetch(`${base}/reports${path}`, {
@@ -44,6 +44,7 @@ before(async () => {
     ['manager', 'manager', north, 1],
     ['admin', 'admin', north, 1],
     ['emptyManager', 'manager', null, 1],
+    ['emptyAdmin', 'admin', null, 1],
     ['employee', 'employee', north, 1],
     ['missing', 'employee', north, 1],
     ['inactive', 'employee', north, 0],
@@ -383,15 +384,15 @@ test('invalid dates, ranges, IDs, formats and filters fail with useful 400 respo
   assert.equal((await get('manager', '/export?month=1&year=2021&format=csv')).status, 400);
   assert.equal(parseReportQuery({ month: '2', year: '2020' }).end, '2020-02-29');
 });
-test('new endpoints and downloads fail closed across employee and project division scopes', async () => {
+test('report endpoints give Managers companywide reads while Admins stay scoped', async () => {
   for (const endpoint of ['/analysis', '/entries', '/export']) {
     const route = `${endpoint}?start_date=2020-12-28&end_date=2021-01-10`;
-    for (const key of ['manager', 'admin', 'emptyManager']) {
+    for (const key of ['admin', 'emptyAdmin']) {
       const result = await get(key, route);
       assert.equal(result.status, 200);
       assert(!JSON.stringify(result.body).includes('outsider'));
       assert(!JSON.stringify(result.body).includes('PRIVATE-PROJECT'));
-      if (key === 'emptyManager')
+      if (key === 'emptyAdmin')
         assert.equal(
           endpoint === '/analysis' ? result.body.summary.total_hours : result.body.total,
           0
@@ -399,8 +400,18 @@ test('new endpoints and downloads fail closed across employee and project divisi
       assert.equal(result.headers.get('cache-control'), 'private, no-store');
     }
     assert.equal((await get('employee', route)).status, 403);
-    const foreign = (await get('manager', route + `&user_id=${people.outsider}`)).body;
+    const foreign = (await get('admin', route + `&user_id=${people.outsider}`)).body;
     assert.equal(endpoint === '/analysis' ? foreign.summary.total_hours : foreign.total, 0);
+    for (const key of ['manager', 'emptyManager']) {
+      const result = await get(key, route);
+      const system = await get('system', route);
+      assert.deepEqual(result.body, system.body);
+      assert(JSON.stringify(result.body).includes('outsider'));
+      assert(JSON.stringify(result.body).includes('PRIVATE-PROJECT'));
+      assert.equal(result.headers.get('cache-control'), 'private, no-store');
+      const filtered = await get(key, route + `&user_id=${people.outsider}`);
+      assert.equal(endpoint === '/analysis' ? filtered.body.summary.total_hours : filtered.body.total, endpoint === '/analysis' ? 24 : 2);
+    }
   }
   assert(
     (await get('system', '/analysis?start_date=2020-12-28&end_date=2021-01-10')).body.projects.some(
@@ -408,14 +419,22 @@ test('new endpoints and downloads fail closed across employee and project divisi
     )
   );
 });
-test('filter options include active state, normalized divisions and historical options without leaking foreign catalogs', async () => {
-  const options = (await get('manager', '/options')).body;
+test('Admin filter options retain assigned divisions and Managers see companywide catalogs', async () => {
+  const options = (await get('admin', '/options')).body;
   assert.equal(options.users.find((u) => u.id === people.employee).active, 1);
   assert.equal(options.users.find((u) => u.id === people.employee).division, 'North & Engineering');
   assert.equal(options.users.find((u) => u.id === people.inactive).active, 0);
   assert(options.projects.some((p) => p.id === retired));
   assert.deepEqual(options.customers, ['ACME & Sons']);
   assert(!JSON.stringify(options).includes('Private'));
+  for (const key of ['manager', 'emptyManager']) {
+    const company = (await get(key, '/options')).body;
+    assert.deepEqual(company, (await get('system', '/options')).body);
+    assert(company.divisions.some(d => d.id === south));
+    assert(company.users.some(u => u.id === people.outsider));
+    assert(company.projects.some(p => p.project_code === 'PRIVATE-PROJECT'));
+    assert.deepEqual(company.customers, ['ACME & Sons', 'Private Customer']);
+  }
 });
 test('drilldown pagination, descriptions and filters match the selected totals', async () => {
   const query = `start_date=2020-12-28&end_date=2021-01-10&user_id=${people.employee}`;

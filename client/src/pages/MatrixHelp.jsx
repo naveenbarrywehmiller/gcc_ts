@@ -4,7 +4,7 @@ import { Grid2X2, Search } from 'lucide-react';
 import { useAuth } from '../contexts/auth';
 import api from '../services/api';
 
-const roleNames = { 'system admin': 'System Admin', manager: 'Manager', admin: 'Admin', employee: 'Employee' };
+const roleNames = { 'system admin': 'System Admin', manager: 'Manager', admin: 'Admin', employee: 'Employee', viewer: 'Viewer' };
 
 function Access({ value }) {
   return <span className={value.allowed ? 'text-emerald-700 dark:text-emerald-300' : 'text-surface-500 dark:text-surface-400'}>{value.scope}</span>;
@@ -32,7 +32,8 @@ export default function MatrixHelp() {
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold">Matrix help</h1>
           <p className="text-sm text-surface-600 dark:text-surface-300 mt-2">Permissions for every page and function. Your role: <strong>{roleNames[user.role]}</strong>.</p>
-          <p className="text-sm text-surface-600 dark:text-surface-300 mt-2">Managers maintain shared settings companywide and manage monthly records in their assigned division. Admins maintain users, projects and tasks. Only System Admins remove shared settings or change privileged roles and administrator access.</p>
+          <p className="text-sm text-surface-600 dark:text-surface-300 mt-2">Managers view users, projects, tasks and reports across all divisions, maintain shared settings companywide and manage monthly records in their assigned division. Admins maintain users, projects and tasks. Only System Admins remove shared settings or change privileged roles and administrator access.</p>
+          <p className="text-sm text-surface-600 dark:text-surface-300 mt-2">Viewers read business pages and download filtered reports across all divisions. Viewers cannot enter timesheets or change business records.</p>
         </div>
       </div>
     </header>

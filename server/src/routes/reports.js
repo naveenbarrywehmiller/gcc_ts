@@ -12,7 +12,7 @@ const router = express.Router();
 
 // GET /api/reports/dashboard - Dashboard stats
 router.get('/dashboard', authenticate, (req, res) => {
-  const isAdmin = req.user.role === 'admin' || req.user.role === 'system admin';
+  const isAdmin = ['admin', 'system admin', 'viewer'].includes(req.user.role);
   const userId = req.user.id;
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -29,7 +29,7 @@ router.get('/dashboard', authenticate, (req, res) => {
   const userScope = reportingScope(req.user, 'u');
   const projectScope = reportingScope(req.user, 'p');
   let teamSummary;
-  if (['admin', 'manager', 'system admin'].includes(req.user.role)) {
+  if (['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role)) {
     const countUsers = extra => db.prepare(`SELECT COUNT(*) AS count FROM users u WHERE u.active = 1 AND ${userScope.sql} ${extra}`).get(...userScope.params).count;
     const hours = (start, end) => db.prepare(`SELECT COALESCE(SUM(t.hours), 0) AS total FROM timesheets t JOIN users u ON u.id = t.user_id
       WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}`).get(start, end, ...userScope.params).total;

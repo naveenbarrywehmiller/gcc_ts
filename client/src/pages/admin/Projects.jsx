@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
 import Modal from '../../components/ui/Modal';
 import FieldHelp from '../../components/ui/FieldHelp';
 import ProjectStatus from '../../components/ProjectStatus';
@@ -18,6 +19,7 @@ const fields = [
 export default function AdminProjects() {
   const toast = useToast();
   const { user, isSystemAdmin } = useAuth();
+  const canManage = hasPermission(user, 'projects');
   const cache = useQueryClient();
   const fileRef = useRef(null);
   const [filters, setFilters] = useState({ search: '', division_id: '', subdivision_id: '', project_status: '', active: '1' });
@@ -33,8 +35,8 @@ export default function AdminProjects() {
   const locations = options.data?.subdivisions || [];
   const filterDivisions = options.data?.filter_divisions || [];
   const filterLocations = options.data?.filter_subdivisions || [];
-  const canCreate = !options.isLoading && !options.isError && (isSystemAdmin || divisions.length > 0);
-  const readOnly = !!form?.id && !form.can_edit;
+  const canCreate = canManage && !options.isLoading && !options.isError && (isSystemAdmin || divisions.length > 0);
+  const readOnly = !canManage || (!!form?.id && !form.can_edit);
   const dropdowns = [
     ['activity', 'Work Type', options.data?.activities || []],
     ['team_type', 'Dedicated/Flex', options.data?.supporting_categories || []],
@@ -88,16 +90,16 @@ export default function AdminProjects() {
   return <div className="space-y-4">
     <div className="flex flex-wrap justify-between gap-3"><h1 className="text-xl font-bold">Projects</h1>
       <div className="flex flex-wrap gap-2">
-        <button disabled={busy} className="btn-secondary btn-sm" onClick={() => download(true)}>Download Template</button>
+        {canManage && <button disabled={busy} className="btn-secondary btn-sm" onClick={() => download(true)}>Download Template</button>}
         <button disabled={busy} className="btn-secondary btn-sm" onClick={() => download(false)}>Export Projects</button>
-        <button disabled={busy || !canCreate} className="btn-secondary btn-sm" onClick={() => fileRef.current.click()}>Import Excel</button>
+        {canManage && <><button disabled={busy || !canCreate} className="btn-secondary btn-sm" onClick={() => fileRef.current.click()}>Import Excel</button>
         <button disabled={busy || !canCreate} className="btn-primary btn-sm" onClick={() => setForm({ project_status: 'Inprogress', division_id: divisions.some(d => d.id === Number(filters.division_id)) ? filters.division_id : (divisions.length === 1 ? divisions[0].id : ''), subdivision_id: '' })}>Add Project</button>
-        <input ref={fileRef} type="file" hidden accept=".xlsx,.csv" onChange={importFile} />
+        <input ref={fileRef} type="file" hidden accept=".xlsx,.csv" onChange={importFile} /></>}
       </div>
     </div>
-    <p className="text-xs text-surface-500">Import creates new projects only. Duplicate codes reject the entire file. Select a division you manage below when it is not supplied in the file.</p>
-    {!isSystemAdmin && <p className="text-xs text-surface-500">You can view projects across all divisions and manage projects in your assigned divisions only.</p>}
-    {!options.isLoading && !options.isError && !canCreate && <p role="status" className="text-sm text-amber-700">No active division is assigned to your account. Ask a system admin to assign your division before adding projects.</p>}
+    {canManage && <p className="text-xs text-surface-500">Import creates new projects only. Duplicate codes reject the entire file. Select a division you manage below when it is not supplied in the file.</p>}
+    {!isSystemAdmin && <p className="text-xs text-surface-500">{canManage ? 'You can view projects across all divisions and manage projects in your assigned divisions only.' : 'View project details and export projects across all divisions.'}</p>}
+    {canManage && !options.isLoading && !options.isError && !canCreate && <p role="status" className="text-sm text-amber-700">No active division is assigned to your account. Ask a system admin to assign your division before adding projects.</p>}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       <input className="input" aria-label="Search projects" placeholder="Search projects…" value={filters.search} onChange={e => updateFilter('search', e.target.value)} />
       <select className="input" aria-label="Filter division" value={filters.division_id} onChange={e => updateFilter('division_id', e.target.value)}><option value="">All divisions</option>{filterDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select>
@@ -111,14 +113,14 @@ export default function AdminProjects() {
       <tbody>{data?.projects.map(p => <tr key={p.id} className="border-t border-surface-200 dark:border-surface-700">
         <td className="p-3">{p.project_code}</td><td className="p-3">{p.project_name}</td><td className="p-3">{p.division_name || 'Unassigned'}</td><td className="p-3">{p.subdivision_name || '—'}</td>
         <td className="p-3"><ProjectStatus status={p.project_status} /></td><td className="p-3">{p.budget_hours ?? '—'}</td>
-        <td className="p-3"><div className="flex flex-wrap items-center gap-2"><button className="btn-secondary btn-sm" disabled={busy} onClick={() => setForm({ ...p })}>{p.can_edit ? 'Edit' : 'View'}</button>{p.can_edit && <>{p.active === 1 && <button disabled={busy} className="btn-ghost btn-sm" onClick={() => openAction(p, 'deactivate')}>Deactivate</button>}<button disabled={busy} className="btn-ghost btn-sm text-red-600 dark:text-red-400" onClick={() => openAction(p, 'delete')}>Delete</button></>}</div></td>
+        <td className="p-3"><div className="flex flex-wrap items-center gap-2"><button className="btn-secondary btn-sm" disabled={busy} onClick={() => setForm({ ...p })}>{canManage && p.can_edit ? 'Edit' : 'View'}</button>{canManage && p.can_edit && <>{p.active === 1 && <button disabled={busy} className="btn-ghost btn-sm" onClick={() => openAction(p, 'deactivate')}>Deactivate</button>}<button disabled={busy} className="btn-ghost btn-sm text-red-600 dark:text-red-400" onClick={() => openAction(p, 'delete')}>Delete</button></>}</div></td>
       </tr>)}{!data?.projects.length && <tr><td colSpan={7} className="p-6 text-center">{isLoading ? 'Loading…' : 'No matching projects'}</td></tr>}</tbody>
     </table></div>
     <div className="flex flex-wrap gap-3 items-center justify-between"><span className="text-sm">{data?.total || 0} projects · Page {page} of {Math.max(1, Math.ceil((data?.total || 0) / 25))}</span><div className="flex gap-2"><button className="btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</button><button className="btn-secondary btn-sm" disabled={page * 25 >= (data?.total || 0)} onClick={() => setPage(p => p + 1)}>Next</button></div></div>
     <Modal isOpen={!!form} onClose={() => !busy && setForm(null)} title={readOnly ? 'View Project' : form?.id ? 'Edit Project' : 'Add Project'} size="xl">
       {form && <form onSubmit={save} className="space-y-4">
         <p className="text-sm text-surface-500">The division and location set here are used automatically for this project in timesheets.</p>
-        {readOnly && <p className="text-sm text-surface-500">This project belongs to another division and is read-only.</p>}
+        {readOnly && <p className="text-sm text-surface-500">Project details are read-only for your account.</p>}
         <fieldset disabled={readOnly || busy} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div><label className="block text-xs mb-1" htmlFor="project-division">Division<FieldHelp label="Division" /></label><select id="project-division" className="input" value={form.division_id || ''} onChange={e => setForm({ ...form, division_id: e.target.value, division: '', subdivision_id: '' })}><option value="">Select division</option>{form.division_id && !divisions.some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{form.division_name || form.division}</option>}{divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
         <div><label className="block text-xs mb-1" htmlFor="project-location">Location<FieldHelp label="Location" /></label><select id="project-location" className="input" disabled={!form.division_id} value={form.subdivision_id || ''} onChange={e => setForm({ ...form, subdivision_id: e.target.value })}><option value="">No location</option>{form.subdivision_id && !locations.some(s => s.id === Number(form.subdivision_id)) && <option value={form.subdivision_id}>{form.subdivision_name}</option>}{locations.filter(s => s.division_id === Number(form.division_id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>

@@ -75,7 +75,8 @@ router.post('/ms-callback', (req, res) => {
       // Auto-provision user
       // Default to employee role, can map from Entra 'roles' claim if configured
       const role = (roles && roles.includes('Admin')) ? 'admin' : 
-                   (roles && roles.includes('Manager')) ? 'manager' : 'employee';
+                   (roles && roles.includes('Manager')) ? 'manager' :
+                   (roles && roles.includes('Viewer')) ? 'viewer' : 'employee';
 
       const result = db.prepare(`
         INSERT INTO users (name, email, password_hash, role, active, created_at, updated_at)

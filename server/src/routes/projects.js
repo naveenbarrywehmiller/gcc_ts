@@ -4,7 +4,7 @@ const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { projectDivisionIds, canManageProjectDivision } = require('../utils/projectPermissions');
 const { reportingDivisionIds } = require('../utils/divisionScope');
-const { reportingScope } = require('../utils/divisionScope');
+const { reportScope } = require('../utils/divisionScope');
 const { columns, validateProject } = require('../utils/projectFields');
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
@@ -35,17 +35,17 @@ router.get('/options', authenticate, permit('reports'), (req, res) => {
   const supporting_categories = db.prepare('SELECT id, name FROM supporting_categories WHERE active = 1 ORDER BY name').all();
   // Monthly division updates use the same effective division assignments.
   const assignedIds = reportingDivisionIds(req.user);
-  const division_update_divisions = filter_divisions.filter(d => req.user.role === 'system admin' || assignedIds.includes(d.id));
+  const division_update_divisions = filter_divisions.filter(d => ['system admin', 'viewer'].includes(req.user.role) || assignedIds.includes(d.id));
   res.json({ divisions, subdivisions, filter_divisions, filter_subdivisions, division_update_divisions, activities, supporting_categories });
 });
-router.get('/export', authenticate, permit('projects'), async (req, res, next) => {
+router.get('/export', authenticate, permit('projectsView'), async (req, res, next) => {
   try {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Projects');
     sheet.columns = columns.map(([key, header]) => ({ key, header, width: 24 }));
     if (req.query.template !== 'true') {
       const { sql, params } = filter(req.query);
-      const scope = reportingScope(req.user, 'p');
+      const scope = reportScope(req.user, 'p');
       db.prepare(select + sql + ` AND ${scope.sql} ORDER BY p.project_code`).all(...params, ...scope.params)
         .forEach(p => sheet.addRow({ ...p, division: p.division_name, location: p.subdivision_name }));
     }

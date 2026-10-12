@@ -6,7 +6,7 @@ const { permit } = require('../middleware/permissions');
 const { reportingDivisionIds } = require('../utils/divisionScope');
 const router = express.Router();
 function auditScope(user) {
-  if (user.role === 'system admin') return { sql: '1=1', params: [] };
+  if (['system admin', 'viewer'].includes(user.role)) return { sql: '1=1', params: [] };
   const ids = reportingDivisionIds(user);
   return { sql: ids.length ? `al.division_id IN (${ids.map(() => '?').join(',')})` : '0=1', params: ids };
 }

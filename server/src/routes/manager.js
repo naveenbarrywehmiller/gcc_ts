@@ -15,15 +15,15 @@ const { permit } = require('../middleware/permissions');
 const router = express.Router();
 
 // Get timesheets needing approval for the manager's team
-router.get('/pending-approvals', authenticate, permit('approvals'), (req, res) => {
+router.get('/pending-approvals', authenticate, permit('approvalsView'), (req, res) => {
   res.json({ weeks: getPendingApprovals(req.user) });
 });
 
 // Get details for a specific week for a specific user
-router.get('/week-details/:userId/:year/:week', authenticate, permit('approvals'), (req, res) => {
+router.get('/week-details/:userId/:year/:week', authenticate, permit('approvalsView'), (req, res) => {
   const { userId, year, week } = req.params;
 
-  if (!canReviewTimesheet(req.user, Number(userId))) {
+  if (req.user.role !== 'viewer' && !canReviewTimesheet(req.user, Number(userId))) {
     return res.status(403).json({ error: 'Not authorized to view this user' });
   }
 

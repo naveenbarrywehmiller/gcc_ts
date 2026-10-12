@@ -65,6 +65,85 @@ test('management roles can read the detailed matrix, Employees are blocked, and 
   }
 });
 
+test('Managers view users, projects and tasks companywide without gaining write privileges', async () => {
+  const task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Matrix Task','Billable')").run().lastInsertRowid);
+  const inactiveTask = Number(db.prepare("INSERT INTO tasks(task_category,active) VALUES ('Inactive Matrix Task',0)").run().lastInsertRowid);
+  for (const actor of ['manager', 'otherManager', 'noManagerScope']) {
+    const directory = await request(actor, '/users');
+    assert.equal(directory.status, 200);
+    assert(directory.body.users.some(user => user.id === users.outsider));
+    assert(directory.body.users.some(user => user.id === users.system));
+    assert(directory.body.users.every(user => user.can_manage === false));
+    assert(!JSON.stringify(directory.body).includes('password_hash'));
+    const filtered = await request(actor, `/users?division_id=${b}&search=outsider`);
+    assert.deepEqual(filtered.body.users.map(user => user.id), [users.outsider]);
+    assert.equal((await request(actor, `/users/${users.outsider}`)).status, 200);
+    const projects = (await request(actor, '/projects?page=1&limit=25')).body.projects;
+    assert(projects.some(project => project.id === projectA));
+    assert(projects.some(project => project.id === projectB));
+    assert(projects.every(project => project.can_edit === false));
+    assert.equal((await request(actor, `/projects/${projectB}`)).body.project.can_edit, false);
+    const tasks = (await request(actor, '/tasks?active=all')).body.tasks;
+    assert(tasks.some(item => item.id === task));
+    assert(tasks.some(item => item.id === inactiveTask));
+    assert.deepEqual((await request(actor, '/tasks?active=0')).body.tasks.map(item => item.id), [inactiveTask]);
+    for (const [route, method, body] of [
+      ['/users', 'POST', { name: 'Blocked user', email: `${actor}@blocked.test`, password: 'password123', division_id: a }],
+      [`/users/${users.employee}`, 'PUT', { name: 'Blocked edit' }],
+      [`/users/${users.employee}/reset-password`, 'POST', { password: 'password123' }],
+      [`/users/${users.employee}/toggle-active`, 'POST', {}],
+      [`/users/${users.employee}`, 'DELETE'],
+      [`/users/${users.employee}/permanent`, 'DELETE'],
+      [`/users/${users.admin}/divisions`, 'PUT', { division_ids: [a, b] }],
+      ['/users/generate-password', 'GET'],
+      ['/projects', 'POST', { project_code: 'BLOCKED', project_name: 'Blocked', division_id: a }],
+      [`/projects/${projectA}`, 'PUT', { project_name: 'Blocked edit' }],
+      [`/projects/${projectB}`, 'DELETE'],
+      [`/projects/${projectB}/permanent`, 'DELETE'],
+      ['/import/projects', 'POST', {}],
+      ['/tasks', 'POST', { task_category: 'Blocked task' }],
+      [`/tasks/${task}`, 'PUT', { task_category: 'Blocked edit' }],
+      [`/tasks/${task}`, 'DELETE'],
+    ]) assert.equal((await request(actor, route, method, body)).status, 403, `${actor}: ${method} ${route}`);
+  }
+  assert.equal((await request('employee', '/users')).status, 403);
+  assert.equal(db.prepare('SELECT name FROM users WHERE id = ?').get(users.employee).name, 'employee');
+  assert.equal(db.prepare('SELECT task_category, active FROM tasks WHERE id = ?').get(task).task_category, 'Matrix Task');
+});
+
+test('Manager report views, filters and downloads include every division even without a profile division', async () => {
+  for (const actor of ['manager', 'otherManager', 'noManagerScope']) {
+    const options = (await request(actor, '/reports/options')).body;
+    assert(options.divisions.some(division => division.id === b));
+    assert(options.users.some(user => user.id === users.outsider));
+    for (const route of [
+      '/reports/utilization?month=10&year=2026',
+      '/reports/weekly-summary?month=10&year=2026',
+      '/reports/export?month=10&year=2026',
+      '/reports/project-hours?month=10&year=2026',
+      '/reports/project-hours-detail?start_date=2026-10-01&end_date=2026-10-31',
+    ]) {
+      const response = await request(actor, route);
+      assert.equal(response.status, 200);
+      assert.deepEqual(response.body, (await request('system', route)).body, route);
+    }
+    for (const route of [
+      '/reports/export?month=10&year=2026&format=excel',
+      '/reports/project-hours-detail?start_date=2026-10-01&end_date=2026-10-31&format=excel',
+      '/projects/export',
+      `/projects/export?division_id=${b}`,
+    ]) {
+      const response = await request(actor, route);
+      assert.equal(response.status, 200);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(response.body);
+      const contents = JSON.stringify(workbook.worksheets.map(sheet => sheet.getSheetValues()));
+      assert(contents.includes('MATRIX-SOUTH'), route);
+      if (route.startsWith('/reports')) assert(contents.includes('outsider'), route);
+    }
+  }
+});
+
 test('shared catalog writes reject Admins/Employees and allow Managers without deletion or activation bypasses', async () => {
   for (const [endpoint, payload, key] of [['divisions', { name: 'Extra Division' }, 'division'], ['departments', { name: 'Extra Department' }, 'department'],
     ['supporting-categories', { name: 'Extra Category' }, 'supportingCategory'], ['activities', { name: 'Extra Activity' }, 'activity']]) {
@@ -110,8 +189,8 @@ test('monthly records permit manager division writes, Admin reads and System Adm
   assert.deepEqual((await request('manager', '/projects/options')).body.division_update_divisions.map(d => d.id), [a]);
 });
 
-test('every report query and JSON export fails closed and excludes foreign contributors and projectless rows', async () => {
-  for (const actor of ['manager', 'admin', 'noManagerScope', 'noAdminScope']) {
+test('Admin report queries and JSON exports stay scoped and fail closed without an assigned division', async () => {
+  for (const actor of ['admin', 'noAdminScope']) {
     const empty = actor.startsWith('no');
     const options = (await request(actor, '/reports/options')).body;
     assert.equal(options.divisions.length, empty ? 0 : 1);
@@ -137,9 +216,9 @@ test('every report query and JSON export fails closed and excludes foreign contr
   assert(JSON.stringify((await request('system', '/reports/export?month=10&year=2026')).body).includes('outsider'));
 });
 
-test('Excel report and project downloads obey the same assigned division scope', async () => {
-  for (const [actor, route] of [['manager', '/reports/export?month=10&year=2026&format=excel'],
-    ['manager', '/reports/project-hours-detail?start_date=2026-10-01&end_date=2026-10-31&format=excel'], ['admin', '/projects/export']]) {
+test('Admin Excel report and project downloads obey the same assigned division scope', async () => {
+  for (const [actor, route] of [['admin', '/reports/export?month=10&year=2026&format=excel'],
+    ['admin', '/reports/project-hours-detail?start_date=2026-10-01&end_date=2026-10-31&format=excel'], ['admin', '/projects/export']]) {
     const response = await request(actor, route);
     assert.equal(response.status, 200);
     const workbook = new ExcelJS.Workbook();
@@ -198,7 +277,7 @@ test('only System Admin can grant privileged roles or expand administrator acces
   assert.equal((await request('admin', `/users/${users.admin}`, 'PUT', { name: 'Updated Admin', division_id: a, division_ids: [a] })).status, 200);
   assert.equal((await request('admin', '/users', 'POST', { name: 'Escalation', email: 'new@permissions.test', password: 'password123', role: 'manager', division_id: a })).status, 403);
   assert.equal((await request('system', `/users/${users.admin}/divisions`, 'PUT', { division_ids: [a, b] })).status, 200);
-  assert.equal((await request('manager', '/users')).status, 403);
+  assert.equal((await request('manager', '/users')).status, 200);
   for (const actor of ['manager', 'admin', 'employee']) {
     assert.equal((await request(actor, '/system/maintenance')).status, 403);
     assert.equal((await request(actor, '/error-logs')).status, 403);

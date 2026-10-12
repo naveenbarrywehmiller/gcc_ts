@@ -1,6 +1,6 @@
 # Reports
 
-Updated October 10, 2026.
+Updated October 12, 2026.
 
 ## Views and filters
 
@@ -20,7 +20,7 @@ Weekly Summary distinguishes ISO week years and preserves every status in a mixe
 
 Capacity follows the existing eight-hour weekday convention and excludes company holidays on weekdays. Weekend holidays do not subtract another working day. Targets and utilization numerators stop at the earlier of today and the selected end date. Future ranges have no elapsed target and show an unavailable percentage rather than zero-percent performance.
 
-Capacity uses the current active-user roster, including management accounts, rather than inferring employment dates from account creation. Inactive users remain in historical activity totals but are excluded from capacity. Different employment schedules and recorded leave deductions are not modeled. Planned Vacation is a plan and does not count as recorded leave or automatically reduce a target.
+Capacity uses the current active-user roster eligible to enter time, including management accounts, rather than inferring employment dates from account creation. Viewers are excluded from expected hours, utilization and missing-hours checks because they cannot enter time. Inactive users and accounts changed to Viewer remain in historical activity totals but are excluded from capacity. Different employment schedules and recorded leave deductions are not modeled. Planned Vacation is a plan and does not count as recorded leave or automatically reduce a target.
 
 Logged-hours coverage is all elapsed logged time divided by expected hours. Billable utilization uses billable elapsed time divided by the same target. Summary activity totals can include inactive users and future dated entries, while utilization rows explicitly use active users and elapsed dates only.
 
@@ -46,7 +46,7 @@ Excel includes Report Info, Timesheet Entries and deduplicated Weekly Details sh
 - `GET /api/reports/export`: `view=weekly|utilization|projects|missing|trends|details` and `format=excel|pdf`. Without a format, returns raw JSON entries.
 - Existing `weekly-summary`, `utilization`, `project-hours` and `project-hours-detail` routes accept the shared range/filter contract and retain legacy month/year or ISO week/year date inputs.
 
-Every reporting endpoint requires Reports permission. Managers and Admins are limited to their reporting divisions; System Admins can report companywide. Both employee and project access limit entries, aggregates, drilldowns and exports. Filters cannot expand access, and actors without a reporting division receive empty data. Reports use private, no-store responses.
+Every report view, filter-options, entry-detail and export endpoint requires Reports permission. Managers, System Admins and Viewers can report companywide, including Managers and Viewers without a profile division. Viewers can use all selection filters and download every report view to Excel or PDF. Admins remain limited to their assigned divisions; both employee and project scope limit their entries, aggregates, drilldowns and exports. Admins without a reporting division receive empty data. Reports use private, no-store responses. Manager dashboard team summaries, approval queues, team vacation and monthly division records retain assigned-division scope.
 
 ## Validation
 

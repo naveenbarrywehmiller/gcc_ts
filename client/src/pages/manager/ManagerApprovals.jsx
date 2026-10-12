@@ -3,6 +3,8 @@ import TimesheetDescription from '../../components/TimesheetDescription';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
+import { useAuth } from '../../contexts/auth';
+import { hasPermission } from '../../utils/permissions';
 import { Check, X, Search, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 const formatDate = (dateStr) => {
   if (!dateStr) return '';
@@ -13,6 +15,8 @@ const formatDate = (dateStr) => {
 };
 
 export default function ManagerApprovals() {
+  const { user } = useAuth();
+  const canApprove = hasPermission(user, 'approvals');
   const [expandedUsers, setExpandedUsers] = useState({});
   const [comment, setComment] = useState('');
   const [selectedAction, setSelectedAction] = useState({ userId: null, week: null, year: null, type: null });
@@ -22,7 +26,7 @@ export default function ManagerApprovals() {
 
   // Fetch pending approvals for the manager's team
   const { data: pendingApprovals, isLoading } = useQuery({
-    queryKey: ['manager-approvals'],
+    queryKey: ['manager-approvals', user.id],
     queryFn: async () => {
       const res = await api.get('/manager/pending-approvals');
       return res.data.weeks;
@@ -46,6 +50,7 @@ export default function ManagerApprovals() {
   });
 
   const handleAction = (userId, week, year, action) => {
+    if (!canApprove) return;
     if (action === 'approve') {
       // Direct approval without comment
       actionMutation.mutate({ action, user_id: userId, week, year });
@@ -94,7 +99,7 @@ export default function ManagerApprovals() {
     <div className="p-3 sm:p-6 max-w-6xl mx-auto animate-fade-in min-w-0">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-surface-900 dark:text-white mb-2">Team Approvals</h1>
-        <p className="text-surface-600 dark:text-surface-400">Review and approve timesheets for your team members.</p>
+        <p className="text-surface-600 dark:text-surface-400">{canApprove ? 'Review and approve timesheets for your team members.' : 'Read submitted timesheets across all divisions. Expand a person to view entries.'}</p>
       </div>
 
       <div className="bg-surface-900 border border-surface-800 rounded-2xl shadow-xl overflow-hidden">
@@ -124,7 +129,7 @@ export default function ManagerApprovals() {
               <Check className="w-8 h-8 text-green-500" />
             </div>
             <h3 className="text-lg font-medium text-white">All caught up!</h3>
-            <p className="text-surface-400 mt-1">No timesheets are currently awaiting your approval.</p>
+            <p className="text-surface-400 mt-1">{searchTerm ? 'No timesheets match your search.' : canApprove ? 'No timesheets are currently awaiting your approval.' : 'No timesheets are currently awaiting approval.'}</p>
           </div>
         ) : (
           <div className="divide-y divide-surface-800">
@@ -156,7 +161,7 @@ export default function ManagerApprovals() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    {canApprove && <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => handleAction(approval.user_id, approval.week_number, approval.week_year, 'approve')}
                         disabled={actionMutation.isPending}
@@ -171,7 +176,7 @@ export default function ManagerApprovals() {
                       >
                         <X className="w-4 h-4" /> Reject
                       </button>
-                    </div>
+                    </div>}
                   </div>
 
                   {/* Expanded Details */}
@@ -213,7 +218,7 @@ export default function ManagerApprovals() {
                   )}
 
                   {/* Rejection Comment Form */}
-                  {selectedAction.userId === approval.user_id && selectedAction.type === 'reject' && selectedAction.week === approval.week_number && (
+                  {canApprove && selectedAction.userId === approval.user_id && selectedAction.type === 'reject' && selectedAction.week === approval.week_number && (
                     <div className="p-4 bg-red-500/5 border-t border-red-500/10">
                       <label className="block text-sm font-medium text-red-400 mb-2">Reason for rejection (required)</label>
                       <div className="flex flex-wrap gap-3">

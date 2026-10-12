@@ -18,7 +18,7 @@ router.use('/:id', authenticate, (req, res, next) => {
   if (!target) return next();
   if (!canManageUser(req.user, target)) return res.status(403).json({ error: 'You can only manage non-admin accounts in your assigned divisions' });
   const input = req.body || {};
-  if (!['admin', 'system admin'].includes(target.role)) {
+  if (!['admin', 'system admin', 'viewer'].includes(target.role)) {
     if (Object.hasOwn(input, 'division_id') || Object.hasOwn(input, 'division')) {
       const updated = normalizeUserReferences(input);
       if (!canManageDivision(req.user, updated.division_id)) return res.status(403).json({ error: 'Select a division assigned to you' });
@@ -127,7 +127,7 @@ router.get('/active-count', authenticate, (req, res) => {
 });
 
 // GET /api/users - List all users (with enhanced filtering and sorting)
-router.get('/', authenticate, permit('users'), (req, res) => {
+router.get('/', authenticate, permit('usersView'), (req, res) => {
   const { search, division, division_id, department_id, supporting_category_id, role, active, sort_by, sort_dir } = req.query;
   let query = `
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
@@ -192,11 +192,17 @@ router.get('/', authenticate, permit('users'), (req, res) => {
   query += ` ORDER BY ${sortColumn} ${sortDirection}`;
 
   const users = db.prepare(query).all(...params);
-  res.json({ users: users.map(user => ({ ...user, can_manage: canManageUser(req.user, user) })) });
+  const by_role = Object.fromEntries(require('../../../shared/accessPolicy.json').roles.map(role => [role, 0]));
+  const counts = db.prepare("SELECT role, COUNT(*) AS total, SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) AS active FROM users WHERE name != '[Deleted User]' GROUP BY role").all();
+  for (const row of counts) by_role[row.role] = row.total;
+  const total = counts.reduce((sum, row) => sum + row.total, 0);
+  const activeCount = counts.reduce((sum, row) => sum + row.active, 0);
+  res.json({ users: users.map(user => ({ ...user, can_manage: canManageUser(req.user, user) })),
+    summary: { total, by_role, active: activeCount, inactive: total - activeCount } });
 });
 
 // GET /api/users/:id
-router.get('/:id', authenticate, permit('users'), (req, res) => {
+router.get('/:id', authenticate, permit('usersView'), (req, res) => {
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
            u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
