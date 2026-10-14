@@ -24,7 +24,7 @@ async function request(user, route, body, method = 'POST') {
   return { status: response.status, body: await response.json() };
 }
 function csv(text, division = divA) {
-  text = text.split('\n').map((line, i) => line + (i === 0 ? ',Billing Type' : ',Billable')).join('\n');
+  text = text.split('\n').map((line, i) => line + (i === 0 ? ',Billable Task IDs' : `,${task}`)).join('\n');
   const form = new FormData(); form.append('file', new Blob([text]), 'projects.csv');
   if (division) form.append('division_id', division);
   return form;
@@ -39,6 +39,7 @@ before(async () => {
   projectB = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)').run('B-SECRET','Other Division',divB).lastInsertRowid);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
   db.exec("UPDATE projects SET billing_type = 'Billable'; UPDATE tasks SET classification = 'Billable'");
+  db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); base = `http://127.0.0.1:${server.address().port}/api`;
 });
 after(() => { server?.close(); db.close(); fs.rmSync(temp, { recursive: true }); });
@@ -76,13 +77,13 @@ test('admins read project choices but export and modify only their own divisions
   assert.equal(list.body.total, 1);
   assert.equal(list.body.projects[0].can_edit, false);
   assert.equal((await request(system, `/projects/${projectB}`, undefined, 'GET')).status, 200);
-  const result = await request(admin, '/projects', { billing_type: 'Billable', project_code: 'A-ONE', project_name: 'Own', budget_hours: 0, project_status: 'Hold' });
+  const result = await request(admin, '/projects', { billable_task_ids: [task], project_code: 'A-ONE', project_name: 'Own', budget_hours: 0, project_status: 'Hold' });
   assert.equal(result.status, 201); assert.equal(result.body.project.division_id, divA); assert.equal(result.body.project.budget_hours, 0);
   assert.equal((await request(admin, `/projects/${result.body.project.id}`, { project_name: 'Updated own project' }, 'PUT')).status, 200);
   assert.equal((await request(admin, `/projects/${result.body.project.id}`, undefined, 'GET')).body.project.can_edit, true);
-  assert.equal((await request(admin, '/projects', { billing_type: 'Billable', project_code: 'FORBIDDEN', project_name: 'Other', division_id: divB })).status, 403);
+  assert.equal((await request(admin, '/projects', { billable_task_ids: [task], project_code: 'FORBIDDEN', project_name: 'Other', division_id: divB })).status, 403);
   assert.equal((await request(admin, `/projects/${result.body.project.id}`, { division_id: divB }, 'PUT')).status, 403);
-  assert.equal((await request(employee, '/projects', { billing_type: 'Billable', project_code:'NO', project_name:'No' })).status, 403);
+  assert.equal((await request(employee, '/projects', { billable_task_ids: [task], project_code:'NO', project_name:'No' })).status, 403);
   const exported = await request(admin, '/projects/export', undefined, 'GET');
   const book = new ExcelJS.Workbook(); await book.xlsx.load(exported.bytes);
   assert.equal(book.worksheets[0].rowCount, 2); assert.equal(book.worksheets[0].getCell('A2').value, 'A-ONE');
@@ -110,7 +111,7 @@ test('template headers round-trip with native Excel dates and project pagination
   const book = new ExcelJS.Workbook(); await book.xlsx.load(result.bytes);
   const sheet = book.worksheets[0]; assert.equal(sheet.rowCount, 1); assert.equal(sheet.getCell('N1').value, 'Status');
   sheet.addRow(['EXCEL', 'Excel Project', 'AX001', '', '', '', '', '', new Date('2026-09-28T00:00:00Z')]);
-  sheet.getCell('T2').value = 'Billable';
+  sheet.getCell('T2').value = String(task);
   sheet.getCell('I2').numFmt = 'yyyy-mm-dd';
   const form = new FormData(); form.append('file', new Blob([await book.xlsx.writeBuffer()]), 'native.xlsx');
   assert.equal((await request(admin, '/import/projects', form)).status, 200);
@@ -189,8 +190,8 @@ test('Excel project import validates active sidebar values with row errors and n
   async function upload(rows) {
     const book = new ExcelJS.Workbook();
     const sheet = book.addWorksheet('Projects');
-    sheet.addRow(['Project Code', 'Project Name', 'Work Type', 'Dedicated/Flex', 'Billing Type']);
-    rows.forEach(row => sheet.addRow([...row, 'Billable']));
+    sheet.addRow(['Project Code', 'Project Name', 'Work Type', 'Dedicated/Flex', 'Billable Task IDs']);
+    rows.forEach(row => sheet.addRow([...row, String(task)]));
     const form = new FormData();
     form.append('file', new Blob([await book.xlsx.writeBuffer()]), 'projects.xlsx');
     return request(admin, '/import/projects', form);
@@ -246,7 +247,7 @@ test('project options use profile division as fallback and distinguish view filt
   }
   const options = (await request(profileAdmin, '/projects/options', undefined, 'GET')).body;
   assert.deepEqual(options.division_update_divisions.map(d => d.id), [divA], 'monthly updates use the same profile fallback');
-  const created = await request(profileAdmin, '/projects', { billing_type: 'Billable', project_code: 'PROFILE', project_name: 'Profile division', subdivision_id: locationA });
+  const created = await request(profileAdmin, '/projects', { billable_task_ids: [task], project_code: 'PROFILE', project_name: 'Profile division', subdivision_id: locationA });
   assert.equal(created.status, 201);
   assert.equal(created.body.project.division_id, divA);
   assert.equal(created.body.project.subdivision_id, locationA);
@@ -264,7 +265,7 @@ test('project options use profile division as fallback and distinguish view filt
   assert.deepEqual(noOptions.subdivisions, []);
   assert.equal(noOptions.filter_divisions.length, 2);
   assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, undefined, 'GET')).body.project.can_edit, false);
-  assert.equal((await request(unassignedAdmin, '/projects', { billing_type: 'Billable', project_code: 'UNASSIGNED', project_name: 'No access', division_id: divA })).status, 403);
+  assert.equal((await request(unassignedAdmin, '/projects', { billable_task_ids: [task], project_code: 'UNASSIGNED', project_name: 'No access', division_id: divA })).status, 403);
   assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, { project_name: 'No access' }, 'PUT')).status, 403);
   assert.equal((await request(unassignedAdmin, `/projects/${projectB}`, undefined, 'DELETE')).status, 403);
 

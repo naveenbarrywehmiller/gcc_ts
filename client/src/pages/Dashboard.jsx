@@ -135,6 +135,13 @@ export default function Dashboard() {
         </>}
       </div>
 
+      <section className="card p-4 sm:p-5 space-y-3">
+        <h2 className="font-semibold">Monthly billing hours</h2>
+        <p className="text-xs text-surface-500">{isManager || divisionOverview ? scopeLabel : 'Your time'} · {monthName} · Classified by the logged task</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">{['Billable', 'Non-Billable', 'Unclassified'].map(type => <p key={type}><span className="block text-surface-500">{type}</span><strong>{(data.billingHours?.find(row => row.classification === type)?.hours || 0).toFixed(1)}h</strong></p>)}</div>
+        {data.planning && <p className="text-sm text-surface-500">Active project task estimates: <strong>{data.planning.estimated_hours == null ? '—' : `${data.planning.estimated_hours.toFixed(1)}h`}</strong> · {data.planning.estimated_tasks}/{data.planning.assigned_tasks} assignments estimated. Full-task plans, counted once per project assignment, independent of monthly logged hours.</p>}
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="card p-5 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">

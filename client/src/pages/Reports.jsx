@@ -762,7 +762,7 @@ function ProjectReport({ data, openEntries }) {
         <p className="text-sm text-surface-500 dark:text-surface-400">
           {data.projects.length} projects ·{' '}
           {new Set(data.projects.flatMap((p) => p.contributors.map((c) => c.user_id))).size}{' '}
-          contributors
+          contributors · Logged hours follow the selected period; task estimates are current full-task plans.
         </p>
         <div className="flex gap-2">
           <button
@@ -802,6 +802,7 @@ function ProjectReport({ data, openEntries }) {
                   {p.project_code}
                 </button>
                 <p className="text-xs text-surface-500 dark:text-surface-400">{p.project_name}</p>
+                {p.planning && <p className="text-xs text-surface-500 mt-1">Assigned tasks: {p.planning.billable_task_ids.length} billable / {p.planning.non_billable_task_ids.length} non-billable<br />Task estimate: {p.planning.task_estimated_hours == null ? '—' : hours(p.planning.task_estimated_hours)} ({p.planning.estimated_task_count}/{p.planning.assigned_task_count} estimated)</p>}
               </td>
               <td className={td}>{p.customer_name || '—'}</td>
               <td className={td}>{p.division || '—'}</td>

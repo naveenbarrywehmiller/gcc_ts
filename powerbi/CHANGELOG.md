@@ -5,6 +5,17 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.1.0] — 2026-10-14
+
+### Added
+- Task planning metadata for estimated hours and input received, start, target, and delivered dates.
+- Project task assignment fields for billable and non-billable tasks, with aggregate task estimate and assignment counts.
+- Updated the task and project model tables to load the new reporting API fields.
+
+### Compatibility
+- Requires application v1.28.0 or later and reporting API v2.0.0. Refresh the PBIP after upgrading the application.
+- Includes the PBIP source project; it does not publish or refresh a Power BI Service dataset.
+
 ## [2.0.0] — 2026-10-09
 
 ### Changed

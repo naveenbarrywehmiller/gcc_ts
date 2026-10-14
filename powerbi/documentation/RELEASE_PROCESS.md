@@ -1,7 +1,7 @@
 # Power BI Release Process — GCC Timesheet
 
-> Dashboard Version: 2.0.0
-> Last Updated: 2026-10-09
+> Dashboard Version: 2.1.0
+> Last Updated: 2026-10-14
 
 ---
 
@@ -30,7 +30,7 @@ Use semantic versioning:
 - PATCH: fixes, formatting, documentation, small corrections
 
 Current baseline:
-- Dashboard version: `v2.0.0`
+- Dashboard version: `v2.1.0`
 
 ---
 

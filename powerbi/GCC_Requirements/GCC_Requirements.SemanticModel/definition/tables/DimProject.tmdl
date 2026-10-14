@@ -101,13 +101,31 @@ table DimProject
 		summarizeBy: none
 		sourceColumn: isActive
 
+	column taskEstimatedHours
+		dataType: double
+		lineageTag: 1ed2a0d8-dd43-48a7-a9a1-9495a2650a53
+		summarizeBy: none
+		sourceColumn: taskEstimatedHours
+
+	column assignedTaskCount
+		dataType: int64
+		lineageTag: 2b4035ea-a20c-4beb-862b-c3ff773708ea
+		summarizeBy: none
+		sourceColumn: assignedTaskCount
+
+	column estimatedTaskCount
+		dataType: int64
+		lineageTag: 49bdd4a2-24b5-4ed6-8b60-b6b180ddf94f
+		summarizeBy: none
+		sourceColumn: estimatedTaskCount
+
 	partition DimProject = m
 		mode: import
 		source =
 				let
 				    Rows = fnApi("projects"),
-				    Raw = Table.FromRecords(Rows, {"id", "projectCode", "projectName", "division", "subdivision", "teamType", "product", "productModule", "activity", "startDate", "targetDate", "deliveredDate", "budgetHours", "projectStatus", "isActive"}, MissingField.UseNull),
-				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"projectCode", type text}, {"projectName", type text}, {"division", type text}, {"subdivision", type text}, {"teamType", type text}, {"product", type text}, {"productModule", type text}, {"activity", type text}, {"startDate", type date}, {"targetDate", type date}, {"deliveredDate", type date}, {"budgetHours", type number}, {"projectStatus", type text}, {"isActive", type logical}}, "en-US"),
+				    Raw = Table.FromRecords(Rows, {"id", "projectCode", "projectName", "division", "subdivision", "teamType", "product", "productModule", "activity", "startDate", "targetDate", "deliveredDate", "budgetHours", "projectStatus", "isActive", "taskEstimatedHours", "assignedTaskCount", "estimatedTaskCount"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"projectCode", type text}, {"projectName", type text}, {"division", type text}, {"subdivision", type text}, {"teamType", type text}, {"product", type text}, {"productModule", type text}, {"activity", type text}, {"startDate", type date}, {"targetDate", type date}, {"deliveredDate", type date}, {"budgetHours", type number}, {"projectStatus", type text}, {"isActive", type logical}, {"taskEstimatedHours", type number}, {"assignedTaskCount", type number}, {"estimatedTaskCount", type number}}, "en-US"),
 				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimProject key." else Typed
 				in Checked
 

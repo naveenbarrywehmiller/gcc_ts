@@ -270,8 +270,8 @@ Standard REST patterns (`GET /`, `POST /`, `PUT /:id`, `DELETE /:id`):
 |---|---|---|
 | **Users** | `/api/users` | `name`, `email`, `role`, `division_id`, `department_id` |
 | **Active Users Count** | `/api/users/active-count` | Returns `{ online: N, total: M }` |
-| **Projects** | `/api/projects` | `name`, `code`, `status`, `division_id` |
-| **Tasks** | `/api/tasks` | `name`, `project_id`, `billable` |
+| **Projects** | `/api/projects` | `project_name`, `project_code`, `project_status`, `division_id`, `billable_task_ids`, `non_billable_task_ids` |
+| **Tasks** | `/api/tasks` | `classification`, `task_category`, `task_description`, optional `estimated_hours`, `input_received_date`, `start_date`, `target_date`, `delivered_date` |
 | **Divisions** | `/api/divisions` | `name`, `code` |
 | **Subdivisions** | `/api/subdivisions` | `name`, `division_id` |
 | **Departments** | `/api/departments` | `name`, `division_id` |
@@ -304,3 +304,16 @@ Content-Type: multipart/form-data
 * `GET /api/sharepoint-sync/status` — Get sync state
 * `POST /api/sharepoint-sync/week` — Trigger sync for a specific week
 * `POST /api/sharepoint-sync/full` — Trigger full historical sync
+
+
+### Task planning and project assignments
+
+`POST/PUT /api/tasks` accepts nullable `estimated_hours` (finite, nonnegative; zero is valid) and four optional ISO calendar dates: `input_received_date`, `start_date`, `target_date`, `delivered_date`. Omitted fields survive updates; empty strings/null clear optional values. Classification must be Billable or Non-Billable and cannot change once assigned or used in time records.
+
+`POST/PUT /api/projects` accepts `billable_task_ids` and `non_billable_task_ids` arrays of task IDs. At least one task is required across the two categories. New assignments require active tasks with the matching classification. Omitted lists on an update retain existing assignments; an empty list clears that category. Existing inactive assignments may be retained for history. Project creation/editing no longer requires a single billing type.
+
+Project reads return the two ID lists, `tasks` with planning metadata, `task_estimated_hours`, `estimated_task_count`, and `assigned_task_count`. Timesheet saving/submission requires an active task explicitly assigned to the project. Admin division permissions continue to apply.
+
+Project Excel import/export uses **Billable Task IDs** and **Non-Billable Task IDs** with semicolon-separated IDs. Templates include a **Task Reference** sheet. At least one category must be populated per imported row; invalid rows reject the entire import. Report Excel includes **Task Planning**, and Project Hours PDF includes current task plans.
+
+Power BI `/tasks` adds `estimatedHours`, `inputReceivedDate`, `startDate`, `targetDate`, and `deliveredDate`. `/projects` adds `billableTaskIds`, `nonBillableTaskIds`, `taskEstimatedHours`, `assignedTaskCount`, and `estimatedTaskCount`. Keep project rows at one row per project; expanding ID lists into those rows would multiply totals.

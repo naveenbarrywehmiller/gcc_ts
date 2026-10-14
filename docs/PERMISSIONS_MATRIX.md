@@ -33,7 +33,7 @@ Users displays total registered accounts plus System Admin, Manager, Admin, Empl
 | --- | --- | --- | --- | --- | --- | --- |
 | Dashboard — Open dashboard and view summary | All divisions | Own records and assigned division | Assigned divisions | Own records | All divisions | Managers and employees see personal hours. Admin, System Admin and Viewer dashboards show the division summary. |
 | Dashboard — View division summary and approval counts | All divisions | Assigned division | Assigned divisions | No access | All divisions | — |
-| Timesheet — View, create, edit and save personal entries | Own records | Own records | Own records | Own records | No access | Viewer accounts read timesheet records through Reports and Approvals. Submitted and approved entries are locked. Choose an allowed project and its billing-compatible task; description is required. |
+| Timesheet — View, create, edit and save personal entries | Own records | Own records | Own records | Own records | No access | Viewer accounts read timesheet records through Reports and Approvals. Submitted and approved entries are locked. Choose an allowed project and an active task assigned to it; description is required. |
 | Timesheet — Delete editable personal entries | Own records | Own records | Own records | Own records | No access | Draft, rejected and recalled entries only. |
 | Timesheet — Submit a week for approval | Own records | Own records | Own records | Own records | No access | Requires an active assigned reviewer. Employees also need an active Admin or System Admin assignment to use the application. |
 | Timesheet — Recall own week | Own records | Own records | Own records | Own records | No access | The existing recall workflow returns the week for editing. |

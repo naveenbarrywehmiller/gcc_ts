@@ -1,5 +1,15 @@
 # Responsive design audit
 
+## Task planning and project assignments (October 13, 2026)
+
+Task Name/Number adds five optional planning fields and columns. Projects replaces the single Billing Type with separate searchable Billable and Non-Billable checkbox lists, selected counts, bulk filtered selection and a selected-only view. At least one task is required across the categories. Timesheet choices use explicit assignments and show the selected task's planning values. Project tables, Dashboard, Project Hours, Excel/PDF exports, Help and Matrix help reflect the new behavior. See [TASK_PLANNING.md](TASK_PLANNING.md) for migration, calculation and import details.
+
+Headed Chromium against the actual API with an isolated in-memory database passed 280 page/dialog viewport checks: task table/form, project table/form, Dashboard, Project Hours, timesheet task dialog, Help, Matrix help and Manager read-only project dialog at all 21 required sizes plus 568×320, 640×360, 844×390, 932×430, 800×600, 1024×768 and 1366×1024. Checks covered document overflow, dialog bounds and dialog width; the read-only form additionally checked input bounds at every size. Representative mobile, tablet, laptop, desktop and ultrawide screenshots were inspected, including the assignment controls scrolled into view. Wide tables retain local horizontal scrolling, and long forms/lists scroll inside their dialogs.
+
+Functional browser checks used more than 120 synthetic tasks: create/edit and persistence of optional fields, rejection of empty assignments, search/no-results behavior, selections retained across filters, mixed-category project save/reload, assignment-filtered timesheet options and planning display. Manager assignment checkboxes remained disabled while searches stayed available. Escape closed dialogs. No browser exceptions or responsive regressions were found. Other browser engines, physical devices and live production data were not exercised.
+
+The Project Hours PDF planning section was generated with 28 tasks, rendered using Poppler and visually checked across its four-page report, including the continued planning table. Blank estimates and dates remain blank; headers and page numbers stay readable. All 118 Node tests and 55 Power BI API checks, lint, production build and `git diff --check` passed. Vite retains its existing large-chunk warning. Power BI Desktop runtime validation was unavailable because Windows denied access to the installed Microsoft Store Tabular library; local model/query source updates were not published or refreshed live.
+
 ## Reports Last Week preset (October 12, 2026)
 
 Last Week appears immediately after This Week and selects the previous Monday–Sunday with local calendar-date arithmetic. Existing report filters remain selected and apply to all views, entry details and downloads.

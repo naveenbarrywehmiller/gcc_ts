@@ -9,10 +9,9 @@ function validateTimesheetEntry(entry) {
   if (!project || !project.active) fail('Select a valid active Project Code');
   if (typeof entry.project_description !== 'string' || !entry.project_description.trim()) fail('Description is required');
   if (entry.project_description.length > descriptionMaxLength) fail(`Description must be text of at most ${descriptionMaxLength} characters`);
-  if (!['Billable', 'Non-Billable'].includes(project.billing_type)) fail('An administrator must select the project Billing Type before time can be saved or submitted');
   const task = validId(entry.task_id)
     ? db.prepare('SELECT * FROM tasks WHERE id = ? AND active = 1').get(entry.task_id) : null;
-  if (!task || task.classification !== project.billing_type) fail('Select an active Task Name/Number matching the project Billing Type');
+  if (!task || !['Billable', 'Non-Billable'].includes(task.classification) || !db.prepare('SELECT 1 FROM project_tasks WHERE project_id = ? AND task_id = ?').get(project.id, task.id)) fail('Select an active Task Name/Number assigned to this project');
   return project;
 }
 

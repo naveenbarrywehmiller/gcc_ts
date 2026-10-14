@@ -16,11 +16,11 @@ let
             Expanded = Table.ExpandRecordColumn(DataTable, "Column1", {
                 "id", "projectCode", "projectName", "customerName", "activity",
                 "division", "subdivision", "teamType", "status", "isActive",
-                "createdDate", "updatedDate"
+                "createdDate", "updatedDate", "taskEstimatedHours", "assignedTaskCount", "estimatedTaskCount", "billableTaskIds", "nonBillableTaskIds"
             }, {
                 "id", "projectCode", "projectName", "customerName", "activity",
                 "division", "subdivision", "teamType", "status", "isActive",
-                "createdDate", "updatedDate"
+                "createdDate", "updatedDate", "taskEstimatedHours", "assignedTaskCount", "estimatedTaskCount", "billableTaskIds", "nonBillableTaskIds"
             }),
             Typed = Table.TransformColumnTypes(Expanded, {
                 {"id", Int64.Type},
@@ -34,7 +34,7 @@ let
                 {"status", type text},
                 {"isActive", type logical},
                 {"createdDate", type datetime},
-                {"updatedDate", type datetime}
+                {"updatedDate", type datetime}, {"taskEstimatedHours", type number}, {"assignedTaskCount", Int64.Type}, {"estimatedTaskCount", Int64.Type}
             })
         in
             Typed

@@ -1,3 +1,4 @@
+import TaskPlanning from '../components/TaskPlanning';
 import TimesheetDetails from '../components/TimesheetDetails';
 import ProjectStatus from '../components/ProjectStatus';
 import fields from '../data/timesheetFields.json';
@@ -266,7 +267,7 @@ export default function Timesheet() {
   }, [projects, loadedData, user]);
 
   const selectedProject = projects.find(p => p.id === newRowProject);
-  const modalTaskOptions = tasks.filter(t => selectedProject?.billing_type && t.classification === selectedProject.billing_type);
+  const modalTaskOptions = tasks.filter(t => selectedProject?.tasks?.some(assigned => assigned.id === t.id));
 
   // Cumulative hours for selected project (client-side calculation)
   const cumulativeHoursForProject = useMemo(() => {
@@ -311,7 +312,7 @@ export default function Timesheet() {
     if (!modalProjectOptions.some(p => p.id === newRowProject)) { toast.warning('Please select a valid Project Code'); return; }
     if (!newRowTask) { toast.warning('Please select a task category'); return; }
     if (!newRowProjectDesc.trim()) { toast.warning('Description is required'); return; }
-    if (!modalTaskOptions.some(t => t.id === newRowTask)) { toast.warning('Select a task matching the project Billing Type'); return; }
+    if (!modalTaskOptions.some(t => t.id === newRowTask)) { toast.warning('Select a task assigned to this project'); return; }
 
     const exists = rows.some((r, i) => {
       if (editingRowIdx !== null && i === editingRowIdx) return false;
@@ -1223,7 +1224,7 @@ export default function Timesheet() {
             onChange={value => {
               setNewRowProject(value);
               const project = projects.find(p => p.id === value);
-              if (!tasks.some(t => t.id === newRowTask && t.classification === project?.billing_type)) setNewRowTask(null);
+              if (!tasks.some(t => t.id === newRowTask && project?.tasks?.some(assigned => assigned.id === t.id))) setNewRowTask(null);
             }}
             placeholder="Search and select a project..."
             id="add-row-project"
@@ -1233,12 +1234,13 @@ export default function Timesheet() {
             options={modalTaskOptions.map(t => ({ value: t.id, label: `${t.task_category} (${t.classification})` }))}
             value={newRowTask}
             onChange={setNewRowTask}
-            disabled={!selectedProject?.billing_type}
+            disabled={!selectedProject || !modalTaskOptions.length}
             placeholder="Select a task name/number..."
             id="add-row-task-category"
           />
-          {selectedProject && !selectedProject.billing_type && <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">An administrator must select this project's Billing Type before you can add time.</p>}
+          {selectedProject && !modalTaskOptions.length && <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">An administrator must assign active tasks to this project before you can add time.</p>}
 
+          <TaskPlanning task={tasks.find(t => t.id === newRowTask)} />
           {newRowProject && cumulativeHoursForProject > 0 && (
             <div className="flex items-center gap-2.5 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 animate-fade-in">
               <Clock className="w-4 h-4 text-blue-500 shrink-0" />

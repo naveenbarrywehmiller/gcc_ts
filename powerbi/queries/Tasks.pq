@@ -16,6 +16,7 @@ let
     // ═══ EXPAND ═══
     Expanded = Table.ExpandRecordColumn(DataTable, "Column1", {
         "id", "classification", "taskCategory", "taskDescription", 
+        "estimatedHours", "inputReceivedDate", "startDate", "targetDate", "deliveredDate",
         "requiresProject", "status", "isActive", "createdDate"
     }),
 
@@ -25,6 +26,11 @@ let
         {"classification", type text},
         {"taskCategory", type text},
         {"taskDescription", type text},
+        {"estimatedHours", type number},
+        {"inputReceivedDate", type date},
+        {"startDate", type date},
+        {"targetDate", type date},
+        {"deliveredDate", type date},
         {"requiresProject", type logical},
         {"status", type text},
         {"isActive", type logical},

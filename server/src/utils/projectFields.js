@@ -12,7 +12,7 @@ const columns = [
   ['budget_hours', 'Budget Hours'], ['project_status', 'Status'],
   ['division', 'Division'], ['location', 'Location'],
   ['customer_name', 'Customer Name'], ['activity', 'Work Type'], ['team_type', 'Dedicated/Flex'],
-  ['billing_type', 'Billing Type'],
+  ['billable_task_ids', 'Billable Task IDs'], ['non_billable_task_ids', 'Non-Billable Task IDs'],
 ];
 const extraFields = columns.slice(2, 14).map(([key]) => key);
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };
@@ -28,8 +28,8 @@ function validateProject(input, user, existing = {}) {
     if (result[key]?.length > 1000) fail(`${key} is too long`);
   }
   if (!result.project_code || !result.project_name) fail('Project Code and Project Name are required');
-  if (!['Billable', 'Non-Billable'].includes(data.billing_type)) fail('Select a Billing Type: Billable or Non-Billable');
-  result.billing_type = data.billing_type;
+  // Retain legacy billing only for historical records without a classified task.
+  result.billing_type = existing.billing_type || null;
   const duplicate = db.prepare('SELECT id FROM projects WHERE LOWER(TRIM(project_code)) = LOWER(?) AND id != ?').get(result.project_code, existing.id || 0);
   if (duplicate) fail(`Project code already exists: ${result.project_code}`, 409);
   result.project_status ||= 'Inprogress';

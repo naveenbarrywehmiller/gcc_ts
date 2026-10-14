@@ -1,6 +1,7 @@
 'use strict';
 
 const db = require('../config/db');
+const { withTasks } = require('../utils/projectTasks');
 const config = require('../config/env');
 
 /**
@@ -484,6 +485,7 @@ class PowerBiService {
         targetDate: p.targetDate,
         deliveredDate: p.deliveredDate,
         budgetHours: p.budgetHours,
+        ...(() => { const plan = withTasks({ id: p.id }); return { billableTaskIds: plan.billable_task_ids, nonBillableTaskIds: plan.non_billable_task_ids, taskEstimatedHours: plan.task_estimated_hours, assignedTaskCount: plan.assigned_task_count, estimatedTaskCount: plan.estimated_task_count }; })(),
         projectStatus: p.projectStatus,
         customerName: p.customerName,
         activity: p.activity,
@@ -564,6 +566,8 @@ class PowerBiService {
         1 as requiresProject,
         CASE WHEN tk.active = 1 THEN 'Active' ELSE 'Inactive' END as status,
         tk.active as active,
+        tk.estimated_hours as estimatedHours, tk.input_received_date as inputReceivedDate,
+        tk.start_date as startDate, tk.target_date as targetDate, tk.delivered_date as deliveredDate,
         tk.created_at as createdDate
       FROM tasks tk
       WHERE 1=1
@@ -589,6 +593,8 @@ class PowerBiService {
         classification: tk.classification,
         taskCategory: tk.taskCategory,
         taskDescription: tk.taskDescription,
+        estimatedHours: tk.estimatedHours, inputReceivedDate: tk.inputReceivedDate,
+        startDate: tk.startDate, targetDate: tk.targetDate, deliveredDate: tk.deliveredDate,
         requiresProject: tk.requiresProject === 1,
         status: tk.status,
         isActive: tk.active === 1,
@@ -710,7 +716,7 @@ class PowerBiService {
   getVersion() {
     return {
       apiVersion: '2.0.0',
-      dashboardVersion: '2.0.0',
+      dashboardVersion: '2.1.0',
       apiNamespace: '/api/powerbi',
       serverTime: new Date().toISOString(),
       cacheEnabled: CACHE_TTL_MS > 0,
