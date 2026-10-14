@@ -5,7 +5,6 @@
 
 ### Features
 
-* add task planning and project task assignments ([210befc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/210befc1d2db5dfe6ddd9cd615f659b8ef717e08))
 * add task planning and project task assignments ([a2d880b](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a2d880b6b65c7b15b5a37ec56b0e1b57a59d31ca))
 
 ## [1.27.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.26.0...v1.27.0) (2026-10-12)
