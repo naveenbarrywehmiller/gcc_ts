@@ -26,7 +26,7 @@ const commonGuides = [
       'Choose a week with the arrows or calendar, then select Add Project to enter project or task details.',
       'Select a Project Code for every row. Its division and location are set by an administrator in Projects and filled in automatically. Ask your administrator if a project is missing.',
       'Enter a required Description of your work, up to 500 characters. The live counter shows how much you have entered, and reviewers can read the description in expanded timesheet details.',
-      'Select Task Name/Number after the project. Tasks follow its Billable or Non-Billable Billing Type. Ask an administrator to classify the project if needed.',
+      'Select Task Name/Number after the project. Choose one of the active tasks assigned to that project. Projects can have both Billable and Non-Billable tasks. Ask an administrator to update assignments if needed.',
       'Enter hours on the appropriate days and select Save to keep work in progress.',
       'When the week is ready, select Submit Week. If a Recall action is available, use it to correct a submitted week.',
       'If an approved week needs a change and you cannot recall it, contact your administrator.',
@@ -115,6 +115,7 @@ const adminGuides = [
     description: 'Keep the options used by timesheets up to date.',
     steps: [
       'Use Projects to search, filter, add, or edit projects. The page also offers an Excel template, import, and export.',
+      'Select at least one task using the searchable Billable and Non-Billable lists. A project may include either or both categories. Estimates and four planning dates are optional on Task Name/Number.',
       'Set the division and location in each project. Managers and System Admins maintain locations in Division; Admins can view the existing locations.',
       'Admins maintain Task Name/Number. Divisions, Departments, Dedicated/Flex and Work Type are read-only for Admins; Managers and System Admins maintain these lists.',
       'Check the record and your scope before changing or deactivating an item.',

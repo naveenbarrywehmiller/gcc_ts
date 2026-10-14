@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { withTasks } = require('../utils/projectTasks');
 const { reportScope, reportingDivisionIds, hasCompanywideReportAccess } = require('../utils/divisionScope');
 const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
 
@@ -392,6 +393,7 @@ function analysis(actor, spec, today = todayDate()) {
         project_name: row.project_name || 'Historical entries without a project',
         customer_name: row.customer_name,
         division: row.project_division,
+        planning: row.project_id ? withTasks({ id: row.project_id }) : null,
         contributors: new Map(),
         ...emptyTotals(),
       });
@@ -581,6 +583,7 @@ module.exports = {
   positiveInt,
   todayDate,
   addDays,
+  billing,
   STATUSES,
   VIEWS,
 };

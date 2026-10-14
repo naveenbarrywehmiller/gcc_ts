@@ -526,6 +526,7 @@ function migrate() {
     db.exec("ALTER TABLE projects ADD COLUMN billing_type TEXT CHECK(billing_type IN ('Billable', 'Non-Billable'))");
   }
   require('./viewerRoleMigration')(db);
+  require('./taskPlanningMigration')(db);
   require('./auditScopeMigration')(db);
   require('./bootstrapAdmin').bootstrapAdmin(db);
 

@@ -1,6 +1,6 @@
 # Power BI API Compatibility — GCC Timesheet
 
-> **Last Updated:** 2026-10-09
+> **Last Updated:** 2026-10-14
 
 ---
 
@@ -8,7 +8,8 @@
 
 | Power BI Dashboard Version | Required API Version | GCC Timesheet App Version | Status |
 |---------------------------|---------------------|--------------------------|--------|
-| v2.0.0 | v2.0.0 | v1.21.0+ | ✅ Current |
+| v2.1.0 | v2.0.0 | v1.28.0+ | ✅ Current |
+| v2.0.0 | v2.0.0 | v1.21.0–v1.27.x | Previous |
 | v1.1.4 | v1.1.0 | v1.15.0–v1.20.0 | Legacy numeric staffing contract |
 | v1.1.0–v1.1.3 | v1.x | v1.3.0+ | ✅ Legacy |
 | v1.0.0 | v1.x | v1.3.0+ | ✅ Legacy |
@@ -17,9 +18,9 @@
 
 ## API Versioning Policy
 
-### Current: API v2.0.0
+### Current: Dashboard v2.1.0 / API v2.0.0
 
-The Power BI REST API is served at `/api/powerbi/*` without explicit version prefixes. The current contract is **v2.0.0**. In `/staffing`, `openPositions` and `newJoiners` are nullable text rather than nullable counts. Existing numeric records migrate to text, preserving zero as `"0"`. Upgrade the application and saved PBIP together, then refresh the model in Desktop. Dashboard v1.1.4 expects numbers and cannot refresh against this contract.
+The Power BI REST API is served at `/api/powerbi/*` without explicit version prefixes. The current API contract remains **v2.0.0**. Dashboard v2.1.0 adds task planning and project task assignment fields using additive response fields. Upgrade application v1.28.0+ and the saved PBIP together, then refresh the model in Desktop. In `/staffing`, `openPositions` and `newJoiners` are nullable text rather than nullable counts. Existing numeric records migrate to text, preserving zero as `"0"`. Upgrade the application and saved PBIP together, then refresh the model in Desktop. Dashboard v1.1.4 expects numbers and cannot refresh against this contract.
 
 ### Backward Compatibility Rules
 

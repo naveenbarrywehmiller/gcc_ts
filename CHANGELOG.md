@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.27.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.26.0...v1.27.0) (2026-10-12)
+
+### Features
+
+* **reports:** add Last Week date preset
+
 ## [1.26.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.25.1...v1.26.0) (2026-10-12)
 
 

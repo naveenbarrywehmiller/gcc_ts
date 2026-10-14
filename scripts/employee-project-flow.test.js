@@ -48,6 +48,7 @@ before(async () => {
   project = Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id,subdivision_id) VALUES ('FLOW','Flow Project',?,?)").run(division, location).lastInsertRowid);
   db.prepare("UPDATE projects SET billing_type = 'Billable' WHERE id = ?").run(project);
   task = Number(db.prepare("INSERT INTO tasks(task_category,classification,requires_project) VALUES ('Design','Billable',1)").run().lastInsertRowid);
+  db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;

@@ -4,11 +4,12 @@ const { authenticate } = require('../middleware/auth');
 
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
+const { validateTask } = require('../utils/taskFields');
 
 // GET /api/tasks
 router.get('/', authenticate, (req, res) => {
   const { search, classification, active } = req.query;
-  let query = 'SELECT id, classification, task_category, task_description, active, created_at, updated_at, 1 AS requires_project FROM tasks WHERE 1=1';
+  let query = 'SELECT *, 1 AS requires_project FROM tasks WHERE 1=1';
   const params = [];
 
   if (search) {
@@ -28,12 +29,9 @@ router.get('/', authenticate, (req, res) => {
 
 // POST /api/tasks
 router.post('/', authenticate, permit('tasks'), (req, res) => {
-  const { classification, task_category, task_description } = req.body;
-  if (!task_category) return res.status(400).json({ error: 'Task category is required' });
-
-  const result = db.prepare(
-    'INSERT INTO tasks (classification, task_category, task_description, requires_project) VALUES (?, ?, ?, ?)'
-  ).run(classification || null, task_category.trim(), task_description || null, 1);
+  const data = validateTask(req.body);
+  const keys = Object.keys(data);
+  const result = db.prepare(`INSERT INTO tasks (${keys.join(',')}, requires_project) VALUES (${keys.map(() => '?').join(',')}, 1)`).run(...Object.values(data));
 
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json({ task });
@@ -41,25 +39,15 @@ router.post('/', authenticate, permit('tasks'), (req, res) => {
 
 // PUT /api/tasks/:id
 router.put('/:id', authenticate, permit('tasks'), (req, res) => {
-  const { classification, task_category, task_description, active } = req.body;
   const taskId = req.params.id;
-
-  const existing = db.prepare('SELECT id FROM tasks WHERE id = ?').get(taskId);
+  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
   if (!existing) return res.status(404).json({ error: 'Task not found' });
-
-  let updateFields = [];
-  let params = [];
-
-  if (classification !== undefined) { updateFields.push('classification = ?'); params.push(classification); }
-  if (task_category !== undefined) { updateFields.push('task_category = ?'); params.push(task_category.trim()); }
-  if (task_description !== undefined) { updateFields.push('task_description = ?'); params.push(task_description); }
-  if (active !== undefined) { updateFields.push('active = ?'); params.push(active ? 1 : 0); }
-
-  if (updateFields.length === 0) return res.status(400).json({ error: 'No fields to update' });
-  updateFields.push('requires_project = 1', 'updated_at = CURRENT_TIMESTAMP');
-  params.push(taskId);
-
-  db.prepare(`UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?`).run(...params);
+  const data = validateTask(req.body, existing);
+  if (data.classification !== existing.classification &&
+      (db.prepare('SELECT 1 FROM project_tasks WHERE task_id = ? LIMIT 1').get(taskId) || db.prepare('SELECT 1 FROM timesheets WHERE task_id = ? LIMIT 1').get(taskId))) {
+    return res.status(409).json({ error: 'Classification cannot change for an assigned or logged task. Create a new task to preserve billing history.' });
+  }
+  db.prepare(`UPDATE tasks SET ${Object.keys(data).map(k => `${k} = ?`).join(',')}, requires_project = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(...Object.values(data), taskId);
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
   res.json({ task });
 });

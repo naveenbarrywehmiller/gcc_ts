@@ -8,6 +8,7 @@ const { reportScope } = require('../utils/divisionScope');
 const { columns, validateProject } = require('../utils/projectFields');
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
+const { validateAssignments, saveAssignments, withTasks } = require('../utils/projectTasks');
 const select = `SELECT p.*, d.name AS division_name, s.name AS subdivision_name FROM projects p
   LEFT JOIN divisions d ON d.id = p.division_id LEFT JOIN subdivisions s ON s.id = p.subdivision_id`;
 function filter(query) {
@@ -36,7 +37,7 @@ router.get('/options', authenticate, permit('reports'), (req, res) => {
   // Monthly division updates use the same effective division assignments.
   const assignedIds = reportingDivisionIds(req.user);
   const division_update_divisions = filter_divisions.filter(d => ['system admin', 'viewer'].includes(req.user.role) || assignedIds.includes(d.id));
-  res.json({ divisions, subdivisions, filter_divisions, filter_subdivisions, division_update_divisions, activities, supporting_categories });
+  res.json({ divisions, subdivisions, filter_divisions, filter_subdivisions, division_update_divisions, activities, supporting_categories, tasks: db.prepare('SELECT * FROM tasks ORDER BY classification, task_category').all() });
 });
 router.get('/export', authenticate, permit('projectsView'), async (req, res, next) => {
   try {
@@ -47,8 +48,11 @@ router.get('/export', authenticate, permit('projectsView'), async (req, res, nex
       const { sql, params } = filter(req.query);
       const scope = reportScope(req.user, 'p');
       db.prepare(select + sql + ` AND ${scope.sql} ORDER BY p.project_code`).all(...params, ...scope.params)
-        .forEach(p => sheet.addRow({ ...p, division: p.division_name, location: p.subdivision_name }));
+        .forEach(p => { const enriched = withTasks(p); sheet.addRow({ ...p, division: p.division_name, location: p.subdivision_name, billable_task_ids: enriched.billable_task_ids.join(';'), non_billable_task_ids: enriched.non_billable_task_ids.join(';') }); });
     }
+    const taskSheet = workbook.addWorksheet('Task Reference');
+    taskSheet.columns = ['ID', 'Classification', 'Task Name/Number', 'Estimated Hours', 'Input Received Date', 'Start Date', 'Target Date', 'Delivered Date', 'Active'].map(header => ({ header, width: 24 }));
+    db.prepare('SELECT * FROM tasks ORDER BY classification, task_category').all().forEach(t => taskSheet.addRow([t.id, t.classification, t.task_category, t.estimated_hours, t.input_received_date, t.start_date, t.target_date, t.delivered_date, t.active ? 'Yes' : 'No']));
     sheet.getRow(1).font = { bold: true };
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -69,7 +73,7 @@ router.get('/', authenticate, (req, res) => {
   const projects = db.prepare(select + sql + ' ORDER BY p.project_code' + (paginated ? ' LIMIT ? OFFSET ?' : ''))
     .all(...params, ...(paginated ? [limit, (page - 1) * limit] : []));
   const editableIds = projectDivisionIds(req.user);
-  res.json({ projects: projects.map(project => ({ ...project, can_edit: req.user.role === 'system admin' || editableIds.includes(project.division_id) })), total, page, limit });
+  res.json({ projects: projects.map(project => ({ ...withTasks(project), can_edit: req.user.role === 'system admin' || editableIds.includes(project.division_id) })), total, page, limit });
 });
 function getProject(req) {
   return db.prepare(select + ' WHERE p.id = ?').get(req.params.id);
@@ -77,7 +81,7 @@ function getProject(req) {
 router.get('/:id', authenticate, (req, res) => {
   const project = getProject(req);
   if (!project) return res.status(404).json({ error: 'Project not found' });
-  res.json({ project: { ...project, can_edit: canManageProjectDivision(req.user, project.division_id) } });
+  res.json({ project: { ...withTasks(project), can_edit: canManageProjectDivision(req.user, project.division_id) } });
 });
 function audit(req, action, id) {
   db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, division_id, ip_address) VALUES (?,?,?,?,?,?,?)')
@@ -86,12 +90,14 @@ function audit(req, action, id) {
 router.post('/', authenticate, permit('projects'), (req, res) => {
   const project = db.transaction(() => {
     const data = validateProject(req.body, req.user);
+    const groups = validateAssignments(req.body);
     const keys = Object.keys(data);
     const result = db.prepare(`INSERT INTO projects (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`).run(...Object.values(data));
+    saveAssignments(Number(result.lastInsertRowid), groups);
     audit(req, 'CREATE_PROJECT', Number(result.lastInsertRowid));
     return db.prepare(select + ' WHERE p.id = ?').get(result.lastInsertRowid);
   })();
-  res.status(201).json({ project });
+  res.status(201).json({ project: withTasks(project) });
 });
 router.put('/:id', authenticate, permit('projects'), (req, res) => {
   const existing = getProject(req);
@@ -99,12 +105,14 @@ router.put('/:id', authenticate, permit('projects'), (req, res) => {
   if (!canManageProjectDivision(req.user, existing.division_id)) return res.status(403).json({ error: 'You can only edit projects in your assigned divisions' });
   const project = db.transaction(() => {
     const data = validateProject(req.body, req.user, existing);
+    const groups = validateAssignments(req.body, existing.id);
     db.prepare(`UPDATE projects SET ${Object.keys(data).map(k => `${k} = ?`).join(',')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
       .run(...Object.values(data), existing.id);
+    saveAssignments(existing.id, groups);
     audit(req, 'UPDATE_PROJECT', existing.id);
     return db.prepare(select + ' WHERE p.id = ?').get(existing.id);
   })();
-  res.json({ project });
+  res.json({ project: withTasks(project) });
 });
 router.delete('/:id/permanent', authenticate, permit('projects'), (req, res) => {
   const existing = getProject(req);

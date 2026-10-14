@@ -10,6 +10,10 @@ Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. The
 
 The Staffing page displays separate Open Position and New Joiner text tables by division and month. The old count cards and monthly count charts were removed. Upgrade the application to v1.21.0, then reopen this PBIP and refresh its data. The reporting API v2.0.0 returns text for both staffing fields; an older numeric model cannot refresh them. The phone layout retains wrapped note values and internal table scrolling.
 
+## Task planning — 2.1.0 (2026-10-14)
+
+DimTask includes estimated hours and the input received, start, target, and delivered dates. DimProject includes its billable and non-billable assigned task IDs, summed estimated task hours, and task counts. Upgrade the application to v1.28.0+ and refresh this PBIP to load the additive reporting API fields.
+
 ## Management overview design — 1.1.1 (2026-10-06)
 
 The report opens on **GCC | Management overview**. Compact filters lead into four prominent KPI cards, followed by input guidance, monthly actual/training hours, a descending horizontal comparison of actual hours by division, and a division table that includes on-time delivery. Training is a subset of actual hours; the monthly chart follows the selected period. The footer retains manual refresh guidance and the header retains the IST timestamp. Blank KPIs are not presented as zero or assigned an invented target/status. All existing measure calculations are retained.

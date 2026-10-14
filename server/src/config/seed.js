@@ -154,6 +154,9 @@ function seed() {
     insertTask.run('Non-Billable', 'Leave', 'Paid time off / sick leave', 1);
   });
   seedTasks();
+  db.exec(`INSERT INTO project_tasks(project_id, task_id)
+    SELECT p.id, t.id FROM projects p JOIN tasks t
+    ON t.classification = CASE WHEN p.customer_name = 'Internal' THEN 'Non-Billable' ELSE 'Billable' END`);
 
   // Seed holidays (2026 sample)
   const insertHoliday = db.prepare('INSERT INTO holidays (date, name) VALUES (?, ?)');

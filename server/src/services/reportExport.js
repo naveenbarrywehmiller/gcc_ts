@@ -279,7 +279,10 @@ async function excel(report, entries, actor, spec) {
     spec.view === 'details' ? table.rows : [...table.rows, table.total]
   );
   if (spec.view !== 'details') main.getRow(main.rowCount).font = { bold: true };
-  sheet(workbook, 'Report Info', ['Setting', 'Value'], info);
+  sheet(workbook, 'Report Info', ['Setting', 'Value'], [...info, ['Task planning', 'Current task estimates, counted once per project/task assignment. Blank estimates are unknown, not zero. Plans are not restricted to the report dates and do not replace Budget Hours or logged hours.']]);
+  sheet(workbook, 'Task Planning', ['Project', 'Task ID', 'Task Name/Number', 'Classification', 'Estimated Hours', 'Input Received Date', 'Start Date', 'Target Date', 'Delivered Date'],
+    report.projects.flatMap(p => (p.planning?.tasks || []).map(t => [p.project_code, t.id, t.task_category, t.classification, t.estimated_hours, t.input_received_date, t.start_date, t.target_date, t.delivered_date])));
+
   if (spec.view === 'projects')
     sheet(
       workbook,
@@ -429,6 +432,17 @@ async function pdf(report, entries, actor, spec) {
       );
     };
     await renderTable(table.headers, [...table.rows, table.total], table.widths);
+    if (spec.view === 'projects' && report.projects.some(p => p.planning?.tasks.length)) {
+      doc.addPage();
+      doc.font('Helvetica-Bold').fontSize(13).text('Current task planning');
+      doc.font('Helvetica').fontSize(9).text('Full-task estimates, once per project assignment. Blank estimates are unknown. Plans are independent of the selected report period and logged hours.');
+      doc.moveDown();
+      await renderTable(
+        ['Project', 'Task', 'Billing', 'Estimate (h)', 'Input received', 'Start', 'Target', 'Delivered'],
+        report.projects.flatMap(p => (p.planning?.tasks || []).map(t => [p.project_code, t.task_category, t.classification, t.estimated_hours ?? '', t.input_received_date, t.start_date, t.target_date, t.delivered_date])),
+        [90, 200, 90, 60, 85, 85, 85, 85]
+      );
+    }
     if (spec.view === 'trends') {
       doc.moveDown();
       doc.font('Helvetica-Bold').fontSize(11).text('Previous period comparison');

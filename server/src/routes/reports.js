@@ -7,6 +7,7 @@ const { reportingScope } = require('../utils/divisionScope');
 const { getPendingApprovals } = require('../utils/pendingApprovals');
 const { expectedWeekHours } = require('../utils/workingHours');
 const router = express.Router();
+const { billing } = require('../services/reporting');
 
 
 
@@ -28,6 +29,14 @@ router.get('/dashboard', authenticate, (req, res) => {
 
   const userScope = reportingScope(req.user, 'u');
   const projectScope = reportingScope(req.user, 'p');
+  const billingScope = ['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role) ? userScope : { sql: 'u.id = ?', params: [userId] };
+  const billingHours = db.prepare(`SELECT ${billing} AS classification, SUM(t.hours) AS hours FROM timesheets t
+    JOIN users u ON u.id = t.user_id LEFT JOIN projects p ON p.id = t.project_id LEFT JOIN tasks tk ON tk.id = t.task_id
+    WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${billingScope.sql} GROUP BY ${billing}`)
+    .all(monthStartDate, monthEndDate, ...billingScope.params);
+  const planning = ['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role) ? db.prepare(`SELECT COUNT(*) AS assigned_tasks,
+    COUNT(tk.estimated_hours) AS estimated_tasks, SUM(tk.estimated_hours) AS estimated_hours FROM project_tasks pt
+    JOIN projects p ON p.id = pt.project_id JOIN tasks tk ON tk.id = pt.task_id WHERE p.active = 1 AND ${projectScope.sql}`).get(...projectScope.params) : null;
   let teamSummary;
   if (['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role)) {
     const countUsers = extra => db.prepare(`SELECT COUNT(*) AS count FROM users u WHERE u.active = 1 AND ${userScope.sql} ${extra}`).get(...userScope.params).count;
@@ -49,7 +58,7 @@ router.get('/dashboard', authenticate, (req, res) => {
       FROM timesheets t JOIN users u ON u.id = t.user_id LEFT JOIN divisions d ON d.id = u.division_id
       WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}
       GROUP BY COALESCE(d.name, NULLIF(TRIM(u.division), '')) ORDER BY total_hours DESC`).all(monthStartDate, monthEndDate, ...userScope.params);
-    res.json({ stats: teamSummary, recentSubmissions: pendingWeeks.slice(0, 10).map(row => ({ ...row, name: row.user_name })), hoursByDivision, period });
+    res.json({ stats: teamSummary, recentSubmissions: pendingWeeks.slice(0, 10).map(row => ({ ...row, name: row.user_name })), hoursByDivision, period, billingHours, planning });
   } else {
     const myMonthlyHours = db.prepare(`
       SELECT COALESCE(SUM(hours), 0) as total FROM timesheets 
@@ -108,6 +117,7 @@ router.get('/dashboard', authenticate, (req, res) => {
         currentWeekYear,
         expectedWeeklyHours: expectedWeekHours(weekStartDate, holidays.map(h => h.date)),
       },
+      billingHours, planning,
       recalledWeeks,
       recentEntries,
       hoursByProject,

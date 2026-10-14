@@ -40,6 +40,7 @@ before(async () => {
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(manager, system, system);
   db.exec("UPDATE projects SET billing_type = 'Billable'");
   task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Billable')").run().lastInsertRowid);
+  db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;

@@ -19,13 +19,55 @@ table DimTask
 		summarizeBy: none
 		sourceColumn: classification
 
+	column estimatedHours
+		dataType: double
+		lineageTag: c805b284-7637-4d08-b25e-e8c1f706cb02
+		summarizeBy: none
+		sourceColumn: estimatedHours
+
+	column inputReceivedDate
+		dataType: dateTime
+		lineageTag: f9452646-56cb-442d-9e15-d2318cbd9351
+		summarizeBy: none
+		sourceColumn: inputReceivedDate
+		formatString: yyyy-mm-dd
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column startDate
+		dataType: dateTime
+		lineageTag: 6b79c8c1-0b24-4ed6-986b-2504617d352a
+		summarizeBy: none
+		sourceColumn: startDate
+		formatString: yyyy-mm-dd
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column targetDate
+		dataType: dateTime
+		lineageTag: e0b8dff4-cd24-4c50-ad74-731c4cbc1f26
+		summarizeBy: none
+		sourceColumn: targetDate
+		formatString: yyyy-mm-dd
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column deliveredDate
+		dataType: dateTime
+		lineageTag: 443c2b53-eb86-4cb4-b1d2-c5922e198ae2
+		summarizeBy: none
+		sourceColumn: deliveredDate
+		formatString: yyyy-mm-dd
+
+		annotation UnderlyingDateTimeDataType = Date
+
 	partition DimTask = m
 		mode: import
 		source =
 				let
 				    Rows = fnApi("tasks"),
-				    Raw = Table.FromRecords(Rows, {"id", "taskCategory", "classification"}, MissingField.UseNull),
-				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"taskCategory", type text}, {"classification", type text}}, "en-US"),
+				    Raw = Table.FromRecords(Rows, {"id", "taskCategory", "classification", "estimatedHours", "inputReceivedDate", "startDate", "targetDate", "deliveredDate"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"taskCategory", type text}, {"classification", type text}, {"estimatedHours", type number}, {"inputReceivedDate", type date}, {"startDate", type date}, {"targetDate", type date}, {"deliveredDate", type date}}, "en-US"),
 				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimTask key." else Typed
 				in Checked
 

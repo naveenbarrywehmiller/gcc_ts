@@ -7,6 +7,7 @@ const db = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
+const { validateAssignments, saveAssignments } = require('../utils/projectTasks');
 
 // Configure multer for file uploads
 const uploadDir = path.join(__dirname, '..', '..', 'uploads');
@@ -99,6 +100,7 @@ router.post('/projects', authenticate, authorize('admin'), upload.single('file')
         const input = { division_id: req.body.division_id || null };
         for (const [key, header] of columns) {
           let value = row[header] ?? row[key];
+          if (['billable_task_ids', 'non_billable_task_ids'].includes(key) && typeof value === 'number') value = String(value);
           if (value instanceof Date) value = value.toISOString().slice(0, 10);
           if (value !== undefined) input[key] = value;
         }
@@ -118,13 +120,14 @@ router.post('/projects', authenticate, authorize('admin'), upload.single('file')
           const code = project.project_code.toLowerCase();
           if (seen.has(code)) throw new Error(`Duplicate Project Code in file: ${project.project_code}`);
           seen.add(code);
-          projects.push(project);
+          projects.push({ project, groups: validateAssignments(input) });
         } catch (err) { errors.push(`Row ${row.sourceRow || index + 2}: ${err.message}`); }
       });
       if (errors.length) return;
-      for (const project of projects) {
+      for (const { project, groups } of projects) {
         const keys = Object.keys(project);
-        db.prepare(`INSERT INTO projects (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`).run(...Object.values(project));
+        const result = db.prepare(`INSERT INTO projects (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`).run(...Object.values(project));
+        saveAssignments(Number(result.lastInsertRowid), groups);
       }
       db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)')
         .run(req.user.id, 'IMPORT_PROJECTS', `Imported ${projects.length} projects`, req.ip);

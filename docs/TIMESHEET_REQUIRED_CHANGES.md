@@ -1,3 +1,5 @@
+> Superseded on October 13, 2026: explicit project/task assignments replace the single Billing Type requirement. See [Task planning and assignments](TASK_PLANNING.md). The historical notes below describe the earlier implementation.
+
 # Timesheet validation and division attribution
 
 Implemented October 9, 2026.

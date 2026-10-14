@@ -14,7 +14,7 @@ function add(area, action, permission, scope, note = '') {
 
 add('Dashboard', 'Open dashboard and view summary', 'signedIn', { ...own, 'system admin': 'All divisions', manager: 'Own records and assigned division', admin: 'Assigned divisions', viewer: 'All divisions' }, 'Managers and employees see personal hours. Admin, System Admin and Viewer dashboards show the division summary.');
 add('Dashboard', 'View division summary and approval counts', 'reports', divisions);
-add('Timesheet', 'View, create, edit and save personal entries', 'timesheetEntry', own, 'Viewer accounts read timesheet records through Reports and Approvals. Submitted and approved entries are locked. Choose an allowed project and its billing-compatible task; description is required.');
+add('Timesheet', 'View, create, edit and save personal entries', 'timesheetEntry', own, 'Viewer accounts read timesheet records through Reports and Approvals. Submitted and approved entries are locked. Choose an allowed project and an active task assigned to it; description is required.');
 add('Timesheet', 'Delete editable personal entries', 'timesheetEntry', own, 'Draft, rejected and recalled entries only.');
 add('Timesheet', 'Submit a week for approval', 'timesheetEntry', own, 'Requires an active assigned reviewer. Employees also need an active Admin or System Admin assignment to use the application.');
 add('Timesheet', 'Recall own week', 'timesheetEntry', own, 'The existing recall workflow returns the week for editing.');

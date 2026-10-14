@@ -32,6 +32,7 @@ before(async () => {
   billable = project('BILL', 'Billable'); nonbillable = project('INTERNAL', 'Non-Billable'); unclassified = project('LEGACY', null);
   task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Billable')").run().lastInsertRowid);
   nonTask = Number(db.prepare("INSERT INTO tasks(task_category,classification,requires_project) VALUES ('Meeting','Non-Billable',0)").run().lastInsertRowid);
+  db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -157,11 +158,11 @@ test('assignment removal excludes legacy submissions from all review queues and 
   assign(admin); assert.equal((await callback()).status, 200);
 });
 
-test('project billing selection is required and obsolete task flags cannot disable the project rule', async () => {
+test('project task assignment is required and obsolete task flags cannot disable the project rule', async () => {
   assert.equal((await request(system, '/projects', { project_code: 'NEW', project_name: 'New' })).status, 400);
-  const created = await request(system, '/projects', { project_code: 'NEW', project_name: 'New', billing_type: 'Non-Billable' });
-  assert.equal(created.status, 201); assert.equal(created.body.project.billing_type, 'Non-Billable');
-  assert.equal((await request(system, `/projects/${unclassified}`, { billing_type: 'Billable' }, 'PUT')).status, 200);
+  const created = await request(system, '/projects', { project_code: 'NEW', project_name: 'New', non_billable_task_ids: [nonTask] });
+  assert.equal(created.status, 201); assert.deepEqual(created.body.project.non_billable_task_ids, [nonTask]);
+  assert.equal((await request(system, `/projects/${unclassified}`, { billable_task_ids: [task] }, 'PUT')).status, 200);
   const createdTask = await request(system, '/tasks', { task_category: 'Legacy client', classification: 'Non-Billable', requires_project: false });
   assert.equal(createdTask.body.task.requires_project, 1);
   assert.equal((await request(system, `/tasks/${nonTask}`, { task_category: 'Meeting', requires_project: false }, 'PUT')).body.task.requires_project, 1);

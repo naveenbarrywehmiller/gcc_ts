@@ -1,3 +1,4 @@
+import { taskPlanningFields } from '../../utils/taskPlanningFields';
 import FieldHelp from '../../components/ui/FieldHelp';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
@@ -32,10 +33,11 @@ export default function AdminTasks() {
   );
 
   const openCreate = () => { setEditing(null); setForm({ classification: '', task_category: '', task_description: '' }); setShowModal(true); };
-  const openEdit = (t) => { setEditing(t); setForm({ classification: t.classification || '', task_category: t.task_category, task_description: t.task_description || '' }); setShowModal(true); };
+  const openEdit = (t) => { setEditing(t); setForm({ ...t }); setShowModal(true); };
 
   const handleSave = async () => {
     try {
+      if (!form.task_category.trim() || !form.classification) { toast.error('Enter a task name and select a classification'); return; }
       if (editing) { await api.put(`/tasks/${editing.id}`, form); toast.success('Task updated'); }
       else { await api.post('/tasks', form); toast.success('Task created'); }
       setShowModal(false); load();
@@ -72,6 +74,7 @@ export default function AdminTasks() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Classification</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Category</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Description</th>
+              {taskPlanningFields.map(([key, label]) => <th key={key} className="text-left px-4 py-3 text-xs font-semibold text-surface-500 whitespace-nowrap">{label}</th>)}
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Status</th>
               {canManage && <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>}
             </tr>
@@ -86,6 +89,7 @@ export default function AdminTasks() {
                 </td>
                 <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">{t.task_category}</td>
                 <td className="px-4 py-3 text-sm text-surface-500">{t.task_description || '—'}</td>
+                {taskPlanningFields.map(([key]) => <td key={key} className="px-4 py-3 text-sm text-surface-500 whitespace-nowrap">{t[key] ?? '—'}</td>)}
                 <td className="px-4 py-3 text-sm text-surface-500">{t.active ? 'Active' : 'Inactive'}</td>
                 {canManage && <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
@@ -104,20 +108,23 @@ export default function AdminTasks() {
         footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} className="btn-primary btn-sm">{editing ? 'Update' : 'Create'}</button></>}>
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Classification</label>
-            <select className="input" value={form.classification} onChange={e => setForm({ ...form, classification: e.target.value })}>
+            <label htmlFor="task-classification" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Classification *</label>
+            <select id="task-classification" className="input" value={form.classification || ''} onChange={e => setForm({ ...form, classification: e.target.value })}>
               <option value="">Select...</option>
               <option value="Billable">Billable</option>
               <option value="Non-Billable">Non-Billable</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Task Name/Number *<FieldHelp label="Task Name/Number" /></label>
-            <input className="input" value={form.task_category} onChange={e => setForm({ ...form, task_category: e.target.value })} placeholder="e.g. Development" />
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5" htmlFor="task-name">Task Name/Number *<FieldHelp label="Task Name/Number" /></label>
+            <input id="task-name" className="input" value={form.task_category} onChange={e => setForm({ ...form, task_category: e.target.value })} placeholder="e.g. Development" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Description<FieldHelp label="Task Description" /></label>
-            <textarea className="input" rows={3} value={form.task_description} onChange={e => setForm({ ...form, task_description: e.target.value })} placeholder="Task description" />
+            <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5" htmlFor="task-description">Description<FieldHelp label="Task Description" /></label>
+            <textarea id="task-description" className="input" rows={3} value={form.task_description || ''} onChange={e => setForm({ ...form, task_description: e.target.value })} placeholder="Task description" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {taskPlanningFields.map(([key, label, type]) => <div key={key} className="min-w-0"><label htmlFor={`task-${key}`} className="block text-xs font-medium mb-1.5">{label} <span className="text-surface-500">(optional)</span></label><input id={`task-${key}`} type={type} className="input" min={type === 'number' ? 0 : undefined} step={type === 'number' ? 'any' : undefined} value={form[key] ?? ''} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}
           </div>
         </div>
       </Modal>
