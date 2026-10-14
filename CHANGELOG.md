@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.27.0...v1.28.0) (2026-10-14)
+
+
+### Features
+
+* add task planning and project task assignments ([a2d880b](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a2d880b6b65c7b15b5a37ec56b0e1b57a59d31ca))
+
 ## [1.27.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.26.0...v1.27.0) (2026-10-12)
 
 
