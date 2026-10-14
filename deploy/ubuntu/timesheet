@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Stable launcher; versioned code lives behind the atomic current symlink.
+set -euo pipefail
+if [[ ${1:-} == --version ]]; then
+  cat /usr/local/lib/gcc-timesheet-admin/current/VERSION
+  exit 0
+fi
+if [[ $EUID != 0 ]]; then
+  exec sudo -- /usr/local/bin/timesheet "$@"
+fi
+exec python3 /usr/local/lib/gcc-timesheet-admin/current/manager.py "$@"

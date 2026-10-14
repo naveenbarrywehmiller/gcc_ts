@@ -1,0 +1,60 @@
+name: TimeSheet Admin
+on:
+  push:
+    branches: [main, 'codex/ubuntu-admin-menu']
+    tags: ['timesheet-admin-v*']
+    paths: ['deploy/ubuntu/**', '.github/workflows/timesheet-admin.yml']
+  pull_request:
+    paths: ['deploy/ubuntu/**', '.github/workflows/timesheet-admin.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax, behavior and documentation checks
+        run: |
+          bash -n deploy/ubuntu/install.sh deploy/ubuntu/timesheet
+          python3 -m compileall -q deploy/ubuntu
+          python3 -m unittest discover -s deploy/ubuntu/tests -p 'test_*.py' -v
+          python3 deploy/ubuntu/build_release.py --check
+      - name: Actual Ubuntu install, Docker, Nginx, backup and restore
+        run: sudo --preserve-env=GITHUB_ACTIONS python3 deploy/ubuntu/tests/smoke_ubuntu.py
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          sudo tail -n 250 /var/log/gcc-timesheet-admin/admin.log || true
+          sudo docker logs --tail 150 timesheet-app || true
+      - name: Build release assets
+        run: python3 deploy/ubuntu/build_release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: timesheet-admin
+          path: deploy/dist/
+  publish:
+    if: startsWith(github.ref, 'refs/tags/timesheet-admin-v')
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: timesheet-admin
+          path: deploy/dist/
+      - name: Publish administrator release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test "$RELEASE_TAG" = "timesheet-admin-v$(cat deploy/ubuntu/VERSION)"
+          gh release create "$RELEASE_TAG" deploy/dist/* \
+            --verify-tag --latest=false \
+            --title "TimeSheet Admin $(cat deploy/ubuntu/VERSION)" \
+            --notes-file deploy/ubuntu/RELEASE_NOTES.md
