@@ -8,6 +8,8 @@ Employee time tracking, team approvals, administration, and reporting in one app
 
 **Current source versions:** Application v1.28.0 · Power BI v2.1.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing data.
 
+**Ubuntu server administration:** [Interactive installer and maintenance guide](deploy/ubuntu/README.md) — run `timesheet` for Docker setup, Avahi, ports, backups, scheduled updates, pause/resume controls and diagnostics. Administrator releases use separate `timesheet-admin-v*` tags.
+
 **Frontend development:** All UI changes must follow the permanent [Responsive Web Design Rules](RESPONSIVE_WEB_DESIGN_RULES.md). The [responsive audit](docs/RESPONSIVE_AUDIT.md) records the current implementation and validation baseline.
 
 ## Features
