@@ -5,6 +5,20 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.2.0] — 2026-10-16
+
+### Added
+- Platform dimension, Division parent keys, effective timesheet Division/Platform attribution and Platform filters across reporting feeds.
+- Platform slicers before Division on all eight canonical PBIP pages, including mobile layouts.
+- Matching updates to the standalone legacy model and Power Query sources. Assignment bridges are excluded from fact joins to prevent duplicate hours.
+- Native synthetic DAX assertions for Platform totals and unallocated capacity.
+
+### Compatibility and validation
+- Requires application v1.29.0 or later and reporting API v2.0.0. Deploy the application before refreshing the PBIP.
+- Source validation passes 254 documents, including TOM/TMDL deserialization. API reconciliation and application regression tests pass.
+- Live Power BI Desktop/Service refresh and native DAX execution were not performed because no model engine was running. Validate these before production publication.
+- This release distributes source files only and preserves existing authentication and automatic/manual refresh mechanisms.
+
 ## [2.1.0] — 2026-10-14
 
 ### Added

@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "08_detail_03",
   "position": {
-    "x": 24,
+    "x": 24.0,
     "y": 230,
     "z": 2000,
     "height": 88,
-    "width": 440,
+    "width": 336.0,
     "tabOrder": 2000
   },
   "visual": {
@@ -110,7 +110,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Period • select a month'"
+                  "Value": "'Period \u2022 select a month'"
                 }
               }
             },

@@ -14,16 +14,16 @@ let
             DataList = if Value.Is(Root, type record) and Record.HasFields(Root, "data") then Root[data] else error "Power BI API response for projects is missing the required 'data' property.",
             DataTable = Table.FromList(DataList, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
             Expanded = Table.ExpandRecordColumn(DataTable, "Column1", {
-                "id", "projectCode", "projectName", "customerName", "activity",
+                "platformId", "platform", "id", "projectCode", "projectName", "customerName", "activity",
                 "division", "subdivision", "teamType", "status", "isActive",
                 "createdDate", "updatedDate", "taskEstimatedHours", "assignedTaskCount", "estimatedTaskCount", "billableTaskIds", "nonBillableTaskIds"
             }, {
-                "id", "projectCode", "projectName", "customerName", "activity",
+                "platformId", "platform", "id", "projectCode", "projectName", "customerName", "activity",
                 "division", "subdivision", "teamType", "status", "isActive",
                 "createdDate", "updatedDate", "taskEstimatedHours", "assignedTaskCount", "estimatedTaskCount", "billableTaskIds", "nonBillableTaskIds"
             }),
             Typed = Table.TransformColumnTypes(Expanded, {
-                {"id", Int64.Type},
+                {"platformId", Int64.Type}, {"platform", type text}, {"id", Int64.Type},
                 {"projectCode", type text},
                 {"projectName", type text},
                 {"customerName", type text},

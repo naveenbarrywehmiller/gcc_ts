@@ -41,7 +41,7 @@ async function get(endpoint, identity='key', method='GET') {
 test('staffing and planned vacation reads retain authentication, division scope, and read-only rules',async()=>{
   const version=(await get('version')).body;
   assert.equal(version.apiVersion,'2.0.0');
-  assert.equal(version.dashboardVersion,'2.1.0');
+  assert.equal(version.dashboardVersion,'2.2.0');
   for(const endpoint of ['staffing','planned-vacations']) {
     assert.equal((await get(endpoint,null)).status,401);
     assert.equal((await get(endpoint,employee)).status,403);
@@ -53,7 +53,7 @@ test('staffing and planned vacation reads retain authentication, division scope,
   assert.equal(staffing.openPositions,null);
   assert.equal(staffing.newJoiners,'No new joiners');
   assert.equal(staffing.date,'2026-10-01');
-  assert.deepEqual(Object.keys(staffing).sort(),['id','divisionId','division','date','openPositions','newJoiners','updatedDate'].sort());
+  assert.deepEqual(Object.keys(staffing).sort(),['id','divisionId','division','platformId','platform','date','openPositions','newJoiners','updatedDate'].sort());
   assert.equal((await get('staffing')).body.data[1].openPositions,'Four open roles');
   assert.equal((await get('planned-vacations',admin)).body.data[0].userId,employee);
 });

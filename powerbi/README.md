@@ -1,5 +1,10 @@
 # GCC Timesheet — Power BI Dashboard
 
+## Platform integration (October 16, 2026)
+
+The current Platform-enabled revision adds `/api/powerbi/platforms`, Platform attributes and filters, a DimPlatform → DimDivision → FactTimesheet hierarchy, and a Platform slicer before Division on all eight canonical PBIP pages. Deploy the matching application revision before refreshing this PBIP; earlier v1.28.0 installations without the Platform migration do not expose the required endpoint. Authentication and refresh deployment remain unchanged. See [Platform implementation and API contract](../docs/PLATFORM_MANAGEMENT.md) for attribution rules, role scope, response examples, migration, validation evidence and the required live-refresh release check. The sections below retain the existing deployment and legacy model reference.
+
+
 > **Version:** 2.0.0
 > **API Compatibility:** Power BI API v2.0.0
 > **Application Compatibility:** GCC Timesheet v1.21.0+

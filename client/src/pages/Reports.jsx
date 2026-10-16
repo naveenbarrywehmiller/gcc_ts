@@ -1,3 +1,4 @@
+import MultiSelectPicker from '../components/ui/MultiSelectPicker';
 import { useState, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -44,6 +45,7 @@ const presets = [
   ['custom', 'Custom'],
 ];
 const emptyFilters = {
+  platform_ids: '',
   division_id: '',
   user_id: '',
   project_id: '',
@@ -248,6 +250,7 @@ export default function Reports() {
     setFilters((previous) => ({
       ...previous,
       [key]: value,
+      ...(key === 'platform_ids' ? { division_id: '', user_id: '', location_id: '' } : {}),
       ...(key === 'division_id' ? { user_id: '', location_id: '' } : {}),
     }));
   const openEntries = (title, extra = {}) =>
@@ -280,7 +283,7 @@ export default function Reports() {
   };
   const available = options.data || {};
   const matchingUsers = (available.users || []).filter(
-    (u) => !filters.division_id || String(u.division_id) === filters.division_id
+    (u) => !filters.division_id || (u.division_ids || [u.division_id]).map(String).includes(filters.division_id)
   );
   const matchingLocations = (available.locations || []).filter(
     (s) => !filters.division_id || String(s.division_id) === filters.division_id
@@ -322,6 +325,7 @@ export default function Reports() {
         </div>
       </div>
       <section className="card p-4 space-y-4" aria-label="Report dates and filters">
+        <MultiSelectPicker label="Platforms" items={(available.platforms || []).map(p => ({ id:p.id,label:p.name }))} selected={filters.platform_ids ? filters.platform_ids.split(',').map(Number) : []} onChange={ids => changeFilter('platform_ids',ids.join(','))} />
         <div className="flex flex-wrap gap-1">
           {presets.map(([id, label]) => (
             <button
@@ -394,7 +398,7 @@ export default function Reports() {
                 value={filters.division_id}
                 onChange={(v) => changeFilter('division_id', v)}
               >
-                {(available.divisions || []).map((d) => (
+                {(available.divisions || []).filter(d => !filters.platform_ids || filters.platform_ids.split(',').includes(String(d.platform_id))).map((d) => (
                   <option value={d.id} key={d.id}>
                     {d.name}
                     {!d.active ? ' (inactive)' : ''}
@@ -617,7 +621,7 @@ function WeeklyReport({ data, openEntries }) {
       </p>
       <ReportTable
         label="Weekly hours"
-        headers={['Employee', 'Division', ...data.weeks.map((w) => w.key), 'Total']}
+        headers={['Employee', 'Platform', 'Division', ...data.weeks.map((w) => w.key), 'Total']}
       >
         {data.rows.map((u) => (
           <tr key={u.user_id}>
@@ -630,7 +634,7 @@ function WeeklyReport({ data, openEntries }) {
               </button>
               <p className="text-xs text-surface-500 dark:text-surface-400 break-all">{u.email}</p>
             </td>
-            <td className={td}>{u.division || '—'}</td>
+            <td className={td}>{u.platform || 'Unmapped'}</td><td className={td}>{u.division || '—'}</td>
             {data.weeks.map((w) => (
               <td key={w.key} className={`${td} min-w-[150px]`}>
                 {u.weeks[w.key] ? (
@@ -659,7 +663,7 @@ function WeeklyReport({ data, openEntries }) {
         ))}
         <tr className="font-semibold bg-surface-50 dark:bg-surface-800/50">
           <td className={td}>Grand Total</td>
-          <td />
+          <td /><td />
           {data.weeks.map((w) => (
             <td className={td} key={w.key}>
               {hours(w.total_hours)}
@@ -709,6 +713,7 @@ function UtilizationReport({ data, openEntries }) {
           label="Employee utilization"
           headers={[
             'Employee',
+            'Platform',
             'Division',
             'Days logged',
             'Logged hours',
@@ -734,7 +739,7 @@ function UtilizationReport({ data, openEntries }) {
                 </button>
                 <p className="text-xs text-surface-500 dark:text-surface-400">{u.email}</p>
               </td>
-              <td className={td}>{u.division || '—'}</td>
+              <td className={td}>{u.platform || 'Unmapped'}</td><td className={td}>{u.division || '—'}</td>
               <td className={td}>{u.days_logged}</td>
               <td className={`${td} whitespace-nowrap`}>{hours(u.total_hours)}</td>
               <td className={td}>{u.expected_hours === null ? '—' : hours(u.expected_hours)}</td>
@@ -780,7 +785,7 @@ function ProjectReport({ data, openEntries }) {
       </div>
       <ReportTable
         label="Project hours and contributors"
-        headers={['Project', 'Customer', 'Division', 'Contributors', 'Hours', 'Share', 'Entries']}
+        headers={['Project', 'Customer', 'Platform', 'Division', 'Contributors', 'Hours', 'Share', 'Entries']}
       >
         {data.projects.map((p) => (
           <Fragment key={keyOf(p)}>
@@ -805,7 +810,7 @@ function ProjectReport({ data, openEntries }) {
                 {p.planning && <p className="text-xs text-surface-500 mt-1">Assigned tasks: {p.planning.billable_task_ids.length} billable / {p.planning.non_billable_task_ids.length} non-billable<br />Task estimate: {p.planning.task_estimated_hours == null ? '—' : hours(p.planning.task_estimated_hours)} ({p.planning.estimated_task_count}/{p.planning.assigned_task_count} estimated)</p>}
               </td>
               <td className={td}>{p.customer_name || '—'}</td>
-              <td className={td}>{p.division || '—'}</td>
+              <td className={td}>{p.platform || 'Unmapped'}</td><td className={td}>{p.division || '—'}</td>
               <td className={td}>{p.contributors.length}</td>
               <td className={`${td} font-semibold whitespace-nowrap`}>{hours(p.total_hours)}</td>
               <td className={td}>
@@ -827,7 +832,7 @@ function ProjectReport({ data, openEntries }) {
             {expanded[keyOf(p)] &&
               p.contributors.map((c) => (
                 <tr className="bg-surface-50 dark:bg-surface-800/40" key={c.user_id}>
-                  <td colSpan={4} className={`${td} pl-8`}>
+                  <td colSpan={5} className={`${td} pl-8`}>
                     <p className="font-medium">{c.name}</p>
                     <p className="text-xs text-surface-500 dark:text-surface-400">{c.email}</p>
                   </td>
@@ -854,7 +859,7 @@ function ProjectReport({ data, openEntries }) {
           </Fragment>
         ))}
         <tr className="font-semibold bg-surface-50 dark:bg-surface-800/50">
-          <td colSpan={4} className={td}>
+          <td colSpan={5} className={td}>
             Grand Total
           </td>
           <td className={td}>{hours(data.summary.total_hours)}</td>
@@ -909,7 +914,7 @@ function MissingReport({ data, openEntries }) {
                     {u.name}
                   </button>
                   <p className="text-xs text-surface-500 dark:text-surface-400">
-                    {u.division || '—'}
+                    {u.platform || 'Unmapped'} · {u.division || '—'}
                   </p>
                 </td>
                 <td className={`${td} whitespace-nowrap`}>{hours(u.expected_hours)}</td>
@@ -1152,6 +1157,8 @@ function EntryPage({ drill, user }) {
                       ],
                       ['Task', r.task_category],
                       ['Customer', r.customer_name],
+                      ['Platform', r.platform],
+                      ['Entry division', r.entry_division],
                       ['Employee division', r.employee_division],
                       ['Location', r.subdivision_name],
                       ['Billing', r.classification],

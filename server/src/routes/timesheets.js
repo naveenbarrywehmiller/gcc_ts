@@ -23,7 +23,7 @@ function normalizeDetails(req, res, next) {
     if (Array.isArray(entries)) for (const entry of entries) {
       if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return res.status(400).json({ error: 'Invalid timesheet entry' });
       // Batch zero-hour requests remove existing drafts; they never save a row.
-      if (!(req.path === '/batch' && entry.hours === 0)) validateTimesheetEntry(entry);
+      if (!(req.path === '/batch' && entry.hours === 0)) validateTimesheetEntry(entry, req.user.id);
       entry.details_json = serializeDetails(entry.details);
       if (entry.project_id) {
         const project = db.prepare('SELECT division_id, subdivision_id FROM projects WHERE id = ?').get(entry.project_id);
@@ -69,7 +69,7 @@ function checkDivisionAccess(userId, divisionId) {
   if (!divisionId) return { allowed: true }; // No division specified, allow
 
   const user = db.prepare(`
-    SELECT u.role, u.division_id, u.supporting_category_id, sc.name as supporting_category_name
+    SELECT u.role, u.platform_assignments_explicit, u.division_id, u.supporting_category_id, sc.name as supporting_category_name
     FROM users u
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
     WHERE u.id = ?
@@ -79,8 +79,8 @@ function checkDivisionAccess(userId, divisionId) {
 
   if (user.role === 'employee') {
     const assigned = db.prepare('SELECT division_id FROM employee_divisions WHERE user_id = ?').all(userId);
-    if (assigned.length) {
-      return assigned.some(row => row.division_id === Number(divisionId))
+    if (assigned.length || user.platform_assignments_explicit) {
+      return (assigned.length ? assigned.some(row => row.division_id === Number(divisionId)) : user.division_id === Number(divisionId))
         ? { allowed: true }
         : { allowed: false, reason: 'Select one of your assigned divisions' };
     }

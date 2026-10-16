@@ -9,7 +9,9 @@ const { columns, validateProject } = require('../utils/projectFields');
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
 const { validateAssignments, saveAssignments, withTasks } = require('../utils/projectTasks');
-const select = `SELECT p.*, d.name AS division_name, s.name AS subdivision_name FROM projects p
+const { userAssignments, validateProjectUsers, saveProjectUsers, withProjectUsers, canBookProject, divisionIds } = require('../utils/platformAssignments');
+const enrich = project => withProjectUsers(withTasks(project));
+const select = `SELECT p.*, d.platform_id, (SELECT name FROM platforms WHERE id=d.platform_id) AS platform_name, d.name AS division_name, s.name AS subdivision_name FROM projects p
   LEFT JOIN divisions d ON d.id = p.division_id LEFT JOIN subdivisions s ON s.id = p.subdivision_id`;
 function filter(query) {
   let sql = ' WHERE 1=1';
@@ -17,6 +19,7 @@ function filter(query) {
   for (const key of ['division_id', 'subdivision_id', 'project_status', 'team_type', 'division']) {
     if (query[key]) { sql += ` AND p.${key} = ?`; params.push(query[key]); }
   }
+  if (query.platform_id) { sql += ' AND p.division_id IN (SELECT id FROM divisions WHERE platform_id=?)'; params.push(query.platform_id); }
   if (query.active !== 'all') { sql += ' AND p.active = ?'; params.push(query.active === '0' ? 0 : 1); }
   if (query.search) {
     sql += ' AND (p.project_code LIKE ? OR p.project_name LIKE ? OR p.customer_name LIKE ?)';
@@ -26,7 +29,7 @@ function filter(query) {
 }
 router.get('/options', authenticate, permit('reports'), (req, res) => {
   const ids = projectDivisionIds(req.user);
-  const filter_divisions = db.prepare('SELECT * FROM divisions WHERE active = 1 ORDER BY name').all();
+  const filter_divisions = db.prepare('SELECT d.*, p.name AS platform_name FROM divisions d JOIN platforms p ON p.id=d.platform_id WHERE d.active=1 ORDER BY p.name,d.name').all();
   const filter_subdivisions = db.prepare('SELECT * FROM subdivisions WHERE active = 1 ORDER BY name').all();
   const divisions = filter_divisions
     .filter(d => req.user.role === 'system admin' || ids.includes(d.id));
@@ -37,13 +40,15 @@ router.get('/options', authenticate, permit('reports'), (req, res) => {
   // Monthly division updates use the same effective division assignments.
   const assignedIds = reportingDivisionIds(req.user);
   const division_update_divisions = filter_divisions.filter(d => ['system admin', 'viewer'].includes(req.user.role) || assignedIds.includes(d.id));
-  res.json({ divisions, subdivisions, filter_divisions, filter_subdivisions, division_update_divisions, activities, supporting_categories, tasks: db.prepare('SELECT * FROM tasks ORDER BY classification, task_category').all() });
+  const platforms = db.prepare('SELECT * FROM platforms WHERE active=1 ORDER BY name').all();
+  const users = db.prepare("SELECT id,name,role,division_id,division FROM users WHERE active=1 AND role!='viewer' AND name!='[Deleted User]' ORDER BY name").all().map(u => ({ ...u, ...userAssignments(u), assignable_division_ids: divisionIds(u, { legacy:false }) }));
+  res.json({ platforms, users, divisions, subdivisions, filter_divisions, filter_subdivisions, division_update_divisions, activities, supporting_categories, tasks: db.prepare('SELECT * FROM tasks ORDER BY classification, task_category').all() });
 });
 router.get('/export', authenticate, permit('projectsView'), async (req, res, next) => {
   try {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Projects');
-    sheet.columns = columns.map(([key, header]) => ({ key, header, width: 24 }));
+    sheet.columns = [...columns, ['platform_name', 'Platform']].map(([key, header]) => ({ key, header, width: 24 }));
     if (req.query.template !== 'true') {
       const { sql, params } = filter(req.query);
       const scope = reportScope(req.user, 'p');
@@ -64,7 +69,12 @@ router.get('/', authenticate, (req, res) => {
   for (const key of ['page', 'limit']) {
     if (req.query[key] !== undefined && (!Number.isSafeInteger(Number(req.query[key])) || Number(req.query[key]) < 1)) return res.status(400).json({ error: `${key} must be a positive integer` });
   }
-  const { sql, params } = filter(req.query);
+  let { sql, params } = filter(req.query);
+  if (req.user.role === 'employee') {
+    const allowed = divisionIds(req.user);
+    sql += ` AND p.division_id IN (${allowed.map(() => '?').join(',') || 'NULL'}) AND (p.user_assignment_mode='division' OR EXISTS(SELECT 1 FROM project_users pu WHERE pu.project_id=p.id AND pu.user_id=?))`;
+    params.push(...allowed, req.user.id);
+  }
   const total = db.prepare('SELECT COUNT(*) AS n FROM projects p' + sql).get(...params).n;
   // Existing timesheet/report consumers retain their unpaginated response contract.
   const paginated = req.query.page !== undefined;
@@ -73,7 +83,7 @@ router.get('/', authenticate, (req, res) => {
   const projects = db.prepare(select + sql + ' ORDER BY p.project_code' + (paginated ? ' LIMIT ? OFFSET ?' : ''))
     .all(...params, ...(paginated ? [limit, (page - 1) * limit] : []));
   const editableIds = projectDivisionIds(req.user);
-  res.json({ projects: projects.map(project => ({ ...withTasks(project), can_edit: req.user.role === 'system admin' || editableIds.includes(project.division_id) })), total, page, limit });
+  res.json({ projects: projects.filter(p => req.user.role !== 'employee' || canBookProject(req.user.id,p)).map(project => ({ ...enrich(project), can_edit: req.user.role === 'system admin' || editableIds.includes(project.division_id) })), total, page, limit });
 });
 function getProject(req) {
   return db.prepare(select + ' WHERE p.id = ?').get(req.params.id);
@@ -81,7 +91,8 @@ function getProject(req) {
 router.get('/:id', authenticate, (req, res) => {
   const project = getProject(req);
   if (!project) return res.status(404).json({ error: 'Project not found' });
-  res.json({ project: { ...withTasks(project), can_edit: canManageProjectDivision(req.user, project.division_id) } });
+  if (req.user.role === 'employee' && !canBookProject(req.user.id,project)) return res.status(403).json({ error:'Project access denied' });
+  res.json({ project: { ...enrich(project), can_edit: canManageProjectDivision(req.user, project.division_id) } });
 });
 function audit(req, action, id) {
   db.prepare('INSERT INTO audit_logs(user_id, action, details, entity_type, entity_id, division_id, ip_address) VALUES (?,?,?,?,?,?,?)')
@@ -91,13 +102,15 @@ router.post('/', authenticate, permit('projects'), (req, res) => {
   const project = db.transaction(() => {
     const data = validateProject(req.body, req.user);
     const groups = validateAssignments(req.body);
+    const members = validateProjectUsers(req.body, data.division_id);
     const keys = Object.keys(data);
     const result = db.prepare(`INSERT INTO projects (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`).run(...Object.values(data));
     saveAssignments(Number(result.lastInsertRowid), groups);
+    saveProjectUsers(Number(result.lastInsertRowid), members);
     audit(req, 'CREATE_PROJECT', Number(result.lastInsertRowid));
     return db.prepare(select + ' WHERE p.id = ?').get(result.lastInsertRowid);
   })();
-  res.status(201).json({ project: withTasks(project) });
+  res.status(201).json({ project: enrich(project) });
 });
 router.put('/:id', authenticate, permit('projects'), (req, res) => {
   const existing = getProject(req);
@@ -106,13 +119,15 @@ router.put('/:id', authenticate, permit('projects'), (req, res) => {
   const project = db.transaction(() => {
     const data = validateProject(req.body, req.user, existing);
     const groups = validateAssignments(req.body, existing.id);
+    const members = validateProjectUsers(req.body, data.division_id, existing);
     db.prepare(`UPDATE projects SET ${Object.keys(data).map(k => `${k} = ?`).join(',')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
       .run(...Object.values(data), existing.id);
     saveAssignments(existing.id, groups);
+    saveProjectUsers(existing.id, members);
     audit(req, 'UPDATE_PROJECT', existing.id);
     return db.prepare(select + ' WHERE p.id = ?').get(existing.id);
   })();
-  res.json({ project: withTasks(project) });
+  res.json({ project: enrich(project) });
 });
 router.delete('/:id/permanent', authenticate, permit('projects'), (req, res) => {
   const existing = getProject(req);

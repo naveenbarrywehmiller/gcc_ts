@@ -20,7 +20,7 @@ import Reports from './pages/Reports';
 import AdminUsers from './pages/admin/Users';
 import AdminProjects from './pages/admin/Projects';
 import AdminTasks from './pages/admin/Tasks';
-import { AdminDivisions, AdminActivities, AdminSupportingCategories } from './pages/admin/SimpleListManager';
+import { AdminPlatforms, AdminDivisions, AdminActivities, AdminSupportingCategories } from './pages/admin/SimpleListManager';
 import AdminDepartments from './pages/admin/AdminDepartments';
 import AdminHolidays from './pages/admin/Holidays';
 import AdminApprovals from './pages/admin/Approvals';
@@ -69,6 +69,7 @@ function AppRoutes() {
         <Route path="/admin/users" element={<PermissionRoute permission="usersView"><AdminUsers /></PermissionRoute>} />
         <Route path="/admin/projects" element={<PermissionRoute permission="projectsView"><AdminProjects /></PermissionRoute>} />
         <Route path="/admin/tasks" element={<PermissionRoute permission="tasksView"><AdminTasks /></PermissionRoute>} />
+        <Route path="/admin/platforms" element={<PermissionRoute permission="catalogView"><AdminPlatforms /></PermissionRoute>} />
         <Route path="/admin/divisions" element={<PermissionRoute permission="catalogView"><AdminDivisions /></PermissionRoute>} />
         <Route path="/admin/subdivisions" element={<PermissionRoute permission="catalogView"><Navigate to="/admin/divisions" replace /></PermissionRoute>} />
         <Route path="/admin/departments" element={<PermissionRoute permission="catalogView"><AdminDepartments /></PermissionRoute>} />

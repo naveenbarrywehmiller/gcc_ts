@@ -145,7 +145,7 @@ test('Manager report views, filters and downloads include every division even wi
 });
 
 test('shared catalog writes reject Admins/Employees and allow Managers without deletion or activation bypasses', async () => {
-  for (const [endpoint, payload, key] of [['divisions', { name: 'Extra Division' }, 'division'], ['departments', { name: 'Extra Department' }, 'department'],
+  for (const [endpoint, payload, key] of [['divisions', { name: 'Extra Division', platform_id: db.prepare('SELECT platform_id FROM divisions WHERE id=?').get(a).platform_id }, 'division'], ['departments', { name: 'Extra Department' }, 'department'],
     ['supporting-categories', { name: 'Extra Category' }, 'supportingCategory'], ['activities', { name: 'Extra Activity' }, 'activity']]) {
     for (const actor of ['admin', 'employee']) assert.equal((await request(actor, `/${endpoint}`, 'POST', payload)).status, 403);
     const created = await request('manager', `/${endpoint}`, 'POST', payload);

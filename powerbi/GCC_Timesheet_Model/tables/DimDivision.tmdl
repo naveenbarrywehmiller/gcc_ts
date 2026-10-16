@@ -28,12 +28,24 @@ table DimDivision
 		lineageTag: eb8d8874-ac48-486b-9e3b-eacf28cfdc83
 		sourceColumn: createdDate
 
+	column platformId
+		dataType: int64
+		lineageTag: b7ee838d-1402-58a4-ad29-ed982d42f784
+		summarizeBy: none
+		sourceColumn: platformId
+
+	column platform
+		dataType: string
+		lineageTag: 277bd365-f045-599a-8c8f-583714d1228f
+		summarizeBy: none
+		sourceColumn: platform
+
 	partition DimDivision = m
 		mode: import
 		source =
 				let
 				    Source = Json.Document(Web.Contents("http://localhost:3001/api/powerbi/divisions", [Headers=[#"X-API-Key"="YOUR_API_KEY_HERE", #"Accept"="application/json"]])),
 				    Data = if Record.HasFields(Source, "data") then Source[data] else {},
-				    Rows = Table.FromRecords(Data, {"id","divisionName","status","isActive","createdDate"}, MissingField.UseNull)
+				    Rows = Table.FromRecords(Data, {"platformId","platform","id","divisionName","status","isActive","createdDate"}, MissingField.UseNull)
 				in
 				    Rows

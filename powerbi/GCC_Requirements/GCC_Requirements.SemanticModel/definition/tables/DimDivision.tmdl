@@ -13,13 +13,25 @@ table DimDivision
 		summarizeBy: none
 		sourceColumn: divisionName
 
+	column platformId
+		dataType: int64
+		lineageTag: b7ee838d-1402-58a4-ad29-ed982d42f784
+		summarizeBy: none
+		sourceColumn: platformId
+
+	column platform
+		dataType: string
+		lineageTag: 277bd365-f045-599a-8c8f-583714d1228f
+		summarizeBy: none
+		sourceColumn: platform
+
 	partition DimDivision = m
 		mode: import
 		source =
 				let
 				    Rows = fnApi("divisions"),
-				    Raw = Table.FromRecords(Rows, {"id", "divisionName"}, MissingField.UseNull),
-				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"divisionName", type text}}, "en-US"),
+				    Raw = Table.FromRecords(Rows, {"id", "divisionName", "platformId", "platform"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"platformId", Int64.Type}, {"platform", type text}, {"id", Int64.Type}, {"divisionName", type text}}, "en-US"),
 				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing DimDivision key." else Typed
 				in Checked
 

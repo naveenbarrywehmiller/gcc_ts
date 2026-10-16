@@ -54,6 +54,7 @@ function validateProject(input, user, existing = {}) {
   if (!canManageProjectDivision(user, divisionId)) fail('Select a division assigned to you', 403);
   const division = divisionId ? db.prepare('SELECT * FROM divisions WHERE id = ? AND active = 1').get(divisionId) : null;
   if (divisionId && !division) fail('Invalid division');
+  if (input.platform_id !== undefined && (!division || Number(input.platform_id) !== division.platform_id)) fail('Platform must match the selected Division');
   result.division_id = divisionId;
   result.division = division?.name || null;
   result.subdivision_id = data.subdivision_id ? Number(data.subdivision_id) : null;

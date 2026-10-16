@@ -25,8 +25,9 @@ function filterLabels(actor, filters) {
   const lookup = (list, id, field = 'name') =>
     list.find((item) => item.id === id)?.[field] || 'Unavailable selection';
   for (const [key, value] of Object.entries(filters)) {
-    if (!value) continue;
+    if (!value || (Array.isArray(value) && !value.length)) continue;
     const labels = {
+      platform_ids: ['Platforms', () => value.map(id => lookup(available.platforms, id)).join(', ')],
       user_id: ['Employee', () => lookup(available.users, value)],
       division_id: ['Division', () => lookup(available.divisions, value)],
       project_id: ['Project', () => lookup(available.projects, value, 'project_code')],
@@ -52,7 +53,7 @@ function filterLabels(actor, filters) {
   }
   return result.length ? result.join(' · ') : 'All accessible records';
 }
-function reportRows(report, view, entries) {
+function baseReportRows(report, view, entries) {
   if (view === 'weekly')
     return {
       headers: ['Employee', 'Division', 'Week', 'Hours', 'Approved', 'Pending', 'Statuses'],
@@ -184,10 +185,11 @@ function reportRows(report, view, entries) {
       ],
     };
   return {
-    headers: ['Employee', 'Date', 'Project', 'Task', 'Hours', 'Status', 'Description'],
-    widths: [120, 70, 90, 95, 50, 65, 290],
+    headers: ['Employee', 'Division', 'Date', 'Project', 'Task', 'Hours', 'Status', 'Description'],
+    widths: [110, 90, 70, 85, 85, 50, 65, 225],
     rows: entries.map((r) => [
       r.employee_name,
+      r.entry_division || '',
       r.work_date,
       r.project_code || 'No project',
       r.task_category || '',
@@ -195,8 +197,24 @@ function reportRows(report, view, entries) {
       r.status,
       r.project_description || r.description || '',
     ]),
-    total: ['Grand Total', '', '', '', round(report.summary.total_hours), '', ''],
+    total: ['Grand Total', '', '', '', '', round(report.summary.total_hours), '', ''],
   };
+}
+function reportRows(report, view, entries) {
+  const table = baseReportRows(report, view, entries);
+  const values = view === 'weekly' ? report.weekly.rows.flatMap(u => Object.keys(u.weeks).map(() => u.platform))
+    : view === 'utilization' ? report.utilization.map(u => u.platform)
+    : view === 'projects' ? report.projects.map(p => p.platform)
+    : view === 'missing' ? report.missing.map(u => u.platform)
+    : view === 'details' ? entries.map(e => e.platform) : null;
+  if (!values) return table; // Trend rows aggregate all selected Platforms.
+  const at = Math.max(1, table.headers.indexOf('Division'));
+  table.headers.splice(at, 0, 'Platform');
+  table.widths = table.widths.map(w => w * 0.9);
+  table.widths.splice(at, 0, 78);
+  table.rows.forEach((row,i) => row.splice(at, 0, values[i] || 'Unmapped'));
+  table.total.splice(at, 0, '');
+  return table;
 }
 function infoRows(report, actor, spec, generated) {
   return [
@@ -307,6 +325,7 @@ async function excel(report, entries, actor, spec) {
     'Timesheet Entries',
     [
       'Employee',
+      'Platform',
       'Division',
       'Date',
       'ISO Year',
@@ -325,6 +344,7 @@ async function excel(report, entries, actor, spec) {
     ],
     entries.map((r) => [
       r.employee_name,
+      r.platform,
       r.employee_division,
       r.work_date,
       r.week_year,

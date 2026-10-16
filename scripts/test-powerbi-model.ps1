@@ -65,6 +65,9 @@ try {
         }
     }
     $taskCases = @(
+        @{name='Platform hours match division hours without duplicates';dax='CALCULATE([Raw Hours],DimPlatform[platformName]="Platform North")';expected=24},
+        @{name='Unrelated Platform has no hours';dax='COALESCE(CALCULATE([Raw Hours],DimPlatform[platformName]="Platform South"),0)';expected=0},
+        @{name='Platform filter suppresses unallocated capacity';dax='CALCULATE([Roster Capacity Hours],DimPlatform[platformName]="Platform North")';expected=$null},
         @{name='Weekly counts not multiplied by days';dax='CALCULATE([Weekly Fundamental Errors], DimDate[YearMonth]="2026-09")';expected=2},
         @{name='Monthly productive hours';dax='CALCULATE([Effective Hours],DimDate[YearMonth]="2026-09")';expected=16},
         @{name='Open position narrative remains text';dax='CALCULATE(SELECTEDVALUE(FactStaffing[openPositions]),DimDate[YearMonth]="2026-10",DimDivision[divisionName]="North")';expected='No open roles'},

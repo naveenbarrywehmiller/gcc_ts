@@ -1,3 +1,4 @@
+import MultiSelectPicker from '../../components/ui/MultiSelectPicker';
 import FieldHelp from '../../components/ui/FieldHelp';
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,6 +21,7 @@ export default function AdminUsers() {
   const canViewHistory = user => isSystemAdmin || managedDivisions.some(d => d.id === user.division_id);
   const [users, setUsers] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [platforms, setPlatforms] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [, setSubdivisions] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -29,6 +31,7 @@ export default function AdminUsers() {
   // Filters and Sort State
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
+    platform_id: '',
     division_id: '',
     subdivision_id: '',
     department_id: '',
@@ -45,6 +48,7 @@ export default function AdminUsers() {
     name: '', email: '', password: '', role: 'employee', 
     division_id: '', department_id: '', supporting_category_id: '', employee_id: '' 
   });
+  const [formPlatformIds, setFormPlatformIds] = useState([]);
   const [formDivisionIds, setFormDivisionIds] = useState([]);
   const [originalDivisionIds, setOriginalDivisionIds] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
@@ -55,11 +59,6 @@ export default function AdminUsers() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   
-  // Division assignment modal
-  const [showDivModal, setShowDivModal] = useState(false);
-  const [divEditUser, setDivEditUser] = useState(null);
-  const [selectedDivisions, setSelectedDivisions] = useState([]);
-
   // Assign/Release confirmation modal
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignTarget, setAssignTarget] = useState(null);
@@ -74,6 +73,7 @@ export default function AdminUsers() {
     
     const params = {
       search,
+      platform_id: filters.platform_id || undefined,
       division_id: filters.division_id || undefined,
       department_id: filters.department_id || undefined,
       supporting_category_id: filters.supporting_category_id || undefined,
@@ -89,8 +89,10 @@ export default function AdminUsers() {
       api.get('/subdivisions'),
       api.get('/departments'),
       api.get('/supporting-categories'),
-      api.get('/projects/options')
-    ]).then(([uRes, divRes, subRes, deptRes, scRes, optionsRes]) => {
+      api.get('/projects/options'),
+      api.get('/platforms')
+    ]).then(([uRes, divRes, subRes, deptRes, scRes, optionsRes, platformsRes]) => {
+      setPlatforms(platformsRes.data.platforms);
       setUsers(uRes.data.users);
       setSummary(uRes.data.summary);
       setDivisions(divRes.data.divisions);
@@ -121,6 +123,7 @@ export default function AdminUsers() {
     });
     setFormDivisionIds(defaultDivision ? [Number(defaultDivision)] : []);
     setOriginalDivisionIds([]);
+    setFormPlatformIds(defaultDivision ? [divisions.find(d => d.id === defaultDivision)?.platform_id].filter(Boolean) : []);
     setShowPassword(false);
     setShowModal(true);
   };
@@ -128,21 +131,17 @@ export default function AdminUsers() {
   const openEdit = async (user) => {
     const activeDivisionIds = new Set(divisions.map(d => d.id));
     let assignedDivisionIds = user.division_id && activeDivisionIds.has(Number(user.division_id)) ? [Number(user.division_id)] : [];
-    let hasExplicitAssignments = false;
     if (user.role === 'admin' || user.role === 'employee') {
       try {
         const res = await api.get(`/users/${user.id}/divisions`);
-        hasExplicitAssignments = res.data.divisions.length > 0;
-        if (res.data.divisions.length) assignedDivisionIds = [...new Set([...assignedDivisionIds, ...res.data.divisions.map(d => d.id).filter(id => activeDivisionIds.has(id))])];
+        // The API resolves legacy defaults and explicitly saved grants consistently.
+        assignedDivisionIds = res.data.division_ids.filter(id => activeDivisionIds.has(id));
       } catch {
         toast.error('Unable to load division assignments');
         return;
       }
     }
-    if (user.role === 'employee' && !hasExplicitAssignments &&
-        !user.supporting_category_name?.toLowerCase().includes('dedicated')) {
-      assignedDivisionIds = divisions.map(d => d.id);
-    }
+    setFormPlatformIds([...new Set([...(user.platform_ids || []), ...divisions.filter(d => assignedDivisionIds.includes(d.id)).map(d => d.platform_id)])]);
     setEditing(user);
     setFormDivisionIds(assignedDivisionIds);
     setOriginalDivisionIds(assignedDivisionIds);
@@ -184,7 +183,7 @@ export default function AdminUsers() {
     try {
       const hasDivisionChoices = form.role === 'admin' || form.role === 'employee';
       if (hasDivisionChoices && formDivisionIds.length === 0) { toast.error('Select at least one division'); return; }
-      const payload = { ...form };
+      const payload = { ...form, platform_ids: formPlatformIds };
       if (hasDivisionChoices) {
         payload.division_ids = formDivisionIds;
         payload.division_id = formDivisionIds.includes(Number(form.division_id)) ? form.division_id : formDivisionIds[0];
@@ -245,37 +244,6 @@ export default function AdminUsers() {
     }
   };
 
-  // Division assignment
-  const openDivisionModal = async (user) => {
-    setDivEditUser(user);
-    try {
-      const res = await api.get(`/users/${user.id}/divisions`);
-      setSelectedDivisions(res.data.divisions.map(d => d.id));
-    } catch {
-      toast.error('Unable to load division assignments');
-      return;
-    }
-    setShowDivModal(true);
-  };
-
-  const toggleDivision = (divId) => {
-    setSelectedDivisions(prev =>
-      prev.includes(divId) ? prev.filter(id => id !== divId) : [...prev, divId]
-    );
-  };
-
-  const saveDivisions = async () => {
-    try {
-      await api.put(`/users/${divEditUser.id}/divisions`, { division_ids: selectedDivisions });
-      toast.success('Divisions updated');
-      setShowDivModal(false);
-      cache.invalidateQueries();
-      loadData();
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to update divisions');
-    }
-  };
-
   const hasDivisionChoices = form.role === 'admin' || form.role === 'employee';
   const editingOwnAdmin = editing?.id === currentUser?.id && editing?.role === 'admin';
   const availableDivisions = isSystemAdmin
@@ -283,15 +251,19 @@ export default function AdminUsers() {
     : form.role === 'employee'
       ? divisions.filter(d => managedDivisions.some(managed => managed.id === d.id) || originalDivisionIds.includes(d.id))
       : managedDivisions;
-  const toggleFormDivision = (divisionId) => {
-    const nextIds = formDivisionIds.includes(divisionId)
-      ? formDivisionIds.filter(id => id !== divisionId)
-      : [...formDivisionIds, divisionId];
+  const changeDivisions = nextIds => {
     setFormDivisionIds(nextIds);
-    if (!nextIds.includes(Number(form.division_id))) {
-      setForm(prev => ({ ...prev, division_id: nextIds[0] || '' }));
-    }
+    if (!nextIds.includes(Number(form.division_id))) setForm(prev => ({ ...prev, division_id: nextIds[0] || '' }));
   };
+  const changePlatforms = nextIds => {
+    const removed = formDivisionIds.filter(id => !nextIds.includes(divisions.find(d => d.id === id)?.platform_id));
+    if (removed.length && !confirm(`Removing this Platform selection will remove ${removed.length} Division assignment(s). Continue?`)) return;
+    setFormPlatformIds(nextIds);
+    changeDivisions(formDivisionIds.filter(id => !removed.includes(id)));
+    if (form.division_id && !nextIds.includes(divisions.find(d => d.id === Number(form.division_id))?.platform_id)) setForm(prev => ({ ...prev, division_id: '' }));
+  };
+  const platformChoices = [...new Map([...platforms.map(p => [p.id, { id:p.id,label:p.name }]), ...availableDivisions.map(d => [d.platform_id, { id:d.platform_id,label:d.platform_name,disabled:!isSystemAdmin && !managedDivisions.some(m => m.platform_id === d.platform_id) }])]).values()];
+  const divisionChoices = availableDivisions.filter(d => formPlatformIds.includes(d.platform_id));
 
   // Admin assign/release
   const openAssignConfirm = (user, action) => {
@@ -389,9 +361,10 @@ export default function AdminUsers() {
               className="input pl-9 w-full"
             />
           </div>
-          <select aria-label="Filter users by division" value={filters.division_id} onChange={(e) => setFilters({...filters, division_id: e.target.value})} className="input">
+          <select className="input" aria-label="Filter users by Platform" value={filters.platform_id} onChange={e => setFilters({ ...filters, platform_id:e.target.value, division_id:'' })}><option value="">All Platforms</option>{platforms.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
+            <select aria-label="Filter users by division" value={filters.division_id} onChange={(e) => setFilters({...filters, division_id: e.target.value})} className="input">
             <option value="">All Divisions</option>
-            {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {divisions.filter(d => !filters.platform_id || d.platform_id === Number(filters.platform_id)).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
           <select aria-label="Filter users by department" value={filters.department_id} onChange={(e) => setFilters({...filters, department_id: e.target.value})} className="input">
             <option value="">All Departments</option>
@@ -467,7 +440,7 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.employee_id || '—'}</td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.email}</td>
-                  <td className="px-4 py-3 text-sm text-surface-500">{user.division_name || user.division || '—'}</td>
+                  <td className="px-4 py-3 text-sm text-surface-500"><span className="block text-xs text-surface-500">{user.platforms?.map(p => p.name).join(', ') || 'Unmapped'}</span>{user.division_name || user.division || '—'}</td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.department_name || '—'}</td>
                   <td className="px-4 py-3 text-sm">{getAdminDisplay(user)}</td>
                   <td className="px-4 py-3">
@@ -499,7 +472,7 @@ export default function AdminUsers() {
                         <History className="w-3.5 h-3.5" />
                       </button>
                       {isSystemAdmin && user.role === 'admin' && (
-                        <button onClick={() => openDivisionModal(user)} className="btn-ghost btn-xs p-1.5" title="Manage Divisions">
+                        <button onClick={() => openEdit(user)} className="btn-ghost btn-xs p-1.5" title="Manage Divisions">
                           <Building2 className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -627,26 +600,14 @@ export default function AdminUsers() {
               </select>
             </div>
           </div>
+          <MultiSelectPicker label="Platforms" items={platformChoices} selected={formPlatformIds} onChange={changePlatforms} readOnly={editingOwnAdmin && !isSystemAdmin} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className={hasDivisionChoices ? 'sm:col-span-2 min-w-0' : 'min-w-0'}>
               {hasDivisionChoices ? (
                 <fieldset disabled={editingOwnAdmin && !isSystemAdmin}>
                   <legend className="text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Divisions *</legend>
                   <p className="text-xs text-surface-500 dark:text-surface-400 mb-2">{form.role === 'admin' ? 'Select the divisions this admin can manage.' : 'Select the divisions this employee can book time in.'} Mark one as the primary division.</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {availableDivisions.map(d => (
-                      <div key={d.id} className={`flex min-w-0 flex-wrap items-center gap-3 min-h-11 p-3 rounded-lg border ${formDivisionIds.includes(d.id) ? 'border-brand-300 bg-brand-50 dark:border-brand-700 dark:bg-brand-950/20' : 'border-surface-200 dark:border-surface-700'}`}>
-                        <label className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer">
-                          <input type="checkbox" checked={formDivisionIds.includes(d.id)} onChange={() => toggleFormDivision(d.id)} className="w-4 h-4 shrink-0 rounded border-surface-300 text-brand-600 focus:ring-brand-500" />
-                          <span className="min-w-0 break-words text-sm font-medium text-surface-700 dark:text-surface-300">{d.name}</span>
-                        </label>
-                        {formDivisionIds.includes(d.id) && <label className="flex items-center gap-1.5 text-xs text-surface-600 dark:text-surface-300 cursor-pointer">
-                          <input type="radio" name="primary-user-division" aria-label={`Primary division: ${d.name}`} checked={Number(form.division_id) === d.id} onChange={() => setForm(prev => ({ ...prev, division_id: d.id }))} className="w-4 h-4 text-brand-600 focus:ring-brand-500" />
-                          Primary
-                        </label>}
-                      </div>
-                    ))}
-                  </div>
+                  <MultiSelectPicker label="Divisions" items={divisionChoices.map(d => ({ id: d.id, label: d.name, description: d.platform_name, disabled: !isSystemAdmin && !managedDivisions.some(m => m.id === d.id) }))} selected={formDivisionIds} onChange={changeDivisions} readOnly={editingOwnAdmin && !isSystemAdmin} renderExtra={d => formDivisionIds.includes(d.id) && <label className="flex min-h-11 items-center gap-2 text-xs"><input type="radio" name="primary-user-division" aria-label={`Primary division: ${d.label}`} checked={Number(form.division_id) === d.id} onChange={() => setForm(prev => ({ ...prev, division_id: d.id }))} />Primary</label>} />
                 </fieldset>
               ) : (
                 <label htmlFor="user-form-division" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Division<FieldHelp label="Division" /></label>
@@ -655,7 +616,7 @@ export default function AdminUsers() {
                 <select id="user-form-division" className="input" value={form.division_id} onChange={(e) => setForm({ ...form, division_id: e.target.value })}>
                   <option value="">— Select —</option>
                   {form.division_id && !availableDivisions.some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{editing?.division_name || editing?.division} (current)</option>}
-                  {availableDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  {divisionChoices.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               )}
             </div>
@@ -667,48 +628,6 @@ export default function AdminUsers() {
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Division Assignment Modal */}
-      <Modal
-        isOpen={showDivModal}
-        onClose={() => setShowDivModal(false)}
-        title={`Manage Divisions — ${divEditUser?.name || ''}`}
-        size="md"
-        footer={
-          <>
-            <button onClick={() => setShowDivModal(false)} className="btn-secondary btn-sm">Cancel</button>
-            <button onClick={saveDivisions} className="btn-primary btn-sm">
-              <Building2 className="w-4 h-4" /> Save Divisions
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-3">
-          <p className="text-xs text-surface-500 dark:text-surface-400">
-            Select the divisions this admin can manage. They will only see timesheets from their assigned divisions.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {divisions.map(d => (
-              <label
-                key={d.id}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                  selectedDivisions.includes(d.id)
-                    ? 'border-brand-300 bg-brand-50 dark:border-brand-700 dark:bg-brand-950/20'
-                    : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedDivisions.includes(d.id)}
-                  onChange={() => toggleDivision(d.id)}
-                  className="w-4 h-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500"
-                />
-                <span className="text-sm font-medium text-surface-700 dark:text-surface-300">{d.name}</span>
-              </label>
-            ))}
           </div>
         </div>
       </Modal>

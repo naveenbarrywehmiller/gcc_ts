@@ -40,7 +40,7 @@ class TimesheetRepository {
    * Handles SQLite upsert and optional SharePoint dual-write.
    */
   async upsertEntry(userId, entry) {
-    validateTimesheetEntry(entry);
+    validateTimesheetEntry(entry, userId);
     if (entry.status === 'submitted') requireAssignedReviewer(userId);
     const { id, project_id, task_id, work_date, hours, description, week_number, week_year, status, division_id, subdivision_id, project_description, ownership_id, billable } = entry;
 

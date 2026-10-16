@@ -10,6 +10,7 @@ const { canManageUser, canManageDivision, adminDivisionIds, userDivisionId } = r
 
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
+const { userAssignments, validatePlatforms, savePlatforms } = require('../utils/platformAssignments');
 
 // Admin account credentials and division grants control access across the app.
 router.use('/:id', authenticate, (req, res, next) => {
@@ -83,9 +84,9 @@ function validateUserDivisions({ division_ids, division_id, role, actor, targetI
     ? new Set(db.prepare('SELECT division_id FROM employee_divisions WHERE user_id = ?').all(targetId).map(row => row.division_id))
     : new Set();
   if (targetId && role === 'employee' && previouslyAssigned.size === 0) {
-    const previous = db.prepare(`SELECT COALESCE(sc.name, u.team_type) AS category
+    const previous = db.prepare(`SELECT u.platform_assignments_explicit, COALESCE(sc.name, u.team_type) AS category
       FROM users u LEFT JOIN supporting_categories sc ON sc.id = u.supporting_category_id WHERE u.id = ?`).get(targetId);
-    if (previous && !previous.category?.toLowerCase().includes('dedicated')) {
+    if (previous && !previous.platform_assignments_explicit && !previous.category?.toLowerCase().includes('dedicated')) {
       for (const row of db.prepare('SELECT id FROM divisions WHERE active = 1').all()) previouslyAssigned.add(row.id);
     }
   }
@@ -197,7 +198,7 @@ router.get('/', authenticate, permit('usersView'), (req, res) => {
   for (const row of counts) by_role[row.role] = row.total;
   const total = counts.reduce((sum, row) => sum + row.total, 0);
   const activeCount = counts.reduce((sum, row) => sum + row.active, 0);
-  res.json({ users: users.map(user => ({ ...user, can_manage: canManageUser(req.user, user) })),
+  res.json({ users: users.map(user => ({ ...user, ...userAssignments(user), can_manage: canManageUser(req.user, user) })).filter(u => !req.query.platform_id || u.platform_ids.includes(Number(req.query.platform_id))),
     summary: { total, by_role, active: activeCount, inactive: total - activeCount } });
 });
 
@@ -220,7 +221,7 @@ router.get('/:id', authenticate, permit('usersView'), (req, res) => {
     WHERE u.id = ?
   `).get(req.params.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ user });
+  res.json({ user: { ...user, ...userAssignments(user) } });
 });
 
 // GET /api/users/:id/divisions - Get stored admin or employee division assignments
@@ -231,12 +232,12 @@ router.get('/:id/divisions', authenticate, (req, res) => {
   if (req.user.id !== user.id && !canManageUser(req.user, user)) return res.status(403).json({ error: 'Division access denied' });
   const table = user.role === 'employee' ? 'employee_divisions' : 'admin_divisions';
   const divisions = db.prepare(`
-    SELECT d.id, d.name FROM ${table} ad
+    SELECT d.id, d.name, d.platform_id, (SELECT name FROM platforms WHERE id=d.platform_id) AS platform_name FROM ${table} ad
     JOIN divisions d ON ad.division_id = d.id
     WHERE ad.user_id = ?
     ORDER BY d.name ASC
   `).all(userId);
-  res.json({ divisions });
+  res.json({ ...userAssignments(user), divisions });
 });
 
 // PUT /api/users/:id/divisions - Assign divisions to an admin user
@@ -248,7 +249,7 @@ router.put('/:id/divisions', authenticate, permit('accessGrants'), (req, res) =>
     return res.status(400).json({ error: 'division_ids array is required' });
   }
 
-  const user = db.prepare('SELECT id, role FROM users WHERE id = ?').get(userId);
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
   if (user.role !== 'admin') return res.status(400).json({ error: 'Division assignments require an admin account' });
   if (division_ids.some(id => !Number.isSafeInteger(Number(id)) || Number(id) <= 0 ||
@@ -256,6 +257,7 @@ router.put('/:id/divisions', authenticate, permit('accessGrants'), (req, res) =>
     return res.status(400).json({ error: 'Select valid active divisions' });
   }
 
+  const platformIds = validatePlatforms(req.user, req.body.platform_ids, division_ids, user);
   const assignDivisions = db.transaction(() => {
     // Remove existing assignments
     db.prepare('DELETE FROM admin_divisions WHERE user_id = ?').run(userId);
@@ -265,20 +267,20 @@ router.put('/:id/divisions', authenticate, permit('accessGrants'), (req, res) =>
       insert.run(userId, divId);
     }
   });
-  assignDivisions();
+  db.transaction(() => { assignDivisions(); savePlatforms(userId, platformIds); })();
 
   db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
     req.user.id, 'ASSIGN_DIVISIONS', `Assigned ${division_ids.length} divisions to user ${userId}`, 'user', userId, req.ip
   );
 
   const divisions = db.prepare(`
-    SELECT d.id, d.name FROM admin_divisions ad
+    SELECT d.id, d.name, d.platform_id, (SELECT name FROM platforms WHERE id=d.platform_id) AS platform_name FROM admin_divisions ad
     JOIN divisions d ON ad.division_id = d.id
     WHERE ad.user_id = ?
     ORDER BY d.name ASC
   `).all(userId);
 
-  res.json({ divisions });
+  res.json({ ...userAssignments(user), divisions });
 });
 
 // POST /api/users - Create user
@@ -319,6 +321,7 @@ router.post('/', authenticate, permit('users'), (req, res) => {
     if (sc) teamType = sc.name;
   }
 
+  const platformIds = validatePlatforms(req.user, req.body.platform_ids, division_ids || [division_id].filter(Boolean));
   const hash = bcrypt.hashSync(password, 12);
   const result = db.transaction(() => {
     const created = db.prepare(`
@@ -326,6 +329,7 @@ router.post('/', authenticate, permit('users'), (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(name.trim(), email.toLowerCase().trim(), hash, role || 'employee', divisionName, core || null, teamType, division_id || null, department_id || null, supporting_category_id || null, employee_id || null);
     if (division_ids) replaceUserDivisions(created.lastInsertRowid, role || 'employee', division_ids);
+    savePlatforms(created.lastInsertRowid, platformIds);
     return created;
   })();
 
@@ -343,7 +347,7 @@ router.post('/', authenticate, permit('users'), (req, res) => {
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
     WHERE u.id = ?
   `).get(result.lastInsertRowid);
-  res.status(201).json({ user });
+  res.status(201).json({ user: { ...user, ...userAssignments(user) } });
 });
 
 // PUT /api/users/:id - Update user
@@ -352,7 +356,7 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
   const { name, email, password, role, division, core, team_type, active, division_id, division_ids, department_id, supporting_category_id, employee_id } = req.body;
   const userId = req.params.id;
 
-  const existing = db.prepare('SELECT id, role, division_id, team_type FROM users WHERE id = ?').get(userId);
+  const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!existing) return res.status(404).json({ error: 'User not found' });
   if (active !== undefined && !active && (existing.id === req.user.id || existing.role === 'system admin')) {
     return res.status(400).json({ error: 'Cannot deactivate your own account or a system admin account' });
@@ -375,6 +379,10 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
     actor: req.user, targetId: userId,
   });
   if (divisionError) return res.status(divisionError.status).json({ error: divisionError.error });
+
+  const assignmentsChanged = ['platform_ids','division_ids','division_id','role'].some(key => Object.hasOwn(req.body,key));
+  const effectiveDivisions = division_ids || (division_id !== undefined ? [division_id].filter(Boolean) : userAssignments(existing).division_ids);
+  const platformIds = assignmentsChanged ? validatePlatforms(req.user, req.body.platform_ids, effectiveDivisions, existing) : null;
 
   if (email) {
     const emailExists = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email.toLowerCase().trim(), userId);
@@ -428,7 +436,7 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
     updateFields.push('team_type = ?'); params.push(team_type);
   }
 
-  if (updateFields.length === 0) {
+  if (updateFields.length === 0 && !assignmentsChanged) {
     return res.status(400).json({ error: 'No fields to update' });
   }
 
@@ -444,6 +452,7 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
     )) {
       replaceUserDivisions(userId, role === undefined ? existing.role : role, [division_id === undefined ? existing.division_id : division_id].filter(Boolean));
     }
+    if (platformIds) savePlatforms(userId, platformIds);
   })();
 
   db.prepare('INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)').run(
@@ -460,7 +469,7 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
     WHERE u.id = ?
   `).get(userId);
-  res.json({ user });
+  res.json({ user: { ...user, ...userAssignments(user) } });
 });
 
 // POST /api/users/:id/reset-password - Admin: Reset a user's password

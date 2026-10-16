@@ -1,6 +1,13 @@
 'use strict';
 
 const db = require('../config/db');
+const { userAssignments } = require('../utils/platformAssignments');
+function platformFilter(filters, params, alias = 'd') {
+  let sql = '';
+  if (filters.platformIds?.length) { sql += ` AND ${alias}.platform_id IN (${filters.platformIds.map(() => '?').join(',')})`; params.push(...filters.platformIds); }
+  if (filters.allowedDivisionIds) { sql += ` AND ${alias}.id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'})`; params.push(...filters.allowedDivisionIds); }
+  return sql;
+}
 const { withTasks } = require('../utils/projectTasks');
 const config = require('../config/env');
 
@@ -91,8 +98,8 @@ class PowerBiService {
     }
 
     if (filters.division) {
-      whereClause += ' AND (LOWER(d.name) = LOWER(?) OR LOWER(u.division) = LOWER(?))';
-      params.push(filters.division, filters.division);
+      whereClause += ' AND LOWER(d.name) = LOWER(?)';
+      params.push(filters.division);
     }
 
     if (filters.department) {
@@ -110,6 +117,8 @@ class PowerBiService {
       params.push(filters.status.toLowerCase());
     }
 
+    whereClause += platformFilter(filters, params);
+    if (filters.allowedDivisionIds) { whereClause += ` AND u.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'})`; params.push(...filters.allowedDivisionIds); }
     // Common FROM and JOIN clauses for both count and data queries
     const fromJoinSql = `
       FROM timesheets t
@@ -141,7 +150,9 @@ class PowerBiService {
         t.user_id as userId,
         t.project_id as projectId,
         t.task_id as taskId,
-        t.division_id as divisionId,
+        d.id as divisionId,
+        d.platform_id as platformId,
+        COALESCE((SELECT name FROM platforms WHERE id=d.platform_id),'Unmapped') as platform,
         t.subdivision_id as subdivisionId,
         t.ownership_id as ownershipId,
         t.project_description as projectDescription,
@@ -203,6 +214,8 @@ class PowerBiService {
       projectId: row.projectId,
       taskId: row.taskId,
       divisionId: row.divisionId,
+      platformId: row.platformId,
+      platform: row.platform,
       subdivisionId: row.subdivisionId,
       ownershipId: row.ownershipId,
       // Mirrors the weekly row identity in Timesheet.jsx; JSON avoids delimiter collisions.
@@ -259,7 +272,7 @@ class PowerBiService {
   _queryUsers(filters) {
     let sql = `
       SELECT 
-        u.id as id,
+        u.id as id, u.division_id, u.division AS legacyDivision,
         COALESCE(u.employee_id, CAST(u.id AS TEXT)) as employeeId,
         u.name as employeeName,
         u.email as email,
@@ -307,12 +320,14 @@ class PowerBiService {
       params.push(filters.role);
     }
 
+    sql += platformFilter({ ...filters, platformIds: [] }, params);
     sql += ' ORDER BY u.name ASC';
 
     const rows = db.prepare(sql).all(...params);
     return {
       data: rows.map((u) => ({
         id: u.id,
+        ...userAssignments({ ...u, division: u.legacyDivision }),
         employeeId: u.employeeId,
         employeeName: u.employeeName,
         email: u.email,
@@ -325,13 +340,20 @@ class PowerBiService {
         isActive: u.active === 1,
         createdDate: u.createdDate,
         updatedDate: u.updatedDate,
-      })),
+      })).filter(u => !filters.platformIds?.length || u.platform_ids.some(id => filters.platformIds.includes(id))),
     };
   }
 
   /**
    * Retrieve read-only division reporting data.
    */
+  getPlatforms(filters = {}) {
+    const divisions = this.getDivisions(filters).data;
+    const allowed = new Set(divisions.map(d => d.platformId));
+    return { data: db.prepare('SELECT id,name AS platformName,active AS isActive FROM platforms ORDER BY name').all()
+      .filter(p => (!filters.allowedDivisionIds || allowed.has(p.id)) && (!filters.platformIds?.length || filters.platformIds.includes(p.id))) };
+  }
+
   getDivisions(filters = {}) {
     const cacheKey = `divisions:${JSON.stringify(filters)}`;
     return cachedQuery(cacheKey, () => this._queryDivisions(filters));
@@ -340,7 +362,7 @@ class PowerBiService {
   _queryDivisions(filters) {
     let sql = `
       SELECT 
-        d.id as id,
+        d.id as id, d.platform_id AS platformId, (SELECT name FROM platforms WHERE id=d.platform_id) AS platform,
         d.name as divisionName,
         CASE WHEN d.active = 1 THEN 'Active' ELSE 'Inactive' END as status,
         d.active as active,
@@ -355,12 +377,13 @@ class PowerBiService {
       params.push(parseInt(filters.active, 10));
     }
 
+    sql += platformFilter(filters, params);
     sql += ' ORDER BY d.name ASC';
     const rows = db.prepare(sql).all(...params);
 
     return {
       data: rows.map((d) => ({
-        id: d.id,
+        id: d.id, platformId: d.platformId, platform: d.platform,
         divisionName: d.divisionName,
         status: d.status,
         isActive: d.active === 1,
@@ -420,7 +443,7 @@ class PowerBiService {
   _queryProjects(filters) {
     let sql = `
       SELECT 
-        p.id as id,
+        p.id as id, d.platform_id AS platformId, (SELECT name FROM platforms WHERE id=d.platform_id) AS platform,
         p.project_code as projectCode,
         p.project_name as projectName,
         p.gcc_project_code as gccProjectCode,
@@ -466,12 +489,13 @@ class PowerBiService {
       params.push(parseInt(filters.active, 10));
     }
 
+    sql += platformFilter(filters, params);
     sql += ' ORDER BY p.project_code ASC';
     const rows = db.prepare(sql).all(...params);
 
     return {
       data: rows.map((p) => ({
-        id: p.id,
+        id: p.id, platformId: p.platformId, platform: p.platform,
         projectCode: p.projectCode,
         projectName: p.projectName,
         gccProjectCode: p.gccProjectCode,
@@ -606,14 +630,16 @@ class PowerBiService {
   /**
    * Retrieve admin-employee assignment mapping for reporting.
    */
-  getAssignments() {
-    return cachedQuery('assignments', () => this._queryAssignments());
+  getAssignments(filters = {}) {
+    return cachedQuery('assignments:'+JSON.stringify(filters), () => this._queryAssignments(filters));
   }
 
-  _queryAssignments() {
+  _queryAssignments(filters) {
+    const params = [];
+    const scope = platformFilter(filters,params);
     const sql = `
       SELECT
-        uaa.id as id,
+        uaa.id as id, d.platform_id AS platformId, (SELECT name FROM platforms WHERE id=d.platform_id) AS platform,
         COALESCE(emp.employee_id, CAST(emp.id AS TEXT)) as employeeId,
         emp.name as employeeName,
         emp.email as employeeEmail,
@@ -628,15 +654,15 @@ class PowerBiService {
       JOIN users admin_u ON uaa.admin_id = admin_u.id
       LEFT JOIN divisions d ON emp.division_id = d.id
       LEFT JOIN departments dept ON emp.department_id = dept.id
-      WHERE emp.name != '[Deleted User]' AND emp.active = 1
+      WHERE emp.name != '[Deleted User]' AND emp.active = 1 ${scope}
       ORDER BY admin_u.name ASC, emp.name ASC
     `;
 
-    const rows = db.prepare(sql).all();
+    const rows = db.prepare(sql).all(...params);
 
     return {
       data: rows.map((r) => ({
-        id: r.id,
+        id: r.id, platformId:r.platformId, platform:r.platform,
         employeeId: r.employeeId,
         employeeName: r.employeeName,
         employeeEmail: r.employeeEmail,
@@ -671,10 +697,12 @@ class PowerBiService {
       params.push(filters.to);
     }
     if (filters.division) {
-      whereClause += ' AND (LOWER(d.name) = LOWER(?) OR LOWER(u.division) = LOWER(?))';
-      params.push(filters.division, filters.division);
+      whereClause += ' AND LOWER(d.name) = LOWER(?)';
+      params.push(filters.division);
     }
 
+    whereClause += platformFilter(filters,params);
+    if (filters.allowedDivisionIds) { whereClause += ` AND u.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}) AND (p.id IS NULL OR p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}))`; params.push(...filters.allowedDivisionIds, ...filters.allowedDivisionIds); }
     const sql = `
       SELECT
         t.status as status,
@@ -683,7 +711,8 @@ class PowerBiService {
         COUNT(DISTINCT t.user_id) as employeeCount
       FROM timesheets t
       JOIN users u ON t.user_id = u.id
-      LEFT JOIN divisions d ON COALESCE(t.division_id, u.division_id) = d.id
+      LEFT JOIN projects p ON p.id=t.project_id
+      LEFT JOIN divisions d ON COALESCE(t.division_id, p.division_id, u.division_id) = d.id
       ${whereClause}
       GROUP BY t.status
       ORDER BY t.status ASC
@@ -716,7 +745,7 @@ class PowerBiService {
   getVersion() {
     return {
       apiVersion: '2.0.0',
-      dashboardVersion: '2.1.0',
+      dashboardVersion: '2.2.0',
       apiNamespace: '/api/powerbi',
       serverTime: new Date().toISOString(),
       cacheEnabled: CACHE_TTL_MS > 0,
@@ -724,6 +753,7 @@ class PowerBiService {
       endpoints: [
         'timesheets',
         'users',
+        'platforms',
         'divisions',
         'departments',
         'projects',
@@ -740,25 +770,28 @@ class PowerBiService {
   }
 
   getPlannedVacations(filters = {}) {
-    const ids = filters.allowedDivisionIds;
-    const scope = ids ? `AND COALESCE(u.division_id, (SELECT d.id FROM divisions d
-      WHERE LOWER(TRIM(d.name)) = LOWER(TRIM(u.division)) AND d.active = 1))
-      IN (${ids.map(() => '?').join(',') || 'NULL'})` : '';
-    return { data: db.prepare(`SELECT v.id, v.user_id AS userId, v.vacation_date AS date
+    const params = [];
+    const scope = platformFilter(filters, params);
+    return { data: db.prepare(`SELECT v.id, v.user_id AS userId, v.vacation_date AS date,
+      d.id AS divisionId, d.platform_id AS platformId, p.name AS platform
       FROM planned_vacations v JOIN users u ON u.id = v.user_id
+      LEFT JOIN divisions d ON d.id = COALESCE(u.division_id, (SELECT id FROM divisions
+        WHERE LOWER(TRIM(name)) = LOWER(TRIM(u.division)) AND active = 1))
+      LEFT JOIN platforms p ON p.id = d.platform_id
       WHERE u.name != '[Deleted User]' ${scope}
-      ORDER BY v.vacation_date, v.id`).all(...(ids || [])) };
+      ORDER BY v.vacation_date, v.id`).all(...params) };
   }
 
   getStaffing(filters = {}) {
-    const ids = filters.allowedDivisionIds;
-    const scope = ids ? `WHERE du.division_id IN (${ids.map(() => '?').join(',') || 'NULL'})` : '';
+    const params = [];
+    const scope = platformFilter(filters, params);
     return { data: db.prepare(`SELECT du.id, du.division_id AS divisionId,
-      d.name AS division, du.month || '-01' AS date,
+      d.name AS division, d.platform_id AS platformId, p.name AS platform, du.month || '-01' AS date,
       du.open_positions AS openPositions, du.new_joiners AS newJoiners,
       du.updated_at AS updatedDate
       FROM division_updates du JOIN divisions d ON d.id = du.division_id
-      ${scope} ORDER BY du.month, du.division_id`).all(...(ids || [])) };
+      JOIN platforms p ON p.id = d.platform_id
+      WHERE 1=1 ${scope} ORDER BY du.month, du.division_id`).all(...params) };
   }
 
   /**
@@ -769,9 +802,11 @@ class PowerBiService {
   }
 
   _queryLegacyExport(filters) {
+    const params = [];
+    const platformSql = platformFilter(filters,params);
     const query = `
       SELECT 
-        t.id as TimesheetId,
+        t.id as TimesheetId, d.platform_id AS PlatformId, (SELECT name FROM platforms WHERE id=d.platform_id) AS Platform,
         t.work_date as WorkDate,
         t.hours as Hours,
         t.billable as IsBillable,
@@ -794,15 +829,17 @@ class PowerBiService {
       JOIN users u ON t.user_id = u.id
       LEFT JOIN projects p ON t.project_id = p.id
       LEFT JOIN tasks tk ON t.task_id = tk.id
-      LEFT JOIN divisions d ON t.division_id = d.id
+      LEFT JOIN divisions d ON COALESCE(t.division_id,p.division_id,u.division_id) = d.id
       LEFT JOIN subdivisions s ON t.subdivision_id = s.id
       LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
       WHERE u.name != '[Deleted User]'
+      ${platformSql}
+      ${filters.allowedDivisionIds ? `AND u.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'})` : ''}
       ${filters.allowedDivisionIds ? `AND (p.id IS NULL OR p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}))` : ''}
       ORDER BY t.work_date DESC
     `;
 
-    const data = db.prepare(query).all(...(filters.allowedDivisionIds || []));
+    const data = db.prepare(query).all(...params, ...(filters.allowedDivisionIds || []), ...(filters.allowedDivisionIds || []));
     return data.map((row) => ({
       ...row,
       IsBillable: row.IsBillable === 1,
