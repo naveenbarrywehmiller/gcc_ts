@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.29.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.28.0...v1.29.0) (2026-10-16)
+
+
+### Features
+
+* add platform management, assignments and reporting ([b7c7490](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b7c7490c491e98feba51657677a6af579a434ff8))
+* **ops:** add versioned Ubuntu timesheet administrator menu ([f9068a4](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f9068a4f6282a15f0f6c9331f54ccbbaad2d2827))
+
 ## [1.28.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.27.0...v1.28.0) (2026-10-14)
 
 
