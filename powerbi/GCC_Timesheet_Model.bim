@@ -871,6 +871,18 @@
               "modifiedTime": "2026-09-27T15:51:26.436667",
               "refreshedTime": "2026-09-27T15:51:26.436667"
             }
+          },
+          {
+            "name": "platformId",
+            "dataType": "int64",
+            "sourceColumn": "platformId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "platform",
+            "dataType": "string",
+            "sourceColumn": "platform",
+            "summarizeBy": "none"
           }
         ],
         "partitions": [
@@ -882,7 +894,7 @@
             "refreshedTime": "2026-09-27T15:51:26.436667",
             "source": {
               "type": "m",
-              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/divisions\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"id\",\"divisionName\",\"status\",\"isActive\",\"createdDate\"}, MissingField.UseNull)\nin\n    Rows"
+              "expression": "let\n    Source = Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/divisions\", [Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\", #\"Accept\"=\"application/json\"]])),\n    Data = if Record.HasFields(Source, \"data\") then Source[data] else {},\n    Rows = Table.FromRecords(Data, {\"platformId\",\"platform\",\"id\",\"divisionName\",\"status\",\"isActive\",\"createdDate\"}, MissingField.UseNull)\nin\n    Rows"
             }
           }
         ]
@@ -1856,6 +1868,33 @@
             "structureModifiedTime": "2026-09-27T15:48:18.653333"
           }
         ]
+      },
+      {
+        "name": "DimPlatform",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "int64",
+            "sourceColumn": "id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "platformName",
+            "dataType": "string",
+            "sourceColumn": "platformName",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DimPlatform",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Source=Json.Document(Web.Contents(\"http://localhost:3001/api/powerbi/platforms\",[Headers=[#\"X-API-Key\"=\"YOUR_API_KEY_HERE\"]])), Rows=Table.FromRecords(Source[data],{\"id\",\"platformName\"},MissingField.UseNull) in Rows"
+            }
+          }
+        ]
       }
     ],
     "relationships": [
@@ -1918,6 +1957,14 @@
         "state": "ready",
         "modifiedTime": "2026-09-27T15:51:26.576667",
         "refreshedTime": "2026-09-27T15:51:26.576667"
+      },
+      {
+        "name": "e7a5b77d-33d7-5402-95e6-a022311cd9cc",
+        "fromTable": "DimDivision",
+        "fromColumn": "platformId",
+        "toTable": "DimPlatform",
+        "toColumn": "id",
+        "crossFilteringBehavior": "oneDirection"
       }
     ],
     "cultures": [

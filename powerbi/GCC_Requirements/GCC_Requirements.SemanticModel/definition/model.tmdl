@@ -9,12 +9,13 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBI_QueryOrder = ["DimEmployee","DimProject","DimDivision","DimHoliday","DimTask","FactTimesheet","FactWeeklyDetails","FactVacation","FactStaffing","Settings","DimDate","FactDeliverable","FactImprovement","FactPlan","InputStatus","_Measures","ApiBaseUrl","ApiPath","FiscalStartMonth","DailyHours","DefectTarget","RefreshClock","fnApi","HourCategoryMap","TimesheetRows","DeliverablesEndpoint","ImprovementsEndpoint"]
+annotation PBI_QueryOrder = ["DimPlatform","DimEmployee","DimProject","DimDivision","DimHoliday","DimTask","FactTimesheet","FactWeeklyDetails","FactVacation","FactStaffing","Settings","DimDate","FactDeliverable","FactImprovement","FactPlan","InputStatus","_Measures","ApiBaseUrl","ApiPath","FiscalStartMonth","DailyHours","DefectTarget","RefreshClock","fnApi","HourCategoryMap","TimesheetRows","DeliverablesEndpoint","ImprovementsEndpoint"]
 
 annotation PBI_ProTooling = ["DevMode"]
 
 ref table DimEmployee
 ref table DimProject
+ref table DimPlatform
 ref table DimDivision
 ref table DimHoliday
 ref table DimTask

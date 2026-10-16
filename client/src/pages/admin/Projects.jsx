@@ -1,3 +1,4 @@
+import MultiSelectPicker from '../../components/ui/MultiSelectPicker';
 import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
@@ -23,7 +24,7 @@ export default function AdminProjects() {
   const canManage = hasPermission(user, 'projects');
   const cache = useQueryClient();
   const fileRef = useRef(null);
-  const [filters, setFilters] = useState({ search: '', division_id: '', subdivision_id: '', project_status: '', active: '1' });
+  const [filters, setFilters] = useState({ search: '', platform_id: '', division_id: '', subdivision_id: '', project_status: '', active: '1' });
   const [page, setPage] = useState(1);
   const [form, setForm] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +43,7 @@ export default function AdminProjects() {
     ['activity', 'Work Type', options.data?.activities || []],
     ['team_type', 'Dedicated/Flex', options.data?.supporting_categories || []],
   ];
-  const updateFilter = (key, value) => { setFilters(f => ({ ...f, [key]: value, ...(key === 'division_id' ? { subdivision_id: '' } : {}) })); setPage(1); };
+  const updateFilter = (key, value) => { setFilters(f => ({ ...f, [key]: value, ...(key === 'platform_id' ? { division_id: '', subdivision_id: '' } : {}), ...(key === 'division_id' ? { subdivision_id: '' } : {}) })); setPage(1); };
   const refresh = () => { cache.invalidateQueries({ queryKey: ['admin-projects'] }); cache.invalidateQueries({ queryKey: ['timesheet'] }); cache.invalidateQueries({ queryKey: ['projects'] }); cache.invalidateQueries({ queryKey: ['dashboard'] }); };
   const save = async e => {
     e.preventDefault();
@@ -95,7 +96,7 @@ export default function AdminProjects() {
         {canManage && <button disabled={busy} className="btn-secondary btn-sm" onClick={() => download(true)}>Download Template</button>}
         <button disabled={busy} className="btn-secondary btn-sm" onClick={() => download(false)}>Export Projects</button>
         {canManage && <><button disabled={busy || !canCreate} className="btn-secondary btn-sm" onClick={() => fileRef.current.click()}>Import Excel</button>
-        <button disabled={busy || !canCreate} className="btn-primary btn-sm" onClick={() => setForm({ billable_task_ids: [], non_billable_task_ids: [], project_status: 'Inprogress', division_id: divisions.some(d => d.id === Number(filters.division_id)) ? filters.division_id : (divisions.length === 1 ? divisions[0].id : ''), subdivision_id: '' })}>Add Project</button>
+        <button disabled={busy || !canCreate} className="btn-primary btn-sm" onClick={() => setForm({ user_ids: [], user_assignment_mode: 'division', billable_task_ids: [], non_billable_task_ids: [], project_status: 'Inprogress', division_id: divisions.some(d => d.id === Number(filters.division_id)) ? filters.division_id : (divisions.length === 1 ? divisions[0].id : ''), subdivision_id: '' })}>Add Project</button>
         <input ref={fileRef} type="file" hidden accept=".xlsx,.csv" onChange={importFile} /></>}
       </div>
     </div>
@@ -104,21 +105,22 @@ export default function AdminProjects() {
     {canManage && !options.isLoading && !options.isError && !canCreate && <p role="status" className="text-sm text-amber-700">No active division is assigned to your account. Ask a system admin to assign your division before adding projects.</p>}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       <input className="input" aria-label="Search projects" placeholder="Search projects…" value={filters.search} onChange={e => updateFilter('search', e.target.value)} />
-      <select className="input" aria-label="Filter division" value={filters.division_id} onChange={e => updateFilter('division_id', e.target.value)}><option value="">All divisions</option>{filterDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select>
+      <select className="input" aria-label="Filter Platform" value={filters.platform_id} onChange={e => updateFilter('platform_id', e.target.value)}><option value="">All Platforms</option>{options.data?.platforms.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
+      <select className="input" aria-label="Filter division" value={filters.division_id} onChange={e => updateFilter('division_id', e.target.value)}><option value="">All divisions</option>{filterDivisions.filter(d => !filters.platform_id || d.platform_id === Number(filters.platform_id)).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select>
       <select className="input" aria-label="Filter location" value={filters.subdivision_id} onChange={e => updateFilter('subdivision_id', e.target.value)}><option value="">All locations</option>{filterLocations.filter(s => !filters.division_id || s.division_id === Number(filters.division_id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
       <select className="input" aria-label="Filter status" value={filters.project_status} onChange={e => updateFilter('project_status', e.target.value)}><option value="">All statuses</option>{['Inprogress', 'Hold', 'Completed'].map(s => <option key={s}>{s}</option>)}</select>
       <select className="input" aria-label="Filter active projects" value={filters.active} onChange={e => updateFilter('active', e.target.value)}><option value="1">Active projects</option><option value="0">Inactive projects</option><option value="all">All projects</option></select>
     </div>
     {(isError || options.isError) && <p role="alert" className="text-red-600">Unable to load projects. Please refresh and try again.</p>}
     <div className="table-container overflow-x-auto"><table className="w-full text-sm">
-      <thead><tr>{['Project Code', 'Project Name', 'Division', 'Location', 'Status', 'Budget Hours', 'Billable Tasks', 'Non-Billable Tasks', 'Task Estimated Hours', 'Actions'].map(h => <th key={h} className="p-3 text-left">{h}</th>)}</tr></thead>
+      <thead><tr>{['Project Code', 'Project Name', 'Platform', 'Division', 'Location', 'Status', 'Budget Hours', 'Billable Tasks', 'Non-Billable Tasks', 'Task Estimated Hours', 'Actions'].map(h => <th key={h} className="p-3 text-left">{h}</th>)}</tr></thead>
       <tbody>{data?.projects.map(p => <tr key={p.id} className="border-t border-surface-200 dark:border-surface-700">
-        <td className="p-3">{p.project_code}</td><td className="p-3">{p.project_name}</td><td className="p-3">{p.division_name || 'Unassigned'}</td><td className="p-3">{p.subdivision_name || '—'}</td>
+        <td className="p-3">{p.project_code}</td><td className="p-3">{p.project_name}</td><td className="p-3">{p.platform_name || 'Unmapped'}</td><td className="p-3">{p.division_name || 'Unassigned'}</td><td className="p-3">{p.subdivision_name || '—'}</td>
         <td className="p-3"><ProjectStatus status={p.project_status} /></td><td className="p-3">{p.budget_hours ?? '—'}</td>
         {['Billable', 'Non-Billable'].map(type => <td key={type} className="p-3"><ul className="min-w-32 space-y-1">{p.tasks?.filter(t => t.classification === type).map(t => <li key={t.id} className="[overflow-wrap:anywhere]">{t.task_category}{!t.active ? ' (inactive)' : ''}</li>)}</ul></td>)}
         <td className="p-3">{p.task_estimated_hours ?? '—'}<span className="block text-xs text-surface-500">{p.estimated_task_count}/{p.assigned_task_count} tasks estimated</span></td>
         <td className="p-3"><div className="flex flex-wrap items-center gap-2"><button className="btn-secondary btn-sm" disabled={busy} onClick={() => setForm({ ...p })}>{canManage && p.can_edit ? 'Edit' : 'View'}</button>{canManage && p.can_edit && <>{p.active === 1 && <button disabled={busy} className="btn-ghost btn-sm" onClick={() => openAction(p, 'deactivate')}>Deactivate</button>}<button disabled={busy} className="btn-ghost btn-sm text-red-600 dark:text-red-400" onClick={() => openAction(p, 'delete')}>Delete</button></>}</div></td>
-      </tr>)}{!data?.projects.length && <tr><td colSpan={10} className="p-6 text-center">{isLoading ? 'Loading…' : 'No matching projects'}</td></tr>}</tbody>
+      </tr>)}{!data?.projects.length && <tr><td colSpan={11} className="p-6 text-center">{isLoading ? 'Loading…' : 'No matching projects'}</td></tr>}</tbody>
     </table></div>
     <div className="flex flex-wrap gap-3 items-center justify-between"><span className="text-sm">{data?.total || 0} projects · Page {page} of {Math.max(1, Math.ceil((data?.total || 0) / 25))}</span><div className="flex gap-2"><button className="btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</button><button className="btn-secondary btn-sm" disabled={page * 25 >= (data?.total || 0)} onClick={() => setPage(p => p + 1)}>Next</button></div></div>
     <Modal isOpen={!!form} onClose={() => !busy && setForm(null)} title={readOnly ? 'View Project' : form?.id ? 'Edit Project' : 'Add Project'} size="xl">
@@ -126,7 +128,8 @@ export default function AdminProjects() {
         <p className="text-sm text-surface-500">The division and location set here are used automatically for this project in timesheets.</p>
         {readOnly && <p className="text-sm text-surface-500">Project details are read-only for your account.</p>}
         <fieldset disabled={readOnly || busy} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div><label className="block text-xs mb-1" htmlFor="project-division">Division<FieldHelp label="Division" /></label><select id="project-division" className="input" value={form.division_id || ''} onChange={e => setForm({ ...form, division_id: e.target.value, division: '', subdivision_id: '' })}><option value="">Select division</option>{form.division_id && !divisions.some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{form.division_name || form.division}</option>}{divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
+        <div><label className="block text-xs mb-1" htmlFor="project-platform">Platform</label><select id="project-platform" className="input" value={form.platform_id || filterDivisions.find(d => d.id === Number(form.division_id))?.platform_id || ''} onChange={e => setForm({ ...form, platform_id: e.target.value, division_id: '', division: '', subdivision_id: '', user_ids: [] })}><option value="">Select Platform</option>{options.data?.platforms.filter(p => readOnly || divisions.some(d => d.platform_id === p.id)).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+        <div><label className="block text-xs mb-1" htmlFor="project-division">Division<FieldHelp label="Division" /></label><select id="project-division" className="input" value={form.division_id || ''} onChange={e => setForm({ ...form, division_id: e.target.value, platform_id: divisions.find(d => d.id === Number(e.target.value))?.platform_id, division: '', subdivision_id: '', user_ids: [] })}><option value="">Select division</option>{form.division_id && !divisions.some(d => d.id === Number(form.division_id)) && <option value={form.division_id}>{form.division_name || form.division}</option>}{divisions.filter(d => d.platform_id === Number(form.platform_id || filterDivisions.find(d => d.id === Number(form.division_id))?.platform_id)).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
         <div><label className="block text-xs mb-1" htmlFor="project-location">Location<FieldHelp label="Location" /></label><select id="project-location" className="input" disabled={!form.division_id} value={form.subdivision_id || ''} onChange={e => setForm({ ...form, subdivision_id: e.target.value })}><option value="">No location</option>{form.subdivision_id && !locations.some(s => s.id === Number(form.subdivision_id)) && <option value={form.subdivision_id}>{form.subdivision_name}</option>}{locations.filter(s => s.division_id === Number(form.division_id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         {fields.map(([key, label, type = 'text']) => <div key={key}><label htmlFor={`project-${key}`} className="block text-xs font-medium mb-1">{label}{['project_code', 'project_name'].includes(key) ? ' *' : ''}<FieldHelp label={label} /></label><input id={`project-${key}`} className="input" type={type} min={type === 'number' ? 0 : undefined} step={type === 'number' ? 'any' : undefined} maxLength={1000} required={['project_code', 'project_name'].includes(key)} value={form[key] ?? ''} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}
         {dropdowns.map(([key, label, items]) => <div key={key}>
@@ -140,6 +143,11 @@ export default function AdminProjects() {
         <div><label className="block text-xs mb-1" htmlFor="project-status">Status<FieldHelp label="Status" /></label><select id="project-status" className="input" value={form.project_status} onChange={e => setForm({ ...form, project_status: e.target.value })}>{['Inprogress', 'Hold', 'Completed'].map(s => <option key={s}>{s}</option>)}</select></div>
         {form.id && <label className="flex gap-2 items-center"><input type="checkbox" checked={!!form.active} onChange={e => setForm({ ...form, active: e.target.checked })} />Active project</label>}
       </fieldset>
+      <section className="space-y-3">
+        <label className="block text-sm">User access<select aria-label="User assignment mode" className="input mt-1" disabled={readOnly || busy} value={form.user_assignment_mode || 'division'} onChange={e => setForm({ ...form, user_assignment_mode: e.target.value })}><option value="division">Existing division access</option><option value="selected">Selected users only</option></select></label>
+        <p className="text-xs text-surface-500">Selected users must have this Division assigned. Platform membership alone does not grant access. Changing Platform or Division clears the user selection.</p>
+        <MultiSelectPicker label="Project users" readOnly={readOnly || busy || form.user_assignment_mode !== 'selected'} selected={form.user_ids || []} onChange={ids => setForm({ ...form, user_ids: ids })} items={(options.data?.users || []).filter(u => u.assignable_division_ids.includes(Number(form.division_id)) || form.user_ids?.includes(u.id)).map(u => ({ id: u.id, label: u.name, description: `Platforms: ${u.platforms.map(p => p.name).join(', ')} · Divisions: ${u.divisions.map(d => d.name).join(', ')}` }))} />
+      </section>
       <div className="space-y-3">
         <h2 className="font-semibold">Task assignments *</h2>
         <p className="text-sm text-surface-500">Select at least one task across either category. You can select tasks in both categories. Task estimates are summed once per assignment; project Budget Hours remains a separate target.</p>

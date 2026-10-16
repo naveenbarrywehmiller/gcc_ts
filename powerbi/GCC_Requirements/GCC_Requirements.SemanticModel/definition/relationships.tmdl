@@ -70,3 +70,11 @@ relationship 559d7162-a8ee-5384-96a8-1b8a7c12f1db
 	fromColumn: FactPlan.date
 	toColumn: DimDate.Date
 
+
+relationship df319331-7e72-5163-b6f1-3e3b734ea286
+	fromColumn: DimDivision.platformId
+	toColumn: DimPlatform.id
+
+relationship 2c36a60f-f991-53da-961b-82b15935d0c1
+	fromColumn: FactTimesheet.divisionId
+	toColumn: DimDivision.id

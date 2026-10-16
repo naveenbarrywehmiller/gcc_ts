@@ -528,6 +528,7 @@ function migrate() {
   require('./viewerRoleMigration')(db);
   require('./taskPlanningMigration')(db);
   require('./auditScopeMigration')(db);
+  require('./platformMigration')(db);
   require('./bootstrapAdmin').bootstrapAdmin(db);
 
   console.log('✅ Database migrations complete.');

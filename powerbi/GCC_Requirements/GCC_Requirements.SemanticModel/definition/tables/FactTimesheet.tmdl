@@ -65,9 +65,27 @@ table FactTimesheet
 		summarizeBy: none
 		sourceColumn: hourCategory
 
+	column divisionId
+		dataType: int64
+		lineageTag: a3b97dd2-a74f-5364-876f-c1ced14a4e91
+		summarizeBy: none
+		sourceColumn: divisionId
+
+	column platformId
+		dataType: int64
+		lineageTag: 59ca13aa-5784-58a3-9177-4a9fb16e2239
+		summarizeBy: none
+		sourceColumn: platformId
+
+	column platform
+		dataType: string
+		lineageTag: 99d65994-c835-5cc8-98bf-fea294aefc25
+		summarizeBy: none
+		sourceColumn: platform
+
 	partition FactTimesheet = m
 		mode: import
-		source = Table.SelectColumns(TimesheetRows,{"id","userId","projectId","taskId","date","hours","status","division","department","hourCategory"})
+		source = Table.SelectColumns(TimesheetRows,{"platformId","platform","divisionId","id","userId","projectId","taskId","date","hours","status","division","department","hourCategory"})
 
 	annotation PBI_ResultType = Table
 

@@ -14,6 +14,7 @@ annotation PBI_ProTooling = ["MCP-PBIModeling"]
 ref table FactTimesheet
 ref table DimEmployee
 ref table DimProject
+ref table DimPlatform
 ref table DimDivision
 ref table DimDepartment
 ref table DimHoliday

@@ -53,6 +53,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     { to: '/admin/users', icon: Users, label: 'Users', permission: 'usersView' },
     { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projectsView' },
     { to: '/admin/tasks', icon: ListTodo, label: 'Task Name/Number', permission: 'tasksView' },
+    { to: '/admin/platforms', icon: Building2, label: 'Platform', permission: 'catalogView' },
     { to: '/admin/divisions', icon: Building2, label: 'Division', permission: 'catalogView' },
     { to: '/admin/departments', icon: Users, label: 'Departments', permission: 'catalogView' },
     { to: '/admin/supporting-categories', icon: Users, label: 'Dedicated/Flex', permission: 'catalogView' },

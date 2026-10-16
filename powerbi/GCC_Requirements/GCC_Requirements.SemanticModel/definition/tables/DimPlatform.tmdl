@@ -1,0 +1,24 @@
+table DimPlatform
+	lineageTag: 26b67b0e-12bf-5ebf-b719-bad18a30f672
+
+	column id
+		dataType: int64
+		lineageTag: 97949d7e-7506-5e9a-b1f2-b13524ea62ab
+		summarizeBy: none
+		sourceColumn: id
+
+	column platformName
+		dataType: string
+		lineageTag: 839b97a1-a29f-5ec9-ab71-58f8e7e107b5
+		summarizeBy: none
+		sourceColumn: platformName
+
+	partition DimPlatform = m
+		mode: import
+		source =
+				let
+				    Rows = fnApi("platforms"),
+				    Raw = Table.FromRecords(Rows, {"id", "platformName"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Raw, {{"id", Int64.Type}, {"platformName", type text}}),
+				    Checked = if List.Count(List.Distinct(Typed[id])) <> Table.RowCount(Typed) or List.Contains(Typed[id], null) then error "Duplicate or missing Platform key." else Typed
+				in Checked

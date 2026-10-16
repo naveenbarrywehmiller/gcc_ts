@@ -48,12 +48,20 @@ router.use(powerBiRateLimiter);
 
 // Authentication & authorization middleware
 router.use(authenticatePowerBi);
+router.use((req,res,next) => {
+  const value = req.query.platform_ids ?? req.query.platform_id;
+  if (value !== undefined && (typeof value !== 'string' || !/^[1-9]\d*(,[1-9]\d*)*$/.test(value) || value.split(',').some(id => !Number.isSafeInteger(Number(id))))) return res.status(400).json({ error: 'Invalid Platform IDs' });
+  req.platformFilters = { platformIds: value ? [...new Set(value.split(',').map(Number))] : [] };
+  next();
+});
+router.get('/platforms', (req,res) => res.json(powerBiService.getPlatforms({ ...projectAccess(req), ...req.platformFilters })));
+
 
 // Capacity and staffing inputs use the same read-only reporting authentication.
 for (const [path, method] of [['planned-vacations', 'getPlannedVacations'], ['staffing', 'getStaffing']]) {
   router.get('/' + path, (req, res) => {
     try {
-      res.json(powerBiService[method](projectAccess(req)));
+      res.json(powerBiService[method]({ ...projectAccess(req), ...req.platformFilters }));
     } catch (err) {
       require('../utils/systemLog').recordSystemError(err, 'Power BI');
       res.status(500).json({ error: 'Failed to retrieve reporting data' });
@@ -171,7 +179,7 @@ router.get('/timesheets', (req, res) => {
       limit: parsedLimit,
     };
 
-    const result = powerBiService.getTimesheets({ ...filters, ...projectAccess(req) }, pagination);
+    const result = powerBiService.getTimesheets({ ...filters, ...projectAccess(req), ...req.platformFilters }, pagination);
     res.json(result);
   } catch (err) {
     require('../utils/systemLog').recordSystemError(err, 'Power BI');
@@ -206,7 +214,7 @@ router.get('/users', (req, res) => {
       active: active !== undefined ? active : undefined,
     };
 
-    const result = powerBiService.getUsers(filters);
+    const result = powerBiService.getUsers({ ...filters, ...projectAccess(req), ...req.platformFilters });
     res.json(result);
   } catch (err) {
     require('../utils/systemLog').recordSystemError(err, 'Power BI');
@@ -226,7 +234,7 @@ router.get('/divisions', (req, res) => {
       active: active !== undefined ? active : undefined,
     };
 
-    const result = powerBiService.getDivisions(filters);
+    const result = powerBiService.getDivisions({ ...filters, ...projectAccess(req), ...req.platformFilters });
     res.json(result);
   } catch (err) {
     require('../utils/systemLog').recordSystemError(err, 'Power BI');
@@ -267,7 +275,7 @@ router.get('/projects', (req, res) => {
       active: active !== undefined ? active : undefined,
     };
 
-    const result = powerBiService.getProjects({ ...filters, ...projectAccess(req) });
+    const result = powerBiService.getProjects({ ...filters, ...projectAccess(req), ...req.platformFilters });
     res.json(result);
   } catch (err) {
     require('../utils/systemLog').recordSystemError(err, 'Power BI');
@@ -337,7 +345,7 @@ router.get('/tasks', (req, res) => {
  */
 router.get('/assignments', (req, res) => {
   try {
-    const result = powerBiService.getAssignments();
+    const result = powerBiService.getAssignments({ ...projectAccess(req), ...req.platformFilters });
     res.json(result);
   } catch (err) {
     require('../utils/systemLog').recordSystemError(err, 'Power BI');
@@ -372,7 +380,7 @@ router.get('/status-summary', (req, res) => {
       division: division ? String(division).trim() : undefined,
     };
 
-    const result = powerBiService.getStatusSummary(filters);
+    const result = powerBiService.getStatusSummary({ ...filters, ...projectAccess(req), ...req.platformFilters });
     res.json(result);
   } catch (err) {
     require('../utils/systemLog').recordSystemError(err, 'Power BI');
@@ -387,7 +395,7 @@ router.get('/status-summary', (req, res) => {
  */
 router.get('/export', (req, res) => {
   try {
-    const data = powerBiService.getLegacyExport(projectAccess(req));
+    const data = powerBiService.getLegacyExport({ ...projectAccess(req), ...req.platformFilters });
     res.json(data);
   } catch (err) {
     require('../utils/systemLog').recordSystemError(err, 'Power BI');

@@ -79,7 +79,7 @@ table _Measures
 		lineageTag: 15032cb3-e0ad-5ed4-b600-04a33de136e3
 
 	/// Current roster estimate. Blank at project/task grain because allocations are unavailable.
-	measure 'Roster Capacity Hours' = IF(NOT ISCROSSFILTERED(DimProject) && NOT ISCROSSFILTERED(DimTask), [Working Days]*SELECTEDVALUE(Settings[DailyHours],8)*[Active Team Strength])
+	measure 'Roster Capacity Hours' = IF(NOT ISCROSSFILTERED(DimPlatform) && NOT ISCROSSFILTERED(DimProject) && NOT ISCROSSFILTERED(DimTask), [Working Days]*SELECTEDVALUE(Settings[DailyHours],8)*[Active Team Strength])
 		formatString: #,##0.0
 		displayFolder: 02 Utilization
 		lineageTag: 60f159a7-ce60-5bbf-9fd3-9760ef326d62

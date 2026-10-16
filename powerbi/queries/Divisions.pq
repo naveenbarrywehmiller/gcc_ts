@@ -12,11 +12,11 @@ let
     DataTable = Table.FromList(DataList, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
 
     Expanded = Table.ExpandRecordColumn(DataTable, "Column1", {
-        "id", "divisionName", "status", "isActive", "createdDate"
+        "platformId", "platform", "id", "divisionName", "status", "isActive", "createdDate"
     }),
 
     Typed = Table.TransformColumnTypes(Expanded, {
-        {"id", Int64.Type},
+        {"platformId", Int64.Type}, {"platform", type text}, {"id", Int64.Type},
         {"divisionName", type text},
         {"status", type text},
         {"isActive", type logical},

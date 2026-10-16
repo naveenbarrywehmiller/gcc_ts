@@ -75,6 +75,9 @@ function parseReportQuery(query) {
   if (days < 1 || days > 366) invalid('Choose a date range of 1–366 days.');
   if (!validDate(addDays(start, -days))) invalid('The comparison period must be in 1900 or later.');
   const filters = {};
+  const platformValue = query.platform_ids ?? query.platform_id;
+  if (platformValue !== undefined && platformValue !== '' && (typeof platformValue !== 'string' || !/^[1-9]\d*(,[1-9]\d*)*$/.test(platformValue))) invalid('Invalid Platform IDs.');
+  filters.platform_ids = platformValue ? [...new Set(platformValue.split(',').map(v => positiveInt(v, 'Platform')))] : [];
   for (const key of ['user_id', 'project_id', 'task_id', 'location_id', 'division_id']) {
     filters[key] =
       query[key] === undefined || query[key] === ''
@@ -120,7 +123,7 @@ function employeeWhere(actor, filters) {
   return { sql: conditions.join(' AND '), params };
 }
 function entryWhere(actor, filters, start, end) {
-  const employee = employeeWhere(actor, filters);
+  const employee = employeeWhere(actor, { ...filters, division_id: null, division: '' });
   const project = reportScope(actor, 'p');
   const conditions = [
     't.work_date BETWEEN ? AND ?',
@@ -128,6 +131,15 @@ function entryWhere(actor, filters, start, end) {
     `(p.id IS NULL OR ${project.sql})`,
   ];
   const params = [start, end, ...employee.params, ...project.params];
+  if (filters.platform_ids?.length) {
+    conditions.push(`ed.platform_id IN (${filters.platform_ids.map(() => '?').join(',')})`); params.push(...filters.platform_ids);
+  }
+  if (filters.division_id) { conditions.push('ed.id = ?'); params.push(filters.division_id); }
+  if (filters.division) { conditions.push('ed.name = ?'); params.push(filters.division); }
+  if (actor.role === 'admin') {
+    const ids = reportingDivisionIds(actor);
+    conditions.push(`ed.id IN (${ids.map(() => '?').join(',') || 'NULL'})`); params.push(...ids);
+  }
   if (filters.projectless) conditions.push('t.project_id IS NULL');
   for (const [key, expression] of [
     ['project_id', 't.project_id'],
@@ -148,13 +160,15 @@ function entryWhere(actor, filters, start, end) {
 const joins = `FROM timesheets t JOIN users u ON u.id = t.user_id
   LEFT JOIN divisions d ON d.id = u.division_id LEFT JOIN projects p ON p.id = t.project_id
   LEFT JOIN tasks tk ON tk.id = t.task_id LEFT JOIN subdivisions s ON s.id = t.subdivision_id
+  LEFT JOIN divisions ed ON ed.id = COALESCE(t.division_id, p.division_id, u.division_id)
+  LEFT JOIN platforms pl ON pl.id = ed.platform_id
   LEFT JOIN divisions pd ON pd.id = p.division_id LEFT JOIN department_ownerships ow ON ow.id = t.ownership_id`;
-const entryColumns = `t.id, t.user_id, t.project_id, t.task_id, t.division_id, t.subdivision_id, t.ownership_id,
+const entryColumns = `pl.id AS platform_id, COALESCE(pl.name,'Unmapped') AS platform, ed.name AS entry_division, t.id, t.user_id, t.project_id, t.task_id, t.division_id, t.subdivision_id, t.ownership_id,
   t.work_date, t.hours, t.description, t.project_description, t.details_json, t.status, t.week_number, t.week_year,
   u.name AS employee_name, u.email AS employee_email, ${employeeDivision} AS employee_division,
   p.project_code, p.project_name, p.customer_name, COALESCE(pd.name, p.division) AS project_division,
   tk.task_category, tk.task_description, ${billing} AS classification, s.name AS subdivision_name, ow.label AS ownership_label`;
-const analysisColumns = `t.user_id, t.project_id, t.work_date, t.hours, t.status,
+const analysisColumns = `pl.id AS platform_id, COALESCE(pl.name,'Unmapped') AS platform, ed.name AS entry_division, t.user_id, t.project_id, t.work_date, t.hours, t.status,
   u.name AS employee_name, u.email AS employee_email, ${employeeDivision} AS employee_division,
   p.project_code, p.project_name, p.customer_name, COALESCE(pd.name, p.division) AS project_division, ${billing} AS classification`;
 
@@ -164,12 +178,12 @@ function options(actor) {
   const ids = reportingDivisionIds(actor);
   const companywide = hasCompanywideReportAccess(actor);
   const divisions = db
-    .prepare('SELECT id, name, active FROM divisions ORDER BY name')
+    .prepare('SELECT id, name, active, platform_id FROM divisions ORDER BY name')
     .all()
     .filter((d) => companywide || ids.includes(d.id));
   const users = db
     .prepare(
-      `SELECT u.id, u.name, u.active, ${employeeDivision} AS division,
+      `SELECT u.id, u.name, u.role, u.active, ${employeeDivision} AS division,
     COALESCE(u.division_id, (SELECT id FROM divisions WHERE LOWER(TRIM(name)) = LOWER(TRIM(u.division)) AND active = 1)) AS division_id
     FROM users u LEFT JOIN divisions d ON d.id = u.division_id WHERE u.name != '[Deleted User]' AND ${scope.sql} ORDER BY u.name`
     )
@@ -193,7 +207,8 @@ function options(actor) {
           .all()
       : [];
   const customers = [...new Set(projects.map((p) => p.customer_name).filter(Boolean))].sort();
-  return { divisions, users, projects, locations, tasks, customers };
+  const platforms = db.prepare('SELECT * FROM platforms ORDER BY name').all().filter(p => companywide || divisions.some(d => d.platform_id === p.id));
+  return { platforms, divisions, users: users.map(u => ({ ...u, division_ids: require('../utils/platformAssignments').userAssignments(u).division_ids })), projects, locations, tasks, customers };
 }
 function getEntries(actor, spec, { page, pageSize = 50 } = {}) {
   const where = entryWhere(actor, spec.filters, spec.start, spec.end);
@@ -258,7 +273,9 @@ function percent(hours, expected) {
   return expected > 0 ? Math.round((hours / expected) * 1000) / 10 : null;
 }
 function capacityAllowed(filters) {
-  return ![
+  return !filters.platform_ids?.length && ![
+    'division_id',
+    'division',
     'project_id',
     'projectless',
     'task_id',
@@ -289,14 +306,15 @@ function analysis(actor, spec, today = todayDate()) {
     .all(...where.params);
   const current = all.filter((row) => row.work_date >= spec.start);
   const previous = all.filter((row) => row.work_date <= previousEnd);
-  const employee = employeeWhere(actor, spec.filters);
+  const employee = employeeWhere(actor, { ...spec.filters, division_id: null, division: '' });
   const people = db
     .prepare(
-      `SELECT u.id, u.name, u.email, u.active, u.role, ${employeeDivision} AS division
+      `SELECT u.id, u.name, u.email, u.active, u.role, COALESCE((SELECT name FROM platforms WHERE id=d.platform_id),'Unmapped') AS platform, ${employeeDivision} AS division
     FROM users u LEFT JOIN divisions d ON d.id = u.division_id WHERE ${employee.sql} ORDER BY u.name`
     )
     .all(...employee.params);
-  const activePeople = people.filter((u) => u.active && u.role !== 'viewer');
+  const organizationFiltered = spec.filters.platform_ids?.length || spec.filters.division_id || spec.filters.division;
+  const activePeople = people.filter((u) => u.active && u.role !== 'viewer' && (!organizationFiltered || current.some(r => r.user_id === u.id)));
   const holidaySet = new Set(
     db
       .prepare('SELECT date FROM holidays WHERE date BETWEEN ? AND ?')
@@ -331,7 +349,7 @@ function analysis(actor, spec, today = todayDate()) {
   const capacityAvailable = fullSelection && !outsideScope;
   const capacityReason = outsideScope
     ? 'Some employee time is outside your report scope. Capacity and missing hours require a complete employee time record.'
-    : 'Clear project, customer, task, location, billing and status filters to calculate employee capacity and missing hours.';
+    : 'Clear Platform, Division, project, customer, task, location, billing and status filters to calculate employee capacity and missing hours.';
   const period = {
     start_date: spec.start,
     end_date: spec.end,
@@ -368,6 +386,9 @@ function analysis(actor, spec, today = todayDate()) {
   const weeks = buckets(spec.start, spec.end, 'week');
   const weeklyPeople = new Map();
   const projects = new Map();
+  const personPlatforms = new Map();
+  const projectPlatforms = new Map();
+  const projectDivisions = new Map();
   for (const row of current) {
     const key = weekKey(row.work_date);
     if (!weeklyPeople.has(row.user_id))
@@ -376,10 +397,14 @@ function analysis(actor, spec, today = todayDate()) {
         name: row.employee_name,
         email: row.employee_email,
         division: row.employee_division,
+        platform: '',
         weeks: {},
         ...emptyTotals(),
       });
     const person = weeklyPeople.get(row.user_id);
+    if (!personPlatforms.has(row.user_id)) personPlatforms.set(row.user_id, new Set());
+    personPlatforms.get(row.user_id).add(row.platform);
+    person.platform = [...personPlatforms.get(row.user_id)].join(' · ');
     if (!person.weeks[key]) person.weeks[key] = emptyTotals();
     accumulate(person.weeks[key], row);
     accumulate(person, row);
@@ -393,11 +418,18 @@ function analysis(actor, spec, today = todayDate()) {
         project_name: row.project_name || 'Historical entries without a project',
         customer_name: row.customer_name,
         division: row.project_division,
+        platform: row.platform,
         planning: row.project_id ? withTasks({ id: row.project_id }) : null,
         contributors: new Map(),
         ...emptyTotals(),
       });
     const project = projects.get(projectKey);
+    if (!projectPlatforms.has(projectKey)) projectPlatforms.set(projectKey, new Set());
+    if (!projectDivisions.has(projectKey)) projectDivisions.set(projectKey, new Set());
+    projectPlatforms.get(projectKey).add(row.platform);
+    projectDivisions.get(projectKey).add(row.entry_division);
+    project.platform = [...projectPlatforms.get(projectKey)].join(' · ');
+    project.division = [...projectDivisions.get(projectKey)].filter(Boolean).join(' · ');
     accumulate(project, row);
     if (!project.contributors.has(row.user_id))
       project.contributors.set(row.user_id, {
@@ -414,6 +446,7 @@ function analysis(actor, spec, today = todayDate()) {
     rows.forEach((r) => accumulate(total, r));
     return {
       ...u,
+      platform: [...new Set(rows.map(r => r.platform))].join(' · ') || 'No matching time',
       ...total,
       days_logged: new Set(rows.map((r) => r.work_date)).size,
       expected_hours: capacityAvailable ? dates.length * 8 : null,
@@ -466,6 +499,7 @@ function analysis(actor, spec, today = todayDate()) {
             name: u.name,
             email: u.email,
             division: u.division,
+            platform: u.platform,
             expected_hours: dates.length * 8,
             logged_hours: rows.reduce((sum, r) => sum + r.hours, 0),
             missing_hours: dates.reduce((sum, d) => {

@@ -68,6 +68,7 @@ app.use('/api/auth', require('./routes/auth-ms'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/platforms', require('./routes/platforms'));
 app.use('/api/divisions', require('./routes/divisions'));
 app.use('/api/subdivisions', require('./routes/subdivisions'));
 app.use('/api/departments', require('./routes/departments'));

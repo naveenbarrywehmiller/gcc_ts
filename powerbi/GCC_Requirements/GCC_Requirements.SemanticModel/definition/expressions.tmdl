@@ -70,11 +70,11 @@ expression HourCategoryMap =
 expression TimesheetRows =
 		let
 		    Rows=fnApi("timesheets"),
-		    Required={"id","userId","projectId","taskId","date","hours","status","weeklyRowKey","weeklyDetails"},
+		    Required={"platformId","platform","divisionId","id","userId","projectId","taskId","date","hours","status","weeklyRowKey","weeklyDetails"},
 		    Checked=if List.AllTrue(List.Transform(Rows, each Record.HasFields(_, Required))) then Rows
 		        else error "Deploy the requirements API update: stable IDs and weeklyRowKey are required.",
-		    T=Table.FromRecords(Checked, {"id","userId","projectId","taskId","date","hours","status","division","department","projectCategory","weeklyRowKey","weeklyDetails","updatedDate"}, MissingField.UseNull),
-		    Typed=Table.TransformColumnTypes(T, {{"id",Int64.Type},{"userId",Int64.Type},{"projectId",Int64.Type},{"taskId",Int64.Type},{"date",type date},{"hours",type number},{"status",type text},{"division",type text},{"department",type text},{"projectCategory",type text},{"weeklyRowKey",type text},{"updatedDate",type datetime}}),
+		    T=Table.FromRecords(Checked, {"platformId","platform","divisionId","id","userId","projectId","taskId","date","hours","status","division","department","projectCategory","weeklyRowKey","weeklyDetails","updatedDate"}, MissingField.UseNull),
+		    Typed=Table.TransformColumnTypes(T, {{"platformId",Int64.Type},{"platform",type text},{"divisionId",Int64.Type},{"id",Int64.Type},{"userId",Int64.Type},{"projectId",Int64.Type},{"taskId",Int64.Type},{"date",type date},{"hours",type number},{"status",type text},{"division",type text},{"department",type text},{"projectCategory",type text},{"weeklyRowKey",type text},{"updatedDate",type datetime}}),
 		    Unique=if Table.RowCount(Typed)=List.Count(List.Distinct(Typed[id])) then Typed else error "Duplicate timesheet IDs.",
 		    CategoryKey=Table.AddColumn(Unique,"categoryKey",each Text.Lower(Text.Trim([projectCategory] ?? "")),type text),
 		    Joined=Table.NestedJoin(CategoryKey,{"categoryKey"},HourCategoryMap,{"taskCategory"},"Map",JoinKind.LeftOuter),

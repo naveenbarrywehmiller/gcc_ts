@@ -21,3 +21,7 @@ relationship DimDate_Date_FactTimesheet_date
 relationship DimDate_Date_DimHoliday_date
 	fromColumn: DimHoliday.date
 	toColumn: DimDate.Date
+
+relationship e7a5b77d-33d7-5402-95e6-a022311cd9cc
+	fromColumn: DimDivision.platformId
+	toColumn: DimPlatform.id

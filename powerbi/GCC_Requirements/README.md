@@ -10,6 +10,10 @@ Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. The
 
 The Staffing page displays separate Open Position and New Joiner text tables by division and month. The old count cards and monthly count charts were removed. Upgrade the application to v1.21.0, then reopen this PBIP and refresh its data. The reporting API v2.0.0 returns text for both staffing fields; an older numeric model cannot refresh them. The phone layout retains wrapped note values and internal table scrolling.
 
+## Platform hierarchy — 2.2.0 (2026-10-16)
+
+Requires GCC Timesheet v1.29.0+ and reporting API v2.0.0. DimPlatform filters Divisions and effective timesheet Division keys without joining user assignment bridges. Platform slicers precede Division on every page. Deploy the application first, then refresh the PBIP using existing credentials. Source validation and API reconciliation pass; live refresh and native DAX execution remain a required pre-publication check. See [implementation details](../../docs/PLATFORM_MANAGEMENT.md).
+
 ## Task planning — 2.1.0 (2026-10-14)
 
 DimTask includes estimated hours and the input received, start, target, and delivered dates. DimProject includes its billable and non-billable assigned task IDs, summed estimated task hours, and task counts. Upgrade the application to v1.28.0+ and refresh this PBIP to load the additive reporting API fields.

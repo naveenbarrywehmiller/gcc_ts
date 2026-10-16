@@ -42,18 +42,18 @@ let
             DataList = if Value.Is(ResponseData, type list) then ResponseData else { },
             DataTable = Table.FromList(DataList, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
             Expanded = Table.ExpandRecordColumn(DataTable, "Column1", {
-                "id", "employeeId", "employeeName", "email", "division", "department",
+                "platformId", "platform", "id", "employeeId", "employeeName", "email", "division", "department",
                 "admin", "date", "week", "weekYear", "project", "projectCode",
                 "projectCategory", "taskClassification", "hours", "status",
                 "isBillable", "submissionDate", "approvalDate", "createdDate", "updatedDate"
             }, {
-                "id", "employeeId", "employeeName", "email", "division", "department",
+                "platformId", "platform", "id", "employeeId", "employeeName", "email", "division", "department",
                 "admin", "date", "week", "weekYear", "project", "projectCode",
                 "projectCategory", "taskClassification", "hours", "status",
                 "isBillable", "submissionDate", "approvalDate", "createdDate", "updatedDate"
             }),
             Typed = Table.TransformColumnTypes(Expanded, {
-                {"id", Int64.Type},
+                {"platformId", Int64.Type}, {"platform", type text}, {"id", Int64.Type},
                 {"employeeId", type text},
                 {"employeeName", type text},
                 {"email", type text},
