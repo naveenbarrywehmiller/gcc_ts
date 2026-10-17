@@ -3,12 +3,15 @@ const assert = require('node:assert/strict');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(require('node:os').tmpdir(), `gcc-test-errors-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
 config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const { migrate } = require('../server/src/config/migrate');
 const jwt = require('../server/node_modules/jsonwebtoken');
 const bcrypt = require('../server/node_modules/bcryptjs');
@@ -47,8 +50,8 @@ before(async () => {
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(outsider, systemAdmin, systemAdmin);
   taskA = Number(db.prepare('INSERT INTO tasks(task_category, requires_project) VALUES (?,0)').run('Task A').lastInsertRowid);
   taskB = Number(db.prepare('INSERT INTO tasks(task_category, requires_project) VALUES (?,0)').run('Task B').lastInsertRowid);
-  db.exec("UPDATE tasks SET classification = 'Billable'");
-  project = Number(db.prepare("INSERT INTO projects(project_code,project_name,billing_type,division_id) VALUES ('TEST','Test','Billable',?)").run(a).lastInsertRowid);
+  db.exec("UPDATE tasks SET classification = 'Productive'");
+  project = Number(db.prepare("INSERT INTO projects(project_code,project_name,billing_type,division_id) VALUES ('TEST','Test','Productive',?)").run(a).lastInsertRowid);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(manager, admin, admin);
   db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1');
@@ -106,7 +109,7 @@ test('recalled project timesheet saves separate task rows and can be resubmitted
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(userId, admin, admin);
   const projectId = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)')
     .run('RECALL-TEST', 'Recall project', divisionId).lastInsertRowid);
-  db.prepare("UPDATE projects SET billing_type = 'Billable' WHERE id = ?").run(projectId);
+  db.prepare("UPDATE projects SET billing_type = 'Productive' WHERE id = ?").run(projectId);
   for (const id of [taskA, taskB]) db.prepare('INSERT INTO project_tasks VALUES (?,?)').run(projectId,id);
   const entries = (first, second) => [
     { project_description: 'Work performed', project_id: projectId, task_id: taskA, work_date: date, hours: first },

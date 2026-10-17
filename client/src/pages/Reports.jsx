@@ -154,14 +154,14 @@ function Rate({ value, coverage = false }) {
     </div>
   );
 }
-function Billing({ summary }) {
+function Classification({ summary }) {
   const items = [
-    ['Billable', summary.billable_hours, 'bg-brand-600'],
-    ['Non-billable', summary.non_billable_hours, 'bg-violet-500'],
+    ['Productive', summary.billable_hours, 'bg-brand-600'],
+    ['Non-productive', summary.non_billable_hours, 'bg-violet-500'],
     ['Unclassified', summary.unclassified_hours, 'bg-surface-400'],
   ];
   return (
-    <section className="card p-4 space-y-4" aria-label="Billing breakdown">
+    <section className="card p-4 space-y-4" aria-label="Classification breakdown">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {items.map(([label, value, color]) => (
           <div className="flex items-center gap-2 min-w-0" key={label}>
@@ -191,7 +191,7 @@ function Billing({ summary }) {
         ))}
       </div>
       <p className="text-xs text-surface-500 dark:text-surface-400">
-        Billing uses task classification, then project billing type. Historical hours without a
+        Classification uses task classification, then legacy project classification. Historical hours without a
         classification stay Unclassified.
       </p>
     </section>
@@ -201,8 +201,8 @@ function FilterSelect({ label, value, onChange, children }) {
   const plural =
     label === 'Employee'
       ? 'employees'
-      : label === 'Billing'
-        ? 'billing types'
+      : label === 'Classification'
+        ? 'classifications'
         : label === 'Status'
           ? 'statuses'
           : `${label.toLowerCase()}s`;
@@ -301,8 +301,8 @@ export default function Reports() {
           </h1>
           <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">
             {['manager', 'system admin', 'viewer'].includes(user.role)
-              ? 'Companywide time, billing, capacity and submission gaps.'
-              : 'Time, billing, capacity and submission gaps in your assigned divisions.'}
+              ? 'Companywide time, classification, capacity and submission gaps.'
+              : 'Time, classification, capacity and submission gaps in your assigned divisions.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -492,11 +492,11 @@ export default function Reports() {
                   ))}
                 </FilterSelect>
                 <FilterSelect
-                  label="Billing"
+                  label="Classification"
                   value={filters.billing_type}
                   onChange={(v) => changeFilter('billing_type', v)}
                 >
-                  {['Billable', 'Non-Billable', 'Unclassified'].map((b) => (
+                  {['Productive', 'Non-Productive', 'Unclassified'].map((b) => (
                     <option key={b}>{b}</option>
                   ))}
                 </FilterSelect>
@@ -578,7 +578,7 @@ export default function Reports() {
                   : 'selected range has not started'}
               </Metric>
             </div>
-            <Billing summary={data.summary} />
+            <Classification summary={data.summary} />
             {tab === 'weekly' && <WeeklyReport data={data.weekly} openEntries={openEntries} />}
             {tab === 'utilization' && <UtilizationReport data={data} openEntries={openEntries} />}
             {tab === 'projects' && (
@@ -698,8 +698,8 @@ function UtilizationReport({ data, openEntries }) {
         <Metric label="Logged-hours coverage" value={pct(data.summary.coverage_pct)}>
           All logged time ÷ expected hours
         </Metric>
-        <Metric label="Billable utilization" value={pct(data.summary.billable_utilization_pct)}>
-          Billable time ÷ expected hours
+        <Metric label="Productive utilization" value={pct(data.summary.billable_utilization_pct)}>
+          Productive time ÷ expected hours
         </Metric>
       </div>
       <CapacityNote data={data} />
@@ -719,7 +719,7 @@ function UtilizationReport({ data, openEntries }) {
             'Logged hours',
             'Expected hours',
             'Coverage',
-            'Billable utilization',
+            'Productive utilization',
           ]}
         >
           {data.utilization.map((u) => (
@@ -807,7 +807,7 @@ function ProjectReport({ data, openEntries }) {
                   {p.project_code}
                 </button>
                 <p className="text-xs text-surface-500 dark:text-surface-400">{p.project_name}</p>
-                {p.planning && <p className="text-xs text-surface-500 mt-1">Assigned tasks: {p.planning.billable_task_ids.length} billable / {p.planning.non_billable_task_ids.length} non-billable<br />Task estimate: {p.planning.task_estimated_hours == null ? '—' : hours(p.planning.task_estimated_hours)} ({p.planning.estimated_task_count}/{p.planning.assigned_task_count} estimated)</p>}
+                {p.planning && <p className="text-xs text-surface-500 mt-1">Assigned tasks: {p.planning.billable_task_ids.length} productive / {p.planning.non_billable_task_ids.length} non-productive<br />Task estimate: {p.planning.task_estimated_hours == null ? '—' : hours(p.planning.task_estimated_hours)} ({p.planning.estimated_task_count}/{p.planning.assigned_task_count} estimated)</p>}
               </td>
               <td className={td}>{p.customer_name || '—'}</td>
               <td className={td}>{p.platform || 'Unmapped'}</td><td className={td}>{p.division || '—'}</td>
@@ -968,10 +968,10 @@ function TrendsReport({ data, grain, setGrain, openEntries }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             ['Total hours', hours(data.summary.total_hours), hours(previous.total_hours)],
-            ['Billable hours', hours(data.summary.billable_hours), hours(previous.billable_hours)],
+            ['Productive hours', hours(data.summary.billable_hours), hours(previous.billable_hours)],
             ['Coverage', pct(data.summary.coverage_pct), pct(previous.coverage_pct)],
             [
-              'Billable utilization',
+              'Productive utilization',
               pct(data.summary.billable_utilization_pct),
               pct(previous.billable_utilization_pct),
             ],
@@ -1040,12 +1040,12 @@ function TrendsReport({ data, grain, setGrain, openEntries }) {
         headers={[
           'Period',
           'Hours',
-          'Billable',
-          'Non-billable',
+          'Productive',
+          'Non-productive',
           'Unclassified',
           'Approved',
           'Coverage',
-          'Billable utilization',
+          'Productive utilization',
         ]}
       >
         {data.trends.map((t) => (
@@ -1161,7 +1161,7 @@ function EntryPage({ drill, user }) {
                       ['Entry division', r.entry_division],
                       ['Employee division', r.employee_division],
                       ['Location', r.subdivision_name],
-                      ['Billing', r.classification],
+                      ['Classification', r.classification],
                     ].map(([label, value]) => (
                       <div className="min-w-0" key={label}>
                         <dt className="text-surface-500 dark:text-surface-400">{label}</dt>

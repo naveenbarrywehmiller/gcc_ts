@@ -3,18 +3,21 @@ const assert = require('node:assert/strict');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(require('node:os').tmpdir(), `gcc-rules-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
 config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 const repo = require('../server/src/repositories/TimesheetRepository');
 const sp = require('../server/src/services/sharepoint');
-let server, base, employee, admin, manager, system, division, billable, nonbillable, unclassified, task, nonTask;
+let server, base, employee, admin, manager, system, division, productive, nonproductive, unclassified, task, nonTask;
 const week = { week: 41, year: 2026 };
-const entry = (overrides = {}) => ({ project_id: billable, task_id: task, project_description: 'Design work\nReviewed changes', work_date: '2026-10-05', hours: 4, ...overrides });
+const entry = (overrides = {}) => ({ project_id: productive, task_id: task, project_description: 'Design work\nReviewed changes', work_date: '2026-10-05', hours: 4, ...overrides });
 const assign = reviewer => db.prepare('INSERT OR REPLACE INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, reviewer, system);
 async function request(actor, route, body, method = 'POST') {
   const response = await fetch(base + route, { method,
@@ -29,9 +32,9 @@ before(async () => {
     .run(role, `${role}@rules.test`, 'unused', role, division).lastInsertRowid);
   employee = user('employee'); admin = user('admin'); manager = user('manager'); system = user('system admin');
   const project = (code, billing) => Number(db.prepare('INSERT INTO projects(project_code,project_name,billing_type,division_id) VALUES (?,?,?,?)').run(code, code, billing, division).lastInsertRowid);
-  billable = project('BILL', 'Billable'); nonbillable = project('INTERNAL', 'Non-Billable'); unclassified = project('LEGACY', null);
-  task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Billable')").run().lastInsertRowid);
-  nonTask = Number(db.prepare("INSERT INTO tasks(task_category,classification,requires_project) VALUES ('Meeting','Non-Billable',0)").run().lastInsertRowid);
+  productive = project('BILL', 'Productive'); nonproductive = project('INTERNAL', 'Non-Productive'); unclassified = project('LEGACY', null);
+  task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Productive')").run().lastInsertRowid);
+  nonTask = Number(db.prepare("INSERT INTO tasks(task_category,classification,requires_project) VALUES ('Meeting','Non-Productive',0)").run().lastInsertRowid);
   db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
@@ -56,7 +59,7 @@ test('single, batch and self-post reject missing fields, wrong billing tasks and
       assert.equal(db.prepare('SELECT COUNT(*) n FROM timesheets').get().n, 0);
     }
   }
-  for (const [table, id] of [['projects', billable], ['tasks', task]]) {
+  for (const [table, id] of [['projects', productive], ['tasks', task]]) {
     db.prepare(`UPDATE ${table} SET active = 0 WHERE id = ?`).run(id);
     assert.equal((await request(employee, '/timesheets', entry())).status, 400);
     db.prepare(`UPDATE ${table} SET active = 1 WHERE id = ?`).run(id);
@@ -64,7 +67,7 @@ test('single, batch and self-post reject missing fields, wrong billing tasks and
   // An irrelevant entries field must never bypass validation on the single-entry route.
   assert.equal((await request(employee, '/timesheets', entry({ project_id: null, entries: [] }))).status, 400);
   assert.equal((await request(employee, '/timesheets', entry())).status, 201);
-  assert.equal((await request(employee, '/timesheets', entry({ project_id: nonbillable, task_id: nonTask }))).status, 201);
+  assert.equal((await request(employee, '/timesheets', entry({ project_id: nonproductive, task_id: nonTask }))).status, 201);
   assert.equal((await request(employee, '/timesheets/batch', { entries: [entry({ hours: 0, project_description: undefined })] })).status, 200);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM timesheets').get().n, 1);
 });
@@ -163,7 +166,7 @@ test('project task assignment is required and obsolete task flags cannot disable
   const created = await request(system, '/projects', { project_code: 'NEW', project_name: 'New', non_billable_task_ids: [nonTask] });
   assert.equal(created.status, 201); assert.deepEqual(created.body.project.non_billable_task_ids, [nonTask]);
   assert.equal((await request(system, `/projects/${unclassified}`, { billable_task_ids: [task] }, 'PUT')).status, 200);
-  const createdTask = await request(system, '/tasks', { task_category: 'Legacy client', classification: 'Non-Billable', requires_project: false });
+  const createdTask = await request(system, '/tasks', { task_category: 'Legacy client', classification: 'Non-Productive', requires_project: false });
   assert.equal(createdTask.body.task.requires_project, 1);
   assert.equal((await request(system, `/tasks/${nonTask}`, { task_category: 'Meeting', requires_project: false }, 'PUT')).body.task.requires_project, 1);
 });

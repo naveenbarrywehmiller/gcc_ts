@@ -7,7 +7,7 @@ See [the setup and operations guide](README.md) for installation, menus and trou
 ## VERSION
 
 ```text
-1.0.0
+1.1.0
 ```
 
 ## install.sh
@@ -146,16 +146,18 @@ def setup_menu():
     name = c.hostname(prompt("Browser hostname", socket.gethostname().split('.')[0] + ".local"))
     web = choose_port("Website port", 8080)
     internal = choose_port("Internal loopback app port", 3001, address="127.0.0.1")
-    email = prompt("Initial system administrator email")
+    email = prompt("Initial system administrator email", "systemadmin@barry-wehmiller.com")
     if not email or not re.fullmatch(r"[^\s@'\"$]+@[^\s@'\"$]+\.[^\s@'\"$]+", email):
         raise ValueError("Enter a valid administrator email.")
-    password = getpass.getpass("Initial password (12+ characters; hidden): ")
-    if len(password) < 12 or any(char in password for char in "'\n\r\\"):
+    password = getpass.getpass("Initial password (blank uses systemadmin; custom: 12+ characters; hidden): ")
+    factory = not password and email == "systemadmin@barry-wehmiller.com"
+    if factory: password = "systemadmin"
+    if (not factory and len(password) < 12) or any(char in password for char in "'\n\r\\"):
         raise ValueError("Use 12+ characters without single quotes, backslashes or line breaks.")
-    if password != getpass.getpass("Confirm password: "):
+    if not factory and password != getpass.getpass("Confirm password: "):
         raise ValueError("Passwords do not match.")
     cfg = {"hostname": name, "web_port": web, "app_port": internal, "https": False,
-           "image_target": c.IMAGE + ":latest"}
+           "image_target": c.IMAGE + ":latest", "autostart": True}
     print(f"Install Docker/Nginx/Avahi and deploy {cfg['image_target']} at {c.origin(cfg)}.")
     if confirm("Proceed with installation?"):
         execute("setup", lambda: ops.setup(cfg, email, password))
@@ -198,9 +200,10 @@ def backup_settings_menu():
     execute("backup-settings", lambda: ops.save_schedules(settings))
 
 def list_backups():
+    print(f"Backup location: {c.BACKUPS}\nDatabase safety backups: {c.ROOT}/app-backup\nApplication database: {c.ROOT}/data/timesheet.db")
     paths = sorted(c.BACKUPS.glob("timesheet-*.tgz"), reverse=True)
     for index, path in enumerate(paths, 1):
-        print(f"{index:3}  {path.name}  {path.stat().st_size / 1024**2:.1f} MiB")
+        print(f"{index:3}  {path}  {path.stat().st_size / 1024**2:.1f} MiB")
     if not paths: print("No snapshots yet.")
     return paths
 
@@ -230,6 +233,10 @@ def status():
         print(f"Website: {c.origin(cfg)}\nUpdate channel: {cfg['image_target']}")
         ops.compose("ps", check=False)
         print(f"Maintenance gate: {(c.ROOT / 'maintenance.flag').exists()}")
+        print(f"Web maintenance (System Admin releases): {(c.ROOT / 'data/.maintenance').exists()}")
+        print(f"Automatic startup after reboot: {'enabled' if cfg.get('autostart', True) else 'disabled'}")
+        print(f"Actual container restart policy: {ops.inspect('{{.HostConfig.RestartPolicy.Name}}', check=False)}")
+        print(f"Backup location: {c.BACKUPS}\nDatabase: {c.ROOT}/data/timesheet.db")
     else: print("Application not configured. Choose Setup.")
     for job in ops.JOBS:
         setting = ops.schedules()[job]
@@ -248,6 +255,25 @@ def os_maintenance():
     c.run(["apt-get", "upgrade", "-y"])
     print("Reboot required." if Path("/var/run/reboot-required").exists() else "No reboot requested by packages.")
     print("Jobs remain paused. Check app health and resume when ready.")
+
+
+def autostart_menu():
+    enabled = c.config().get("autostart", True)
+    value = prompt("Start app automatically after OS reboot? y/n", "y" if enabled else "n").lower()
+    if value not in ("y", "n"): raise ValueError("Enter y or n.")
+    execute("autostart", lambda: ops.configure_autostart(value == "y"))
+
+
+def factory_reset_menu():
+    print("WARNING: Factory reset permanently removes ALL users, platforms, divisions, projects, tasks, timesheets, holidays, assignments, uploads and application logs.")
+    print(f"A complete safety snapshot is required before deletion: {c.BACKUPS}")
+    print("Only systemadmin@barry-wehmiller.com / systemadmin will remain. Automatic jobs will be paused.")
+    print("Server hostname, ports, HTTPS, secrets, backup archives and reboot startup settings are preserved.")
+    print("Web maintenance stays enabled until System Admin signs in in the browser.")
+    if input("Type FACTORY RESET to confirm: ").strip() == "FACTORY RESET":
+        execute("factory-reset", ops.factory_reset)
+    else:
+        print("Factory reset cancelled.")
 
 def menu():
     while True:
@@ -285,6 +311,8 @@ def menu():
  29  Edit application environment (private editor)
  30  Ubuntu/Docker package maintenance
  31  Open installed guide
+ 32  Configure app automatic startup after OS reboot (default enabled)
+ 33  Factory reset ALL application data (warning + automatic backup)
   0  Exit
 """)
         try:
@@ -328,6 +356,8 @@ def menu():
                 print("This upgrades Ubuntu packages, including Docker; a restart may be required.")
                 if confirm("Pause jobs, back up and run package upgrades?"): execute("os-maintenance", os_maintenance)
             elif choice == "31": subprocess.run(["less", str(c.SOURCE / "README.md")], check=True)
+            elif choice == "32": autostart_menu()
+            elif choice == "33": factory_reset_menu()
             else: print("Choose one of the listed numbers.")
         except (Exception, KeyboardInterrupt) as error:
             c.LOG.exception("MENU operation failed")
@@ -374,6 +404,14 @@ def main():
             elif args.command == "restore":
                 if not args.confirm or not args.value: raise ValueError("Use timesheet restore /absolute/backup.tgz --confirm")
                 ops.restore(Path(args.value))
+            elif args.command == "factory-reset":
+                if not args.confirm:
+                    raise ValueError(f"WARNING: Deletes ALL application data; only the factory System Admin remains. Automatic backup: {c.BACKUPS}. Use timesheet factory-reset --confirm")
+                ops.factory_reset()
+            elif args.command == "autostart":
+                if args.value not in ("enable", "disable"):
+                    raise ValueError("Use timesheet autostart enable|disable")
+                ops.configure_autostart(args.value == "enable")
             elif args.command in ("pause", "resume"): ops.pause(args.value or "all", args.command == "resume")
             elif args.command == "prune": ops.prune(args.confirm)
             elif args.command == "install-bundle": release.install(c.SOURCE, release.validate_tag(args.value or ""))
@@ -593,7 +631,7 @@ import secrets
 import shutil
 import socket
 import sqlite3
-from contextlib import closing
+from contextlib import closing, contextmanager
 import tarfile
 import tempfile
 import time
@@ -632,13 +670,39 @@ def gate(enabled=True):
         (c.ROOT / "maintenance.flag").unlink(missing_ok=True)
 
 
+def web_maintenance():
+    c.atomic(c.ROOT / "data/.maintenance", "Maintenance: release by System Admin web login only.\n", 0o644)
+
+
+@contextmanager
+def database_operation():
+    marker = c.ROOT / "data/.maintenance-operation"
+    # Share an exclusive marker with web database operations. Never overwrite a
+    # live operation (including one started through the browser).
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with marker.open("x") as handle:
+            handle.write("Database operation in progress\n")
+        marker.chmod(0o644)
+    except FileExistsError:
+        raise RuntimeError(f"A database operation is in progress: {marker}. See the guide for interrupted-operation recovery.")
+    try:
+        gate()
+        web_maintenance()
+        yield
+    finally:
+        web_maintenance()
+        marker.unlink(missing_ok=True)
+        print(f"Web maintenance remains enabled: {c.origin(c.config())}. System Admin must sign in to release it.")
+
+
 def health(timeout=180):
     port = c.config()["app_port"]
     until = time.monotonic() + timeout
     while time.monotonic() < until:
         try:
             if inspect("{{.State.Health.Status}}", check=False) == "healthy":
-                with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=5) as response:
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health/live", timeout=5) as response:
                     result = json.load(response)
                 if result.get("status") == "ok":
                     return result
@@ -650,6 +714,7 @@ def health(timeout=180):
 
 def start():
     gate()
+    write_compose(c.config())
     compose("up", "-d", "--pull", "never", "timesheet")
     result = health()
     gate(False)
@@ -674,14 +739,31 @@ def validate_config(cfg):
         raise ValueError("Website and internal app ports must differ.")
     if not isinstance(cfg["https"], bool):
         raise ValueError("Invalid HTTPS setting.")
+    if not isinstance(cfg.get("autostart", True), bool):
+        raise ValueError("Invalid automatic startup setting.")
     if not re.fullmatch(re.escape(c.IMAGE) + r"(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}|@sha256:[0-9a-f]{64})", cfg["image_target"]):
         raise ValueError("Image must belong to this project's GHCR repository.")
 
 
 def write_compose(cfg):
     template = (c.SOURCE / "compose.yaml").read_text()
+    template = template.replace("restart: always", 'restart: always' if cfg.get("autostart", True) else 'restart: "no"')
     c.atomic(c.ROOT / "compose.yaml", template.replace("127.0.0.1:3001:3001",
                                                      f'127.0.0.1:{cfg["app_port"]}:3001'), 0o644)
+
+
+def configure_autostart(enabled):
+    if not isinstance(enabled, bool):
+        raise ValueError("Automatic startup must be enabled or disabled.")
+    cfg = c.config()
+    # Apply to the existing container without starting an intentionally stopped app.
+    c.run(["docker", "update", "--restart=" + ("always" if enabled else "no"), "timesheet-app"])
+    cfg["autostart"] = enabled
+    c.save_config(cfg)
+    write_compose(cfg)
+    if enabled:
+        c.run(["systemctl", "enable", "docker", "nginx", "avahi-daemon"])
+    print("App startup after OS reboot: " + ("enabled" if enabled else "disabled"))
 
 
 def nginx_text(cfg):
@@ -906,17 +988,13 @@ def snapshot():
 
 def backup():
     active = running()
-    was_gated = (c.ROOT / "maintenance.flag").exists()
-    gate()
-    try:
-        compose("stop", "timesheet")
-        path = snapshot()
-    finally:
-        if active:
-            compose("up", "-d", "--pull", "never", "timesheet")
-            health()
-            if not was_gated:
-                gate(False)
+    with database_operation():
+        try:
+            compose("stop", "timesheet")
+            path = snapshot()
+        finally:
+            if active:
+                start()
     copy_offsite(path)
     return path
 
@@ -961,6 +1039,8 @@ def validate_archive(path, stage):
 def restore_snapshot(path):
     # Complete extraction, database verification and image availability checks
     # before replacing anything. Same-filesystem renames avoid copy failures.
+    operation_active = (c.ROOT / "data/.maintenance-operation").exists()
+    maintenance_active = (c.ROOT / "data/.maintenance").exists()
     with tempfile.TemporaryDirectory(prefix=".restore-", dir=c.ROOT) as temporary:
         stage = Path(temporary)
         metadata = validate_archive(path, stage)
@@ -984,6 +1064,15 @@ def restore_snapshot(path):
                 moved.append(name)
                 (stage / name).rename(destination)
             c.atomic(c.ROOT / ".image", image_id + "\n")
+            # Snapshot data can predate maintenance or include a stale operation
+            # marker. The current operation decides whether release is locked.
+            marker = c.ROOT / "data/.maintenance-operation"
+            if operation_active:
+                c.atomic(marker, "Database operation in progress\n", 0o644)
+            else:
+                marker.unlink(missing_ok=True)
+            if maintenance_active:
+                web_maintenance()
             write_nginx(c.config())
             start()
         except BaseException:
@@ -1006,19 +1095,54 @@ def restore(path):
     with tempfile.TemporaryDirectory(prefix=".verify-", dir=c.ROOT) as temporary:
         validate_archive(path, Path(temporary))
     pause("update")
-    stop()
-    safety = None
-    try:
-        safety = snapshot()
-        restore_snapshot(path)
-    except BaseException:
-        c.LOG.exception("Restore failed; recovering safety snapshot %s", safety)
-        if safety:
-            restore_snapshot(safety)
-        else:
-            start()
-        raise
+    with database_operation():
+        stop()
+        safety = None
+        try:
+            safety = snapshot()
+            restore_snapshot(path)
+        except BaseException:
+            c.LOG.exception("Restore failed; recovering safety snapshot %s", safety)
+            if safety:
+                restore_snapshot(safety)
+            else:
+                start()
+            raise
     print("Restore complete. Automatic app updates remain paused.")
+
+
+def factory_reset():
+    pause("all")
+    with database_operation():
+        stop()
+        safety = None
+        try:
+            safety = snapshot()
+            # Require the complete off-VM copy too, if configured, before deleting.
+            copy_offsite(safety)
+            compose("run", "--rm", "--no-deps", "--entrypoint", "node", "timesheet",
+                    "src/config/factoryReset.js", "--confirm")
+            # Database reset is atomic. Delete uploaded/test files and old app logs
+            # only after it succeeds; retain both full and database safety backups.
+            for name in ("uploads", "logs"):
+                target = (c.ROOT / name).resolve()
+                if target.parent != c.ROOT.resolve():
+                    raise RuntimeError("Invalid reset directory")
+                shutil.rmtree(target)
+                target.mkdir(mode=0o700)
+            c.env_update({"BOOTSTRAP_ADMIN_EMAIL": None, "BOOTSTRAP_ADMIN_PASSWORD": None, "SEED_DEMO_DATA": "false",
+                          "ENABLE_MSAL_AUTH": "false", "ENABLE_SHAREPOINT_SYNC": "false",
+                          "ENABLE_POWER_AUTOMATE": "false", "POWERBI_API_ENABLED": "false"})
+            start()
+        except BaseException:
+            c.LOG.exception("Factory reset failed; recovering safety snapshot %s", safety)
+            if safety:
+                restore_snapshot(safety)
+            else:
+                start()
+            raise
+    print(f"Factory reset complete. Safety snapshot: {safety}")
+    print("Only systemadmin@barry-wehmiller.com remains; password: systemadmin. Automatic jobs remain paused.")
 
 
 def app_update(retry=False):
@@ -1291,12 +1415,13 @@ services:
   timesheet:
     image: ${TIMESHEET_IMAGE:-ghcr.io/naveenbarrywehmiller/gcc_ts:latest}
     container_name: timesheet-app
-    restart: unless-stopped
+    restart: always
     env_file: .env
     environment:
       NODE_ENV: production
       PORT: "3001"
       DB_PATH: /app/server/data/timesheet.db
+      MAINTENANCE_FILE: /app/server/data/.maintenance
     ports:
       - "127.0.0.1:3001:3001"
     volumes:
@@ -1311,7 +1436,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health/live',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
       start_period: 30s

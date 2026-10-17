@@ -320,7 +320,7 @@ router.get('/holidays', (req, res) => {
  *
  * Supported query parameters:
  *   - active: 1 | 0
- *   - classification: Billable | Non-Billable
+ *   - classification: Productive | Non-Productive
  */
 router.get('/tasks', (req, res) => {
   try {

@@ -23,7 +23,9 @@ jobs:
           python3 -m compileall -q deploy/ubuntu
           python3 -m unittest discover -s deploy/ubuntu/tests -p 'test_*.py' -v
           python3 deploy/ubuntu/build_release.py --check
-      - name: Actual Ubuntu install, Docker, Nginx, backup and restore
+      - name: Build this revision's application for the deployment smoke test
+        run: docker build -t ghcr.io/naveenbarrywehmiller/gcc_ts:admin-ci .
+      - name: Actual Ubuntu install, Docker, Nginx, backup, restore and reset
         run: sudo --preserve-env=GITHUB_ACTIONS python3 deploy/ubuntu/tests/smoke_ubuntu.py
       - name: Diagnostics on failure
         if: failure()

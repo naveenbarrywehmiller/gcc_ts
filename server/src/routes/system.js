@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { randomUUID } = require('crypto');
 const { exec } = require('child_process');
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
@@ -13,24 +14,20 @@ const router = express.Router();
 router.use(authenticate);
 router.use(permit('system'));
 
-const maintenanceFile = path.join(__dirname, '..', '..', '.maintenance');
+const maintenance = require('../middleware/maintenance');
 
 // --- Maintenance Mode ---
 router.get('/maintenance', (req, res) => {
-  const enabled = fs.existsSync(maintenanceFile);
-  res.json({ enabled });
+  res.json({ enabled: maintenance.isEnabled(), operationInProgress: maintenance.isOperationActive() });
 });
 
 router.post('/maintenance', (req, res) => {
   const { enabled } = req.body;
   if (enabled) {
-    if (!fs.existsSync(maintenanceFile)) {
-      fs.writeFileSync(maintenanceFile, '');
-    }
+    maintenance.enable();
   } else {
-    if (fs.existsSync(maintenanceFile)) {
-      fs.unlinkSync(maintenanceFile);
-    }
+    if (maintenance.isOperationActive()) return res.status(409).json({ error: 'Database operation is still in progress' });
+    maintenance.disable();
   }
   res.json({ enabled: !!enabled });
 });
@@ -65,9 +62,11 @@ function getFormattedTimestamp(d = new Date()) {
 
 // --- Direct Download Database to PC ---
 router.get('/database/download', async (req, res) => {
+  if (maintenance.isOperationActive()) return res.status(409).json({ error: 'Another database operation is in progress' });
+  maintenance.beginOperation();
   const timestamp = getFormattedTimestamp();
   const filename = `timesheet-backup-${timestamp}.db`;
-  const tempFile = path.join(os.tmpdir(), filename);
+  const tempFile = path.join(os.tmpdir(), `${randomUUID()}-${filename}`);
 
   try {
     // WAL checkpoint to ensure recent changes are committed
@@ -107,6 +106,8 @@ router.get('/database/download', async (req, res) => {
       if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
     } catch {}
     res.status(500).json({ error: 'Failed to generate database backup', details: error.message });
+  } finally {
+    maintenance.endOperation();
   }
 });
 
@@ -124,6 +125,11 @@ router.post('/database/restore-upload', (req, res, next) => {
   }
 
   const uploadedPath = req.file.path;
+  if (maintenance.isOperationActive()) {
+    fs.rmSync(uploadedPath, { force: true });
+    return res.status(409).json({ error: 'Another database operation is in progress' });
+  }
+  maintenance.beginOperation();
 
   try {
     // 1. Validate SQLite magic header (first 16 bytes: "SQLite format 3\0")
@@ -158,12 +164,12 @@ router.post('/database/restore-upload', (req, res, next) => {
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir, { recursive: true });
     }
-    const safetyFile = path.join(backupDir, `timesheet-pre-restore-${getFormattedTimestamp()}.db`);
+    const safetyFile = path.join(backupDir, `timesheet-pre-restore-${getFormattedTimestamp()}-${randomUUID()}.db`);
     try {
       await db.backup(safetyFile);
       console.log(`[DB Restore] Safety backup created at: ${safetyFile}`);
     } catch (safetyErr) {
-      console.warn('[DB Restore] Could not create safety backup:', safetyErr.message);
+      throw new Error('Restore cancelled: safety backup failed: ' + safetyErr.message);
     }
 
     // 4. Safely checkpoint and close active database connection
@@ -214,18 +220,20 @@ router.post('/database/restore-upload', (req, res, next) => {
       if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
     } catch {}
     res.status(400).json({ error: err.message || 'Database restore failed' });
+  } finally {
+    maintenance.endOperation();
   }
 });
 
 // --- Server-Side Backup Script ---
-router.post('/backup', (req, res) => {
-  exec('npm run backup', { cwd: path.join(__dirname, '..', '..') }, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Backup error: ${error}`);
-      return res.status(500).json({ error: 'Backup failed', details: stderr });
-    }
-    res.json({ success: true, message: stdout });
-  });
+router.post('/backup', async (req, res) => {
+  if (maintenance.isOperationActive()) return res.status(409).json({ error: 'Another database operation is in progress' });
+  try {
+    const filename = await require('../config/backup').backupDatabase();
+    res.json({ success: true, message: `Backup: ${filename}. Maintenance remains enabled until System Admin web login.`, path: filename });
+  } catch (error) {
+    res.status(500).json({ error: 'Backup failed', details: error.message });
+  }
 });
 
 // --- Server-Side Restore Script ---

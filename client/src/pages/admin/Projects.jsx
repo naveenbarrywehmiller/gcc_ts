@@ -48,7 +48,7 @@ export default function AdminProjects() {
   const save = async e => {
     e.preventDefault();
     if (readOnly) return;
-    if (!(form.billable_task_ids?.length || form.non_billable_task_ids?.length)) { toast.error('Assign at least one Billable or Non-Billable task'); return; }
+    if (!(form.billable_task_ids?.length || form.non_billable_task_ids?.length)) { toast.error('Assign at least one Productive or Non-Productive task'); return; }
     setBusy(true);
     try {
       if (form.id) await api.put(`/projects/${form.id}`, form); else await api.post('/projects', form);
@@ -113,11 +113,11 @@ export default function AdminProjects() {
     </div>
     {(isError || options.isError) && <p role="alert" className="text-red-600">Unable to load projects. Please refresh and try again.</p>}
     <div className="table-container overflow-x-auto"><table className="w-full text-sm">
-      <thead><tr>{['Project Code', 'Project Name', 'Platform', 'Division', 'Location', 'Status', 'Budget Hours', 'Billable Tasks', 'Non-Billable Tasks', 'Task Estimated Hours', 'Actions'].map(h => <th key={h} className="p-3 text-left">{h}</th>)}</tr></thead>
+      <thead><tr>{['Project Code', 'Project Name', 'Platform', 'Division', 'Location', 'Status', 'Budget Hours', 'Productive Tasks', 'Non-Productive Tasks', 'Task Estimated Hours', 'Actions'].map(h => <th key={h} className="p-3 text-left">{h}</th>)}</tr></thead>
       <tbody>{data?.projects.map(p => <tr key={p.id} className="border-t border-surface-200 dark:border-surface-700">
         <td className="p-3">{p.project_code}</td><td className="p-3">{p.project_name}</td><td className="p-3">{p.platform_name || 'Unmapped'}</td><td className="p-3">{p.division_name || 'Unassigned'}</td><td className="p-3">{p.subdivision_name || '—'}</td>
         <td className="p-3"><ProjectStatus status={p.project_status} /></td><td className="p-3">{p.budget_hours ?? '—'}</td>
-        {['Billable', 'Non-Billable'].map(type => <td key={type} className="p-3"><ul className="min-w-32 space-y-1">{p.tasks?.filter(t => t.classification === type).map(t => <li key={t.id} className="[overflow-wrap:anywhere]">{t.task_category}{!t.active ? ' (inactive)' : ''}</li>)}</ul></td>)}
+        {['Productive', 'Non-Productive'].map(type => <td key={type} className="p-3"><ul className="min-w-32 space-y-1">{p.tasks?.filter(t => t.classification === type).map(t => <li key={t.id} className="[overflow-wrap:anywhere]">{t.task_category}{!t.active ? ' (inactive)' : ''}</li>)}</ul></td>)}
         <td className="p-3">{p.task_estimated_hours ?? '—'}<span className="block text-xs text-surface-500">{p.estimated_task_count}/{p.assigned_task_count} tasks estimated</span></td>
         <td className="p-3"><div className="flex flex-wrap items-center gap-2"><button className="btn-secondary btn-sm" disabled={busy} onClick={() => setForm({ ...p })}>{canManage && p.can_edit ? 'Edit' : 'View'}</button>{canManage && p.can_edit && <>{p.active === 1 && <button disabled={busy} className="btn-ghost btn-sm" onClick={() => openAction(p, 'deactivate')}>Deactivate</button>}<button disabled={busy} className="btn-ghost btn-sm text-red-600 dark:text-red-400" onClick={() => openAction(p, 'delete')}>Delete</button></>}</div></td>
       </tr>)}{!data?.projects.length && <tr><td colSpan={11} className="p-6 text-center">{isLoading ? 'Loading…' : 'No matching projects'}</td></tr>}</tbody>
@@ -153,7 +153,7 @@ export default function AdminProjects() {
         <p className="text-sm text-surface-500">Select at least one task across either category. You can select tasks in both categories. Task estimates are summed once per assignment; project Budget Hours remains a separate target.</p>
         {options.isError && <p role="alert" className="text-red-600">Task choices could not be loaded. Refresh to try again.</p>}
         <fieldset disabled={busy || options.isLoading || options.isError} className="grid min-w-0 grid-cols-1 md:grid-cols-2 gap-4">
-          {[['billable_task_ids', 'Billable'], ['non_billable_task_ids', 'Non-Billable']].map(([key, classification]) => <ProjectTaskPicker key={key} classification={classification} tasks={options.data?.tasks || form.tasks || []} selected={form[key] || []} readOnly={readOnly} onChange={ids => setForm({ ...form, [key]: ids })} />)}
+          {[['billable_task_ids', 'Productive'], ['non_billable_task_ids', 'Non-Productive']].map(([key, classification]) => <ProjectTaskPicker key={key} classification={classification} tasks={options.data?.tasks || form.tasks || []} selected={form[key] || []} readOnly={readOnly} onChange={ids => setForm({ ...form, [key]: ids })} />)}
         </fieldset>
       </div>
       {!readOnly && <button disabled={busy} className="btn-primary" type="submit">{busy ? 'Saving…' : 'Save Project'}</button>}</form>}

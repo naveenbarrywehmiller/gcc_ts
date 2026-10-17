@@ -3,12 +3,16 @@ const assert = require('node:assert/strict');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(require('node:os').tmpdir(), `gcc-access-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
 config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+db.exec("INSERT INTO supporting_categories(name) VALUES ('Flex Team'),('Dedicated Team')");
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 let server, base, a, b, system, admin, peer, manager, employee, foreign, unassigned, legacy, flexCategory, dedicatedCategory, task;
 async function request(actor, route, body, method = 'GET') {
@@ -38,8 +42,8 @@ before(async () => {
   db.prepare("INSERT INTO projects(project_code,project_name,division_id) VALUES ('AUDIT-A','A',?),('AUDIT-B','B',?)").run(a, b);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(manager, system, system);
-  db.exec("UPDATE projects SET billing_type = 'Billable'");
-  task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Billable')").run().lastInsertRowid);
+  db.exec("UPDATE projects SET billing_type = 'Productive'");
+  task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Productive')").run().lastInsertRowid);
   db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));

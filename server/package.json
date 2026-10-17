@@ -11,6 +11,7 @@
     "seed": "node src/config/seed.js",
     "setup": "npm run migrate && npm run seed",
     "backup": "node src/config/backup.js",
+    "factory-reset": "node src/config/factoryReset.js",
     "restore": "node src/config/restore.js",
     "test": "node --test ../scripts/*.test.js && node ../scripts/test-powerbi-api.js",
     "test:powerbi": "node ../scripts/test-powerbi-api.js"

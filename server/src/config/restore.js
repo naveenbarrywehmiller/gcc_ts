@@ -1,53 +1,48 @@
-/**
- * Database restore script.
- * Usage: node src/config/restore.js <path-to-backup.db>
- * 
- * Replaces the current SQLite database with the backup file.
- * The server SHOULD be stopped before running this.
- */
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const Database = require('better-sqlite3');
 const config = require('./env');
+const db = require('./db');
+const maintenance = require('../middleware/maintenance');
 
-const backupFile = process.argv[2];
-
-if (!backupFile) {
-  console.error('Usage: node src/config/restore.js <backup-file.db>');
-  console.error('Example: npm run restore -- ./backup/timesheet-2026-08-01.db');
-  process.exit(1);
-}
-
-const src = path.resolve(backupFile);
-
-if (!fs.existsSync(src)) {
-  console.error(`File not found: ${src}`);
-  process.exit(1);
-}
-
-const dbPath = config.dbPath;
-const dir = path.dirname(dbPath);
-
-// Ensure data directory exists
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
-}
-
-console.log(`Restoring from: ${src}`);
-console.log(`Target:         ${dbPath}`);
-
-// Copy the backup over the current DB
-fs.copyFileSync(src, dbPath);
-
-// Remove WAL and SHM files (they belong to the old DB)
-['-wal', '-shm'].forEach(suffix => {
+// Offline CLI: stop all application workers first. Browser restores use upload.
+async function restoreDatabase(source, confirmed = false) {
+  if (!source || !confirmed) throw new Error('Stop the app, then use npm run restore -- /absolute/backup.db --confirm');
+  const filename = path.resolve(source);
+  if (filename === config.dbPath) throw new Error('Select a backup file, not the active database');
+  const candidate = new Database(filename, { readonly: true, fileMustExist: true });
   try {
-    fs.unlinkSync(dbPath + suffix);
-    console.log(`Removed: ${dbPath}${suffix}`);
-  } catch (e) {
-    // file doesn't exist — that's fine
-  }
-});
-
-console.log('');
-console.log('Database restored successfully.');
-console.log('Restart the server to apply the restored database.');
+    if (candidate.pragma('integrity_check', { simple: true }) !== 'ok') throw new Error('Backup integrity check failed');
+    if (!candidate.prepare("SELECT 1 FROM users WHERE role='system admin' AND active=1 LIMIT 1").get()) throw new Error('Backup requires an active System Admin to release maintenance');
+  } finally { candidate.close(); }
+  maintenance.beginOperation();
+  const directory = path.resolve(__dirname, '../../backup');
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-') + '-' + crypto.randomBytes(3).toString('hex');
+  const safety = path.join(directory, `timesheet-pre-restore-${stamp}.db`);
+  try {
+    fs.mkdirSync(directory, { recursive: true });
+    await db.backup(safety);
+    console.log(`Safety backup: ${safety}`);
+    db._close();
+    for (const suffix of ['-wal', '-shm']) fs.rmSync(config.dbPath + suffix, { force: true });
+    try {
+      fs.copyFileSync(filename, config.dbPath);
+      db._reopen();
+      require('./migrate').migrate();
+    } catch (error) {
+      db._close();
+      for (const suffix of ['-wal', '-shm']) fs.rmSync(config.dbPath + suffix, { force: true });
+      fs.copyFileSync(safety, config.dbPath);
+      db._reopen();
+      throw error;
+    }
+    console.log(`Restored: ${filename}\nDatabase: ${config.dbPath}\nMaintenance remains enabled until System Admin web login.`);
+    return safety;
+  } finally { maintenance.endOperation(); }
+}
+if (require.main === module) {
+  restoreDatabase(process.argv[2], process.argv.includes('--confirm'))
+    .catch(error => { console.error(error.message); process.exitCode = 1; }).finally(() => db._close());
+}
+module.exports = { restoreDatabase };

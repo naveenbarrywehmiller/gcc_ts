@@ -46,16 +46,18 @@ def setup_menu():
     name = c.hostname(prompt("Browser hostname", socket.gethostname().split('.')[0] + ".local"))
     web = choose_port("Website port", 8080)
     internal = choose_port("Internal loopback app port", 3001, address="127.0.0.1")
-    email = prompt("Initial system administrator email")
+    email = prompt("Initial system administrator email", "systemadmin@barry-wehmiller.com")
     if not email or not re.fullmatch(r"[^\s@'\"$]+@[^\s@'\"$]+\.[^\s@'\"$]+", email):
         raise ValueError("Enter a valid administrator email.")
-    password = getpass.getpass("Initial password (12+ characters; hidden): ")
-    if len(password) < 12 or any(char in password for char in "'\n\r\\"):
+    password = getpass.getpass("Initial password (blank uses systemadmin; custom: 12+ characters; hidden): ")
+    factory = not password and email == "systemadmin@barry-wehmiller.com"
+    if factory: password = "systemadmin"
+    if (not factory and len(password) < 12) or any(char in password for char in "'\n\r\\"):
         raise ValueError("Use 12+ characters without single quotes, backslashes or line breaks.")
-    if password != getpass.getpass("Confirm password: "):
+    if not factory and password != getpass.getpass("Confirm password: "):
         raise ValueError("Passwords do not match.")
     cfg = {"hostname": name, "web_port": web, "app_port": internal, "https": False,
-           "image_target": c.IMAGE + ":latest"}
+           "image_target": c.IMAGE + ":latest", "autostart": True}
     print(f"Install Docker/Nginx/Avahi and deploy {cfg['image_target']} at {c.origin(cfg)}.")
     if confirm("Proceed with installation?"):
         execute("setup", lambda: ops.setup(cfg, email, password))
@@ -98,9 +100,10 @@ def backup_settings_menu():
     execute("backup-settings", lambda: ops.save_schedules(settings))
 
 def list_backups():
+    print(f"Backup location: {c.BACKUPS}\nDatabase safety backups: {c.ROOT}/app-backup\nApplication database: {c.ROOT}/data/timesheet.db")
     paths = sorted(c.BACKUPS.glob("timesheet-*.tgz"), reverse=True)
     for index, path in enumerate(paths, 1):
-        print(f"{index:3}  {path.name}  {path.stat().st_size / 1024**2:.1f} MiB")
+        print(f"{index:3}  {path}  {path.stat().st_size / 1024**2:.1f} MiB")
     if not paths: print("No snapshots yet.")
     return paths
 
@@ -130,6 +133,10 @@ def status():
         print(f"Website: {c.origin(cfg)}\nUpdate channel: {cfg['image_target']}")
         ops.compose("ps", check=False)
         print(f"Maintenance gate: {(c.ROOT / 'maintenance.flag').exists()}")
+        print(f"Web maintenance (System Admin releases): {(c.ROOT / 'data/.maintenance').exists()}")
+        print(f"Automatic startup after reboot: {'enabled' if cfg.get('autostart', True) else 'disabled'}")
+        print(f"Actual container restart policy: {ops.inspect('{{.HostConfig.RestartPolicy.Name}}', check=False)}")
+        print(f"Backup location: {c.BACKUPS}\nDatabase: {c.ROOT}/data/timesheet.db")
     else: print("Application not configured. Choose Setup.")
     for job in ops.JOBS:
         setting = ops.schedules()[job]
@@ -148,6 +155,25 @@ def os_maintenance():
     c.run(["apt-get", "upgrade", "-y"])
     print("Reboot required." if Path("/var/run/reboot-required").exists() else "No reboot requested by packages.")
     print("Jobs remain paused. Check app health and resume when ready.")
+
+
+def autostart_menu():
+    enabled = c.config().get("autostart", True)
+    value = prompt("Start app automatically after OS reboot? y/n", "y" if enabled else "n").lower()
+    if value not in ("y", "n"): raise ValueError("Enter y or n.")
+    execute("autostart", lambda: ops.configure_autostart(value == "y"))
+
+
+def factory_reset_menu():
+    print("WARNING: Factory reset permanently removes ALL users, platforms, divisions, projects, tasks, timesheets, holidays, assignments, uploads and application logs.")
+    print(f"A complete safety snapshot is required before deletion: {c.BACKUPS}")
+    print("Only systemadmin@barry-wehmiller.com / systemadmin will remain. Automatic jobs will be paused.")
+    print("Server hostname, ports, HTTPS, secrets, backup archives and reboot startup settings are preserved.")
+    print("Web maintenance stays enabled until System Admin signs in in the browser.")
+    if input("Type FACTORY RESET to confirm: ").strip() == "FACTORY RESET":
+        execute("factory-reset", ops.factory_reset)
+    else:
+        print("Factory reset cancelled.")
 
 def menu():
     while True:
@@ -185,6 +211,8 @@ def menu():
  29  Edit application environment (private editor)
  30  Ubuntu/Docker package maintenance
  31  Open installed guide
+ 32  Configure app automatic startup after OS reboot (default enabled)
+ 33  Factory reset ALL application data (warning + automatic backup)
   0  Exit
 """)
         try:
@@ -228,6 +256,8 @@ def menu():
                 print("This upgrades Ubuntu packages, including Docker; a restart may be required.")
                 if confirm("Pause jobs, back up and run package upgrades?"): execute("os-maintenance", os_maintenance)
             elif choice == "31": subprocess.run(["less", str(c.SOURCE / "README.md")], check=True)
+            elif choice == "32": autostart_menu()
+            elif choice == "33": factory_reset_menu()
             else: print("Choose one of the listed numbers.")
         except (Exception, KeyboardInterrupt) as error:
             c.LOG.exception("MENU operation failed")
@@ -274,6 +304,14 @@ def main():
             elif args.command == "restore":
                 if not args.confirm or not args.value: raise ValueError("Use timesheet restore /absolute/backup.tgz --confirm")
                 ops.restore(Path(args.value))
+            elif args.command == "factory-reset":
+                if not args.confirm:
+                    raise ValueError(f"WARNING: Deletes ALL application data; only the factory System Admin remains. Automatic backup: {c.BACKUPS}. Use timesheet factory-reset --confirm")
+                ops.factory_reset()
+            elif args.command == "autostart":
+                if args.value not in ("enable", "disable"):
+                    raise ValueError("Use timesheet autostart enable|disable")
+                ops.configure_autostart(args.value == "enable")
             elif args.command in ("pause", "resume"): ops.pause(args.value or "all", args.command == "resume")
             elif args.command == "prune": ops.prune(args.confirm)
             elif args.command == "install-bundle": release.install(c.SOURCE, release.validate_tag(args.value or ""))

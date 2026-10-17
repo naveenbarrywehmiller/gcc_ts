@@ -201,7 +201,7 @@ coverage=[
 ('Effort / schedule / on-time','Available at project grain','Budget vs project lifetime actuals for projects delivered in selected dates. Project delivery is not treated as a deliverable count.'),
 ('Team strength / dedicated / flex','Available','Current active roster and distinct contributing employees are separate. Employee supportingCategory defines Dedicated/Flex.'),
 ('Vacation / holidays / capacity','Available with assumptions','Historical recorded leave; future planned vacation. Capacity is a current-roster estimate, not historical contracted capacity.'),
-('Training / internal / admin hours','Available','Explicit HourCategoryMap. Edit mappings to match production task categories; do not infer from billable flag.'),
+('Training / internal / admin hours','Available','Explicit HourCategoryMap. Edit mappings to match production task categories; do not infer from productive flag.'),
 ('Forecast / scheduled hours','Available as estimate','Budget spread evenly across working dates. No resource assignment exists; department-specific demand is blank.'),
 ('Products touched','Available','Distinct project products with submitted/approved work in selected dates; blank products excluded.'),
 ('Improvement / designed / developed','Available at weekly grain','Deduplicated weekly row details, attributed to Monday. Conflicting copies block counts.'),

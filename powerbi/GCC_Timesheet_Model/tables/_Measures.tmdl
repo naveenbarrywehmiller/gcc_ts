@@ -62,19 +62,19 @@ table _Measures
 		displayFolder: 02 Status
 		lineageTag: 8fde07c0-6a3b-4074-b428-af461535cb0a
 
-	measure 'Billable Hours' = CALCULATE([Total Hours], FactTimesheet[isBillable] = TRUE())
+	measure 'Productive Hours' = CALCULATE([Total Hours], FactTimesheet[isBillable] = TRUE())
 		formatString: #,##0.0
-		displayFolder: 03 Billing
+		displayFolder: 03 Classification
 		lineageTag: 50b211ac-7e66-4023-b9b3-dfa3de3066da
 
-	measure 'Non-Billable Hours' = CALCULATE([Total Hours], FactTimesheet[isBillable] = FALSE())
+	measure 'Non-Productive Hours' = CALCULATE([Total Hours], FactTimesheet[isBillable] = FALSE())
 		formatString: #,##0.0
-		displayFolder: 03 Billing
+		displayFolder: 03 Classification
 		lineageTag: 1fc560da-69bb-4aa4-84eb-6b86b4756b1a
 
-	measure 'Billable Percentage' = DIVIDE([Billable Hours], [Total Hours], 0)
+	measure 'Productive Percentage' = DIVIDE([Productive Hours], [Total Hours], 0)
 		formatString: 0.0%
-		displayFolder: 03 Billing
+		displayFolder: 03 Classification
 		lineageTag: c7e73f0f-204d-4c1b-808e-2ea156c3f4ce
 
 	measure 'Submission Rate' = VAR SubmittedOrBeyond = CALCULATE([Total Entries], FactTimesheet[status] IN {"submitted", "approved", "rejected", "recalled"}) RETURN DIVIDE(SubmittedOrBeyond, [Total Entries], 0)

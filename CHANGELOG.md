@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.30.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.29.0...v1.30.0) (2026-10-17)
+
+### Features
+
+* Fresh installs contain only the System Admin account and no sample business data.
+* Productive and Non-Productive classifications throughout forms, reports, exports and local Power BI labels, with historical migration.
+* Linux reboot startup configuration (enabled by default), factory reset with warning, mandatory safety backups and recovery.
+* Persistent maintenance during backup/restore/reset, released through the web by System Admin only.
+* Absolute backup paths, native SQLite backups and compatibility with older spreadsheet task assignment headings.
+
+### Validation
+
+* 132 Node tests, 55 reporting API checks, 23 deployment tests and 448 responsive checks passed locally.
+* Companion Linux administrator: 1.1.0.
+
 ## [1.29.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.28.0...v1.29.0) (2026-10-16)
 
 

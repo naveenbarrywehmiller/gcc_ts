@@ -1034,7 +1034,7 @@ export default function Timesheet() {
                             <span className="text-xs font-semibold text-surface-900 dark:text-white truncate">
                               {row.project_id 
                                 ? `${row.division_name || 'N/A'}${row.subdivision_name ? ` > ${row.subdivision_name}` : ''}`
-                                : (row.classification || 'Non-Billable')
+                                : (row.classification || 'Non-Productive')
                               }
                             </span>
                             {row.status !== 'draft' && (

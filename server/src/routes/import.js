@@ -99,7 +99,8 @@ router.post('/projects', authenticate, authorize('admin'), upload.single('file')
       data.forEach((row, index) => {
         const input = { division_id: req.body.division_id || null };
         for (const [key, header] of columns) {
-          let value = row[header] ?? row[key];
+          const legacyHeader = { billable_task_ids: 'Billable Task IDs', non_billable_task_ids: 'Non-Billable Task IDs' }[key];
+          let value = row[header] ?? row[key] ?? row[legacyHeader];
           if (['billable_task_ids', 'non_billable_task_ids'].includes(key) && typeof value === 'number') value = String(value);
           if (value instanceof Date) value = value.toISOString().slice(0, 10);
           if (value !== undefined) input[key] = value;

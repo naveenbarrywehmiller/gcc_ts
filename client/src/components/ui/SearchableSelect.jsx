@@ -113,7 +113,7 @@ export default function SearchableSelect({
                       className={`w-full min-h-[44px] px-3 py-2 text-left text-sm flex items-center justify-between hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors
                         ${isSelected ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-400' : 'text-surface-700 dark:text-surface-300'}`}
                     >
-                      <span className="truncate">{lbl}</span>
+                      <span className="min-w-0 whitespace-normal [overflow-wrap:anywhere]">{lbl}</span>
                       {isSelected && <Check className="w-4 h-4 shrink-0 text-brand-600 dark:text-brand-400" />}
                     </button>
                   );

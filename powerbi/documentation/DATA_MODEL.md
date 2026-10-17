@@ -52,10 +52,10 @@ The central fact table containing individual timesheet entries.
 | `project` | Text | `p.project_name` | Project name |
 | `projectCode` | Text | `p.project_code` | Project code (FK → DimProject) |
 | `projectCategory` | Text | `tk.task_category` | Task category |
-| `taskClassification` | Text | `tk.classification` | Billable/Non-Billable |
+| `taskClassification` | Text | `tk.classification` | Productive/Non-Productive |
 | `hours` | Decimal Number | `t.hours` | Hours worked (0–24) |
 | `status` | Text | `t.status` | Entry status |
-| `isBillable` | True/False | `t.billable` | Billable flag |
+| `isBillable` | True/False | `t.productive` | Productive flag |
 | `submissionDate` | DateTime | Computed | When timesheet was submitted |
 | `approvalDate` | DateTime | Computed | When timesheet was approved |
 | `createdDate` | DateTime | `t.created_at` | Record creation timestamp |

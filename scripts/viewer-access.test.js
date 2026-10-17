@@ -4,6 +4,7 @@ const path = require('node:path');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = path.join(require('node:os').tmpdir(), `gcc-viewer-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
@@ -11,6 +12,8 @@ config.enablePowerAutomate = false;
 config.rateLimitMax = 10000;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 const bcrypt = require('../server/node_modules/bcryptjs');
 const ExcelJS = require('../server/node_modules/exceljs');
@@ -35,10 +38,10 @@ before(async () => {
   }
   addUser('[Deleted User]', 'employee', south, 0);
   for (const key of ['employee', 'outsider']) db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(users[key], users.system, users.system);
-  const project = (code, id) => Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id,division,billing_type,customer_name) VALUES (?,?,?,?,'Billable',?)")
+  const project = (code, id) => Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id,division,billing_type,customer_name) VALUES (?,?,?,?,'Productive',?)")
     .run(code, code, id, id === north ? 'Viewer North' : 'Viewer South', id === north ? 'North Customer' : 'South Customer').lastInsertRowid);
   projectA = project('VIEW-NORTH', north); projectB = project('VIEW-SOUTH', south);
-  task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Viewer Engineering','Billable')").run().lastInsertRowid);
+  task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Viewer Engineering','Productive')").run().lastInsertRowid);
   db.prepare("INSERT INTO tasks(task_category,active) VALUES ('Viewer Retired',0)").run();
   for (const [person, projectId, divisionId, hours] of [['employee', projectA, north, 4], ['outsider', projectB, south, 8]]) {
     db.prepare("INSERT INTO timesheets(user_id,project_id,division_id,task_id,work_date,hours,week_number,week_year,status,project_description) VALUES (?,?,?,?,'2026-10-05',?,41,2026,'submitted','Viewer readable description')")
@@ -127,7 +130,7 @@ test('Viewer report filters and Excel/PDF downloads operate across all divisions
   assert.equal(all.summary.expected_hours, 200);
   assert(!all.utilization.some(row => row.id === users.viewer));
   assert(!all.missing.some(row => row.id === users.viewer));
-  const filters = `${range}&division_id=${south}&user_id=${users.outsider}&project_id=${projectB}&task_id=${task}&customer=South%20Customer&billing_type=Billable&status=submitted`;
+  const filters = `${range}&division_id=${south}&user_id=${users.outsider}&project_id=${projectB}&task_id=${task}&customer=South%20Customer&billing_type=Productive&status=submitted`;
   const filtered = (await request('/reports/analysis?' + filters)).body;
   assert.equal(filtered.summary.total_hours, 8);
   const entries = (await request('/reports/entries?' + filters)).body;

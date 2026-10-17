@@ -3,12 +3,13 @@ services:
   timesheet:
     image: ${TIMESHEET_IMAGE:-ghcr.io/naveenbarrywehmiller/gcc_ts:latest}
     container_name: timesheet-app
-    restart: unless-stopped
+    restart: always
     env_file: .env
     environment:
       NODE_ENV: production
       PORT: "3001"
       DB_PATH: /app/server/data/timesheet.db
+      MAINTENANCE_FILE: /app/server/data/.maintenance
     ports:
       - "127.0.0.1:3001:3001"
     volumes:
@@ -23,7 +24,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health/live',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
       start_period: 30s

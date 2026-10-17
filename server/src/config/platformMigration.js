@@ -7,8 +7,10 @@ module.exports = function platformMigration(db) {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );`);
     if (!db.prepare('PRAGMA table_info(divisions)').all().some(c => c.name === 'platform_id')) {
-      db.prepare('INSERT OR IGNORE INTO platforms(name) VALUES (?)').run('Legacy / Unmapped');
-      const legacy = db.prepare('SELECT id FROM platforms WHERE name = ?').get('Legacy / Unmapped').id;
+      // Only old databases with divisions need a legacy mapping.
+      const hasDivisions = !!db.prepare('SELECT 1 FROM divisions LIMIT 1').get();
+      if (hasDivisions) db.prepare('INSERT OR IGNORE INTO platforms(name) VALUES (?)').run('Legacy / Unmapped');
+      const legacy = hasDivisions ? db.prepare('SELECT id FROM platforms WHERE name = ?').get('Legacy / Unmapped').id : 1;
       // SQLite cannot add a non-null REFERENCES column with a non-null default when
       // FK checks are enabled. Triggers enforce the reference without rebuilding IDs.
       db.exec(`ALTER TABLE divisions ADD COLUMN platform_id INTEGER NOT NULL DEFAULT ${legacy};`);

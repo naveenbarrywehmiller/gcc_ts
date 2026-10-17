@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(require('node:os').tmpdir(), `gcc-platforms-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
@@ -33,7 +34,7 @@ before(async () => {
   system=user('system','system admin',null); admin=user('admin','admin',a); employee=user('employee','employee',a); outsider=user('outsider','employee',b);
   db.prepare('INSERT INTO admin_divisions(user_id,division_id) VALUES (?,?)').run(admin,a);
   for (const id of [employee,outsider]) db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id) VALUES (?,?)').run(id,system);
-  task=Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Billable')").run().lastInsertRowid);
+  task=Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Productive')").run().lastInsertRowid);
   const makeProject = (code,division) => {
     const id=Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)').run(code,code,division).lastInsertRowid);
     db.prepare('INSERT INTO project_tasks(project_id,task_id) VALUES (?,?)').run(id,task); return id;

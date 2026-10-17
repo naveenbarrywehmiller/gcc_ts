@@ -7,10 +7,13 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'gcc-changes-'));
 process.env.SYSTEM_ERROR_LOG_PATH = path.join(temp, 'errors.jsonl');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:'; config.enableSharepointSync = false; config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 const ExcelJS = require('../server/node_modules/exceljs');
 let server, base, admin, system, employee, divA, divB, task, projectB;
@@ -24,7 +27,7 @@ async function request(user, route, body, method = 'POST') {
   return { status: response.status, body: await response.json() };
 }
 function csv(text, division = divA) {
-  text = text.split('\n').map((line, i) => line + (i === 0 ? ',Billable Task IDs' : `,${task}`)).join('\n');
+  text = text.split('\n').map((line, i) => line + (i === 0 ? ',Productive Task IDs' : `,${task}`)).join('\n');
   const form = new FormData(); form.append('file', new Blob([text]), 'projects.csv');
   if (division) form.append('division_id', division);
   return form;
@@ -38,7 +41,7 @@ before(async () => {
   task = Number(db.prepare('INSERT INTO tasks(task_category,requires_project) VALUES (?,0)').run('Task').lastInsertRowid);
   projectB = Number(db.prepare('INSERT INTO projects(project_code,project_name,division_id) VALUES (?,?,?)').run('B-SECRET','Other Division',divB).lastInsertRowid);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, admin);
-  db.exec("UPDATE projects SET billing_type = 'Billable'; UPDATE tasks SET classification = 'Billable'");
+  db.exec("UPDATE projects SET billing_type = 'Productive'; UPDATE tasks SET classification = 'Productive'");
   db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); base = `http://127.0.0.1:${server.address().port}/api`;
 });
@@ -190,7 +193,7 @@ test('Excel project import validates active sidebar values with row errors and n
   async function upload(rows) {
     const book = new ExcelJS.Workbook();
     const sheet = book.addWorksheet('Projects');
-    sheet.addRow(['Project Code', 'Project Name', 'Work Type', 'Dedicated/Flex', 'Billable Task IDs']);
+    sheet.addRow(['Project Code', 'Project Name', 'Work Type', 'Dedicated/Flex', 'Productive Task IDs']);
     rows.forEach(row => sheet.addRow([...row, String(task)]));
     const form = new FormData();
     form.append('file', new Blob([await book.xlsx.writeBuffer()]), 'projects.xlsx');

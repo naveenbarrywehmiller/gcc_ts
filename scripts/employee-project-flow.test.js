@@ -5,12 +5,15 @@ const os = require('node:os');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = path.join(os.tmpdir(), `gcc-employee-flow-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
 config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 const bcrypt = require('../server/node_modules/bcryptjs');
 const { descriptionMaxLength } = require('../shared/timesheetLimits.json');
@@ -46,8 +49,8 @@ before(async () => {
     .run(role, `${role.replace(' ', '')}@flow.test`, hash, role, division).lastInsertRowid);
   employee = user('employee'); admin = user('admin'); system = user('system admin'); manager = user('manager');
   project = Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id,subdivision_id) VALUES ('FLOW','Flow Project',?,?)").run(division, location).lastInsertRowid);
-  db.prepare("UPDATE projects SET billing_type = 'Billable' WHERE id = ?").run(project);
-  task = Number(db.prepare("INSERT INTO tasks(task_category,classification,requires_project) VALUES ('Design','Billable',1)").run().lastInsertRowid);
+  db.prepare("UPDATE projects SET billing_type = 'Productive' WHERE id = ?").run(project);
+  task = Number(db.prepare("INSERT INTO tasks(task_category,classification,requires_project) VALUES ('Design','Productive',1)").run().lastInsertRowid);
   db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));

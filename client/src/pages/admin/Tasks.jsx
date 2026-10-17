@@ -83,7 +83,7 @@ export default function AdminTasks() {
             {filtered.map(t => (
               <tr key={t.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors">
                 <td className="px-4 py-3">
-                  <span className={`badge ${t.classification === 'Billable' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'}`}>
+                  <span className={`badge ${t.classification === 'Productive' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'}`}>
                     {t.classification || 'N/A'}
                   </span>
                 </td>
@@ -111,8 +111,8 @@ export default function AdminTasks() {
             <label htmlFor="task-classification" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Classification *</label>
             <select id="task-classification" className="input" value={form.classification || ''} onChange={e => setForm({ ...form, classification: e.target.value })}>
               <option value="">Select...</option>
-              <option value="Billable">Billable</option>
-              <option value="Non-Billable">Non-Billable</option>
+              <option value="Productive">Productive</option>
+              <option value="Non-Productive">Non-Productive</option>
             </select>
           </div>
           <div>

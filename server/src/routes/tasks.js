@@ -45,7 +45,7 @@ router.put('/:id', authenticate, permit('tasks'), (req, res) => {
   const data = validateTask(req.body, existing);
   if (data.classification !== existing.classification &&
       (db.prepare('SELECT 1 FROM project_tasks WHERE task_id = ? LIMIT 1').get(taskId) || db.prepare('SELECT 1 FROM timesheets WHERE task_id = ? LIMIT 1').get(taskId))) {
-    return res.status(409).json({ error: 'Classification cannot change for an assigned or logged task. Create a new task to preserve billing history.' });
+    return res.status(409).json({ error: 'Classification cannot change for an assigned or logged task. Create a new task to preserve classification history.' });
   }
   db.prepare(`UPDATE tasks SET ${Object.keys(data).map(k => `${k} = ?`).join(',')}, requires_project = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(...Object.values(data), taskId);
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);

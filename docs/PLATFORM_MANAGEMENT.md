@@ -9,7 +9,7 @@ Implemented October 16, 2026 for application v1.29.0 and Power BI source package
 - User Edit places Platforms before Divisions. Admin and Employee accounts support multiple Divisions, with one selected primary Division. Other roles retain their existing primary-Division semantics and can have multiple descriptive Platform assignments. Existing role permissions are unchanged.
 - The shared picker supports search, Select filtered, Clear filtered, Show selected only, individual checkboxes and selected counts. Bulk changes affect only visible, editable results. Search changes preserve hidden selections. Removing a Platform prompts before removing its selected Divisions. Grants outside the editing Admin's scope are visible but disabled.
 - Project Edit selects Platform before Division and displays each selectable user's Platforms and Divisions. **Existing division access** preserves the previous access model. **Selected users only** additionally restricts booking to explicitly selected users with an actual assignment to the Project Division. An empty selected-user list admits nobody. Switching Platform/Division clears the pending user selection, which is validated again on save.
-- Existing Billable and Non-Billable task pickers use the same shared component. Read-only project views retain searchable task/user lists with disabled assignment checkboxes.
+- Existing Productive and Non-Productive task pickers use the same shared component. Read-only project views retain searchable task/user lists with disabled assignment checkboxes.
 
 ## Schema and migration
 

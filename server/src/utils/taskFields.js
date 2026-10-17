@@ -3,7 +3,7 @@ const planningFields = ['estimated_hours', 'input_received_date', 'start_date', 
 function validateTask(input, existing = {}) {
   const data = { ...existing, ...input };
   if (typeof data.task_category !== 'string' || !data.task_category.trim()) fail('Task Name/Number is required');
-  if (!['Billable', 'Non-Billable'].includes(data.classification)) fail('Select Billable or Non-Billable classification');
+  if (!['Productive', 'Non-Productive'].includes(data.classification)) fail('Select Productive or Non-Productive classification');
   const result = { task_category: data.task_category.trim(), classification: data.classification, task_description: data.task_description || null };
   if (result.task_category.length > 1000 || (result.task_description !== null && typeof result.task_description !== 'string')) fail('Invalid task name or description');
   for (const key of planningFields) {

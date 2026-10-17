@@ -12,7 +12,7 @@ const columns = [
   ['budget_hours', 'Budget Hours'], ['project_status', 'Status'],
   ['division', 'Division'], ['location', 'Location'],
   ['customer_name', 'Customer Name'], ['activity', 'Work Type'], ['team_type', 'Dedicated/Flex'],
-  ['billable_task_ids', 'Billable Task IDs'], ['non_billable_task_ids', 'Non-Billable Task IDs'],
+  ['billable_task_ids', 'Productive Task IDs'], ['non_billable_task_ids', 'Non-Productive Task IDs'],
 ];
 const extraFields = columns.slice(2, 14).map(([key]) => key);
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };

@@ -5,6 +5,7 @@ const path = require('node:path');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(require('node:os').tmpdir(), `gcc-test-errors-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 const app = require('../server/src/index');
@@ -13,12 +14,13 @@ const bcrypt = require('../server/node_modules/bcryptjs');
 
 test('maintenance login enforces system admin credentials and restores access', async (t) => {
   // Simulate only the maintenance flag; never change a developer's real flag/database.
-  const flag = path.resolve(__dirname, '../server/.maintenance');
+  const flag = path.resolve(process.env.MAINTENANCE_FILE);
   const existsSync = fs.existsSync;
   const unlinkSync = fs.unlinkSync;
   let enabled = true;
   let cannotRemove = false;
-  t.mock.method(fs, 'existsSync', file => path.resolve(String(file)) === flag ? enabled : existsSync(file));
+  let operationActive = false;
+  t.mock.method(fs, 'existsSync', file => path.resolve(String(file)) === flag ? enabled : path.resolve(String(file)) === flag + '-operation' ? operationActive : existsSync(file));
   t.mock.method(fs, 'unlinkSync', file => {
     if (path.resolve(String(file)) !== flag) return unlinkSync(file);
     if (cannotRemove) throw Object.assign(new Error('Permission denied'), { code: 'EACCES' });
@@ -42,6 +44,7 @@ test('maintenance login enforces system admin credentials and restores access', 
     assert.equal(page.headers.get('cache-control'), 'no-store');
     assert.match(await page.text(), /System admin login/);
     assert.equal((await fetch(base + '/api/health')).status, 503);
+    assert.equal((await fetch(base + '/api/health/live')).status, 200);
     assert.equal((await fetch(base + '/api/auth/ms-callback', { method: 'POST' })).status, 503);
     for (const email of ['employee@test.invalid', 'manager@test.invalid', 'admin@test.invalid']) {
       for (const endpoint of ['login', 'maintenance-login']) {
@@ -55,6 +58,10 @@ test('maintenance login enforces system admin credentials and restores access', 
       assert.equal((await login(email, password)).status, 401);
       assert.equal(enabled, true);
     }
+    operationActive = true;
+    assert.equal((await login('systemadmin@test.invalid')).status, 503);
+    assert.equal(enabled, true, 'valid credentials cannot reopen access during an operation');
+    operationActive = false;
     cannotRemove = true;
     const failed = await login('systemadmin@test.invalid');
     assert.equal(failed.status, 500);

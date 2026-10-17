@@ -6,7 +6,7 @@ echo "🔍 Checking database..."
 # Run migrations (idempotent — safe to run every startup)
 node src/config/migrate.js
 
-# Seed reference tables only; demo users require explicit development opt-in.
+# Initialize without inserting sample or reference records.
 node src/config/seed.js
 
 echo "🚀 Starting server with PM2 (cluster mode — all CPU cores)..."

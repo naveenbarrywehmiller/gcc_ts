@@ -77,6 +77,9 @@ router.post(['/login', '/maintenance-login'], (req, res) => {
 
   // Do not issue a session if maintenance cannot be disabled.
   if (maintenanceEnabled) {
+    if (maintenance.isOperationActive()) {
+      return res.status(503).json({ error: 'Database operation is still in progress. Sign in after it finishes to release maintenance.' });
+    }
     maintenance.disable();
     db.prepare('INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)').run(
       user.id, 'MAINTENANCE_DISABLED', 'Maintenance disabled by system admin login', req.ip
