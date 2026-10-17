@@ -2,6 +2,14 @@
 
 ## [1.30.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.29.0...v1.30.0) (2026-10-17)
 
+
+### Features
+
+* clean setup, productive classifications and Linux admin 1.1.0 ([42833eb](https://github.com/naveenbarrywehmiller/gcc_ts/commit/42833ebb2a4796cb68049f2ebab277e8f735e6c7))
+* release clean setup and Linux administration improvements ([f915838](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f915838e48611a085347c3bcd7f557a5fb8ed0b8))
+
+## [1.30.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.29.0...v1.30.0) (2026-10-17)
+
 ### Features
 
 * Fresh installs contain only the System Admin account and no sample business data.
