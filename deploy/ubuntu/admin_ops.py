@@ -10,7 +10,7 @@ import secrets
 import shutil
 import socket
 import sqlite3
-from contextlib import closing
+from contextlib import closing, contextmanager
 import tarfile
 import tempfile
 import time
@@ -49,13 +49,39 @@ def gate(enabled=True):
         (c.ROOT / "maintenance.flag").unlink(missing_ok=True)
 
 
+def web_maintenance():
+    c.atomic(c.ROOT / "data/.maintenance", "Maintenance: release by System Admin web login only.\n", 0o644)
+
+
+@contextmanager
+def database_operation():
+    marker = c.ROOT / "data/.maintenance-operation"
+    # Share an exclusive marker with web database operations. Never overwrite a
+    # live operation (including one started through the browser).
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with marker.open("x") as handle:
+            handle.write("Database operation in progress\n")
+        marker.chmod(0o644)
+    except FileExistsError:
+        raise RuntimeError(f"A database operation is in progress: {marker}. See the guide for interrupted-operation recovery.")
+    try:
+        gate()
+        web_maintenance()
+        yield
+    finally:
+        web_maintenance()
+        marker.unlink(missing_ok=True)
+        print(f"Web maintenance remains enabled: {c.origin(c.config())}. System Admin must sign in to release it.")
+
+
 def health(timeout=180):
     port = c.config()["app_port"]
     until = time.monotonic() + timeout
     while time.monotonic() < until:
         try:
             if inspect("{{.State.Health.Status}}", check=False) == "healthy":
-                with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=5) as response:
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health/live", timeout=5) as response:
                     result = json.load(response)
                 if result.get("status") == "ok":
                     return result
@@ -67,6 +93,7 @@ def health(timeout=180):
 
 def start():
     gate()
+    write_compose(c.config())
     compose("up", "-d", "--pull", "never", "timesheet")
     result = health()
     gate(False)
@@ -91,14 +118,31 @@ def validate_config(cfg):
         raise ValueError("Website and internal app ports must differ.")
     if not isinstance(cfg["https"], bool):
         raise ValueError("Invalid HTTPS setting.")
+    if not isinstance(cfg.get("autostart", True), bool):
+        raise ValueError("Invalid automatic startup setting.")
     if not re.fullmatch(re.escape(c.IMAGE) + r"(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}|@sha256:[0-9a-f]{64})", cfg["image_target"]):
         raise ValueError("Image must belong to this project's GHCR repository.")
 
 
 def write_compose(cfg):
     template = (c.SOURCE / "compose.yaml").read_text()
+    template = template.replace("restart: always", 'restart: always' if cfg.get("autostart", True) else 'restart: "no"')
     c.atomic(c.ROOT / "compose.yaml", template.replace("127.0.0.1:3001:3001",
                                                      f'127.0.0.1:{cfg["app_port"]}:3001'), 0o644)
+
+
+def configure_autostart(enabled):
+    if not isinstance(enabled, bool):
+        raise ValueError("Automatic startup must be enabled or disabled.")
+    cfg = c.config()
+    # Apply to the existing container without starting an intentionally stopped app.
+    c.run(["docker", "update", "--restart=" + ("always" if enabled else "no"), "timesheet-app"])
+    cfg["autostart"] = enabled
+    c.save_config(cfg)
+    write_compose(cfg)
+    if enabled:
+        c.run(["systemctl", "enable", "docker", "nginx", "avahi-daemon"])
+    print("App startup after OS reboot: " + ("enabled" if enabled else "disabled"))
 
 
 def nginx_text(cfg):
@@ -323,17 +367,13 @@ def snapshot():
 
 def backup():
     active = running()
-    was_gated = (c.ROOT / "maintenance.flag").exists()
-    gate()
-    try:
-        compose("stop", "timesheet")
-        path = snapshot()
-    finally:
-        if active:
-            compose("up", "-d", "--pull", "never", "timesheet")
-            health()
-            if not was_gated:
-                gate(False)
+    with database_operation():
+        try:
+            compose("stop", "timesheet")
+            path = snapshot()
+        finally:
+            if active:
+                start()
     copy_offsite(path)
     return path
 
@@ -378,6 +418,8 @@ def validate_archive(path, stage):
 def restore_snapshot(path):
     # Complete extraction, database verification and image availability checks
     # before replacing anything. Same-filesystem renames avoid copy failures.
+    operation_active = (c.ROOT / "data/.maintenance-operation").exists()
+    maintenance_active = (c.ROOT / "data/.maintenance").exists()
     with tempfile.TemporaryDirectory(prefix=".restore-", dir=c.ROOT) as temporary:
         stage = Path(temporary)
         metadata = validate_archive(path, stage)
@@ -401,6 +443,15 @@ def restore_snapshot(path):
                 moved.append(name)
                 (stage / name).rename(destination)
             c.atomic(c.ROOT / ".image", image_id + "\n")
+            # Snapshot data can predate maintenance or include a stale operation
+            # marker. The current operation decides whether release is locked.
+            marker = c.ROOT / "data/.maintenance-operation"
+            if operation_active:
+                c.atomic(marker, "Database operation in progress\n", 0o644)
+            else:
+                marker.unlink(missing_ok=True)
+            if maintenance_active:
+                web_maintenance()
             write_nginx(c.config())
             start()
         except BaseException:
@@ -423,19 +474,54 @@ def restore(path):
     with tempfile.TemporaryDirectory(prefix=".verify-", dir=c.ROOT) as temporary:
         validate_archive(path, Path(temporary))
     pause("update")
-    stop()
-    safety = None
-    try:
-        safety = snapshot()
-        restore_snapshot(path)
-    except BaseException:
-        c.LOG.exception("Restore failed; recovering safety snapshot %s", safety)
-        if safety:
-            restore_snapshot(safety)
-        else:
-            start()
-        raise
+    with database_operation():
+        stop()
+        safety = None
+        try:
+            safety = snapshot()
+            restore_snapshot(path)
+        except BaseException:
+            c.LOG.exception("Restore failed; recovering safety snapshot %s", safety)
+            if safety:
+                restore_snapshot(safety)
+            else:
+                start()
+            raise
     print("Restore complete. Automatic app updates remain paused.")
+
+
+def factory_reset():
+    pause("all")
+    with database_operation():
+        stop()
+        safety = None
+        try:
+            safety = snapshot()
+            # Require the complete off-VM copy too, if configured, before deleting.
+            copy_offsite(safety)
+            compose("run", "--rm", "--no-deps", "--entrypoint", "node", "timesheet",
+                    "src/config/factoryReset.js", "--confirm")
+            # Database reset is atomic. Delete uploaded/test files and old app logs
+            # only after it succeeds; retain both full and database safety backups.
+            for name in ("uploads", "logs"):
+                target = (c.ROOT / name).resolve()
+                if target.parent != c.ROOT.resolve():
+                    raise RuntimeError("Invalid reset directory")
+                shutil.rmtree(target)
+                target.mkdir(mode=0o700)
+            c.env_update({"BOOTSTRAP_ADMIN_EMAIL": None, "BOOTSTRAP_ADMIN_PASSWORD": None, "SEED_DEMO_DATA": "false",
+                          "ENABLE_MSAL_AUTH": "false", "ENABLE_SHAREPOINT_SYNC": "false",
+                          "ENABLE_POWER_AUTOMATE": "false", "POWERBI_API_ENABLED": "false"})
+            start()
+        except BaseException:
+            c.LOG.exception("Factory reset failed; recovering safety snapshot %s", safety)
+            if safety:
+                restore_snapshot(safety)
+            else:
+                start()
+            raise
+    print(f"Factory reset complete. Safety snapshot: {safety}")
+    print("Only systemadmin@barry-wehmiller.com remains; password: systemadmin. Automatic jobs remain paused.")
 
 
 def app_update(retry=False):

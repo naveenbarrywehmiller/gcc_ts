@@ -36,7 +36,7 @@
 - **Weekly Hours** — Line chart: Total hours by week number
 - **Monthly Hours** — Area chart: Hours by month with YoY comparison
 - **Status Breakdown** — 100% stacked bar: Status distribution by month
-- **Billable vs Non-Billable** — Donut chart
+- **Productive vs Non-Productive** — Donut chart
 
 ### Filters
 - Date range (date slicer)
@@ -110,7 +110,7 @@ Division → Department → Employee → Timesheet
 ## Page 6 — Project Analytics
 
 ### KPI Cards
-| Active Projects | Total Project Hours | Contributors | Billable % |
+| Active Projects | Total Project Hours | Contributors | Productive % |
 
 ### Visuals
 - **Hours by Project** — Treemap: Project hours with size encoding
@@ -194,7 +194,7 @@ Admin → Employee → Timesheet
 ## Page 10 — Detailed Timesheets
 
 ### Full Detail Table
-| Date | Employee | Employee ID | Admin | Division | Department | Project | Project Code | Category | Hours | Status | Billable |
+| Date | Employee | Employee ID | Admin | Division | Department | Project | Project Code | Category | Hours | Status | Productive |
 
 ### Features
 - Searchable (use Power BI's built-in search)
@@ -213,7 +213,7 @@ Admin → Employee → Timesheet
 - Department
 - Project
 - Status
-- Billable (Yes/No)
+- Productive (Yes/No)
 
 ---
 

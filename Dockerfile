@@ -41,6 +41,7 @@ RUN mkdir -p /app/server/data /app/server/uploads
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV DB_PATH=./data/timesheet.db
+ENV MAINTENANCE_FILE=/app/server/data/.maintenance
 
 WORKDIR /app/server
 
@@ -48,6 +49,6 @@ EXPOSE 3001
 
 # Health check (uses Node.js — no extra dependencies needed)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/api/health',(r)=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>process.exit(r.statusCode===200?0:1))}).on('error',()=>process.exit(1))"
+  CMD node -e "require('http').get('http://localhost:3001/api/health/live',(r)=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>process.exit(r.statusCode===200?0:1))}).on('error',()=>process.exit(1))"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

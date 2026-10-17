@@ -23,7 +23,7 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Task planning metadata for estimated hours and input received, start, target, and delivered dates.
-- Project task assignment fields for billable and non-billable tasks, with aggregate task estimate and assignment counts.
+- Project task assignment fields for productive and non-productive tasks, with aggregate task estimate and assignment counts.
 - Updated the task and project model tables to load the new reporting API fields.
 
 ### Compatibility

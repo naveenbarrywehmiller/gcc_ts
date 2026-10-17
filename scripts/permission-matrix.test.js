@@ -4,12 +4,15 @@ const path = require('node:path');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = path.join(require('node:os').tmpdir(), `gcc-permissions-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
 config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 const ExcelJS = require('../server/node_modules/exceljs');
 let server, base, a, b, projectA, projectB, location, department, ownership, holiday;
@@ -32,7 +35,7 @@ before(async () => {
       .run(name, `${name}@permissions.test`, 'unused', role, id, id === a ? 'Permissions North' : id === b ? 'Permissions South' : null).lastInsertRowid);
   }
   for (const key of ['employee', 'outsider']) db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(users[key], users.system, users.system);
-  const project = (code, division) => Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id,division,billing_type) VALUES (?,?,?,?,'Billable')")
+  const project = (code, division) => Number(db.prepare("INSERT INTO projects(project_code,project_name,division_id,division,billing_type) VALUES (?,?,?,?,'Productive')")
     .run(code, code, division, division === a ? 'Permissions North' : 'Permissions South').lastInsertRowid);
   projectA = project('MATRIX-NORTH', a); projectB = project('MATRIX-SOUTH', b);
   for (const [actor, projectId, hours] of [['employee', projectA, 4], ['outsider', projectB, 17], ['outsider', null, 13], ['outsider', projectA, 11]]) {
@@ -66,7 +69,7 @@ test('management roles can read the detailed matrix, Employees are blocked, and 
 });
 
 test('Managers view users, projects and tasks companywide without gaining write privileges', async () => {
-  const task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Matrix Task','Billable')").run().lastInsertRowid);
+  const task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Matrix Task','Productive')").run().lastInsertRowid);
   const inactiveTask = Number(db.prepare("INSERT INTO tasks(task_category,active) VALUES ('Inactive Matrix Task',0)").run().lastInsertRowid);
   for (const actor of ['manager', 'otherManager', 'noManagerScope']) {
     const directory = await request(actor, '/users');

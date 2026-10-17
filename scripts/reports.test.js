@@ -6,17 +6,20 @@ process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(
   require('node:os').tmpdir(),
   `gcc-reports-${process.pid}.jsonl`
 );
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.enableSharepointSync = false;
 config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 const ExcelJS = require('../server/node_modules/exceljs');
 const { getISOWeekNumber } = require('../server/src/utils/dateUtils');
 const { parseReportQuery, analysis } = require('../server/src/services/reporting');
-let server, base, north, south, billable, internal, retired, task, support, location, otherLocation;
+let server, base, north, south, productive, internal, retired, task, support, location, otherLocation;
 const people = {};
 const spec = (extra) =>
   parseReportQuery({ start_date: '2020-12-28', end_date: '2021-01-10', ...extra });
@@ -87,18 +90,18 @@ before(async () => {
           active
         ).lastInsertRowid
     );
-  billable = project('NORTH-BILL', north, 'Billable');
-  internal = project('NORTH-INT', north, 'Non-Billable');
+  productive = project('NORTH-BILL', north, 'Productive');
+  internal = project('NORTH-INT', north, 'Non-Productive');
   retired = project('RETIRED', north, null, 0);
-  const privateProject = project('PRIVATE-PROJECT', south, 'Billable');
+  const privateProject = project('PRIVATE-PROJECT', south, 'Productive');
   task = Number(
     db
-      .prepare("INSERT INTO tasks(task_category,classification) VALUES ('Engineering','Billable')")
+      .prepare("INSERT INTO tasks(task_category,classification) VALUES ('Engineering','Productive')")
       .run().lastInsertRowid
   );
   support = Number(
     db
-      .prepare("INSERT INTO tasks(task_category,classification) VALUES ('Training','Non-Billable')")
+      .prepare("INSERT INTO tasks(task_category,classification) VALUES ('Training','Non-Productive')")
       .run().lastInsertRowid
   );
   const entry = (person, project, taskId, date, hours, status, loc = location) => {
@@ -120,19 +123,19 @@ before(async () => {
       '{"designed":2}'
     );
   };
-  entry('employee', billable, task, '2020-12-28', 8, 'approved');
+  entry('employee', productive, task, '2020-12-28', 8, 'approved');
   entry('employee', internal, support, '2020-12-29', 4, 'submitted');
   entry('employee', retired, null, '2020-12-30', 4, 'draft');
-  entry('employee', billable, task, '2020-12-31', 12, 'approved');
-  entry('employee', billable, task, '2021-01-04', 4, 'submitted');
-  entry('employee', billable, task, '2021-01-05', 4, 'rejected');
+  entry('employee', productive, task, '2020-12-31', 12, 'approved');
+  entry('employee', productive, task, '2021-01-04', 4, 'submitted');
+  entry('employee', productive, task, '2021-01-05', 4, 'rejected');
   entry('employee', internal, support, '2021-01-05', 4, 'recalled');
-  entry('employee', billable, task, '2021-01-08', 8, 'draft'); // Must not enter Jan 6 capacity.
+  entry('employee', productive, task, '2021-01-08', 8, 'draft'); // Must not enter Jan 6 capacity.
   entry('inactive', retired, null, '2020-12-28', 3, 'approved');
   entry('employee', null, null, '2020-12-30', 1, 'approved');
-  entry('employee', billable, task, '2020-12-14', 8, 'approved'); // Previous equal-length period.
+  entry('employee', productive, task, '2020-12-14', 8, 'approved'); // Previous equal-length period.
   entry('inactive', privateProject, task, '2020-12-28', 7, 'approved', otherLocation); // Foreign project cannot leak.
-  entry('outsider', billable, task, '2020-12-28', 11, 'approved', otherLocation); // Foreign contributor cannot leak.
+  entry('outsider', productive, task, '2020-12-28', 11, 'approved', otherLocation); // Foreign contributor cannot leak.
   entry('outsider', null, null, '2020-12-28', 13, 'draft', otherLocation);
   db.prepare(
     "INSERT INTO holidays(date,name) VALUES ('2021-01-01','New Year'), ('2021-01-02','Weekend holiday')"
@@ -232,13 +235,13 @@ test('fractional-hour sums do not create a microscopic false daily shortfall', (
     for (let i = 0; i < 10; i++) {
       const id = Number(
         db
-          .prepare("INSERT INTO tasks(task_category,classification) VALUES (?,'Billable')")
+          .prepare("INSERT INTO tasks(task_category,classification) VALUES (?,'Productive')")
           .run(`Fractional task ${i}`).lastInsertRowid
       );
       tasks.push(id);
       db.prepare(
         "INSERT INTO timesheets(user_id,project_id,task_id,work_date,hours,status,week_number,week_year) VALUES (?,?,?,'2021-01-06',0.8,'approved',1,2021)"
-      ).run(people.employee, billable, id);
+      ).run(people.employee, productive, id);
     }
     const report = current({
       start_date: '2021-01-06',
@@ -261,7 +264,7 @@ test('all activity filters apply and capacity is explicitly unavailable for part
     { task_id: String(support) },
     { location_id: String(location) },
     { status: 'submitted' },
-    { billing_type: 'Billable' },
+    { billing_type: 'Productive' },
   ]) {
     const report = current(extra);
     assert.equal(report.capacity.available, false);

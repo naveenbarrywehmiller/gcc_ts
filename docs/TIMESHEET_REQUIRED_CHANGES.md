@@ -1,4 +1,4 @@
-> Superseded on October 13, 2026: explicit project/task assignments replace the single Billing Type requirement. See [Task planning and assignments](TASK_PLANNING.md). The historical notes below describe the earlier implementation.
+> Superseded on October 13, 2026: explicit project/task assignments replace the single Classification Type requirement. See [Task planning and assignments](TASK_PLANNING.md). The historical notes below describe the earlier implementation.
 
 # Timesheet validation and division attribution
 
@@ -10,7 +10,7 @@ The configured local database is `server/data/timesheet.db`. Read-only inspectio
 
 Run `node scripts/audit-timesheet-integrity.js 2026-10` against the configured database for a read-only report. It does not start the application or run migrations. The output includes entry IDs, user IDs, dates, hours, stored employee/entry divisions, linked division activity, effective attribution and reasons, plus existing rows with missing required fields. Keep the output private as operational data.
 
-The only new database column is nullable `projects.billing_type`, restricted to Billable or Non-Billable when set. As requested, migration does **not** infer or populate historical project classifications. An administrator must select Billing Type in Projects before saving or submitting time for an unclassified project. Project creation and imports require Billing Type; exports/templates include that column. Historical timesheets are not backfilled, removed, or rewritten by this change. The migration is repeatable and tested against legacy rows.
+The only new database column is nullable `projects.billing_type`, restricted to Productive or Non-Productive when set. As requested, migration does **not** infer or populate historical project classifications. An administrator must select Classification Type in Projects before saving or submitting time for an unclassified project. Project creation and imports require Classification Type; exports/templates include that column. Historical timesheets are not backfilled, removed, or rewritten by this change. The migration is repeatable and tested against legacy rows.
 
 `tasks.requires_project` remains as a compatibility column for existing databases and integrations, but is no longer configurable or consulted for time-entry decisions. Task API compatibility output and Power BI's existing `requiresProject` field report true. New and edited tasks retain true. Historical task rows do not need bulk updates.
 
@@ -24,7 +24,7 @@ The existing login rule is unchanged: employees require an active **Admin or Sys
 
 ## Entry validation and UI
 
-Single-entry, batch, self-post, repository writes, and submission validate a real active project, nonblank Description (up to 500 characters), and an active task matching the project's Billing Type. Submission and self-post also validate existing draft/recalled/rejected rows so old incomplete records cannot bypass the requirements. Historical approved records remain readable. Correct incomplete drafts with Edit Row before resubmission.
+Single-entry, batch, self-post, repository writes, and submission validate a real active project, nonblank Description (up to 500 characters), and an active task matching the project's Classification Type. Submission and self-post also validate existing draft/recalled/rejected rows so old incomplete records cannot bypass the requirements. Historical approved records remain readable. Correct incomplete drafts with Edit Row before resubmission.
 
 Batch zero-hour requests retain their existing deletion meaning; they cannot save an invalid row. Changing a saved row's project/task sends deletion of the previous key and replacement entries in one transaction so a failed replacement preserves saved hours.
 
@@ -48,6 +48,6 @@ Regression tests cover blank and stale legacy text, linked inactive divisions, l
 
 - 73 Node tests and 55 existing Power BI API regression checks passed; dedicated tests cover all three reviewer roles, missing/inactive/invalid/self assignments, notification recipients, callback review identity, bulk SharePoint replay, mandatory fields across write paths, atomic rejection, legacy submissions, migration preservation, project billing configuration, and division attribution.
 - Frontend lint and production build. The existing JavaScript bundle-size warning remains.
-- Chromium against the actual local API with an isolated in-memory database: required row fields, Billable/Non-Billable tasks, task clearing, unclassified project messaging, save/reload, employee submission, divisions search/clear/no-results, and removal of task configuration controls.
+- Chromium against the actual local API with an isolated in-memory database: required row fields, Productive/Non-Productive tasks, task clearing, unclassified project messaging, save/reload, employee submission, divisions search/clear/no-results, and removal of task configuration controls.
 - 112 layout checks: Timesheet row dialog, Divisions with expanded Locations, Task dialog, and Project dialog at all 21 required sizes plus seven portrait/landscape counterparts (28 sizes). No document overflow, dialog overflow, out-of-bounds dialogs, or page errors. Representative screenshots were inspected.
 - No production writes or deployments; live external integrations, other browser engines, physical devices and screen-reader software were not exercised.

@@ -4,7 +4,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { getISOWeekNumber } = require('../utils/dateUtils');
 
-function migrate() {
+function migrate({ bootstrap = true } = {}) {
   console.log('🔄 Running database migrations...');
 
   const migrationSQL = `
@@ -298,16 +298,6 @@ function migrate() {
   }
 
   // --- Data migration: map existing team_type text to supporting_category_id ---
-  // First ensure supporting_categories exist
-  const scCount = db.prepare('SELECT COUNT(*) as count FROM supporting_categories').get();
-  if (scCount.count === 0) {
-    // Will be seeded later, but if running migration standalone, create defaults
-    try {
-      db.exec("INSERT OR IGNORE INTO supporting_categories (name) VALUES ('Dedicated Team')");
-      db.exec("INSERT OR IGNORE INTO supporting_categories (name) VALUES ('Flex Team')");
-    } catch (e) { /* ignore if already exists */ }
-  }
-
   const usersNeedingSCMigration = db.prepare(
     "SELECT id, team_type FROM users WHERE team_type IS NOT NULL AND team_type != '' AND supporting_category_id IS NULL"
   ).all();
@@ -529,7 +519,8 @@ function migrate() {
   require('./taskPlanningMigration')(db);
   require('./auditScopeMigration')(db);
   require('./platformMigration')(db);
-  require('./bootstrapAdmin').bootstrapAdmin(db);
+  require('./classificationMigration')(db);
+  if (bootstrap) require('./bootstrapAdmin').bootstrapAdmin(db);
 
   console.log('✅ Database migrations complete.');
 }

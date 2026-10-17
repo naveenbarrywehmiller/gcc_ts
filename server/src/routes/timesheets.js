@@ -297,7 +297,7 @@ router.post('/', authenticate, normalizeDetails, (req, res) => {
     }
 
     const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
-    const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+    const isBillable = (taskInfo?.classification === 'Productive') ? 1 : 0;
 
     // Update existing
     db.prepare(`
@@ -322,7 +322,7 @@ router.post('/', authenticate, normalizeDetails, (req, res) => {
   }
 
   const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
-  const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+  const isBillable = (taskInfo?.classification === 'Productive') ? 1 : 0;
 
   // Create new
   const result = db.prepare(`
@@ -392,7 +392,7 @@ router.post('/batch', authenticate, normalizeDetails, (req, res) => {
           db.prepare('DELETE FROM timesheets WHERE id = ?').run(existing.id);
         } else {
           const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
-          const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+          const isBillable = (taskInfo?.classification === 'Productive') ? 1 : 0;
 
           db.prepare(`
             UPDATE timesheets SET task_id = ?, hours = ?, description = ?,
@@ -404,7 +404,7 @@ router.post('/batch', authenticate, normalizeDetails, (req, res) => {
         }
       } else if (hours > 0) {
         const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
-        const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+        const isBillable = (taskInfo?.classification === 'Productive') ? 1 : 0;
 
         db.prepare(`
           INSERT INTO timesheets (user_id, project_id, task_id, work_date, hours, description, week_number, week_year,
@@ -551,7 +551,7 @@ router.post('/post', authenticate, permit('selfPost'), normalizeDetails, (req, r
         }
 
         const taskInfo = task_id ? db.prepare('SELECT classification FROM tasks WHERE id = ?').get(task_id) : null;
-        const isBillable = (taskInfo?.classification === 'Billable') ? 1 : 0;
+        const isBillable = (taskInfo?.classification === 'Productive') ? 1 : 0;
 
         if (existing) {
           db.prepare(`

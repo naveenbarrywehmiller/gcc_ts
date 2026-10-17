@@ -3,10 +3,13 @@ const assert = require('node:assert/strict');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.SYSTEM_ERROR_LOG_PATH = require('node:path').join(require('node:os').tmpdir(), `task-planning-${process.pid}.jsonl`);
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:'; config.enableSharepointSync = false; config.enablePowerAutomate = false;
 const app = require('../server/src/index');
 const db = require('../server/src/config/db');
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
 const jwt = require('../server/node_modules/jsonwebtoken');
 const ExcelJS = require('../server/node_modules/exceljs');
 let server, base, system, admin, manager, employee, division, bill, nonbill, unassigned, project;
@@ -24,7 +27,7 @@ before(async () => {
 after(() => { server?.close(); db.close(); });
 
 test('task planning fields validate, preserve omitted values and explicitly clear to null', async () => {
-  const created = await request('/tasks', { classification: 'Billable', task_category: 'Engineering', estimated_hours: 12.5, input_received_date: '2026-10-01', start_date: '2026-10-02', target_date: '2026-10-15', delivered_date: '2026-10-14' });
+  const created = await request('/tasks', { classification: 'Productive', task_category: 'Engineering', estimated_hours: 12.5, input_received_date: '2026-10-01', start_date: '2026-10-02', target_date: '2026-10-15', delivered_date: '2026-10-14' });
   assert.equal(created.status, 201); bill = created.body.task.id;
   const changed = await request(`/tasks/${bill}`, { task_description: 'Updated' }, 'PUT');
   assert.equal(changed.body.task.estimated_hours, 12.5); assert.equal(changed.body.task.delivered_date, '2026-10-14');
@@ -34,11 +37,11 @@ test('task planning fields validate, preserve omitted values and explicitly clea
   const cleared = await request(`/tasks/${bill}`, { delivered_date: '', estimated_hours: 0 }, 'PUT');
   assert.equal(cleared.body.task.delivered_date, null); assert.equal(cleared.body.task.estimated_hours, 0);
   await request(`/tasks/${bill}`, { estimated_hours: 12.5 }, 'PUT');
-  nonbill = (await request('/tasks', { classification: 'Non-Billable', task_category: 'Coordination' })).body.task.id;
-  unassigned = (await request('/tasks', { classification: 'Billable', task_category: 'Other project' })).body.task.id;
+  nonbill = (await request('/tasks', { classification: 'Non-Productive', task_category: 'Coordination' })).body.task.id;
+  unassigned = (await request('/tasks', { classification: 'Productive', task_category: 'Other project' })).body.task.id;
   const tasks = (await request('/tasks', undefined, 'GET')).body.tasks;
   assert.equal(tasks.find(t => t.id === nonbill).estimated_hours, null);
-  assert.equal((await request('/tasks', { classification: 'Billable', task_category: 'Denied' }, 'POST', manager)).status, 403);
+  assert.equal((await request('/tasks', { classification: 'Productive', task_category: 'Denied' }, 'POST', manager)).status, 403);
 });
 
 test('project assignments require at least one task, validate categories and save atomically', async () => {
@@ -54,7 +57,7 @@ test('project assignments require at least one task, validate categories and sav
   const rejected = await request(`/projects/${project}`, { project_name: 'Must roll back', billable_task_ids: [], non_billable_task_ids: [] }, 'PUT');
   assert.equal(rejected.status, 400); assert.equal(db.prepare('SELECT project_name FROM projects WHERE id=?').get(project).project_name, data.project_name);
   assert.equal((await request(`/projects/${project}`, { project_name: 'Manager denied' }, 'PUT', manager)).status, 403);
-  assert.equal((await request(`/tasks/${bill}`, { classification: 'Non-Billable' }, 'PUT')).status, 409);
+  assert.equal((await request(`/tasks/${bill}`, { classification: 'Non-Productive' }, 'PUT')).status, 409);
 });
 
 test('mixed project time is accepted only for assigned active tasks and billing totals reconcile', async () => {
@@ -65,7 +68,7 @@ test('mixed project time is accepted only for assigned active tasks and billing 
   assert.equal((await request('/timesheets/batch', { entries: [entry(bill), entry(nonbill)] }, 'POST', employee)).status, 200);
   const dashboard = (await request('/reports/dashboard', undefined, 'GET')).body;
   assert.equal(dashboard.stats.monthlyHours, 4);
-  assert.deepEqual(dashboard.billingHours, [{ classification: 'Billable', hours: 2 }, { classification: 'Non-Billable', hours: 2 }]);
+  assert.deepEqual(dashboard.billingHours, [{ classification: 'Non-Productive', hours: 2 }, { classification: 'Productive', hours: 2 }]);
   assert.equal(dashboard.planning.estimated_hours, 12.5); assert.equal(dashboard.planning.assigned_tasks, 2);
   const report = (await request(`/reports/analysis?start_date=${date}&end_date=${date}`, undefined, 'GET')).body;
   assert.equal(report.summary.total_hours, 4); assert.equal(report.summary.billable_hours, 2); assert.equal(report.summary.non_billable_hours, 2);
@@ -102,8 +105,16 @@ test('Excel assignment columns and task reference round-trip with atomic failure
   assert.equal((await upload()).status, 200);
   const imported = (await request('/projects?search=ROUNDTRIP', undefined, 'GET')).body.projects[0];
   assert.deepEqual(imported.billable_task_ids, [bill]); assert.deepEqual(imported.non_billable_task_ids, [nonbill]);
+  sheet.getCell('A2').value = 'LEGACY-HEADERS';
+  const productiveColumn = sheet.getRow(1).values.indexOf('Productive Task IDs');
+  const nonProductiveColumn = sheet.getRow(1).values.indexOf('Non-Productive Task IDs');
+  sheet.getRow(1).getCell(productiveColumn).value = 'Billable Task IDs';
+  sheet.getRow(1).getCell(nonProductiveColumn).value = 'Non-Billable Task IDs';
+  assert.equal((await upload()).status, 200, 'older templates remain importable');
+  sheet.getRow(1).getCell(productiveColumn).value = 'Productive Task IDs';
+  sheet.getRow(1).getCell(nonProductiveColumn).value = 'Non-Productive Task IDs';
   sheet.getCell('A2').value = 'BAD-IMPORT';
-  const column = sheet.getRow(1).values.indexOf('Billable Task IDs'); sheet.getRow(2).getCell(column).value = String(nonbill);
+  const column = sheet.getRow(1).values.indexOf('Productive Task IDs'); sheet.getRow(2).getCell(column).value = String(nonbill);
   assert.equal((await upload()).status, 400);
   assert.equal(db.prepare("SELECT COUNT(*) n FROM projects WHERE project_code = 'BAD-IMPORT'").get().n, 0);
 });
@@ -113,7 +124,7 @@ test('one-time migration preserves historical rows and never restores removed as
   legacy.exec(`PRAGMA foreign_keys=ON; CREATE TABLE projects(id INTEGER PRIMARY KEY, billing_type TEXT);
     CREATE TABLE tasks(id INTEGER PRIMARY KEY, classification TEXT, active INTEGER);
     CREATE TABLE timesheets(id INTEGER PRIMARY KEY, project_id INTEGER, task_id INTEGER, hours REAL);
-    INSERT INTO projects VALUES (1,'Billable'),(2,NULL); INSERT INTO tasks VALUES (1,'Billable',1),(2,'Non-Billable',0);
+    INSERT INTO projects VALUES (1,'Productive'),(2,NULL); INSERT INTO tasks VALUES (1,'Productive',1),(2,'Non-Productive',0);
     INSERT INTO timesheets VALUES (1,1,2,3),(2,2,2,4);`);
   const migrate = require('../server/src/config/taskPlanningMigration');
   const history = legacy.prepare('SELECT * FROM timesheets').all(); migrate(legacy);

@@ -1,6 +1,6 @@
-# GCC TimeSheet Admin v1.0.0 — Ubuntu setup and operations
+# GCC TimeSheet Admin v1.1.0 — Ubuntu setup and operations
 
-**Start here:** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/timesheet-admin-v1.0.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/timesheet-admin-v1.0.0/install.sh) · [Complete script reference](SCRIPTS.md)
+**Release source:** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/timesheet-admin-v1.1.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/timesheet-admin-v1.1.0/install.sh) · [Complete script reference](SCRIPTS.md)
 
 On your **Ubuntu VM**, run:
 
@@ -8,9 +8,9 @@ On your **Ubuntu VM**, run:
 sudo apt update
 sudo apt install -y curl ca-certificates
 curl -fL --retry 3 \
-  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/timesheet-admin-v1.0.0/install.sh \
+  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/timesheet-admin-v1.1.0/install.sh \
   -o /tmp/timesheet-install.sh
-sudo bash /tmp/timesheet-install.sh timesheet-admin-v1.0.0
+sudo bash /tmp/timesheet-install.sh timesheet-admin-v1.1.0
 timesheet
 ```
 
@@ -24,15 +24,17 @@ The tool reads the existing system hostname and timezone. It does not run `hostn
 
 Ubuntu Server **24.04 or 26.04 LTS**, Python 3.12+, a sudo account and outbound HTTPS access are required. Python and basic download tools are installed by the bootstrap. A starting VM size is 2 vCPU, 4 GB RAM and 60 GB SSD; actual capacity depends on usage. IT should provide a DHCP reservation/static IP and allow access to Ubuntu mirrors, Docker's package repository, GitHub, GHCR and their download endpoints. Configure APT/Docker proxies through IT if required.
 
+**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **8** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/ubuntu/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle timesheet-admin-v1.1.0`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
+
 ## First installation, in order
 
 1. Run the commands at the top of this guide, then type `timesheet`.
 2. Choose **1**. The screen shows the system hostname and timezone. The suggested browser address is `<existing-hostname>.local`.
 3. Choose a website port. **8080** is the default to avoid taking over an existing company web server; choose **80** if available and you want no port suffix. Occupied ports are rejected. Choose a different internal app port if **3001** is occupied. It is bound to `127.0.0.1` only.
-4. Enter your first system-administrator email and a password of 12 or more characters. Password input is hidden. Keep this password in your company vault. The script generates independent JWT secrets and a reporting API key.
+4. Accept the factory email **systemadmin@barry-wehmiller.com** and leave the hidden password input blank to use **systemadmin**. You may instead supply a custom initial administrator and a 12+ character password. The fresh database contains only that System Admin; all business directories are empty. The script generates independent JWT secrets and a reporting API key. Automatic app startup after OS reboot is enabled by default; configure it with **32**.
 5. Confirm installation. Docker Engine/Compose, Nginx, Avahi and supporting packages are installed. An existing working Docker installation is preserved. The image is pulled and pinned by digest, startup migrations run, and health is checked.
 6. If your IT team uses UFW, **12** adds rules for the chosen web port and mDNS. It does not enable UFW or change SSH rules. IT must allow traffic through any VM/network firewalls too.
-7. Open the displayed URL on an employee device. For example, a server named `gcc-app01` using port 8080 is `http://gcc-app01.local:8080`. Sign in and verify a sample timesheet.
+7. Open the displayed URL on an employee device. For example, a server named `gcc-app01` using port 8080 is `http://gcc-app01.local:8080`. Sign in, create your own Platform, Division and other required records, and verify a timesheet.
 8. Choose **28** after successful login to remove bootstrap credentials from the environment. This leaves the created account intact.
 9. Choose **9** to configure HTTPS, then test login, save/submit and approvals over HTTPS before employee use.
 10. Choose **13** for your first backup, **16** to check the database and **17** to configure automatic jobs. Schedules start **disabled** until you enable them.
@@ -62,6 +64,8 @@ The Docker image is **`ghcr.io/naveenbarrywehmiller/gcc_ts:latest`** ([package](
 | 28 / 29 | Remove bootstrap credentials / private environment editor |
 | 30 | Pause jobs, back up, upgrade Ubuntu packages including Docker |
 | 31 / 0 | Read this installed guide / exit |
+| 32 | Enable/disable automatic app startup after OS reboot (default enabled) |
+| 33 | Factory reset all app data after warning and automatic safety backup |
 
 The menu remains available after ordinary operation failures and points to the error log. Operations are serialized with a lock, so a manual update cannot overlap an automatic backup. If the lock is busy, retry after the current job finishes. Avoid running raw Docker/Compose commands during menu operations.
 
@@ -129,7 +133,7 @@ Startup checks do not verify every business workflow. A functional issue found l
 
 Backups are stored under `/var/backups/gcc-timesheet`, with SHA-256 sidecars. They contain private environment secrets, employee data and TLS private keys, so keep both local and off-VM copies access-controlled and encrypted at rest under company policy.
 
-The app is stopped while snapshots are created so SQLite/WAL and uploads stay consistent. Scheduled/manual backups restart an app that was running, but leave an intentionally stopped app stopped. The script checks space before archiving. Old Docker images are retained under recovery tags.
+The app is stopped while snapshots are created so SQLite/WAL and uploads stay consistent. Scheduled/manual backups restart an app that was running, but leave an intentionally stopped app stopped. **Web maintenance remains enabled after every backup until a System Admin signs in through the browser.** This applies to scheduled backups too. The script checks space before archiving. Old Docker images are retained under recovery tags. Menus **13–15** show absolute snapshot paths under `/var/backups/gcc-timesheet`; database-only safety copies are under `/opt/gcc-timesheet/app-backup`.
 
 **20** configures retention from 7–3650 days and optional automatic pruning after successful scheduled backups. Pruning always retains the newest three snapshots. **21** previews before manual deletion. Automatic pruning is off by default. Docker images are never automatically pruned; review recovery tags and registry retention before deleting images needed for rollback.
 
@@ -150,7 +154,7 @@ For snapshots older than registry retention, separately save their Docker image 
 
 ## Restore and disaster recovery
 
-Use **15** to list and choose a snapshot, then confirm replacement. The tool verifies archive checksum, allowed paths, required files and SQLite integrity before replacing data. It pauses automatic app updates, makes a safety snapshot, restores the selected config/data/image, regenerates Nginx and checks startup. Auto-updates remain paused until you resume them.
+Use **15** to list and choose a snapshot, then confirm replacement. The tool verifies archive checksum, allowed paths, required files and SQLite integrity before replacing data. It pauses automatic app updates, makes a safety snapshot, restores the selected config/data/image, regenerates Nginx and checks startup. Auto-updates remain paused until you resume them. Web maintenance remains enabled after restore, including when recovering an older snapshot that had maintenance disabled. Once complete, open the website and sign in as an active System Admin from the restored database to release maintenance.
 
 ```bash
 timesheet restore /var/backups/gcc-timesheet/timesheet-ACTUAL-FILENAME.tgz --confirm
@@ -161,6 +165,18 @@ timesheet check-db
 Restoring replaces database, uploads, environment, selected ports/hostname and TLS material with that snapshot. Employee changes after the snapshot are lost. Restoring an old port requires that port still be available. The tool uses the retained image ID, or pulls its recorded immutable registry digest and checks the image ID. Recovery across CPU architectures requires an explicit migration rather than silently choosing a different image.
 
 For a replacement VM: install this administrator, complete a temporary fresh app setup, copy a trusted snapshot and sidecar into `/var/backups/gcc-timesheet`, then restore it. Set ownership to root and permissions to 600 for copied files. Review the restored browser hostname/ports, TLS and environment before reopening access. Schedules are machine-specific and are not restored from app snapshots; configure them in **17**. Preserve IT's OS/network settings and SSH backup keys separately. A backup from the earlier shell-only guide is not interchangeable with this administrator's format.
+
+## Factory reset and maintenance release
+
+Choose **33** for a clean application. The warning lists the data being deleted and requires the exact words `FACTORY RESET`. The CLI equivalent is `timesheet factory-reset --confirm`; omitting `--confirm` refuses the operation.
+
+Reset pauses all automatic jobs, enables maintenance, stops the app, creates and checksums a full safety snapshot, and completes an off-VM copy when configured. A failed snapshot or copy aborts deletion. It then builds a fresh database and creates only **systemadmin@barry-wehmiller.com / systemadmin**, clears uploaded files and application logs, and starts the app in web maintenance. A failure attempts to restore the full safety snapshot. Backups, server hostname/ports/TLS, environment secrets and automatic startup preference are retained. SSO, SharePoint sync, Power Automate and the reporting API are disabled to keep the reset installation local-only. Automatic jobs stay paused until explicitly resumed.
+
+The database-only safety copy is also saved in `/opt/gcc-timesheet/app-backup`; the complete snapshot path under `/var/backups/gcc-timesheet` is printed before data is reset. Use **15** to recover it if needed. No existing deployment is silently erased during an upgrade.
+
+Backup, restore and reset share the app's persisted maintenance file at `/opt/gcc-timesheet/data/.maintenance`. After the operation finishes, the Nginx gate is removed so the browser can show the existing **System admin login** page. Only a valid active System Admin can reopen employee access. Login and the web maintenance switch cannot release it while `/opt/gcc-timesheet/data/.maintenance-operation` exists. Health checks use `/api/health/live` and do not release maintenance.
+
+If power loss interrupts a database operation, inspect `/var/log/gcc-timesheet-admin/admin.log` and database integrity before recovery. A leftover operation marker deliberately blocks release. After ensuring no administrator job is running, stop the app with **4**, remove only `/opt/gcc-timesheet/data/.maintenance-operation`, and use **3**. The ordinary `.maintenance` file remains until System Admin web login. Retain the printed safety snapshot for recovery.
 
 ## Logs and troubleshooting
 
@@ -191,7 +207,7 @@ systemctl --failed
 
 - **Port occupied:** use **24** to identify listeners, then select another port in **9**. Do not kill an unrelated service.
 - **`.local` fails:** test from the same LAN, inspect Avahi and ask IT about mDNS/VLAN policy. Use normal company DNS across routed networks.
-- **502/503:** inspect container logs and administrator log. After resolving the cause, **3** starts the app and removes the maintenance gate only after health succeeds.
+- **502/503:** inspect container logs and administrator log. After resolving the cause, **3** starts the app and removes the temporary Nginx gate only after health succeeds. It never clears web maintenance; a System Admin signs in in the browser to release it.
 - **Pull/download fails:** check outbound access, corporate proxy/CA and GitHub availability/rate limits. GHCR is public; if visibility becomes private, authenticate root with `sudo docker login ghcr.io` using a least-privilege token.
 - **Disk full:** inspect backups and Docker usage. Preview retention cleanup; do not remove database directories or run volume pruning.
 - **Interrupted setup:** use **1** or `timesheet resume-setup` after resolving the failure. Do not regenerate secrets.
@@ -200,7 +216,7 @@ systemctl --failed
 
 ## Routine OS maintenance and complete CLI
 
-Use **30** for Ubuntu/Docker package upgrades. It pauses all three jobs, backs up first and reports whether the OS requests a reboot. It does not reboot automatically. After a planned reboot, verify the app and selectively resume jobs. Docker's `unless-stopped` policy restarts previously running containers; an explicitly stopped app stays stopped until **3**.
+Use **30** for Ubuntu/Docker package upgrades. It pauses all three jobs, backs up first and reports whether the OS requests a reboot. It does not reboot automatically. After a planned reboot, verify the app and selectively resume jobs. Menu **32** controls reboot startup. Enabled (the default) uses Docker's `always` restart policy and enables Docker/Nginx/Avahi at boot, so even an explicitly stopped container starts after the Docker daemon or OS restarts. Disabled uses restart policy `no`; it does not stop the currently running app. Use **3** to start manually. This setting persists across ordinary app updates; restoring a snapshot restores its startup preference.
 
 ```bash
 timesheet                 # interactive menu
@@ -218,6 +234,9 @@ timesheet logs
 timesheet diagnostics
 timesheet remove-bootstrap
 timesheet os-maintenance
+timesheet autostart enable
+timesheet autostart disable
+timesheet factory-reset --confirm
 ```
 
 Backup/update/pause/restore/self-update commands are listed in their sections above. Menu-only configuration actions include network/TLS, interactive schedule editing, image-channel selection, the environment editor and retention/off-VM configuration. Timers invoke the same CLI operations with `--scheduled`; there is no separate maintenance implementation.

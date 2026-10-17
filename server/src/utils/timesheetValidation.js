@@ -12,7 +12,7 @@ function validateTimesheetEntry(entry, userId = entry.user_id) {
   if (entry.project_description.length > descriptionMaxLength) fail(`Description must be text of at most ${descriptionMaxLength} characters`);
   const task = validId(entry.task_id)
     ? db.prepare('SELECT * FROM tasks WHERE id = ? AND active = 1').get(entry.task_id) : null;
-  if (!task || !['Billable', 'Non-Billable'].includes(task.classification) || !db.prepare('SELECT 1 FROM project_tasks WHERE project_id = ? AND task_id = ?').get(project.id, task.id)) fail('Select an active Task Name/Number assigned to this project');
+  if (!task || !['Productive', 'Non-Productive'].includes(task.classification) || !db.prepare('SELECT 1 FROM project_tasks WHERE project_id = ? AND task_id = ?').get(project.id, task.id)) fail('Select an active Task Name/Number assigned to this project');
   return project;
 }
 

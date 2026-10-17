@@ -51,3 +51,6 @@ server/logs/
 # Database backups and maintenance state
 server/backup/
 server/.maintenance
+server/.maintenance-operation
+server/data/.maintenance*
+server/data/*.factory-*

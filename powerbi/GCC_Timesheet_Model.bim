@@ -1608,30 +1608,30 @@
             "structureModifiedTime": "2026-09-27T15:48:18.653333"
           },
           {
-            "name": "Billable Hours",
+            "name": "Productive Hours",
             "expression": "CALCULATE([Total Hours], FactTimesheet[isBillable] = TRUE())",
             "formatString": "#,##0.0",
-            "displayFolder": "03 Billing",
+            "displayFolder": "03 Classification",
             "lineageTag": "50b211ac-7e66-4023-b9b3-dfa3de3066da",
             "dataType": "double",
             "modifiedTime": "2026-09-27T15:48:18.686667",
             "structureModifiedTime": "2026-09-27T15:48:18.653333"
           },
           {
-            "name": "Non-Billable Hours",
+            "name": "Non-Productive Hours",
             "expression": "CALCULATE([Total Hours], FactTimesheet[isBillable] = FALSE())",
             "formatString": "#,##0.0",
-            "displayFolder": "03 Billing",
+            "displayFolder": "03 Classification",
             "lineageTag": "1fc560da-69bb-4aa4-84eb-6b86b4756b1a",
             "dataType": "double",
             "modifiedTime": "2026-09-27T15:48:18.686667",
             "structureModifiedTime": "2026-09-27T15:48:18.653333"
           },
           {
-            "name": "Billable Percentage",
-            "expression": "DIVIDE([Billable Hours], [Total Hours], 0)",
+            "name": "Productive Percentage",
+            "expression": "DIVIDE([Productive Hours], [Total Hours], 0)",
             "formatString": "0.0%",
-            "displayFolder": "03 Billing",
+            "displayFolder": "03 Classification",
             "lineageTag": "c7e73f0f-204d-4c1b-808e-2ea156c3f4ce",
             "dataType": "double",
             "modifiedTime": "2026-09-27T15:48:18.686667",

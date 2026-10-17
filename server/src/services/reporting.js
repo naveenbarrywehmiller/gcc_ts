@@ -8,7 +8,7 @@ const STATUSES = ['draft', 'submitted', 'approved', 'rejected', 'recalled'];
 const VIEWS = ['weekly', 'utilization', 'projects', 'missing', 'trends', 'details'];
 const employeeDivision = "COALESCE(d.name, NULLIF(TRIM(u.division), ''))";
 const billing =
-  "CASE WHEN tk.classification IN ('Billable','Non-Billable') THEN tk.classification WHEN p.billing_type IN ('Billable','Non-Billable') THEN p.billing_type ELSE 'Unclassified' END";
+  "CASE WHEN tk.classification IN ('Productive','Non-Productive') THEN tk.classification WHEN p.billing_type IN ('Productive','Non-Productive') THEN p.billing_type ELSE 'Unclassified' END";
 
 function invalid(message) {
   const error = new Error(message);
@@ -92,9 +92,9 @@ function parseReportQuery(query) {
   if (filters.status && !STATUSES.includes(filters.status)) invalid('Invalid status.');
   if (
     filters.billing_type &&
-    !['Billable', 'Non-Billable', 'Unclassified'].includes(filters.billing_type)
+    !['Productive', 'Non-Productive', 'Unclassified'].includes(filters.billing_type)
   )
-    invalid('Invalid billing type.');
+    invalid('Invalid classification.');
   const grain = query.grain || 'week';
   if (!['week', 'month'].includes(grain)) invalid('Choose weekly or monthly trends.');
   const view = query.view || 'details';
@@ -237,9 +237,9 @@ function emptyTotals() {
 function accumulate(total, entry) {
   total.total_hours += entry.hours;
   total[
-    entry.classification === 'Billable'
+    entry.classification === 'Productive'
       ? 'billable_hours'
-      : entry.classification === 'Non-Billable'
+      : entry.classification === 'Non-Productive'
         ? 'non_billable_hours'
         : 'unclassified_hours'
   ] += entry.hours;
@@ -349,7 +349,7 @@ function analysis(actor, spec, today = todayDate()) {
   const capacityAvailable = fullSelection && !outsideScope;
   const capacityReason = outsideScope
     ? 'Some employee time is outside your report scope. Capacity and missing hours require a complete employee time record.'
-    : 'Clear Platform, Division, project, customer, task, location, billing and status filters to calculate employee capacity and missing hours.';
+    : 'Clear Platform, Division, project, customer, task, location, classification and status filters to calculate employee capacity and missing hours.';
   const period = {
     start_date: spec.start,
     end_date: spec.end,
@@ -366,7 +366,7 @@ function analysis(actor, spec, today = todayDate()) {
   );
   const loggedToDate = activeThroughEntries.reduce((sum, r) => sum + r.hours, 0);
   const billableToDate = activeThroughEntries
-    .filter((r) => r.classification === 'Billable')
+    .filter((r) => r.classification === 'Productive')
     .reduce((sum, r) => sum + r.hours, 0);
   const expectedTotal = dates.length * 8 * activePeople.length;
   const noEntries =
@@ -545,7 +545,7 @@ function analysis(actor, spec, today = todayDate()) {
       : null;
     bucket.billable_utilization_pct = capacityAvailable
       ? percent(
-          rows.filter((r) => r.classification === 'Billable').reduce((sum, r) => sum + r.hours, 0),
+          rows.filter((r) => r.classification === 'Productive').reduce((sum, r) => sum + r.hours, 0),
           expected
         )
       : null;
@@ -565,7 +565,7 @@ function analysis(actor, spec, today = todayDate()) {
   previousTotals.billable_utilization_pct = previousCapacityAvailable
     ? percent(
         previousActive
-          .filter((r) => r.classification === 'Billable')
+          .filter((r) => r.classification === 'Productive')
           .reduce((sum, r) => sum + r.hours, 0),
         previousExpected
       )

@@ -38,6 +38,7 @@ test('impossible dates and incomplete calendars are rejected', () => {
 
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env'); config.dbPath = ':memory:';
 const db = require('../server/src/config/db');
 require('../server/src/config/migrate').migrate();

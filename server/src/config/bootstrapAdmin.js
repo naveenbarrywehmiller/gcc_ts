@@ -1,13 +1,17 @@
 const bcrypt = require('bcryptjs');
+const FACTORY_EMAIL = 'systemadmin@barry-wehmiller.com';
+const FACTORY_PASSWORD = 'systemadmin';
 
 // Explicit, one-time provisioning. Never recreate an account based on its email.
 function bootstrapAdmin(db, env = process.env) {
   return db.transaction(() => {
     if (db.prepare("SELECT id FROM users WHERE role = 'system admin' LIMIT 1").get()) return;
-    const email = env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
-    const password = env.BOOTSTRAP_ADMIN_PASSWORD;
+    const empty = !db.prepare('SELECT 1 FROM users LIMIT 1').get();
+    const email = (env.BOOTSTRAP_ADMIN_EMAIL ?? (empty ? FACTORY_EMAIL : ''))?.trim().toLowerCase();
+    const password = env.BOOTSTRAP_ADMIN_PASSWORD ?? (empty ? FACTORY_PASSWORD : '');
     if (!email && !password) return;
-    if (!email || !email.includes('@') || !password || password.length < 12) {
+    const factory = email === FACTORY_EMAIL && password === FACTORY_PASSWORD;
+    if (!email || !email.includes('@') || !password || (!factory && password.length < 12)) {
       throw new Error('Bootstrap requires BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD (at least 12 characters)');
     }
     if (db.prepare('SELECT id FROM users WHERE email = ?').get(email)) {
@@ -18,4 +22,4 @@ function bootstrapAdmin(db, env = process.env) {
   })();
 }
 
-module.exports = { bootstrapAdmin };
+module.exports = { bootstrapAdmin, FACTORY_EMAIL, FACTORY_PASSWORD };

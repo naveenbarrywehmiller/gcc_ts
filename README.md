@@ -21,7 +21,7 @@ Employee time tracking, team approvals, administration, and reporting in one app
 | Dashboard | Personal hours, weekly progress, status summaries, recent activity, and shortcuts |
 | Approvals | Manager review and administrator approval screens, comments, and division-scoped administration |
 | Organization | Divisions, subdivisions, departments, department ownerships, supporting categories, and activities |
-| Master data | Users, projects, customers/project metadata, tasks, billable classification, and activation/deactivation |
+| Master data | Users, projects, customers/project metadata, tasks, Productive/Non-Productive classification, and activation/deactivation |
 | Reporting | Utilization, project hours and detail, weekly summaries, filtering, Excel/PDF exports |
 | Reporting inputs | Division travel and staffing updates for reporting |
 | Holidays | Holiday calendar administration and calendar integration; see implementation and tests in the repository |
@@ -93,11 +93,11 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 Set `JWT_SECRET` and `JWT_REFRESH_SECRET` to the generated values. For first-time provisioning, also set:
 
 ```dotenv
-BOOTSTRAP_ADMIN_EMAIL=admin@example.com
-BOOTSTRAP_ADMIN_PASSWORD=replace-with-a-unique-password-at-least-12-characters
+BOOTSTRAP_ADMIN_EMAIL=systemadmin@barry-wehmiller.com
+BOOTSTRAP_ADMIN_PASSWORD=systemadmin
 ```
 
-There is **no default production login**. Migrations create a system admin only when these values are supplied and no system admin already exists. Remove the bootstrap values after successful provisioning; they do not reset an existing user's password.
+A fresh database contains only **systemadmin@barry-wehmiller.com / systemadmin**, with the System Admin role. Every business directory starts empty. You may override both bootstrap values before first setup; custom passwords require 12+ characters. Existing accounts/passwords are never overwritten by startup. Remove bootstrap values after provisioning.
 
 ### 3. Initialize and run
 
@@ -105,7 +105,7 @@ There is **no default production login**. Migrations create a system admin only 
 npm run setup
 ```
 
-This runs migrations and catalog seeding. `SEED_DEMO_DATA=false` is the default; demo-user creation is prohibited in production. Migrations also run automatically on server startup.
+This runs migrations without adding sample users, platforms, divisions, projects, tasks, departments, supporting categories, activities or holidays. The former demo-seed flag no longer inserts test data. Migrations also run automatically on server startup.
 
 Open two terminals at the repository root:
 
@@ -147,7 +147,7 @@ The backend explicitly loads **`server/.env`**. Docker Compose reads **root `.en
 | `APP_BASE_URL` | Empty in code; localhost in example | Set to the externally accessible URL for integrations |
 | `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX` | `900000`, `2000` | API request window and maximum count |
 | `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | Empty | One-time system-admin provisioning |
-| `SEED_DEMO_DATA` | `false` | Development-only demo users |
+| `SEED_DEMO_DATA` | ignored | Setup never creates demo records |
 | `POWERBI_API_ENABLED` | `true` | Set `false` to disable the reporting API |
 | `POWERBI_API_KEY` | Empty | Generate a dedicated random key before enabling external reporting clients |
 | `POWERBI_API_BASE_PATH` | `/api/powerbi` | Custom mount supported; the standard path remains an alias |
@@ -212,9 +212,9 @@ Use a trusted reverse proxy or your established HTTPS tunnel for external access
 
 - **Online backup:** sign in as system admin, open `/admin/system`, and download the database. The download endpoint uses SQLite's native online backup API.
 - **Restore:** use the system-admin database upload workflow, after saving a backup and reviewing the file. Restore replaces application data and should be coordinated with users.
-- **CLI backup:** `npm --prefix server run backup` writes to `server/backup`. Install `sqlite3` for an online CLI snapshot. If unavailable, the script copies database/WAL files; stop the server first to keep that fallback consistent.
-- **CLI restore:** stop the server, then run `npm --prefix server run restore -- /absolute/path/to/backup.db` and restart. The script replaces the database and clears existing WAL/SHM files; use a self-contained verified backup.
-- **Maintenance:** use the system-admin screen. File-based maintenance uses `server/.maintenance`; API requests generally return 503 while enabled. Container recreation removes that non-mounted marker, so check maintenance state after recreation.
+- **CLI backup:** `npm --prefix server run backup` writes to `server/backup`. Uses SQLite's native backup API with unique timestamped filenames; maintenance is entered automatically and remains enabled.
+- **CLI restore:** stop the server, then run `npm --prefix server run restore -- /absolute/path/to/backup.db --confirm` and restart. The script validates the selected database, requires an active System Admin, saves a safety backup before replacement, migrates the restored database and keeps maintenance enabled.
+- **Maintenance:** use the system-admin screen. Local maintenance uses `server/.maintenance`; Docker uses the persisted `/app/server/data/.maintenance` marker. Backup/restore/reset enter maintenance automatically and retain it after completion or restart. Only System Admin web login or the System Admin web maintenance control releases it. Release is blocked while an operation is running. `/api/health/live` remains available for deployment health checks; employee APIs return 503.
 - **Diagnostics:** review `/admin/error-logs`, application logs, and `/api/health`. Keep backups outside the host as part of your operational process; a persistent volume alone is not an off-host backup.
 
 ## Commands and validation
@@ -223,7 +223,7 @@ Run from the repository root:
 
 | Command | Purpose |
 | --- | --- |
-| `npm run setup` | Database migrations and seeding |
+| `npm run setup` | Database migrations; only the initial System Admin is provisioned |
 | `npm run dev:server` | Backend development server |
 | `npm run dev:client` | Frontend development server |
 | `npm run build` | Production frontend build |
@@ -295,3 +295,11 @@ Browser authentication uses HttpOnly cookies; API clients may use bearer tokens.
 ## Usage
 
 Internal use only. This repository does not provide an open-source license grant.
+
+### Clean setup and factory reset
+
+Fresh installations ship no business/test records. Existing deployments are preserved during upgrades; clearing an existing installation is an explicit factory reset. In the Ubuntu administrator, menu **33** warns before resetting and requires `FACTORY RESET`. It creates a full safety snapshot, clears application data/uploads/logs, recreates only the factory System Admin, pauses automatic jobs and leaves web maintenance enabled. Menu **32** controls automatic startup after OS reboot (enabled by default). See [the Linux operations guide](deploy/ubuntu/README.md).
+
+For an offline local database reset, stop all server workers first, then run `npm --prefix server run factory-reset -- --confirm`. A timestamped safety database is required and saved to `server/backup` before replacement. This local command resets the database; the Linux menu additionally resets uploaded files and application logs. The factory account uses an ID above all previous users so old sessions cannot become the new administrator. Sign in through the maintenance page to reopen access.
+
+Task classifications are **Productive** and **Non-Productive** in forms, project task lists, dashboards, filters, reports, Excel/PDF exports, Help and local Power BI measure labels. Startup migrates legacy classifications without changing record IDs or assignments. Existing integration keys such as `billing_type`, `billable_task_ids`, `non_billable_task_ids`, `billable_hours`, SQLite `billable`, Power BI `isBillable` and the SharePoint `Billable` field remain stable for existing integrations; their values now reflect Productive/Non-Productive tasks.

@@ -124,23 +124,23 @@ CALCULATE(
 )
 
 // ─────────────────────────────────────────────────────────────
-// BILLABLE & NON-BILLABLE
+// PRODUCTIVE & NON-PRODUCTIVE
 // ─────────────────────────────────────────────────────────────
 
-Billable Hours =
+Productive Hours =
 CALCULATE(
     SUM(FactTimesheet[hours]),
     FactTimesheet[isBillable] = TRUE()
 )
 
-Non-Billable Hours =
+Non-Productive Hours =
 CALCULATE(
     SUM(FactTimesheet[hours]),
     FactTimesheet[isBillable] = FALSE()
 )
 
-Billable Percentage =
-DIVIDE([Billable Hours], [Total Hours], 0)
+Productive Percentage =
+DIVIDE([Productive Hours], [Total Hours], 0)
 
 // ─────────────────────────────────────────────────────────────
 // COMPLIANCE & SUBMISSION RATES

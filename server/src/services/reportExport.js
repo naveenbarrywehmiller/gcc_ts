@@ -46,7 +46,7 @@ function filterLabels(actor, filters) {
         () => (available.locations.some((s) => s.name === value) ? value : 'Unavailable selection'),
       ],
       status: ['Status', () => value],
-      billing_type: ['Billing', () => value],
+      billing_type: ['Classification', () => value],
       projectless: ['Project', () => 'No project'],
     };
     if (labels[key]) result.push(`${labels[key][0]}: ${labels[key][1]()}`);
@@ -81,7 +81,7 @@ function baseReportRows(report, view, entries) {
     };
   if (view === 'utilization')
     return {
-      headers: ['Employee', 'Division', 'Days', 'Hours*', 'Expected*', 'Coverage %', 'Billable %'],
+      headers: ['Employee', 'Division', 'Days', 'Hours*', 'Expected*', 'Coverage %', 'Productive %'],
       widths: [190, 155, 65, 80, 80, 105, 105],
       rows: report.utilization.map((u) => [
         u.name,
@@ -155,12 +155,12 @@ function baseReportRows(report, view, entries) {
       headers: [
         'Period',
         'Hours',
-        'Billable',
-        'Non-billable',
+        'Productive',
+        'Non-productive',
         'Unclassified',
         'Approved',
         'Coverage %',
-        'Billable utilization %',
+        'Productive utilization %',
       ],
       widths: [150, 85, 85, 95, 95, 85, 95, 95],
       rows: report.trends.map((t) => [
@@ -229,8 +229,8 @@ function infoRows(report, actor, spec, generated) {
     ['Total hours', round(report.summary.total_hours)],
     ['Approved hours', round(report.summary.approved_hours)],
     ['Pending approval hours', round(report.summary.pending_hours)],
-    ['Billable hours', round(report.summary.billable_hours)],
-    ['Non-billable hours', round(report.summary.non_billable_hours)],
+    ['Productive hours', round(report.summary.billable_hours)],
+    ['Non-productive hours', round(report.summary.non_billable_hours)],
     ['Unclassified hours', round(report.summary.unclassified_hours)],
     ['Active users', report.summary.employees],
     ['Active users with no matching elapsed entries', report.summary.no_entries],
@@ -241,18 +241,18 @@ function infoRows(report, actor, spec, generated) {
       `${report.comparison.period.start_date} to ${report.comparison.period.end_date}`,
     ],
     ['Previous total hours', round(report.comparison.summary.total_hours)],
-    ['Previous billable hours', round(report.comparison.summary.billable_hours)],
+    ['Previous productive hours', round(report.comparison.summary.billable_hours)],
     ['Previous coverage %', round(report.comparison.summary.coverage_pct)],
-    ['Previous billable utilization %', round(report.comparison.summary.billable_utilization_pct)],
+    ['Previous productive utilization %', round(report.comparison.summary.billable_utilization_pct)],
     ['Hours change %', round(report.comparison.hours_change_pct)],
     ['Comparison', report.comparison.note],
     [
-      'Billing',
-      'Task classification, then project billing type; missing classifications remain Unclassified.',
+      'Classification',
+      'Task classification, then legacy project classification; missing classifications remain Unclassified.',
     ],
     [
       'Utilization',
-      '*Logged and expected hours use active users and elapsed dates only. Coverage is all logged time / expected; billable utilization is billable time / expected.',
+      '*Logged and expected hours use active users and elapsed dates only. Coverage is all logged time / expected; productive utilization is productive time / expected.',
     ],
   ];
 }
@@ -335,7 +335,7 @@ async function excel(report, entries, actor, spec) {
       'Customer',
       'Task',
       'Location',
-      'Billing',
+      'Classification',
       'Ownership',
       'Hours',
       'Status',
@@ -429,10 +429,10 @@ async function pdf(report, entries, actor, spec) {
       `Total: ${round(report.summary.total_hours)}h | Approved: ${round(report.summary.approved_hours)}h | Pending approval: ${round(report.summary.pending_hours)}h`
     );
     doc.text(
-      `Billable: ${round(report.summary.billable_hours)}h | Non-billable: ${round(report.summary.non_billable_hours)}h | Unclassified: ${round(report.summary.unclassified_hours)}h`
+      `Productive: ${round(report.summary.billable_hours)}h | Non-productive: ${round(report.summary.non_billable_hours)}h | Unclassified: ${round(report.summary.unclassified_hours)}h`
     );
     doc.text(
-      `Capacity through: ${report.period.expected_through || 'No elapsed days'} | Coverage: ${percentText(report.summary.coverage_pct)} | Billable utilization: ${percentText(report.summary.billable_utilization_pct)}`
+      `Capacity through: ${report.period.expected_through || 'No elapsed days'} | Coverage: ${percentText(report.summary.coverage_pct)} | Productive utilization: ${percentText(report.summary.billable_utilization_pct)}`
     );
     if (!report.capacity.available) doc.text(report.capacity.reason);
     doc.moveDown();
@@ -458,7 +458,7 @@ async function pdf(report, entries, actor, spec) {
       doc.font('Helvetica').fontSize(9).text('Full-task estimates, once per project assignment. Blank estimates are unknown. Plans are independent of the selected report period and logged hours.');
       doc.moveDown();
       await renderTable(
-        ['Project', 'Task', 'Billing', 'Estimate (h)', 'Input received', 'Start', 'Target', 'Delivered'],
+        ['Project', 'Task', 'Classification', 'Estimate (h)', 'Input received', 'Start', 'Target', 'Delivered'],
         report.projects.flatMap(p => (p.planning?.tasks || []).map(t => [p.project_code, t.task_category, t.classification, t.estimated_hours ?? '', t.input_received_date, t.start_date, t.target_date, t.delivered_date])),
         [90, 200, 90, 60, 85, 85, 85, 85]
       );
@@ -472,10 +472,10 @@ async function pdf(report, entries, actor, spec) {
         ['Metric', 'Selected period', 'Previous period'],
         [
           ['Total hours', round(report.summary.total_hours), round(previous.total_hours)],
-          ['Billable hours', round(report.summary.billable_hours), round(previous.billable_hours)],
+          ['Productive hours', round(report.summary.billable_hours), round(previous.billable_hours)],
           ['Coverage %', round(report.summary.coverage_pct), round(previous.coverage_pct)],
           [
-            'Billable utilization %',
+            'Productive utilization %',
             round(report.summary.billable_utilization_pct),
             round(previous.billable_utilization_pct),
           ],
@@ -511,7 +511,7 @@ async function pdf(report, entries, actor, spec) {
     doc.moveDown();
     doc.font('Helvetica').fontSize(8).text(report.capacity.note);
     doc.text(
-      'Coverage = all logged hours / expected. Billable utilization = billable hours / expected. Utilization rows include active users and elapsed dates only.'
+      'Coverage = all logged hours / expected. Productive utilization = productive hours / expected. Utilization rows include active users and elapsed dates only.'
     );
     doc.text(
       `Previous period: ${report.comparison.period.start_date} to ${report.comparison.period.end_date} | Hours: ${round(report.comparison.summary.total_hours)} | Change: ${percentText(report.comparison.hours_change_pct)}`

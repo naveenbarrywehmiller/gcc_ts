@@ -94,7 +94,7 @@ app.use('/api/system', require('./routes/system'));
 app.use('/api/division-updates', require('./routes/division-updates'));
 app.use('/api/error-logs', require('./routes/error-logs'));
 // Health check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/api/health/live'], (req, res) => {
   const { version } = require('./config/version');
   res.set('Cache-Control', 'no-store');
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: `v${version}` });

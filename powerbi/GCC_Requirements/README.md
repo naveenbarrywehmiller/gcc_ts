@@ -16,7 +16,7 @@ Requires GCC Timesheet v1.29.0+ and reporting API v2.0.0. DimPlatform filters Di
 
 ## Task planning — 2.1.0 (2026-10-14)
 
-DimTask includes estimated hours and the input received, start, target, and delivered dates. DimProject includes its billable and non-billable assigned task IDs, summed estimated task hours, and task counts. Upgrade the application to v1.28.0+ and refresh this PBIP to load the additive reporting API fields.
+DimTask includes estimated hours and the input received, start, target, and delivered dates. DimProject includes its productive and non-productive assigned task IDs, summed estimated task hours, and task counts. Upgrade the application to v1.28.0+ and refresh this PBIP to load the additive reporting API fields.
 
 ## Management overview design — 1.1.1 (2026-10-06)
 
@@ -32,7 +32,7 @@ The saved model includes six tested DAX variable refactors (1.1.2, 2026-10-06). 
 
 ## Training category mapping — 1.1.3
 
-The saved HourCategoryMap maps `Trainings/Webinars` to Training. This also covers non-billable hours logged without a project. DAX measures and visuals are unchanged; refresh the Desktop report to import the updated category. Other unmapped task labels still block utilization until their classifications are confirmed. See the [validation notes](../validation/README.md) for current test limits.
+The saved HourCategoryMap maps `Trainings/Webinars` to Training. This also covers non-productive hours logged without a project. DAX measures and visuals are unchanged; refresh the Desktop report to import the updated category. Other unmapped task labels still block utilization until their classifications are confirmed. See the [validation notes](../validation/README.md) for current test limits.
 
 ## Multiple division assignments — 1.1.4
 
@@ -58,7 +58,7 @@ The report uses **Indian Standard Time (IST, UTC+05:30)** for every viewer. The 
 
 ## Inputs still needed
 
-Utilization remains blank until the live categories **SOP 1234** and **vgnn** have approved hour mappings, as requested. Billable does not automatically mean Productive. Additional gaps include monthly staffing submissions, explicit deliverable/error/rework and improvement registers, fiscal/tolerance confirmation, employment/project allocation history and platform/cohort definitions. The complete guide describes each contract and its affected KPIs.
+Utilization remains blank until the live categories **SOP 1234** and **vgnn** have approved hour mappings, as requested. Productive does not automatically mean Productive. Additional gaps include monthly staffing submissions, explicit deliverable/error/rework and improvement registers, fiscal/tolerance confirmation, employment/project allocation history and platform/cohort definitions. The complete guide describes each contract and its affected KPIs.
 
 ## Validation and sharing
 

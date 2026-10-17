@@ -2,11 +2,15 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
+process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
 const config = require('../server/src/config/env');
 config.dbPath = ':memory:';
 config.powerBiApiKey = 'requirements-test-only';
 const db = require('../server/src/config/db');
 require('../server/src/config/migrate').migrate();
+// Explicit test catalog; production setup creates no Platform records.
+db.prepare("INSERT OR IGNORE INTO platforms(id,name) VALUES (1,'Test Platform')").run();
+
 const express = require('../server/node_modules/express');
 const jwt = require('../server/node_modules/jsonwebtoken');
 const app = express();

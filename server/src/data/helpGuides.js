@@ -26,7 +26,7 @@ const commonGuides = [
       'Choose a week with the arrows or calendar, then select Add Project to enter project or task details.',
       'Select a Project Code for every row. Its division and location are set by an administrator in Projects and filled in automatically. Ask your administrator if a project is missing.',
       'Enter a required Description of your work, up to 500 characters. The live counter shows how much you have entered, and reviewers can read the description in expanded timesheet details.',
-      'Select Task Name/Number after the project. Choose one of the active tasks assigned to that project. Projects can have both Billable and Non-Billable tasks. Ask an administrator to update assignments if needed.',
+      'Select Task Name/Number after the project. Choose one of the active tasks assigned to that project. Projects can have both Productive and Non-Productive tasks. Ask an administrator to update assignments if needed.',
       'Enter hours on the appropriate days and select Save to keep work in progress.',
       'When the week is ready, select Submit Week. If a Recall action is available, use it to correct a submitted week.',
       'If an approved week needs a change and you cannot recall it, contact your administrator.',
@@ -65,7 +65,7 @@ const managerGuides = [
     description: 'Review your division’s vacation plans and companywide reports.', steps: [
       'Use Team view in Planned Vacation to read saved plans in your assigned division. Edit your own dates in My view.',
       'Open Reports to choose a date range and review Weekly Summary, Utilization, Project Hours, Missing Hours or Trends across all divisions, including entry details and downloads.',
-      'Use More filters for customer, task, location and billing. Select hours or View entries to inspect the underlying records.',
+      'Use More filters for customer, task, location and classification. Select hours or View entries to inspect the underlying records.',
       'Capacity uses active users, eight-hour weekdays and company holidays through today. Planned vacation is not recorded leave. Clear activity filters for missing-hours checks.',
       'Excel and PDF download the selected report view with its filters and totals.',
     ] },
@@ -115,7 +115,7 @@ const adminGuides = [
     description: 'Keep the options used by timesheets up to date.',
     steps: [
       'Use Projects to search, filter, add, or edit projects. The page also offers an Excel template, import, and export.',
-      'Select at least one task using the searchable Billable and Non-Billable lists. A project may include either or both categories. Estimates and four planning dates are optional on Task Name/Number.',
+      'Select at least one task using the searchable Productive and Non-Productive lists. A project may include either or both categories. Estimates and four planning dates are optional on Task Name/Number.',
       'Set the division and location in each project. Managers and System Admins maintain locations in Division; Admins can view the existing locations.',
       'Admins maintain Task Name/Number. Divisions, Departments, Dedicated/Flex and Work Type are read-only for Admins; Managers and System Admins maintain these lists.',
       'Check the record and your scope before changing or deactivating an item.',
@@ -128,8 +128,8 @@ const adminGuides = [
     description: 'Review recorded work and administrative activity.',
     steps: [
       'Open Reports and choose a date range of up to 366 days. Weekly Summary, Utilization, Project Hours, Missing Hours and Trends use the same dates and filters.',
-      'Use More filters for customer, task, location and billing. Select hours or View entries to inspect daily records, descriptions and weekly details.',
-      'Coverage includes all logged hours; billable utilization includes billable hours only. Targets use active users, eight-hour weekdays and company holidays through today.',
+      'Use More filters for customer, task, location and classification. Select hours or View entries to inspect daily records, descriptions and weekly details.',
+      'Coverage includes all logged hours; productive utilization includes productive hours only. Targets use active users, eight-hour weekdays and company holidays through today.',
       'Missing Hours flags daily shortfalls and unsubmitted completed weeks. Planned vacation is not recorded leave. Full employee records are required for capacity checks.',
       'Excel or PDF downloads the selected report view with its filters and totals. Excel also includes underlying entries and deduplicated weekly details.',
       'Use Audit Log to review recorded administrative changes.',
@@ -207,7 +207,7 @@ const viewerGuides = [
   ] },
   { id: 'viewer-reports', title: 'Reports', path: '/reports', description: 'Read and download filtered reports across all divisions.', steps: [
     'Choose a date range and report view. Select a division, employee or project, or leave them at All for companywide results.',
-    'Use More filters for customer, task, location and billing. Select hours or View entries to read underlying records.',
+    'Use More filters for customer, task, location and classification. Select hours or View entries to read underlying records.',
     'Download Excel or PDF to export the selected view with its current filters and totals.',
     'Capacity and missing-hours checks require complete employee time. Clear activity filters when checking missing hours.',
   ] },

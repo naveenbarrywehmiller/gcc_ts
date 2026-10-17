@@ -33,14 +33,14 @@ Purpose: understand when work is recorded and how it is classified.
 |---|---|---|
 | Daily average | Card | `[Average Daily Hours]` |
 | Weekly average | Card | `[Average Weekly Hours]` |
-| Billable percentage | Card | `[Billable Percentage]` |
+| Productive percentage | Card | `[Productive Percentage]` |
 | Daily hours | Clustered column chart | Axis: `DimDate[DayName]`; Values: `[Total Hours]` |
 | Weekly hours | Line chart | Axis: `DimDate[WeekStart]`; Values: `[Total Hours]` |
-| Billable split | Donut chart | Legend: `FactTimesheet[isBillable]`; Values: `[Total Hours]` |
+| Productive split | Donut chart | Legend: `FactTimesheet[isBillable]`; Values: `[Total Hours]` |
 | Weekend and holiday hours | Clustered column chart | Values: `[Weekend Hours]`, `[Holiday Hours]` |
 | Status by month | 100% stacked column chart | Axis: `DimDate[MonthYearLabel]`; Legend: `FactTimesheet[status]`; Values: `[Total Hours]` |
 
-Slicers: date range, employee, division, department, status, and billable flag.
+Slicers: date range, employee, division, department, status, and productive flag.
 
 ### 3. Employee Analytics
 
@@ -74,15 +74,15 @@ Use synchronized division and department slicers. Keep cross-filtering one-direc
 
 ### 5. Project Analytics
 
-Purpose: identify project concentration, contributors, and billable mix.
+Purpose: identify project concentration, contributors, and productive mix.
 
 | Visual | Type | Fields / Measures |
 |---|---|---|
 | Project hours | Treemap | Group: `DimProject[projectName]`; Values: `[Total Hours]` |
 | Top project trend | Line chart | Axis: `DimDate[MonthYearLabel]`; Legend: `DimProject[projectName]`; Values: `[Total Hours]`; filter: Top 5 |
 | Project contributors | Stacked bar chart | Category: `DimProject[projectName]`; Legend: `DimEmployee[employeeName]`; Values: `[Total Hours]` |
-| Billable mix | Donut chart | Legend: `FactTimesheet[isBillable]`; Values: `[Total Hours]` |
-| Project detail | Table | Project code, project name, customer, division, `[Total Hours]`, `[Active Employee Count]`, `[Billable Percentage]` |
+| Productive mix | Donut chart | Legend: `FactTimesheet[isBillable]`; Values: `[Total Hours]` |
+| Project detail | Table | Project code, project name, customer, division, `[Total Hours]`, `[Active Employee Count]`, `[Productive Percentage]` |
 
 Enable drill-through using `DimProject[projectCode]`.
 
@@ -153,14 +153,14 @@ Synchronize these slicers across the report using **View > Sync slicers**:
 | Department | `DimDepartment[departmentName]` | Dropdown with search |
 | Employee | `DimEmployee[employeeName]` | Dropdown with search |
 | Status | `FactTimesheet[status]` | Multi-select dropdown |
-| Billable | `FactTimesheet[isBillable]` | Dropdown |
+| Productive | `FactTimesheet[isBillable]` | Dropdown |
 
 ## Tooltip Pages
 
 Create report-page tooltips for:
 
-- **Employee tooltip:** employee name, division, department, total hours, billable percentage, approval rate.
-- **Project tooltip:** project name, customer, total hours, contributors, billable percentage.
+- **Employee tooltip:** employee name, division, department, total hours, productive percentage, approval rate.
+- **Project tooltip:** project name, customer, total hours, contributors, productive percentage.
 - **Division tooltip:** employee count, total hours, submission rate, approval rate.
 
 ## Formatting Recommendations

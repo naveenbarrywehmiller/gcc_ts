@@ -105,7 +105,7 @@ PURPOSE = {
     'Admin Hours': 'Actual hours explicitly mapped to Admin.',
     'Vacation Hours': 'Recorded actual hours mapped to Vacation; distinct from planned vacation capacity.',
     'Holiday Hours': 'Recorded actual hours mapped to Holiday; distinct from calendar holiday days.',
-    'Productive Hours': 'Actual hours explicitly mapped to Productive; not inferred from Billable.',
+    'Productive Hours': 'Actual hours explicitly mapped to Productive; based on the separately confirmed HourCategoryMap.',
     'Unmapped Hours': 'Actual hours with no approved mapping; a positive result blocks utilization.',
     'Effective Hours': 'Actuals minus training, internal, admin, vacation and holiday hours; blank when unmapped hours exist.',
     'Working Days': 'Selected Monday–Friday dates excluding company holidays.',
@@ -247,7 +247,7 @@ The requirements project needs **reporting API v1.1.0**, included in application
 | projects | DimProject | Project IDs, budget, dates, status, division and product fields |
 | divisions | DimDivision | Division ID/name master |
 | holidays | DimHoliday and DimDate | Company holiday IDs/dates |
-| tasks | DimTask | Task category and Billable/Nonbillable classification |
+| tasks | DimTask | Task category and Productive/Non-Productive classification |
 | timesheets | TimesheetRows, FactTimesheet, FactWeeklyDetails | Paginated daily entries with stable IDs and copied weekly metadata |
 | planned-vacations | FactVacation | Planned full-day employee/date absence |
 | staffing | FactStaffing | Division/month, open-position snapshot and new-joiner flow |
@@ -302,7 +302,7 @@ Capacity, effort and project forecast return blank under unsupported employee/pr
 
 ## Missing inputs and decisions
 
-These gaps are represented as blanks/readiness information, not invented business records. The user explicitly chose **keep utilization blank until task mapping is confirmed**. The live labels `SOP 1234` and `vgnn` are Billable but stay **Unmapped**. Confirm their approved hour categories before adding entries to HourCategoryMap; do not map all Billable work to Productive automatically.
+These gaps are represented as blanks/readiness information, not invented business records. The user explicitly chose **keep utilization blank until task mapping is confirmed**. The live labels `SOP 1234` and `vgnn` are Productive but stay **Unmapped**. Confirm their approved hour categories before adding entries to HourCategoryMap; do not map all Productive work to Productive automatically.
 
 | Priority | Input/decision | Needed for | What to provide/change |
 |---|---|---|---|

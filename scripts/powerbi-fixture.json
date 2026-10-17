@@ -60,12 +60,12 @@
     {
       "id": 1,
       "taskCategory": "Development",
-      "classification": "Billable"
+      "classification": "Productive"
     },
     {
       "id": 2,
       "taskCategory": "Trainings/Webinars",
-      "classification": "Non-Billable"
+      "classification": "Non-Productive"
     }
   ],
   "holidays": [

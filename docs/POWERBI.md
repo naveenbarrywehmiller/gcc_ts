@@ -142,7 +142,7 @@ X-API-Key: YOUR_API_KEY_HERE
       "project": "SCADA Modernization",
       "projectCode": "PRJ-204",
       "projectCategory": "Development",
-      "taskClassification": "Billable",
+      "taskClassification": "Productive",
       "hours": 8.0,
       "status": "approved",
       "isBillable": true,
