@@ -38,12 +38,14 @@ add('Users', 'Assign/release employee ownership; view timesheet history', 'users
 add('Projects', 'View available projects and select them in a timesheet', 'timesheetEntry', 'Available project choices', 'Employee booking divisions and Dedicated/Flex rules are enforced when saving time.');
 add('Projects', 'View the project directory and details; search and filter', 'projectsView', 'All divisions', 'Managers and Viewers have read-only access.');
 add('Projects', 'Create, edit, classify and deactivate projects', 'projects', divisions, 'Both the current and destination division must be manageable. Reference values are selected from existing lists.');
-add('Projects', 'Import a project workbook', 'projects', divisions, 'Import is validated before any records are saved.');
-add('Projects', 'Export project data or download an import template', 'projectsView', reportDivisions);
+add('Projects', 'Import a project workbook', 'projects', divisions, 'Creates or updates by stable ID. Removed export rows deactivate only those exported projects. Any invalid row rejects all changes; both current and destination divisions are checked.');
+add('Projects', 'Export project data for editing or new rows', 'projectsView', reportDivisions, 'Current filters apply. Empty results export headers. Admin exports include only assigned Platforms and Divisions.');
 add('Projects', 'Permanently delete an unused project', 'projects', divisions, 'Projects with timesheet entries must be deactivated instead.');
 add('Task Name/Number', 'Use existing tasks in a timesheet', 'timesheetEntry', 'Available task choices');
 add('Task Name/Number', 'View and search the shared task directory', 'tasksView', 'Companywide', 'Includes active and inactive tasks. Managers and Viewers have read-only access.');
 add('Task Name/Number', 'Create, edit and deactivate shared tasks', 'tasks', 'Companywide', 'Task management remains with Admins and System Admins.');
+add('Task Name/Number', 'Export tasks for editing or new rows', 'tasksView', 'Companywide', 'Current filters apply. Empty results export headers; Excel includes Classification and Active dropdowns.');
+add('Task Name/Number', 'Import task changes and deactivate removed export rows', 'tasks', 'Companywide', 'Any invalid row rejects all changes. Task IDs preserve existing links and assigned/logged classification history.');
 for (const area of ['Divisions', 'Locations', 'Departments', 'Department Ownership', 'Dedicated/Flex', 'Work Type']) {
   add(area, 'View and search reference settings', 'catalogView', 'Companywide', 'Employees can use relevant choices through their existing forms.');
   add(area, 'Add and edit reference settings', 'catalogEdit', 'Companywide', 'Manager changes affect all divisions.');

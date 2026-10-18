@@ -4,7 +4,26 @@ const { authenticate } = require('../middleware/auth');
 
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
-const { validateTask } = require('../utils/taskFields');
+const { validateTask, validateTaskHistory } = require('../utils/taskFields');
+const ExcelJS = require('exceljs');
+const { taskColumns, createSheet, addDropdowns, addManifest } = require('../utils/catalogWorkbook');
+
+router.get('/export', authenticate, permit('tasksView'), async (req, res, next) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = createSheet(workbook, 'Tasks', taskColumns);
+    const tasks = db.prepare('SELECT * FROM tasks ORDER BY classification, task_category, id').all().filter(t =>
+      (req.query.active === 'all' || t.active === (req.query.active === '0' ? 0 : 1)) &&
+      (!req.query.classification || t.classification === req.query.classification) &&
+      (!req.query.search || [t.task_category, t.task_description, t.classification].some(value => value?.toLowerCase().includes(String(req.query.search).toLowerCase()))));
+    tasks.forEach(t => sheet.addRow({ ...t, active: t.active ? 'Yes' : 'No' }));
+    addDropdowns(workbook, sheet, taskColumns, { classification: ['Productive', 'Non-Productive'], active: ['Yes', 'No'] });
+    addManifest(workbook, 'tasks', tasks);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="tasks.xlsx"');
+    await workbook.xlsx.write(res); res.end();
+  } catch (error) { next(error); }
+});
 
 // GET /api/tasks
 router.get('/', authenticate, (req, res) => {
@@ -43,10 +62,7 @@ router.put('/:id', authenticate, permit('tasks'), (req, res) => {
   const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
   if (!existing) return res.status(404).json({ error: 'Task not found' });
   const data = validateTask(req.body, existing);
-  if (data.classification !== existing.classification &&
-      (db.prepare('SELECT 1 FROM project_tasks WHERE task_id = ? LIMIT 1').get(taskId) || db.prepare('SELECT 1 FROM timesheets WHERE task_id = ? LIMIT 1').get(taskId))) {
-    return res.status(409).json({ error: 'Classification cannot change for an assigned or logged task. Create a new task to preserve classification history.' });
-  }
+  validateTaskHistory(data, existing);
   db.prepare(`UPDATE tasks SET ${Object.keys(data).map(k => `${k} = ?`).join(',')}, requires_project = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(...Object.values(data), taskId);
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
   res.json({ task });

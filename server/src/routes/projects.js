@@ -5,7 +5,8 @@ const { authenticate } = require('../middleware/auth');
 const { projectDivisionIds, canManageProjectDivision } = require('../utils/projectPermissions');
 const { reportingDivisionIds } = require('../utils/divisionScope');
 const { reportScope } = require('../utils/divisionScope');
-const { columns, validateProject } = require('../utils/projectFields');
+const { validateProject } = require('../utils/projectFields');
+const { projectColumns, createSheet, addDropdowns, addManifest } = require('../utils/catalogWorkbook');
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
 const { validateAssignments, saveAssignments, withTasks } = require('../utils/projectTasks');
@@ -47,21 +48,35 @@ router.get('/options', authenticate, permit('reports'), (req, res) => {
 router.get('/export', authenticate, permit('projectsView'), async (req, res, next) => {
   try {
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Projects');
-    sheet.columns = [...columns, ['platform_name', 'Platform']].map(([key, header]) => ({ key, header, width: 24 }));
-    if (req.query.template !== 'true') {
-      const { sql, params } = filter(req.query);
-      const scope = reportScope(req.user, 'p');
-      db.prepare(select + sql + ` AND ${scope.sql} ORDER BY p.project_code`).all(...params, ...scope.params)
-        .forEach(p => { const enriched = withTasks(p); sheet.addRow({ ...p, division: p.division_name, location: p.subdivision_name, billable_task_ids: enriched.billable_task_ids.join(';'), non_billable_task_ids: enriched.non_billable_task_ids.join(';') }); });
-    }
+    const sheet = createSheet(workbook, 'Projects', projectColumns);
+    const { sql, params } = filter(req.query);
+    const scope = reportScope(req.user, 'p');
+    const projects = db.prepare(select + sql + ` AND ${scope.sql} ORDER BY p.project_code`).all(...params, ...scope.params);
+    projects.forEach(p => {
+      const enriched = enrich(p);
+      sheet.addRow({ ...p, division: p.division_name, location: p.subdivision_name, active: p.active ? 'Yes' : 'No',
+        billable_task_ids: enriched.billable_task_ids.join(';'), non_billable_task_ids: enriched.non_billable_task_ids.join(';'), user_ids: enriched.user_ids.join(';') });
+    });
+    const divisions = db.prepare('SELECT d.*, p.name AS platform_name FROM divisions d JOIN platforms p ON p.id=d.platform_id WHERE d.active=1 AND p.active=1 ORDER BY p.name,d.name').all()
+      .filter(d => req.user.role !== 'admin' || canManageProjectDivision(req.user, d.id));
+    const locations = db.prepare('SELECT * FROM subdivisions WHERE active=1 ORDER BY name').all().filter(s => divisions.some(d => d.id === s.division_id));
+    addDropdowns(workbook, sheet, projectColumns, {
+      platform_name: divisions.map(d => d.platform_name), division: divisions.map(d => d.name), location: locations.map(s => s.name),
+      project_status: ['Inprogress', 'Hold', 'Completed'], active: ['Yes', 'No'], user_assignment_mode: ['division', 'selected'],
+      activity: db.prepare('SELECT name FROM activities WHERE active=1 ORDER BY name').all().map(r => r.name),
+      team_type: db.prepare('SELECT name FROM supporting_categories WHERE active=1 ORDER BY name').all().map(r => r.name),
+    });
     const taskSheet = workbook.addWorksheet('Task Reference');
     taskSheet.columns = ['ID', 'Classification', 'Task Name/Number', 'Estimated Hours', 'Input Received Date', 'Start Date', 'Target Date', 'Delivered Date', 'Active'].map(header => ({ header, width: 24 }));
     db.prepare('SELECT * FROM tasks ORDER BY classification, task_category').all().forEach(t => taskSheet.addRow([t.id, t.classification, t.task_category, t.estimated_hours, t.input_received_date, t.start_date, t.target_date, t.delivered_date, t.active ? 'Yes' : 'No']));
-    sheet.getRow(1).font = { bold: true };
-    sheet.views = [{ state: 'frozen', ySplit: 1 }];
+    const users = createSheet(workbook, 'User Reference', [['id', 'ID'], ['name', 'Name'], ['divisions', 'Division IDs']]);
+    db.prepare("SELECT * FROM users WHERE active=1 AND role!='viewer' AND name!='[Deleted User]' ORDER BY name").all().forEach(u => {
+      const ids = divisionIds(u, { legacy: false }).filter(id => divisions.some(d => d.id === id));
+      if (ids.length) users.addRow({ id: u.id, name: u.name, divisions: ids.join(';') });
+    });
+    addManifest(workbook, 'projects', projects);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${req.query.template === 'true' ? 'project-template' : 'projects'}.xlsx"`);
+    res.setHeader('Content-Disposition', 'attachment; filename="projects.xlsx"');
     await workbook.xlsx.write(res); res.end();
   } catch (err) { next(err); }
 });

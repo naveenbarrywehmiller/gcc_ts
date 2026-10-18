@@ -114,7 +114,10 @@ const adminGuides = [
     path: '/admin/projects',
     description: 'Keep the options used by timesheets up to date.',
     steps: [
-      'Use Projects to search, filter, add, or edit projects. The page also offers an Excel template, import, and export.',
+      'Use Projects to search, filter, add, or edit projects. Export Projects downloads the current filters, or just headers when empty. Admin exports stay within assigned Platforms and Divisions.',
+      'Edit exported projects and reimport to update them. Keep existing Project IDs; leave IDs blank for new rows. Excel dropdowns cover single choices. Use semicolon-separated task and user IDs from the reference sheets for multiple selections.',
+      'Removing rows from an exported Excel workbook deactivates those exported records. Keep the hidden sheets; filtered-out and newly created records are unaffected. CSV and older files never deactivate omitted rows. Only the web can permanently delete unused projects.',
+      'Task Name/Number offers Export Tasks and Import Excel with the same update, validation and deactivation behavior. Tasks remain shared companywide. Keep Task IDs; assigned or logged task classifications cannot change. Any invalid row rejects the entire project or task import and the error popup identifies the affected rows.',
       'Select at least one task using the searchable Productive and Non-Productive lists. A project may include either or both categories. Estimates and four planning dates are optional on Task Name/Number.',
       'Set the division and location in each project. Managers and System Admins maintain locations in Division; Admins can view the existing locations.',
       'Admins maintain Task Name/Number. Divisions, Departments, Dedicated/Flex and Work Type are read-only for Admins; Managers and System Admins maintain these lists.',

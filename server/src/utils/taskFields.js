@@ -18,4 +18,11 @@ function validateTask(input, existing = {}) {
   if (input.active !== undefined) result.active = input.active ? 1 : 0;
   return result;
 }
-module.exports = { planningFields, validateTask };
+function validateTaskHistory(data, existing) {
+  const db = require('../config/db');
+  if (existing && data.classification !== existing.classification &&
+      (db.prepare('SELECT 1 FROM project_tasks WHERE task_id = ? LIMIT 1').get(existing.id) || db.prepare('SELECT 1 FROM timesheets WHERE task_id = ? LIMIT 1').get(existing.id))) {
+    fail('Classification cannot change for an assigned or logged task. Create a new task to preserve classification history.', 409);
+  }
+}
+module.exports = { planningFields, validateTask, validateTaskHistory };

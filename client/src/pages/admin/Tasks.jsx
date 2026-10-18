@@ -1,6 +1,8 @@
 import { taskPlanningFields } from '../../utils/taskPlanningFields';
 import FieldHelp from '../../components/ui/FieldHelp';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { downloadCatalog, importSummary } from '../../utils/catalogTransfer';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
@@ -13,6 +15,10 @@ export default function AdminTasks() {
   const toast = useToast();
   const { user } = useAuth();
   const canManage = hasPermission(user, 'tasks');
+  const cache = useQueryClient();
+  const fileRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -49,15 +55,45 @@ export default function AdminTasks() {
     try { await api.delete(`/tasks/${id}`); toast.success('Task deactivated'); load(); } catch { toast.error('Failed'); }
   };
 
+  const download = async () => {
+    setBusy(true);
+    try { await downloadCatalog('/tasks/export', { search, active }, 'tasks.xlsx'); }
+    catch { toast.error('Download failed'); }
+    finally { setBusy(false); }
+  };
+  const importFile = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setBusy(true);
+    const body = new FormData(); body.append('file', file);
+    try {
+      const response = await api.post('/import/tasks', body, { headers: { 'Content-Type': 'multipart/form-data' } });
+      toast.success(importSummary(response.data)); load();
+      for (const queryKey of [['project-options'], ['projects'], ['admin-projects'], ['tasks'], ['timesheet'], ['dashboard']]) cache.invalidateQueries({ queryKey });
+    } catch (error) { setErrors([error.response?.data?.error || 'Import failed', ...(error.response?.data?.errors || [])]); }
+    finally { setBusy(false); e.target.value = ''; }
+  };
+
   if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">Task Name/Number</h1>
-        {canManage && <button onClick={openCreate} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Task</button>}
+        <div className="flex flex-wrap gap-2">
+          <button disabled={busy} onClick={download} className="btn-secondary btn-sm">Export Tasks</button>
+          {canManage && <>
+            <button disabled={busy} onClick={() => fileRef.current.click()} className="btn-secondary btn-sm">Import Excel</button>
+            <input ref={fileRef} type="file" hidden accept=".xlsx,.csv" onChange={importFile} />
+            <button disabled={busy} onClick={openCreate} className="btn-primary btn-sm"><Plus className="w-4 h-4" /> Add Task</button>
+          </>}
+        </div>
       </div>
       {!canManage && <p className="text-sm text-surface-500">View shared tasks used across all divisions.</p>}
+      {canManage && <div className="space-y-1 text-xs text-surface-500">
+        <p>Export Tasks downloads the current filters, or headers for an empty list. Edit and reimport to update tasks; keep existing Task IDs and leave IDs blank for new rows. Excel includes Classification and Active dropdowns.</p>
+        <p>Removing a row from an exported Excel file deactivates that exported task. CSV and older files update or add rows without deactivating missing tasks. Any invalid row rejects the entire import. Keep the workbook’s hidden sheets. Tasks are shared across all divisions; classification cannot change after assignment or time entry.</p>
+      </div>}
       <div className="flex flex-col sm:flex-row gap-3">
       <div className="relative w-full sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
@@ -127,6 +163,9 @@ export default function AdminTasks() {
             {taskPlanningFields.map(([key, label, type]) => <div key={key} className="min-w-0"><label htmlFor={`task-${key}`} className="block text-xs font-medium mb-1.5">{label} <span className="text-surface-500">(optional)</span></label><input id={`task-${key}`} type={type} className="input" min={type === 'number' ? 0 : undefined} step={type === 'number' ? 'any' : undefined} value={form[key] ?? ''} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}
           </div>
         </div>
+      </Modal>
+      <Modal isOpen={!!errors} onClose={() => setErrors(null)} title="Task import failed">
+        <ul className="list-disc pl-5 space-y-2 text-sm break-words" role="alert">{errors?.map((error, index) => <li key={index}>{error}</li>)}</ul>
       </Modal>
     </div>
   );

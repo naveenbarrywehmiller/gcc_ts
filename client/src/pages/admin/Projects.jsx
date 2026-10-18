@@ -9,6 +9,7 @@ import Modal from '../../components/ui/Modal';
 import FieldHelp from '../../components/ui/FieldHelp';
 import ProjectTaskPicker from '../../components/ProjectTaskPicker';
 import ProjectStatus from '../../components/ProjectStatus';
+import { downloadCatalog, importSummary } from '../../utils/catalogTransfer';
 
 const fields = [
   ['project_code', 'Project Code'], ['project_name', 'Project Name'], ['gcc_project_code', 'GCC - Project Code'],
@@ -56,13 +57,10 @@ export default function AdminProjects() {
     } catch (err) { toast.error(err.response?.data?.error || 'Unable to save project'); }
     finally { setBusy(false); }
   };
-  const download = async template => {
+  const download = async () => {
     setBusy(true);
     try {
-      const res = await api.get('/projects/export', { params: { ...filters, template }, responseType: 'blob' });
-      const url = URL.createObjectURL(res.data); const link = document.createElement('a');
-      link.href = url; link.download = template ? 'project-template.xlsx' : 'projects.xlsx'; link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      await downloadCatalog('/projects/export', filters, 'projects.xlsx');
     } catch { toast.error('Download failed'); } finally { setBusy(false); }
   };
   const importFile = async e => {
@@ -72,7 +70,7 @@ export default function AdminProjects() {
     if (divisions.some(d => d.id === Number(filters.division_id))) body.append('division_id', filters.division_id);
     try {
       const res = await api.post('/import/projects', body, { headers: { 'Content-Type': 'multipart/form-data' } });
-      toast.success(`Imported ${res.data.imported} projects`); refresh(); setPage(1);
+      toast.success(importSummary(res.data)); refresh(); setPage(1);
     } catch (err) { setErrors([err.response?.data?.error || 'Import failed', ...(err.response?.data?.errors || [])]); }
     finally { setBusy(false); e.target.value = ''; }
   };
@@ -93,15 +91,17 @@ export default function AdminProjects() {
   return <div className="space-y-4">
     <div className="flex flex-wrap justify-between gap-3"><h1 className="text-xl font-bold">Projects</h1>
       <div className="flex flex-wrap gap-2">
-        {canManage && <button disabled={busy} className="btn-secondary btn-sm" onClick={() => download(true)}>Download Template</button>}
-        <button disabled={busy} className="btn-secondary btn-sm" onClick={() => download(false)}>Export Projects</button>
+        <button disabled={busy} className="btn-secondary btn-sm" onClick={download}>Export Projects</button>
         {canManage && <><button disabled={busy || !canCreate} className="btn-secondary btn-sm" onClick={() => fileRef.current.click()}>Import Excel</button>
         <button disabled={busy || !canCreate} className="btn-primary btn-sm" onClick={() => setForm({ user_ids: [], user_assignment_mode: 'division', billable_task_ids: [], non_billable_task_ids: [], project_status: 'Inprogress', division_id: divisions.some(d => d.id === Number(filters.division_id)) ? filters.division_id : (divisions.length === 1 ? divisions[0].id : ''), subdivision_id: '' })}>Add Project</button>
         <input ref={fileRef} type="file" hidden accept=".xlsx,.csv" onChange={importFile} /></>}
       </div>
     </div>
-    {canManage && <p className="text-xs text-surface-500">Import creates new projects only. Use semicolon-separated task IDs from the template’s Task Reference sheet. Duplicate codes reject the entire file. Select a division you manage below when it is not supplied in the file.</p>}
-    {!isSystemAdmin && <p className="text-xs text-surface-500">{canManage ? 'You can view projects across all divisions and manage projects in your assigned divisions only.' : 'View project details and export projects across all divisions.'}</p>}
+    {canManage && <div className="space-y-1 text-xs text-surface-500">
+      <p>Export Projects downloads the current filters, or headers for an empty list. Edit and reimport to update projects; keep existing Project IDs and leave IDs blank for new rows. Use Excel dropdowns for single choices and semicolon-separated IDs from Task Reference and User Reference for multiple selections.</p>
+      <p>Removing a row from an exported Excel file deactivates that exported project. Only the web can permanently delete projects. CSV and older files update or add rows without deactivating missing projects. Any invalid row rejects the entire import. Keep the workbook’s hidden sheets. Select a managed division below when the file does not include one.</p>
+    </div>}
+    {!isSystemAdmin && <p className="text-xs text-surface-500">{canManage ? 'You can view projects across all divisions. Exports and changes are limited to your assigned platforms and divisions.' : 'View project details and export projects across all divisions.'}</p>}
     {canManage && !options.isLoading && !options.isError && !canCreate && <p role="status" className="text-sm text-amber-700">No active division is assigned to your account. Ask a system admin to assign your division before adding projects.</p>}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       <input className="input" aria-label="Search projects" placeholder="Search projects…" value={filters.search} onChange={e => updateFilter('search', e.target.value)} />
@@ -165,6 +165,6 @@ export default function AdminProjects() {
         {actionError && <p role="alert" className="text-red-700 dark:text-red-300">{actionError}</p>}
       </div>}
     </Modal>
-    <Modal isOpen={!!errors} onClose={() => setErrors(null)} title="Project import failed"><ul className="list-disc pl-5 space-y-2 text-sm">{errors?.map((error, i) => <li key={i}>{error}</li>)}</ul></Modal>
+    <Modal isOpen={!!errors} onClose={() => setErrors(null)} title="Project import failed"><ul className="list-disc pl-5 space-y-2 text-sm break-words" role="alert">{errors?.map((error, i) => <li key={i}>{error}</li>)}</ul></Modal>
   </div>;
 }

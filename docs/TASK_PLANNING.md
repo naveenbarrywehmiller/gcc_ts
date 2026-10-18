@@ -26,7 +26,7 @@ Admin and System Admin permissions, including Admin division restrictions, apply
 
 Project Hours shows the current full-task estimate alongside period-filtered actual hours. Planning is a current snapshot of all assignments for the included projects, independent of the report date range and task/billing filters. Task tables and the timesheet task selector show the optional metadata. Excel reports include a separate Task Planning sheet; Project Hours PDF includes a planning section.
 
-Project Excel templates/exports replace Classification Type with Productive Task IDs and Non-Productive Task IDs. Use semicolon-separated IDs; the Task Reference sheet lists IDs, categories and planning fields. Missing/invalid assignments reject the entire import. Task Reference is informational; importing projects does not edit task master data.
+Project Excel exports replace Classification Type with Productive Task IDs and Non-Productive Task IDs. Use semicolon-separated IDs; the Task Reference sheet lists IDs, categories and planning fields. Missing/invalid assignments reject the entire import. Task Reference is informational; importing projects does not edit task master data. Both Projects and Task Name/Number now support exporting, editing and reimporting existing records, plus deactivation of removed export rows; see [CATALOG_IMPORT_EXPORT.md](CATALOG_IMPORT_EXPORT.md).
 
 Power BI task/project API payloads, reusable Power Query files, and the GCC Requirements model dimensions expose the new planning fields. Preserve one row per task/project in dimensions. Existing actual-hours measures keep their original grain; assignment ID lists must not be expanded into fact rows. No live Power BI content was published or refreshed.
 
