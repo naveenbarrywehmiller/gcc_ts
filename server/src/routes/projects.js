@@ -6,7 +6,7 @@ const { projectDivisionIds, canManageProjectDivision } = require('../utils/proje
 const { reportingDivisionIds } = require('../utils/divisionScope');
 const { reportScope } = require('../utils/divisionScope');
 const { validateProject } = require('../utils/projectFields');
-const { projectColumns, createSheet, addDropdowns, addManifest } = require('../utils/catalogWorkbook');
+const { projectColumns, createSheet, addDropdowns, addManifest, exportFilename } = require('../utils/catalogWorkbook');
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
 const { validateAssignments, saveAssignments, withTasks } = require('../utils/projectTasks');
@@ -76,7 +76,7 @@ router.get('/export', authenticate, permit('projectsView'), async (req, res, nex
     });
     addManifest(workbook, 'projects', projects);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="projects.xlsx"');
+    res.setHeader('Content-Disposition', `attachment; filename="${exportFilename('projects', req.query.time_zone)}"`);
     await workbook.xlsx.write(res); res.end();
   } catch (err) { next(err); }
 });

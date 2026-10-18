@@ -2,6 +2,8 @@
 
 Projects uses Export Projects for both existing records and a new-record workbook; the separate Download Template action and template export branch are removed. Task Name/Number offers Export Tasks and Import Excel. Empty results have only headers in the main data sheet, with no example or blank data rows. Exports honor current filters without pagination.
 
+Downloads include the export date and time to the second: `projects_YYYY-MM-DD_HH-mm-ss.xlsx` and `tasks_YYYY-MM-DD_HH-mm-ss.xlsx`. The web uses the browser's local time zone. Direct API exports accept an IANA `time_zone` parameter and default to UTC when omitted.
+
 ## Permissions
 
 Admin project exports and imports follow assigned Divisions and their parent Platforms. A requested out-of-scope filter returns a header-only export. Imports check the current and destination Division, including omitted exported projects. Scope is checked again on upload, so an old workbook cannot retain revoked access. System Admins manage all projects; Managers and Viewers retain companywide read/export access. Tasks remain the existing shared companywide catalog, editable/importable by Admins and System Admins, with read/export access for Managers and Viewers. Employees cannot export/import either catalog.

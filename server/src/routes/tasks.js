@@ -6,7 +6,7 @@ const { permit } = require('../middleware/permissions');
 const router = express.Router();
 const { validateTask, validateTaskHistory } = require('../utils/taskFields');
 const ExcelJS = require('exceljs');
-const { taskColumns, createSheet, addDropdowns, addManifest } = require('../utils/catalogWorkbook');
+const { taskColumns, createSheet, addDropdowns, addManifest, exportFilename } = require('../utils/catalogWorkbook');
 
 router.get('/export', authenticate, permit('tasksView'), async (req, res, next) => {
   try {
@@ -20,7 +20,7 @@ router.get('/export', authenticate, permit('tasksView'), async (req, res, next) 
     addDropdowns(workbook, sheet, taskColumns, { classification: ['Productive', 'Non-Productive'], active: ['Yes', 'No'] });
     addManifest(workbook, 'tasks', tasks);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="tasks.xlsx"');
+    res.setHeader('Content-Disposition', `attachment; filename="${exportFilename('tasks', req.query.time_zone)}"`);
     await workbook.xlsx.write(res); res.end();
   } catch (error) { next(error); }
 });
