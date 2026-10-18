@@ -1,5 +1,9 @@
 # Responsive design audit
 
+## Timestamped catalog downloads (October 17, 2026)
+
+Project and task Excel filenames include `YYYY-MM-DD_HH-mm-ss` using the browser's local time zone; direct API calls default to UTC. The download helper uses the API's Content-Disposition filename. Rendered components and styles are unchanged. Headed Chromium passed both page/export-button checks at all 28 required sizes/orientations and two additional page checks in an India time zone (58 checks). Actual download names matched Los Angeles and India local times; timestamped files reimported successfully. Direct API UTC filenames and rejection of invalid time zones were checked. The 13 import/export tests, lint, production build and whitespace checks passed; the existing Vite large-chunk warning remains.
+
 ## Project and task workbook editing (October 17, 2026)
 
 Projects removes Download Template and uses Export Projects for populated or header-only workbooks. Projects and Task Name/Number support stable-ID updates, Excel single-choice dropdowns, whole-file validation with row errors, and deactivation of removed export rows. Project exports/imports retain Admin Platform/Division scope; tasks retain shared companywide permissions. Project task/user assignments and timesheet links survive updates. See [CATALOG_IMPORT_EXPORT.md](CATALOG_IMPORT_EXPORT.md) for file rules and compatibility.

@@ -4,9 +4,9 @@ Employee time tracking, team approvals, administration, and reporting in one app
 
 [Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
-**Releases:** [Application v1.31.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.31.0) · [Power BI v2.2.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v2.2.0) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v2.2.0/gcc-requirements-powerbi-v2.2.0.zip))
+**Releases:** [Application v1.31.1](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.31.1) · [Power BI v2.2.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v2.2.0) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v2.2.0/gcc-requirements-powerbi-v2.2.0.zip))
 
-**Current source versions:** Application v1.31.0 · Power BI v2.2.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing data.
+**Current source versions:** Application v1.31.1 · Power BI v2.2.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing data.
 
 **Ubuntu server administration:** [Interactive installer and maintenance guide](deploy/ubuntu/README.md) — run `timesheet` for Docker setup, Avahi, ports, backups, scheduled updates, pause/resume controls and diagnostics. Administrator releases use separate `timesheet-admin-v*` tags.
 

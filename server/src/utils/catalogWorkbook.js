@@ -16,6 +16,15 @@ const taskColumns = [
   ['target_date', 'Target Date'], ['delivered_date', 'Delivered Date'], ['active', 'Active'],
 ];
 
+function exportFilename(kind, timeZone = 'UTC') {
+  let formatter;
+  try {
+    formatter = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  } catch { fail('Invalid export time zone'); }
+  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map(({ type, value }) => [type, value]));
+  return `${kind}_${parts.year}-${parts.month}-${parts.day}_${parts.hour}-${parts.minute}-${parts.second}.xlsx`;
+}
+
 function signature(kind, records) {
   return crypto.createHmac('sha256', jwtSecret).update(JSON.stringify([1, kind, records])).digest('hex');
 }
@@ -136,4 +145,4 @@ function idList(value) {
   return String(value ?? '').trim() ? String(value).split(';').map(value => value.trim()) : [];
 }
 
-module.exports = { projectColumns, taskColumns, addManifest, createSheet, addDropdowns, readWorkbook, activeValue, recordId, idList };
+module.exports = { projectColumns, taskColumns, exportFilename, addManifest, createSheet, addDropdowns, readWorkbook, activeValue, recordId, idList };

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.31.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.0...v1.31.1) (2026-10-17)
+
+### Bug Fixes
+
+* Include the export date and time in Project and Task Name/Number Excel filenames using the browser's local time zone.
+* Use the API's timestamped filename for browser downloads; direct API exports default to UTC and accept an IANA time zone.
+
+### Validation
+
+* 13 import/export tests, 58 browser viewport checks, lint, production build and whitespace checks passed.
+* Verified Los Angeles and India download timestamps, UTC API filenames, invalid-time-zone rejection and successful reimports of timestamped files.
+
 ## [1.31.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.30.0...v1.31.0) (2026-10-17)
 
 ### Features

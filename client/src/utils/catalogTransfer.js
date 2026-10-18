@@ -1,11 +1,12 @@
 import api from '../services/api';
 
 export async function downloadCatalog(path, params, filename) {
-  const response = await api.get(path, { params, responseType: 'blob' });
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await api.get(path, { params: { ...params, time_zone: timeZone }, responseType: 'blob' });
   const url = URL.createObjectURL(response.data);
   const link = document.createElement('a');
   link.href = url;
-  link.download = filename;
+  link.download = response.headers['content-disposition']?.match(/filename="([^"]+)"/)?.[1] || filename;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
