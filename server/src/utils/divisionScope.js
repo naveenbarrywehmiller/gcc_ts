@@ -22,6 +22,22 @@ function projectScope(user, alias = 'p') {
   return { sql: ids.length ? `${alias}.division_id IN (${ids.map(() => '?').join(',')})` : '0=1', params: ids };
 }
 
+function timesheetEntryDivisionSql(timesheetAlias = 't', projectAlias = 'p', userAlias = 'u') {
+  return `COALESCE(${timesheetAlias}.division_id, ${projectAlias}.division_id, ${userAlias}.division_id,
+    (SELECT id FROM divisions WHERE LOWER(TRIM(name)) = LOWER(TRIM(${userAlias}.division)) AND active = 1))`;
+}
+
+function timesheetEntryScope(user, timesheetAlias = 't', projectAlias = 'p', userAlias = 'u') {
+  if (user.role !== 'admin') return { sql: '1=1', params: [] };
+  const ids = adminDivisionIds(user);
+  return {
+    sql: ids.length
+      ? `${timesheetEntryDivisionSql(timesheetAlias, projectAlias, userAlias)} IN (${ids.map(() => '?').join(',')})`
+      : '0=1',
+    params: ids,
+  };
+}
+
 function canManageUser(actor, target) {
   return actor.role === 'system admin' || (actor.role === 'admin' &&
     (actor.id === target.id || (!['admin', 'system admin', 'viewer'].includes(target.role) && canManageDivision(actor, userDivisionId(target)))));
@@ -58,4 +74,5 @@ function canEditDivisionUpdate(user, divisionId) {
 }
 
 module.exports = { adminDivisionIds, canManageDivision, projectScope, userDivisionId, canManageUser,
-  reportingDivisionIds, reportingScope, reportScope, hasCompanywideReportAccess, canEditDivisionUpdate };
+  reportingDivisionIds, reportingScope, reportScope, hasCompanywideReportAccess, canEditDivisionUpdate,
+  timesheetEntryDivisionSql, timesheetEntryScope };

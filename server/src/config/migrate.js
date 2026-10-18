@@ -222,6 +222,10 @@ function migrate({ bootstrap = true } = {}) {
     console.log('  → Adding timesheets.billable column...');
     db.exec('ALTER TABLE timesheets ADD COLUMN billable INTEGER DEFAULT 0');
   }
+  if (!timesheetColumns.includes('details_json')) {
+    console.log('  → Adding timesheets.details_json column...');
+    db.exec("ALTER TABLE timesheets ADD COLUMN details_json TEXT NOT NULL DEFAULT '{}'");
+  }
 
   const auditColumns = db.prepare("PRAGMA table_info(audit_logs)").all().map(c => c.name);
   if (!auditColumns.includes('entity_type')) {
@@ -369,8 +373,10 @@ function migrate({ bootstrap = true } = {}) {
   const projectIdCol = tsColInfo.find(c => c.name === 'project_id');
   if (projectIdCol && projectIdCol.notnull === 1) {
     console.log('  → Migrating timesheets table to make project_id nullable...');
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS timesheets_new (
+    db.transaction(() => {
+      db.exec(`
+        DROP TABLE IF EXISTS timesheets_new;
+        CREATE TABLE timesheets_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         project_id INTEGER,
@@ -382,9 +388,12 @@ function migrate({ bootstrap = true } = {}) {
         week_year INTEGER,
         admin_comment TEXT,
         status TEXT DEFAULT 'draft' CHECK(status IN ('draft','submitted','approved','rejected','recalled')),
-        division_id INTEGER,
-        subdivision_id INTEGER,
+        division_id INTEGER REFERENCES divisions(id),
+        subdivision_id INTEGER REFERENCES subdivisions(id),
         project_description TEXT,
+        ownership_id INTEGER REFERENCES department_ownerships(id),
+        billable INTEGER DEFAULT 0,
+        details_json TEXT NOT NULL DEFAULT '{}',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id),
@@ -394,10 +403,10 @@ function migrate({ bootstrap = true } = {}) {
 
       INSERT INTO timesheets_new (id, user_id, project_id, task_id, work_date, hours, description,
         week_number, week_year, admin_comment, status, division_id, subdivision_id, project_description,
-        created_at, updated_at)
+        ownership_id, billable, details_json, created_at, updated_at)
       SELECT id, user_id, project_id, task_id, work_date, hours, description,
         week_number, week_year, admin_comment, status, division_id, subdivision_id, project_description,
-        created_at, updated_at
+        ownership_id, billable, details_json, created_at, updated_at
       FROM timesheets;
 
       DROP TABLE timesheets;
@@ -409,7 +418,8 @@ function migrate({ bootstrap = true } = {}) {
       CREATE INDEX IF NOT EXISTS idx_timesheets_status ON timesheets(status);
       CREATE INDEX IF NOT EXISTS idx_timesheets_work_date ON timesheets(work_date);
       CREATE INDEX IF NOT EXISTS idx_timesheets_week ON timesheets(user_id, week_year, week_number);
-    `);
+      `);
+    })();
     console.log('  → Timesheets table migrated (project_id now nullable).');
   }
 

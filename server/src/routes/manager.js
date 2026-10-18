@@ -10,6 +10,7 @@ const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { canReviewTimesheet } = require('../utils/timesheetPermissions');
 const { getPendingApprovals } = require('../utils/pendingApprovals');
+const { timesheetEntryDivisionSql, timesheetEntryScope } = require('../utils/divisionScope');
 
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
@@ -26,18 +27,20 @@ router.get('/week-details/:userId/:year/:week', authenticate, permit('approvalsV
   if (req.user.role !== 'viewer' && !canReviewTimesheet(req.user, Number(userId))) {
     return res.status(403).json({ error: 'Not authorized to view this user' });
   }
+  const scope = timesheetEntryScope(req.user);
 
   // Reuse the repository logic for reads (but it gets one user's week)
   const entries = db.prepare(`
     SELECT t.*, p.project_code, tk.task_category, d.name as division_name, s.name as subdivision_name
     FROM timesheets t
+    JOIN users u ON u.id = t.user_id
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN tasks tk ON t.task_id = tk.id
-    LEFT JOIN divisions d ON t.division_id = d.id
+    LEFT JOIN divisions d ON d.id = ${timesheetEntryDivisionSql()}
     LEFT JOIN subdivisions s ON t.subdivision_id = s.id
-    WHERE t.user_id = ? AND t.week_year = ? AND t.week_number = ?
+    WHERE t.user_id = ? AND t.week_year = ? AND t.week_number = ? AND ${scope.sql}
     ORDER BY t.work_date ASC
-  `).all(userId, year, week);
+  `).all(userId, year, week, ...scope.params);
 
   res.json({ entries });
 });

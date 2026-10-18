@@ -254,6 +254,85 @@ test('dashboard aggregate totals and Manager team summaries use assigned divisio
   assert(scoped.hoursByDivision.every(row => row.division === 'Permissions North'));
 });
 
+test('Admin timesheet reads and aggregates follow each entry division, not the employee primary division', async () => {
+  const tempAdmin = Number(db.prepare(
+    'INSERT INTO users(name,email,password_hash,role,division_id,division) VALUES (?,?,?,?,?,?)'
+  ).run('adminSouthScope', 'admin-south-scope@permissions.test', 'unused', 'admin', b, 'Permissions South').lastInsertRowid);
+  users.adminSouthScope = tempAdmin;
+  const today = new Date().toISOString().slice(0, 10);
+  const { week, year } = require('../server/src/utils/dateUtils').getISOWeekNumber(today);
+  const northDashboardBefore = (await request('admin', '/reports/dashboard')).body;
+  const southDashboardBefore = (await request('adminSouthScope', '/reports/dashboard')).body;
+  const northBefore = northDashboardBefore.stats.monthlyHours;
+  const southBefore = southDashboardBefore.stats.monthlyHours;
+  const northDivisionBefore = northDashboardBefore.hoursByDivision.find(row => row.division === 'Permissions North')?.total_hours || 0;
+  const southDivisionBefore = southDashboardBefore.hoursByDivision.find(row => row.division === 'Permissions South')?.total_hours || 0;
+  let multiUser;
+
+  try {
+    multiUser = Number(db.prepare(
+      'INSERT INTO users(name,email,password_hash,role,division_id,division,employee_id) VALUES (?,?,?,?,?,?,?)'
+    ).run('multiDivisionEmployee', 'multi-division@permissions.test', 'unused', 'employee', a, 'Permissions North', 'MULTI-DIVISION-EMP').lastInsertRowid);
+    for (const divisionId of [a, b]) {
+      db.prepare('INSERT INTO employee_divisions(user_id,division_id) VALUES (?,?)').run(multiUser, divisionId);
+    }
+    db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)')
+      .run(multiUser, users.admin, users.system);
+    for (const [projectId, divisionId, hours] of [[projectA, a, 2], [projectB, b, 3]]) {
+      db.prepare(`INSERT INTO timesheets
+        (user_id,project_id,work_date,hours,week_number,week_year,division_id,status)
+        VALUES (?,?,?,?,?,?,?,'submitted')`).run(multiUser, projectId, today, hours, week, year, divisionId);
+    }
+
+    const query = `/timesheets/all?week=${week}&year=${year}&user_id=${multiUser}`;
+    const northRows = (await request('admin', query)).body.entries;
+    const southRows = (await request('adminSouthScope', query)).body.entries;
+    assert.deepEqual(northRows.map(row => row.division_id), [a]);
+    assert.deepEqual(southRows.map(row => row.division_id), [b]);
+
+    const summary = (await request('admin', `/timesheets/summary?week=${week}&year=${year}`)).body.summaries;
+    assert.equal(summary.find(row => row.user_id === multiUser)?.total_hours, 2);
+    const approvals = (await request('admin', '/manager/pending-approvals')).body.weeks;
+    assert.equal(approvals.find(row => row.user_id === multiUser)?.total_hours, 2);
+
+    const details = (await request('admin', `/manager/week-details/${multiUser}/${year}/${week}`)).body.entries;
+    assert.deepEqual(details.map(row => row.division_id), [a]);
+    const history = (await request('admin', `/admin-ownership/timesheet-history?user_id=${multiUser}&week=${week}&year=${year}`)).body.entries;
+    assert.deepEqual(history.map(row => row.division_id), [a]);
+
+    const powerBiRows = (await request('admin', `/powerbi/timesheets?employeeId=${multiUser}`)).body.data;
+    const powerBiSouthRows = (await request('adminSouthScope', `/powerbi/timesheets?employeeId=${multiUser}`)).body.data;
+    assert.deepEqual(powerBiRows.map(row => row.divisionId), [a]);
+    assert.deepEqual(powerBiSouthRows.map(row => row.divisionId), [b]);
+
+    const statusQuery = `/powerbi/status-summary?from=${today}&to=${today}`;
+    assert.equal((await request('admin', statusQuery)).body.summary.totalHours, 2);
+    assert.equal((await request('adminSouthScope', statusQuery)).body.summary.totalHours, 3);
+
+    const northDashboardAfter = (await request('admin', '/reports/dashboard')).body;
+    const southDashboardAfter = (await request('adminSouthScope', '/reports/dashboard')).body;
+    const northAfter = northDashboardAfter.stats.monthlyHours;
+    const southAfter = southDashboardAfter.stats.monthlyHours;
+    assert.equal(northAfter - northBefore, 2);
+    assert.equal(southAfter - southBefore, 3);
+    const northDivisionHours = northDashboardAfter.hoursByDivision
+      .find(row => row.division === 'Permissions North')?.total_hours;
+    const southDivisionHours = southDashboardAfter.hoursByDivision
+      .find(row => row.division === 'Permissions South')?.total_hours;
+    assert.equal(northDivisionHours - northDivisionBefore, 2);
+    assert.equal(southDivisionHours - southDivisionBefore, 3);
+  } finally {
+    if (multiUser) {
+      db.prepare('DELETE FROM timesheets WHERE user_id = ?').run(multiUser);
+      db.prepare('DELETE FROM employee_divisions WHERE user_id = ?').run(multiUser);
+      db.prepare('DELETE FROM user_admin_assignments WHERE user_id = ?').run(multiUser);
+      db.prepare('DELETE FROM users WHERE id = ?').run(multiUser);
+    }
+    db.prepare('DELETE FROM users WHERE id = ?').run(tempAdmin);
+    delete users.adminSouthScope;
+  }
+});
+
 test('audit visibility follows immutable event scope; global and legacy events stay System Admin only', async () => {
   db.prepare('INSERT INTO audit_logs(user_id,action,details,entity_type,entity_id) VALUES (?,?,?,?,?)').run(users.system, 'MATRIX_USER_EVENT', 'Scoped target', 'user', users.employee);
   const log = db.prepare("SELECT * FROM audit_logs WHERE action = 'MATRIX_USER_EVENT'").get();

@@ -3,7 +3,7 @@ const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { getISOWeekNumber, getWeekDateRange } = require('../utils/dateUtils');
 
-const { reportingScope } = require('../utils/divisionScope');
+const { reportingScope, timesheetEntryDivisionSql, timesheetEntryScope } = require('../utils/divisionScope');
 const { getPendingApprovals } = require('../utils/pendingApprovals');
 const { expectedWeekHours } = require('../utils/workingHours');
 const router = express.Router();
@@ -29,7 +29,12 @@ router.get('/dashboard', authenticate, (req, res) => {
 
   const userScope = reportingScope(req.user, 'u');
   const projectScope = reportingScope(req.user, 'p');
-  const billingScope = ['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role) ? userScope : { sql: 'u.id = ?', params: [userId] };
+  const entryScope = req.user.role === 'admin' ? timesheetEntryScope(req.user) : userScope;
+  const billingScope = req.user.role === 'admin'
+    ? entryScope
+    : ['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role)
+      ? userScope
+      : { sql: 'u.id = ?', params: [userId] };
   const billingHours = db.prepare(`SELECT ${billing} AS classification, SUM(t.hours) AS hours FROM timesheets t
     JOIN users u ON u.id = t.user_id LEFT JOIN projects p ON p.id = t.project_id LEFT JOIN tasks tk ON tk.id = t.task_id
     WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${billingScope.sql} GROUP BY ${billing}`)
@@ -41,9 +46,11 @@ router.get('/dashboard', authenticate, (req, res) => {
   if (['admin', 'manager', 'system admin', 'viewer'].includes(req.user.role)) {
     const countUsers = extra => db.prepare(`SELECT COUNT(*) AS count FROM users u WHERE u.active = 1 AND ${userScope.sql} ${extra}`).get(...userScope.params).count;
     const hours = (start, end) => db.prepare(`SELECT COALESCE(SUM(t.hours), 0) AS total FROM timesheets t JOIN users u ON u.id = t.user_id
-      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}`).get(start, end, ...userScope.params).total;
+      LEFT JOIN projects p ON p.id = t.project_id
+      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${entryScope.sql}`).get(start, end, ...entryScope.params).total;
     const activeUsers = (start, end) => db.prepare(`SELECT COUNT(DISTINCT u.id) AS count FROM timesheets t JOIN users u ON u.id = t.user_id
-      WHERE u.active = 1 AND u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}`).get(start, end, ...userScope.params).count;
+      LEFT JOIN projects p ON p.id = t.project_id
+      WHERE u.active = 1 AND u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${entryScope.sql}`).get(start, end, ...entryScope.params).count;
     teamSummary = {
       totalRegistered: countUsers(''),
       totalProjects: db.prepare(`SELECT COUNT(*) AS count FROM projects p WHERE p.active = 1 AND ${projectScope.sql}`).get(...projectScope.params).count,
@@ -54,10 +61,12 @@ router.get('/dashboard', authenticate, (req, res) => {
     };
   }
   if (isAdmin) {
+    const entryDivision = timesheetEntryDivisionSql();
     const hoursByDivision = db.prepare(`SELECT COALESCE(d.name, NULLIF(TRIM(u.division), '')) AS division, COALESCE(SUM(t.hours), 0) AS total_hours
-      FROM timesheets t JOIN users u ON u.id = t.user_id LEFT JOIN divisions d ON d.id = u.division_id
-      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${userScope.sql}
-      GROUP BY COALESCE(d.name, NULLIF(TRIM(u.division), '')) ORDER BY total_hours DESC`).all(monthStartDate, monthEndDate, ...userScope.params);
+      FROM timesheets t JOIN users u ON u.id = t.user_id LEFT JOIN projects p ON p.id = t.project_id
+      LEFT JOIN divisions d ON d.id = ${entryDivision}
+      WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ? AND ${entryScope.sql}
+      GROUP BY COALESCE(d.name, NULLIF(TRIM(u.division), '')) ORDER BY total_hours DESC`).all(monthStartDate, monthEndDate, ...entryScope.params);
     res.json({ stats: teamSummary, recentSubmissions: pendingWeeks.slice(0, 10).map(row => ({ ...row, name: row.user_name })), hoursByDivision, period, billingHours, planning });
   } else {
     const myMonthlyHours = db.prepare(`

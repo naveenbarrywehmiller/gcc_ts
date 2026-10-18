@@ -12,7 +12,7 @@
 const express = require('express');
 const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
-const { projectScope, canManageDivision } = require('../utils/divisionScope');
+const { projectScope, canManageDivision, timesheetEntryDivisionSql, timesheetEntryScope } = require('../utils/divisionScope');
 
 const { permit } = require('../middleware/permissions');
 const router = express.Router();
@@ -224,7 +224,7 @@ router.get('/timesheet-history', authenticate, permit('users'), (req, res) => {
   const adminId = req.user.id;
   const { user_id, week, year, month, status, division_id, assigned_only } = req.query;
 
-  const scope = projectScope(req.user, 'u');
+  const scope = timesheetEntryScope(req.user);
 
   // If specific user requested, verify admin has access
   if (user_id) {
@@ -249,7 +249,7 @@ router.get('/timesheet-history', authenticate, permit('users'), (req, res) => {
     LEFT JOIN user_admin_assignments uaa ON uaa.user_id = u.id
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN tasks tk ON t.task_id = tk.id
-    LEFT JOIN divisions d ON t.division_id = d.id
+    LEFT JOIN divisions d ON d.id = ${timesheetEntryDivisionSql()}
     LEFT JOIN subdivisions s ON t.subdivision_id = s.id
     LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
     WHERE u.name != '[Deleted User]'
@@ -270,7 +270,7 @@ router.get('/timesheet-history', authenticate, permit('users'), (req, res) => {
     params.push(parseInt(user_id));
   }
   if (division_id) {
-    query += ' AND u.division_id = ?';
+    query += ` AND ${timesheetEntryDivisionSql()} = ?`;
     params.push(parseInt(division_id));
   }
   if (status) {

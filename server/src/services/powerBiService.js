@@ -2,6 +2,7 @@
 
 const db = require('../config/db');
 const { userAssignments } = require('../utils/platformAssignments');
+const { timesheetEntryDivisionSql } = require('../utils/divisionScope');
 function platformFilter(filters, params, alias = 'd') {
   let sql = '';
   if (filters.platformIds?.length) { sql += ` AND ${alias}.platform_id IN (${filters.platformIds.map(() => '?').join(',')})`; params.push(...filters.platformIds); }
@@ -77,11 +78,6 @@ class PowerBiService {
     let whereClause = "WHERE u.name != '[Deleted User]'";
     const params = [];
 
-    if (filters.allowedDivisionIds) {
-      whereClause += ` AND (p.id IS NULL OR p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}))`;
-      params.push(...filters.allowedDivisionIds);
-    }
-
     if (filters.from) {
       whereClause += ' AND t.work_date >= ?';
       params.push(filters.from);
@@ -118,14 +114,13 @@ class PowerBiService {
     }
 
     whereClause += platformFilter(filters, params);
-    if (filters.allowedDivisionIds) { whereClause += ` AND u.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'})`; params.push(...filters.allowedDivisionIds); }
     // Common FROM and JOIN clauses for both count and data queries
     const fromJoinSql = `
       FROM timesheets t
       JOIN users u ON t.user_id = u.id
       LEFT JOIN projects p ON t.project_id = p.id
       LEFT JOIN tasks tk ON t.task_id = tk.id
-      LEFT JOIN divisions d ON COALESCE(t.division_id, p.division_id, u.division_id) = d.id
+      LEFT JOIN divisions d ON d.id = ${timesheetEntryDivisionSql()}
       LEFT JOIN departments dept ON u.department_id = dept.id
       LEFT JOIN user_admin_assignments uaa ON u.id = uaa.user_id
       LEFT JOIN users admin_u ON uaa.admin_id = admin_u.id
@@ -702,7 +697,6 @@ class PowerBiService {
     }
 
     whereClause += platformFilter(filters,params);
-    if (filters.allowedDivisionIds) { whereClause += ` AND u.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}) AND (p.id IS NULL OR p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}))`; params.push(...filters.allowedDivisionIds, ...filters.allowedDivisionIds); }
     const sql = `
       SELECT
         t.status as status,
@@ -712,7 +706,7 @@ class PowerBiService {
       FROM timesheets t
       JOIN users u ON t.user_id = u.id
       LEFT JOIN projects p ON p.id=t.project_id
-      LEFT JOIN divisions d ON COALESCE(t.division_id, p.division_id, u.division_id) = d.id
+      LEFT JOIN divisions d ON d.id = ${timesheetEntryDivisionSql()}
       ${whereClause}
       GROUP BY t.status
       ORDER BY t.status ASC
@@ -829,17 +823,15 @@ class PowerBiService {
       JOIN users u ON t.user_id = u.id
       LEFT JOIN projects p ON t.project_id = p.id
       LEFT JOIN tasks tk ON t.task_id = tk.id
-      LEFT JOIN divisions d ON COALESCE(t.division_id,p.division_id,u.division_id) = d.id
+      LEFT JOIN divisions d ON d.id = ${timesheetEntryDivisionSql()}
       LEFT JOIN subdivisions s ON t.subdivision_id = s.id
       LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
       WHERE u.name != '[Deleted User]'
       ${platformSql}
-      ${filters.allowedDivisionIds ? `AND u.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'})` : ''}
-      ${filters.allowedDivisionIds ? `AND (p.id IS NULL OR p.division_id IN (${filters.allowedDivisionIds.map(() => '?').join(',') || 'NULL'}))` : ''}
       ORDER BY t.work_date DESC
     `;
 
-    const data = db.prepare(query).all(...params, ...(filters.allowedDivisionIds || []), ...(filters.allowedDivisionIds || []));
+    const data = db.prepare(query).all(...params);
     return data.map((row) => ({
       ...row,
       IsBillable: row.IsBillable === 1,

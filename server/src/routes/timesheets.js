@@ -9,7 +9,7 @@ const sp = require('../services/sharepoint');
 const { canReviewTimesheet, canReceiveTimesheetReview } = require('../utils/timesheetPermissions');
 
 const { serializeDetails } = require('../utils/timesheetDetails');
-const { projectScope, adminDivisionIds } = require('../utils/divisionScope');
+const { projectScope, adminDivisionIds, timesheetEntryDivisionSql, timesheetEntryScope } = require('../utils/divisionScope');
 const { validateTimesheetEntry, validateWeekEntries } = require('../utils/timesheetValidation');
 const { requireAssignedReviewer, assignedReviewer } = require('../utils/timesheetAssignment');
 const { permit } = require('../middleware/permissions');
@@ -155,12 +155,12 @@ router.get('/all', authenticate, authorize('admin'), (req, res) => {
     LEFT JOIN users u ON t.user_id = u.id
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN tasks tk ON t.task_id = tk.id
-    LEFT JOIN divisions d ON t.division_id = d.id
+    LEFT JOIN divisions d ON d.id = ${timesheetEntryDivisionSql()}
     LEFT JOIN subdivisions s ON t.subdivision_id = s.id
     LEFT JOIN department_ownerships do_ ON t.ownership_id = do_.id
     WHERE u.name != '[Deleted User]'
   `;
-  const scope = projectScope(req.user, 'u');
+  const scope = timesheetEntryScope(req.user);
   query += ` AND ${scope.sql}`;
   const params = [...scope.params];
 
@@ -176,7 +176,7 @@ router.get('/all', authenticate, authorize('admin'), (req, res) => {
   }
   if (user_id) { query += ' AND t.user_id = ?'; params.push(user_id); }
   if (status) { query += ' AND t.status = ?'; params.push(status); }
-  if (division) { query += ' AND u.division = ?'; params.push(division); }
+  if (division) { query += ' AND d.name = ?'; params.push(division); }
 
   query += ' ORDER BY t.work_date DESC, u.name ASC';
   const entries = db.prepare(query).all(...params);
@@ -209,12 +209,13 @@ router.get('/summary', authenticate, authorize('admin'), (req, res) => {
       t.week_year
     FROM timesheets t
     LEFT JOIN users u ON t.user_id = u.id
+    LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN user_admin_assignments uaa ON uaa.user_id = u.id
     LEFT JOIN users admin_user ON uaa.admin_id = admin_user.id
     WHERE u.name != '[Deleted User]' AND t.work_date BETWEEN ? AND ?
   `;
   const params = [startDate, endDate];
-  const scope = projectScope(req.user, 'u');
+  const scope = timesheetEntryScope(req.user);
   query += ` AND ${scope.sql}`;
   params.push(...scope.params);
 
