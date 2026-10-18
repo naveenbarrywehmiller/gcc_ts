@@ -99,8 +99,11 @@ test('assignment removal and deactivation preserve history but prevent new time'
 test('Excel assignment columns and task reference round-trip with atomic failures', async () => {
   const response = await request('/projects/export', undefined, 'GET');
   const book = new ExcelJS.Workbook(); await book.xlsx.load(response.body);
+  // Legacy workbooks have no export manifest or stable project IDs; add new rows without synchronizing omissions.
+  book.removeWorksheet('_Import Manifest');
   assert.equal(book.getWorksheet('Task Reference').rowCount, 4);
   const sheet = book.getWorksheet('Projects'); sheet.getCell('A2').value = 'ROUNDTRIP';
+  sheet.getRow(2).getCell(sheet.getRow(1).values.indexOf('Project ID')).value = null;
   const upload = async () => { const body = new FormData(); body.append('file', new Blob([await book.xlsx.writeBuffer()]), 'assignments.xlsx'); return request('/import/projects', body); };
   assert.equal((await upload()).status, 200);
   const imported = (await request('/projects?search=ROUNDTRIP', undefined, 'GET')).body.projects[0];

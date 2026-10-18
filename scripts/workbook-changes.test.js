@@ -100,7 +100,7 @@ test('admins read project choices but export and modify only their own divisions
   });
 });
 test('project import rejects whole file on duplicate, missing fields, invalid date or foreign division', async () => {
-  for (const text of ['Project Code,Project Name\nNEW,New\na-one,Duplicate', 'Project Code,Project Name\nNEW,New\nnew,Again', 'Project Code,Project Name\nNEW,New\nMISSING,', 'Project Code,Project Name,Start Date\nNEW,New,2026-02-31', 'Project Code,Project Name,Division\nNEW,New,Division B']) {
+  for (const text of ['Project Code,Project Name\nNEW,New\nnew,Again', 'Project Code,Project Name\nNEW,New\nMISSING,', 'Project Code,Project Name,Start Date\nNEW,New,2026-02-31', 'Project Code,Project Name,Division\nNEW,New,Division B']) {
     const result = await request(admin, '/import/projects', csv(text));
     assert.equal(result.status, 400); assert(result.body.errors.length > 0);
     assert.equal(db.prepare("SELECT COUNT(*) n FROM projects WHERE project_code = 'NEW'").get().n, 0);
@@ -109,8 +109,8 @@ test('project import rejects whole file on duplicate, missing fields, invalid da
   assert.equal(good.status, 200); assert.equal(good.body.imported, 1);
   assert.equal(db.prepare("SELECT budget_hours FROM projects WHERE project_code = 'IMPORT'").get().budget_hours, 12.5);
 });
-test('template headers round-trip with native Excel dates and project pagination', async () => {
-  const result = await request(admin, '/projects/export?template=true', undefined, 'GET');
+test('empty export headers round-trip with native Excel dates and project pagination', async () => {
+  const result = await request(admin, '/projects/export?search=NO-MATCH', undefined, 'GET');
   const book = new ExcelJS.Workbook(); await book.xlsx.load(result.bytes);
   const sheet = book.worksheets[0]; assert.equal(sheet.rowCount, 1); assert.equal(sheet.getCell('N1').value, 'Status');
   sheet.addRow(['EXCEL', 'Excel Project', 'AX001', '', '', '', '', '', new Date('2026-09-28T00:00:00Z')]);

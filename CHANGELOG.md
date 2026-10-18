@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.31.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.30.0...v1.31.0) (2026-10-17)
+
+### Features
+
+* Export, edit and reimport existing projects and Task Name/Number records using stable IDs while preserving assignments and timesheet history.
+* Replace Download Template with reusable project exports, including header-only exports for empty lists.
+* Add Excel dropdown validation for single-choice project/task fields, plus task and scoped user reference sheets for multiple selections.
+* Reject the entire import when any row is invalid, with row-specific errors and no partial updates or deactivations.
+* Deactivate rows removed from an exported Excel workbook, limited to that export's snapshot; retain permanent project deletion in the web interface.
+* Preserve assigned Platform/Division scope for Admin project exports and imports and shared task-catalog permissions.
+
+### Validation
+
+* 145 Node tests, 55 reporting API checks, 288 responsive checks, lint, production build and whitespace checks passed.
+* Excel validation rules and named ranges were verified in exported files; desktop Excel interaction was not tested.
+
 ## [1.30.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.29.0...v1.30.0) (2026-10-17)
 
 ### Features

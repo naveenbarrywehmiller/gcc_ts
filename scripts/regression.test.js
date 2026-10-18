@@ -70,11 +70,14 @@ test('bootstrap is explicit and does not recreate renamed accounts', () => {
 
 test('admin self-promotion is blocked, system-admin role changes take effect, and removed imports are unavailable', async () => {
   assert.equal((await request(admin, '/users', { name: 'Escalated', email: 'escalated@test.invalid', password: 'long-password', role: 'system admin' })).status, 403);
-  for (const type of ['users', 'tasks', 'divisions']) {
+  for (const type of ['users', 'divisions']) {
     const form = new FormData();
     form.append('file', new Blob(['Name,Email,Role\nEscalated,imported@test.invalid,system admin']), 'data.csv');
     assert.equal((await request(systemAdmin, `/import/${type}`, form)).status, 404);
   }
+  const invalidTasks = new FormData();
+  invalidTasks.append('file', new Blob(['Name,Email,Role\nEscalated,imported@test.invalid,system admin']), 'data.csv');
+  assert.equal((await request(systemAdmin, '/import/tasks', invalidTasks)).status, 400);
   assert.equal((await request(admin, '/system/maintenance', undefined, 'GET')).status, 403);
   assert.equal((await request(admin, `/users/${admin}`, { role: 'system admin' }, 'PUT')).status, 403);
   assert.equal((await request(systemAdmin, `/users/${admin}`, { role: 'system admin' }, 'PUT')).status, 200);
