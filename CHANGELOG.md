@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.31.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.1...v1.31.2) (2026-10-19)
+
+### Bug Fixes
+
+* Preserve all existing timesheet fields and values during legacy database upgrades.
+* Keep Admin timesheet reads and aggregates inside assigned divisions.
+
+### Compatibility
+
+* Update the Replit runtime to Node.js 22 and refresh compatible Express/proxy-addr lockfile versions.
+
+### Validation
+
+* 148 local tests passed; client lint and production build passed. The external Power BI API script was not run.
+
 ## [1.31.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.0...v1.31.1) (2026-10-17)
 
 ### Bug Fixes
