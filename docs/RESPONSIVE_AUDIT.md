@@ -1,5 +1,17 @@
 # Responsive design audit
 
+For future layout tests, use the reusable [Chromium responsive and loading-state checklist](CHROMIUM_LAYOUT_TEST_CHECKLIST.md), including the full 28-viewport list and the route-loading validation baseline.
+
+## Route code splitting (October 19, 2026)
+
+Admin screens, Matrix help, manager approvals and Reports now load through dynamic imports when opened. The loading status appears inside the existing responsive shell, preserving navigation and the content container. All route paths, page props, redirects and permission guards are unchanged; the four named catalog screens share one deferred module.
+
+The production build reduces the main JavaScript chunk from 637.48 kB to 384.04 kB (about 40%). Including the shared API chunk, initial JavaScript is 441.19 kB (about 31% less). Vite emits the route chunks automatically with the existing configuration, and no chunk exceeds the unchanged 500 kB warning threshold. Lint, whitespace checks and 48 focused permission, Admin access, Viewer and reporting tests pass.
+
+Headed Chromium against production assets and the actual API with an isolated in-memory database passed 114 direct-link checks: all 19 affected URLs for all five roles and signed-out users. Denied routes redirect without requesting their deferred chunks. Home requests no admin/report screen chunks; client navigation, browser Back/Forward and the legacy Locations redirect work.
+
+All 18 deferred screens passed document-overflow and shell checks at the 21 required viewport sizes plus 568×320, 640×360, 844×390, 932×430, 800×600, 1024×768 and 1366×1024 (504 checks). Holding the Reports chunk passed 28 additional loading-state checks for document width, visible shell and status bounds; the mobile navigation opened and closed with Escape while loading. Representative mobile, tablet, laptop, desktop and ultrawide screenshots were visually inspected. No browser exceptions or unexpected API failures occurred. Other browser engines, physical devices and screen readers were not tested.
+
 ## Timestamped catalog downloads (October 17, 2026)
 
 Project and task Excel filenames include `YYYY-MM-DD_HH-mm-ss` using the browser's local time zone; direct API calls default to UTC. The download helper uses the API's Content-Disposition filename. Rendered components and styles are unchanged. Headed Chromium passed both page/export-button checks at all 28 required sizes/orientations and two additional page checks in an India time zone (58 checks). Actual download names matched Los Angeles and India local times; timestamped files reimported successfully. Direct API UTC filenames and rejection of invalid time zones were checked. The 13 import/export tests, lint, production build and whitespace checks passed; the existing Vite large-chunk warning remains.

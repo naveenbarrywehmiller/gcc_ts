@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.31.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.2...v1.31.3) (2026-10-19)
+
+### Performance
+
+* Load admin screens, Matrix help, manager approvals and Reports on demand while preserving direct links, redirects and permission guards.
+* Reduce the main JavaScript chunk from 637.48 kB to 384.04 kB (about 40%) and total initial JavaScript to 441.19 kB (about 31% less); resolve the production build's 500 kB chunk warning.
+* Keep navigation and the responsive shell available while deferred screens load.
+
+### Documentation
+
+* Add a reusable Chromium layout checklist with 28 viewports, responsive and loading-state checks, route/permission checks and screenshot requirements, linked from the repository guidelines and responsive rules.
+
+### Validation
+
+* Client lint, production build, whitespace checks and 48 focused permission, Admin access, Viewer and reporting tests passed.
+* Chromium passed 114 direct-link checks and 532 responsive/loading checks using production assets and an isolated in-memory database, with no browser exceptions or unexpected API failures.
+
 ## [1.31.2](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.1...v1.31.2) (2026-10-19)
 
 ### Bug Fixes

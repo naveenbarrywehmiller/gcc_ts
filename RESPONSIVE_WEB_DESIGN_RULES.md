@@ -20,6 +20,8 @@ Use these dimensions as minimum validation points, in CSS pixels. Layouts must a
 
 Check mobile portrait and landscape and tablet portrait and landscape, especially for menus, calendars, dialogs, and controls near the bottom of the viewport.
 
+For layout testing, use the [Chromium responsive and loading-state checklist](docs/CHROMIUM_LAYOUT_TEST_CHECKLIST.md). It includes the complete 28-viewport test list with landscape sizes, loading-state checks, route checks where applicable, and evidence to record.
+
 ## Layout foundations
 
 1. **Build mobile first when practical.** Make the small-screen layout usable, then progressively enhance it for larger screens.

@@ -1,8 +1,6 @@
-import MatrixHelp from './pages/MatrixHelp';
+import { lazy, Suspense } from 'react';
 import { hasPermission } from './utils/permissions';
-import DivisionUpdates from './pages/admin/DivisionUpdates';
-import ErrorLogs from './pages/admin/ErrorLogs';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MsalProvider } from '@azure/msal-react';
 import { msalInstance } from './services/msal';
@@ -16,19 +14,25 @@ import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
 import PlannedVacation from './pages/PlannedVacation';
 import Help from './pages/Help';
-import Reports from './pages/Reports';
-import AdminUsers from './pages/admin/Users';
-import AdminProjects from './pages/admin/Projects';
-import AdminTasks from './pages/admin/Tasks';
-import { AdminPlatforms, AdminDivisions, AdminActivities, AdminSupportingCategories } from './pages/admin/SimpleListManager';
-import AdminDepartments from './pages/admin/AdminDepartments';
-import AdminHolidays from './pages/admin/Holidays';
-import AdminApprovals from './pages/admin/Approvals';
-import AdminAuditLog from './pages/admin/AuditLog';
-import SystemMaintenance from './pages/admin/SystemMaintenance';
 
-// We'll create ManagerApprovals shortly
-import ManagerApprovals from './pages/manager/ManagerApprovals';
+// Keep less-used screens out of the initial bundle. Guards still run before they render.
+const MatrixHelp = lazy(() => import('./pages/MatrixHelp'));
+const Reports = lazy(() => import('./pages/Reports'));
+const ManagerApprovals = lazy(() => import('./pages/manager/ManagerApprovals'));
+const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const AdminProjects = lazy(() => import('./pages/admin/Projects'));
+const AdminTasks = lazy(() => import('./pages/admin/Tasks'));
+const AdminPlatforms = lazy(() => import('./pages/admin/SimpleListManager').then(module => ({ default: module.AdminPlatforms })));
+const AdminDivisions = lazy(() => import('./pages/admin/SimpleListManager').then(module => ({ default: module.AdminDivisions })));
+const AdminActivities = lazy(() => import('./pages/admin/SimpleListManager').then(module => ({ default: module.AdminActivities })));
+const AdminSupportingCategories = lazy(() => import('./pages/admin/SimpleListManager').then(module => ({ default: module.AdminSupportingCategories })));
+const AdminDepartments = lazy(() => import('./pages/admin/AdminDepartments'));
+const AdminHolidays = lazy(() => import('./pages/admin/Holidays'));
+const AdminApprovals = lazy(() => import('./pages/admin/Approvals'));
+const AdminAuditLog = lazy(() => import('./pages/admin/AuditLog'));
+const DivisionUpdates = lazy(() => import('./pages/admin/DivisionUpdates'));
+const ErrorLogs = lazy(() => import('./pages/admin/ErrorLogs'));
+const SystemMaintenance = lazy(() => import('./pages/admin/SystemMaintenance'));
 
 function PermissionRoute({ permission, children }) {
   const { user, loading } = useAuth();
@@ -59,31 +63,37 @@ function AppRoutes() {
         <Route path="/timesheet" element={<PermissionRoute permission="timesheetEntry"><Timesheet /></PermissionRoute>} />
         <Route path="/planned-vacation" element={<PlannedVacation />} />
         <Route path="/help" element={<Help />} />
-        <Route path="/admin/matrix-help" element={<PermissionRoute permission="matrixView"><MatrixHelp /></PermissionRoute>} />
-        
-        {/* Manager Routes */}
-        <Route path="/manager/approvals" element={<PermissionRoute permission="approvalsView"><ManagerApprovals /></PermissionRoute>} />
+        <Route element={
+          <Suspense fallback={<p role="status" className="py-8 text-center text-sm text-surface-500 dark:text-surface-400">Loading page...</p>}>
+            <Outlet />
+          </Suspense>
+        }>
+          <Route path="/admin/matrix-help" element={<PermissionRoute permission="matrixView"><MatrixHelp /></PermissionRoute>} />
 
-        {/* Admin Routes */}
-        <Route path="/reports" element={<PermissionRoute permission="reports"><Reports /></PermissionRoute>} />
-        <Route path="/admin/users" element={<PermissionRoute permission="usersView"><AdminUsers /></PermissionRoute>} />
-        <Route path="/admin/projects" element={<PermissionRoute permission="projectsView"><AdminProjects /></PermissionRoute>} />
-        <Route path="/admin/tasks" element={<PermissionRoute permission="tasksView"><AdminTasks /></PermissionRoute>} />
-        <Route path="/admin/platforms" element={<PermissionRoute permission="catalogView"><AdminPlatforms /></PermissionRoute>} />
-        <Route path="/admin/divisions" element={<PermissionRoute permission="catalogView"><AdminDivisions /></PermissionRoute>} />
-        <Route path="/admin/subdivisions" element={<PermissionRoute permission="catalogView"><Navigate to="/admin/divisions" replace /></PermissionRoute>} />
-        <Route path="/admin/departments" element={<PermissionRoute permission="catalogView"><AdminDepartments /></PermissionRoute>} />
-        <Route path="/admin/supporting-categories" element={<PermissionRoute permission="catalogView"><AdminSupportingCategories /></PermissionRoute>} />
-        <Route path="/admin/activities" element={<PermissionRoute permission="catalogView"><AdminActivities /></PermissionRoute>} />
-        <Route path="/admin/holidays" element={<PermissionRoute permission="catalogView"><AdminHolidays /></PermissionRoute>} />
-        <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
-        <Route path="/admin/audit" element={<PermissionRoute permission="audit"><AdminAuditLog /></PermissionRoute>} />
-        
-        <Route path="/admin/travel" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="travel" /></PermissionRoute>} />
-        <Route path="/admin/staffing" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="staffing" /></PermissionRoute>} />
-        <Route path="/admin/error-logs" element={<SystemAdminRoute><ErrorLogs /></SystemAdminRoute>} />
-        {/* System Admin Routes */}
-        <Route path="/admin/system" element={<SystemAdminRoute><SystemMaintenance /></SystemAdminRoute>} />
+          {/* Manager Routes */}
+          <Route path="/manager/approvals" element={<PermissionRoute permission="approvalsView"><ManagerApprovals /></PermissionRoute>} />
+
+          {/* Admin Routes */}
+          <Route path="/reports" element={<PermissionRoute permission="reports"><Reports /></PermissionRoute>} />
+          <Route path="/admin/users" element={<PermissionRoute permission="usersView"><AdminUsers /></PermissionRoute>} />
+          <Route path="/admin/projects" element={<PermissionRoute permission="projectsView"><AdminProjects /></PermissionRoute>} />
+          <Route path="/admin/tasks" element={<PermissionRoute permission="tasksView"><AdminTasks /></PermissionRoute>} />
+          <Route path="/admin/platforms" element={<PermissionRoute permission="catalogView"><AdminPlatforms /></PermissionRoute>} />
+          <Route path="/admin/divisions" element={<PermissionRoute permission="catalogView"><AdminDivisions /></PermissionRoute>} />
+          <Route path="/admin/subdivisions" element={<PermissionRoute permission="catalogView"><Navigate to="/admin/divisions" replace /></PermissionRoute>} />
+          <Route path="/admin/departments" element={<PermissionRoute permission="catalogView"><AdminDepartments /></PermissionRoute>} />
+          <Route path="/admin/supporting-categories" element={<PermissionRoute permission="catalogView"><AdminSupportingCategories /></PermissionRoute>} />
+          <Route path="/admin/activities" element={<PermissionRoute permission="catalogView"><AdminActivities /></PermissionRoute>} />
+          <Route path="/admin/holidays" element={<PermissionRoute permission="catalogView"><AdminHolidays /></PermissionRoute>} />
+          <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
+          <Route path="/admin/audit" element={<PermissionRoute permission="audit"><AdminAuditLog /></PermissionRoute>} />
+
+          <Route path="/admin/travel" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="travel" /></PermissionRoute>} />
+          <Route path="/admin/staffing" element={<PermissionRoute permission="divisionUpdateView"><DivisionUpdates kind="staffing" /></PermissionRoute>} />
+          <Route path="/admin/error-logs" element={<SystemAdminRoute><ErrorLogs /></SystemAdminRoute>} />
+          {/* System Admin Routes */}
+          <Route path="/admin/system" element={<SystemAdminRoute><SystemMaintenance /></SystemAdminRoute>} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
