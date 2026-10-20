@@ -281,7 +281,7 @@ powerbi/                Power BI report, semantic model, and documentation
 | [Deployment notes](DEPLOYMENT_NOTES.md) | Infrastructure history and deployment fixes |
 | [Migration guide](MIGRATION.md) | Migration guidance |
 | [Power BI API integration](docs/POWERBI.md) | Read-only feed configuration |
-| [Power BI project guide](powerbi/POWERBI.md) | Requirements, model, queries, and report setup |
+| [Power BI project guide](powerbi/documentation/POWERBI.md) | Requirements, model, queries, and report setup |
 | [Power BI project README](powerbi/GCC_Requirements/README.md) | Opening and configuring the report project |
 | [Power BI validation](powerbi/validation/README.md) | Model validation prerequisites and evidence |
 | [Changelog](CHANGELOG.md) | Release history |

@@ -24,33 +24,21 @@ The design is intentionally conservative:
 powerbi/
 ├── README.md
 ├── CHANGELOG.md
+├── GCC_Requirements/
+│   ├── GCC_Requirements_v2.2.1.pbip
+│   ├── GCC_Requirements.Report/
+│   └── GCC_Requirements.SemanticModel/
 ├── documentation/
-│   ├── API_COMPATIBILITY.md
-│   ├── DATA_MODEL.md
-│   ├── DEPLOYMENT.md
-│   ├── DEVELOPMENT.md
-│   ├── POWERBI_SETUP.md
-│   ├── REFRESH.md
-│   └── TROUBLESHOOTING.md
-├── queries/
-│   ├── Assignments.pq
-│   ├── Departments.pq
-│   ├── DimDate.dax
-│   ├── Divisions.pq
-│   ├── Holidays.pq
-│   ├── Measures.dax
-│   ├── Projects.pq
-│   ├── StatusSummary.pq
-│   ├── Tasks.pq
-│   ├── Timesheets.pq
-│   ├── Users.pq
+│   ├── POWERBI.md
+│   ├── POWERBI_USER_GUIDE.md
 │   └── ...
-├── theme/
-│   └── gcc_timesheet_theme.json
-├── assets/
-│   └── dashboard_preview.md
-└── pbix/
-    # optional/generated report artifacts only when needed
+├── validation/
+└── legacy/
+    ├── GCC_Timesheet_Model.bim
+    ├── GCC_Timesheet_Model/
+    ├── queries/
+    ├── theme/
+    └── assets/
 ```
 
 ---
@@ -58,8 +46,8 @@ powerbi/
 ## Source of Truth
 
 When a field is unclear, the source of truth is the actual server implementation:
-- [server/src/routes/powerbi.js](../server/src/routes/powerbi.js)
-- [server/src/services/powerBiService.js](../server/src/services/powerBiService.js)
+- [server/src/routes/powerbi.js](../../server/src/routes/powerbi.js)
+- [server/src/services/powerBiService.js](../../server/src/services/powerBiService.js)
 
 Do not invent new endpoint fields in the Power BI layer. If a required field is missing, confirm the server contract first.
 

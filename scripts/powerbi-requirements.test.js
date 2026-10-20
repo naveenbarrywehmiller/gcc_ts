@@ -81,3 +81,16 @@ test('Desktop schema versions stay independent of the dashboard release number',
   const culture=fs.readFileSync(path.join(project,'GCC_Requirements.SemanticModel/definition/cultures/en-US.tmdl'),'utf8');
   assert.equal(culture.match(/"Version"\s*:\s*"([^"]+)"/)?.[1],'2.0.0');
 });
+
+test('Power BI project filename matches the advertised dashboard release and resolves its model',async()=>{
+  const {dashboardVersion}=(await get('version')).body;
+  const project=path.join(__dirname,'../powerbi/GCC_Requirements');
+  const filename=`GCC_Requirements_v${dashboardVersion}.pbip`;
+  assert.deepEqual(fs.readdirSync(project).filter(name=>name.endsWith('.pbip')),[filename]);
+  const manifest=JSON.parse(fs.readFileSync(path.join(project,filename),'utf8'));
+  const report=path.join(project,manifest.artifacts[0].report.path);
+  const definition=JSON.parse(fs.readFileSync(path.join(report,'definition.pbir'),'utf8'));
+  const model=path.resolve(report,definition.datasetReference.byPath.path);
+  assert.equal(model,path.join(project,'GCC_Requirements.SemanticModel'));
+  assert(fs.existsSync(path.join(model,'definition.pbism')));
+});

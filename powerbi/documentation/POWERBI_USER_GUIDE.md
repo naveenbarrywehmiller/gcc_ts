@@ -2,7 +2,7 @@
 
 Updated: 20 October 2026. For GCC Requirements Power BI v2.2.1 in this repository.
 
-If Desktop reports incompatible linguistic metadata, use the corrected v2.2.1 package or follow the [specific source repair](documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata). Dashboard release versions and Power BI's internal format versions are independent.
+If Desktop reports incompatible linguistic metadata, use the corrected v2.2.1 package or follow the [specific source repair](TROUBLESHOOTING.md#incompatible-linguistic-metadata). Dashboard release versions and Power BI's internal format versions are independent.
 
 Use this guide to change the source URL, update connection credentials, refresh data, edit visuals and maintain the report. Menu labels can vary slightly between Power BI Desktop versions.
 
@@ -26,14 +26,14 @@ Use this guide to change the source URL, update connection credentials, refresh 
 Open:
 
 ```text
-C:\gcc_ts\powerbi\GCC_Requirements\GCC_Requirements.pbip
+C:\gcc_ts\powerbi\GCC_Requirements\GCC_Requirements_v2.2.1.pbip
 ```
 
 The `.pbip` is the entry point. Keep it together with both sibling folders:
 
 ```text
 GCC_Requirements/
-├── GCC_Requirements.pbip
+├── GCC_Requirements_v2.2.1.pbip
 ├── GCC_Requirements.Report/
 └── GCC_Requirements.SemanticModel/
 ```
@@ -172,7 +172,7 @@ For the phone version, select **View → Mobile layout**, choose the page, and a
 5. Check empty selections, zero values, individual divisions and overall totals. Preserve meaningful blanks instead of automatically converting them to zero.
 6. Save only after checking the intended business result.
 
-The prepared [DAX optimization review](documentation/DAX_OPTIMIZATION_REVIEW.md) contains recommendations. Its [comparison query](../scripts/compare-powerbi-dax-candidates.dax) defines temporary query-scoped measures for comparison; it does not apply changes to the production measures. Performance gains have not been benchmarked.
+The prepared [DAX optimization review](DAX_OPTIMIZATION_REVIEW.md) contains recommendations. Its [comparison query](../../scripts/compare-powerbi-dax-candidates.dax) defines temporary query-scoped measures for comparison; it does not apply changes to the production measures. Performance gains have not been benchmarked.
 
 ## 9. Power BI Service: credentials and scheduled refresh
 

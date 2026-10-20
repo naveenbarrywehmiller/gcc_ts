@@ -36,5 +36,9 @@ for visual in (target/'GCC_Requirements.Report/definition/pages').glob('*/visual
     if v['position']['y']==18:
         v['visual']['objects']['general'][0]['properties']['paragraphs'][0]['textRuns'][0]['value']='QA • SYNTHETIC DATA | '+v['visual']['objects']['general'][0]['properties']['paragraphs'][0]['textRuns'][0]['value']
         visual.write_text(json.dumps(v),encoding='utf-8')
-(target/'GCC_Requirements.pbip').rename(target/'GCC_TEST_DATA_QA.pbip')
-print(target/'GCC_TEST_DATA_QA.pbip')
+projects=list(target.glob('*.pbip'))
+if len(projects)!=1:
+    raise ValueError('Expected one versioned PBIP entry point in the QA copy.')
+qa_project=target/projects[0].name.replace('GCC_Requirements','GCC_TEST_DATA_QA',1)
+projects[0].rename(qa_project)
+print(qa_project)

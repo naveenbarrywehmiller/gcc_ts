@@ -149,7 +149,7 @@ In the Web dialog, select **Advanced**.
 
 ### Alternative: Use Pre-built Power Query M Scripts
 
-Copy the Power Query M scripts from `powerbi/queries/` into the Advanced Editor:
+Copy the Power Query M scripts from `powerbi/legacy/queries/` into the Advanced Editor:
 1. In Power Query, click **New Source** → **Blank Query**
 2. Click **Advanced Editor** on the Home ribbon
 3. Paste the contents of the `.pq` file
@@ -202,7 +202,7 @@ Header name:  X-API-Key
 Header value: YOUR_POWERBI_API_KEY
 ```
 
-Do not put the token in the URL, commit it to GitHub, or paste it into a screenshot. For production, use a Power Query parameter or Power BI data-source credential configuration. The `.pq` scripts in `powerbi/queries/` contain `YOUR_API_KEY_HERE` as a safe placeholder.
+Do not put the token in the URL, commit it to GitHub, or paste it into a screenshot. For production, use a Power Query parameter or Power BI data-source credential configuration. The `.pq` scripts in `powerbi/legacy/queries/` contain `YOUR_API_KEY_HERE` as a safe placeholder.
 
 ---
 
@@ -243,7 +243,7 @@ In **Model View**, create these relationships:
 
 ## 8. Create Date Dimension
 
-Go to **Home** → **New Table** and paste the DAX from `powerbi/queries/DimDate.dax`.
+Go to **Home** → **New Table** and paste the DAX from `powerbi/legacy/queries/DimDate.dax`.
 
 This creates a comprehensive date table with Year, Quarter, Month, Week, Day, Is Weekend, and Is Holiday columns.
 
@@ -253,7 +253,7 @@ This creates a comprehensive date table with Year, Quarter, Month, Week, Day, Is
 
 Create a measures table: **Home** → **Enter Data** → name it `_Measures` → **Load**.
 
-Add all measures from `powerbi/queries/Measures.dax`. Key measures include:
+Add all measures from `powerbi/legacy/queries/Measures.dax`. Key measures include:
 
 - Total Hours, Average Hours, Employee Count
 - Submitted/Approved/Pending/Rejected Hours
@@ -266,7 +266,7 @@ Add all measures from `powerbi/queries/Measures.dax`. Key measures include:
 
 ## 10. Build Dashboard Pages
 
-See `powerbi/assets/dashboard_preview.md` for detailed page layouts.
+See `powerbi/legacy/assets/dashboard_preview.md` for detailed page layouts.
 
 | Page | Content |
 |------|---------|
@@ -286,7 +286,7 @@ See `powerbi/assets/dashboard_preview.md` for detailed page layouts.
 ## 11. Apply Custom Theme
 
 1. Go to **View** → **Themes** → **Browse for themes**
-2. Select `powerbi/theme/gcc_timesheet_theme.json`
+2. Select `powerbi/legacy/theme/gcc_timesheet_theme.json`
 3. The theme applies corporate colors and typography
 
 ---

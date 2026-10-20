@@ -130,4 +130,4 @@ Remove cookies, bearer tokens, API keys, passwords, webhook signatures, and pers
 
 ## Further reading
 
-[Main setup and features](../README.md) · [API](../API_REFERENCE.md) · [Deployment history](../DEPLOYMENT_NOTES.md) · [Power BI integration](../docs/POWERBI.md) · [Power BI project](../powerbi/POWERBI.md)
+[Main setup and features](../README.md) · [API](../API_REFERENCE.md) · [Deployment history](../DEPLOYMENT_NOTES.md) · [Power BI integration](../docs/POWERBI.md) · [Power BI project](../powerbi/documentation/POWERBI.md)

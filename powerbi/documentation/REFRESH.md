@@ -124,7 +124,7 @@ The REST API supports incremental refresh via `from`/`to` query parameters:
 GET /api/powerbi/timesheets?from=2026-09-01&to=2026-09-25
 ```
 
-This is handled by the Power Query M scripts in `powerbi/queries/`.
+This is handled by the Power Query M scripts in `powerbi/legacy/queries/`.
 
 ---
 

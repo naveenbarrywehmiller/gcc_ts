@@ -1,0 +1,91 @@
+{
+  "testedUtc": "2026-10-20T09:45:40.300Z",
+  "nativeDesktopVersion": "2.159.883.0",
+  "method": "Observed native Power BI Desktop canvas and user interactions through Computer Use",
+  "refresh": {
+    "status": "Pass",
+    "lastRefreshIST": "2026-10-20 15:15:09 IST",
+    "actualHours": 60,
+    "activeTeamStrength": 15
+  },
+  "desktopPages": [
+    {
+      "page": "Management overview",
+      "status": "Pass",
+      "observed": "Cards, monthly/division charts and division table render; Actual Hours 60; Active Team Strength 15; utilization and on-time KPI blank pending business inputs."
+    },
+    {
+      "page": "Utilization",
+      "status": "Pass",
+      "observed": "All cards, charts and capacity table render; Unmapped Hours 52; 15 active members; Available Hours 2512; protected utilization KPIs blank."
+    },
+    {
+      "page": "Delivery & quality",
+      "status": "Pass with data prerequisites",
+      "observed": "All cards, empty charts and delivery table render without visual errors; no delivered projects or optional deliverable source data in selected period."
+    },
+    {
+      "page": "Capacity & forecast",
+      "status": "Pass",
+      "observed": "Cards, demand/capacity line chart and project table render; 600 hours weekly availability; 100 overdue unscheduled hours; 26 projects missing planning inputs."
+    },
+    {
+      "page": "Dedicated & Flex teams",
+      "status": "Pass",
+      "observed": "Four cards, team hours/utilization charts and department table render; Dedicated Strength 10; Flex Strength 4; Dedicated FY Hours 60; department total Actual Hours 60."
+    },
+    {
+      "page": "Continuous improvement",
+      "status": "Pass with data prerequisites",
+      "observed": "Cards, empty charts and weekly detail table render without errors; optional improvement register is not configured."
+    },
+    {
+      "page": "Staffing",
+      "status": "Pass",
+      "observed": "Cards and staffing tables render; roster 15, contributing employees 1; October Alliance record shows 5 open positions and 1 new joiner."
+    },
+    {
+      "page": "Timesheet & training detail",
+      "status": "Pass",
+      "observed": "Four KPI cards and detail table render; Actual Hours 60; October raw-hour table total 160, including recalled/draft rows; Approved Hours blank because none approved."
+    },
+    {
+      "page": "Input readiness",
+      "status": "Pass",
+      "observed": "Requirements coverage and refresh settings tables render; AsOfDate 2026-10-20; RefreshIST matches header; business prerequisites visible."
+    }
+  ],
+  "interactions": [
+    {
+      "test": "Reporting month September 2026",
+      "status": "Pass",
+      "observed": "Selecting 2026-09 clears Actual Hours/charts and shows 0.0% utilization while roster remains 15; blank Actual Hours is consistent with no submitted/approved rows in September."
+    },
+    {
+      "test": "Alliance platform filter",
+      "status": "Pass",
+      "observed": "Selecting Alliance filters roster to one active member and clears hours charts; no visual error."
+    },
+    {
+      "test": "BW Tec division filter",
+      "status": "Pass",
+      "observed": "Division performance table narrows to BW Tec; Actual Hours remains 60."
+    },
+    {
+      "test": "Filter reset",
+      "status": "Pass",
+      "observed": "Restored October 2026, Platform All, Division All; 60 Actual Hours and 15 roster members return."
+    }
+  ],
+  "phonePages": [
+    {
+      "page": "Input readiness",
+      "status": "Partial",
+      "observed": "Native phone editor opened; lower sections and other phone pages were not inspected before the user interrupted testing."
+    }
+  ],
+  "limits": [
+    "Native phone testing interrupted before completion",
+    "No Service publication, physical-device, RLS or scheduled-refresh testing"
+  ]
+}

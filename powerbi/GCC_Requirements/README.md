@@ -1,10 +1,10 @@
 # GCC requirements Power BI project
 
-**[User guide: change source URL, password, refresh and report settings](../POWERBI_USER_GUIDE.md)** provides step-by-step maintenance instructions.
+**[User guide: change source URL, password, refresh and report settings](../documentation/POWERBI_USER_GUIDE.md)** provides step-by-step maintenance instructions.
 
-Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. Version **2.2.1** contains **17 tables, 70 DAX measures, 20 relationships, nine report pages and 121 visual containers**. Its semantic model is TMDL in `GCC_Requirements.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
+Open **[GCC_Requirements_v2.2.1.pbip](GCC_Requirements_v2.2.1.pbip)** in Power BI Desktop. Version **2.2.1** contains **17 tables, 70 DAX measures, 20 relationships, nine report pages and 121 visual containers**. Its semantic model is TMDL in `GCC_Requirements.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
 
-**[Complete Power BI guide — POWERBI.md](../POWERBI.md)** includes every DAX formula, shared Power Query expressions, table queries, column/relationship definitions, visual bindings, connection instructions and missing inputs. Its older generated inventories predate the Platform addition; current counts and verification are in [release verification](../validation/RELEASE_2.2.1.md).
+**[Complete Power BI guide — POWERBI.md](../documentation/POWERBI.md)** includes every DAX formula, shared Power Query expressions, table queries, column/relationship definitions, visual bindings, connection instructions and missing inputs. Its older generated inventories predate the Platform addition; current counts and verification are in [release verification](../validation/RELEASE_2.2.1.md).
 
 ## Desktop compatibility repair — 2.2.1 (2026-10-20)
 
@@ -40,7 +40,7 @@ The saved HourCategoryMap maps `Trainings/Webinars` to Training. This also cover
 
 ## Multiple division assignments — 1.1.4
 
-The `DimEmployee[division]` field is each person's primary division. Admin and employee checkbox assignments do not create extra roster rows or split capacity, regardless of Dedicated/Flex category. Timesheet hours use the division booked on each entry. Model descriptions and the [complete guide](../POWERBI.md) now state this distinction; calculations, data sources, and visuals are unchanged.
+The `DimEmployee[division]` field is each person's primary division. Admin and employee checkbox assignments do not create extra roster rows or split capacity, regardless of Dedicated/Flex category. Timesheet hours use the division booked on each entry. Model descriptions and the [complete guide](../documentation/POWERBI.md) now state this distinction; calculations, data sources, and visuals are unchanged.
 
 ## Phone layouts
 

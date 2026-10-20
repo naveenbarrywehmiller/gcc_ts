@@ -14,6 +14,11 @@ Distributed as a **source prerelease** pending native Desktop canvas/phone previ
 - Removed Platform/Division phone-filter overlaps on seven pages by preserving dropdown heights and moving the following controls down.
 - Updated Platform input-readiness guidance and repaired two native-test fixture rows to include the required Platform/Division fields.
 
+### Repository organization
+- Renamed the entry point to `GCC_Requirements_v2.2.1.pbip`; the filename suffix follows the dashboard release and is checked against the reporting API version response.
+- Grouped the complete reference and user guide under `documentation/`, and older standalone model/query/theme/assets under `legacy/`. Updated links, QA preview naming and documentation generation; report/model definitions are retained.
+- Post-reinstall native testing verified refresh, all nine desktop pages and the exercised filters. Phone inspection remains partial; see [the retest](validation/NATIVE_RETEST_2026-10-20.md).
+
 ### Validation and compatibility
 - All 70 DAX measures and 39 native-engine scenarios pass; 254 report schema documents validate. All 121 saved phone placements pass geometry checks.
 - Live snapshot checks passed 12 API reconciliations, 10 measure contexts and 94 visual field queries. Five web report views passed 140 responsive checks.

@@ -165,7 +165,7 @@ Create report-page tooltips for:
 
 ## Formatting Recommendations
 
-- Use the existing GCC theme in `powerbi/theme/gcc_timesheet_theme.json`.
+- Use the existing GCC theme in `powerbi/legacy/theme/gcc_timesheet_theme.json`.
 - Use cards only for headline KPIs; use charts for comparisons and trends.
 - Sort all categorical bar charts by their primary measure descending.
 - Use consistent number formats: hours with one decimal, counts with no decimals, and rates as percentages.

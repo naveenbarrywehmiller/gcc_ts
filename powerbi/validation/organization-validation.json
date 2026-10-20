@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-20",
+  "dashboardVersion": "2.2.1",
+  "entryPoint": "GCC_Requirements/GCC_Requirements_v2.2.1.pbip",
+  "scope": "Folder organization, entry-point naming and maintenance references; no DAX or visual layout changes",
+  "checks": {
+    "requirementsTests": { "passed": 4, "failed": 0 },
+    "entryPointReportModelReferences": "Pass",
+    "existingDocumentationLinks": { "checked": 189, "missing": 0 },
+    "generatedDocumentationLinks": { "checked": 84, "missing": 0 },
+    "generatedDocumentationInventory": { "tables": 17, "measures": 70, "pages": 9, "visuals": 121 },
+    "qaPreviewFilename": "GCC_TEST_DATA_QA_v2.2.1.pbip",
+    "movedLegacyModelQueryThemeAssetHashes": "Unchanged",
+    "pythonSyntax": "Pass"
+  },
+  "fullSchemaRerun": {
+    "status": "Unavailable",
+    "reason": "HTTP 404 from Microsoft's schema endpoint for an existing Desktop-saved visualContainer 2.14.0 declaration",
+    "schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+    "note": "Desktop's report-format edits were preserved; this folder change does not claim a new complete schema pass."
+  },
+  "nativePhoneTesting": "Partial; user interrupted testing after opening Input readiness"
+}

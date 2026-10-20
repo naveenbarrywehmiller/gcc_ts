@@ -1,6 +1,10 @@
 # Validation evidence
 
-The deliverable is `../GCC_Requirements/GCC_Requirements.pbip`.
+The current deliverable is [GCC_Requirements_v2.2.1.pbip](../GCC_Requirements/GCC_Requirements_v2.2.1.pbip).
+
+## Reinstalled Desktop retest (October 20, 2026)
+
+The [native retest](NATIVE_RETEST_2026-10-20.md) supersedes the earlier canvas-opening limitation below. All nine desktop pages rendered after a successful canonical refresh. All 70 measures, 39 native assertions, 94 live visual queries and 12 reconciliations passed. Month/Platform/Division filtering and resets worked. Native phone inspection was interrupted after opening Input readiness and remains partial; no full phone certification is claimed.
 
 ## Power BI 2.2.1 release (October 20, 2026)
 
@@ -40,6 +44,6 @@ TMDL descriptions now identify the roster division as the selected primary divis
 * Live read-only API verification on 2026-10-02: reporting API v1.1.0 returned HTTP 200 for version, users, projects, divisions, holidays, tasks, timesheets, staffing and planned-vacations. Counts: 5 users, 7 projects, 9 divisions, 5 holidays, 2 tasks, 4 daily timesheets, 0 staffing entries and 1 planned-vacation row. No credentials or raw production responses are committed.
 * Authorized live API snapshot processing in an isolated Desktop-native model: 16 tables, 72 measures evaluated without errors; 4 daily entries and 32 approved hours. October utilization remained blank because the two live task labels are unmapped, as requested. The temporary test database was dropped; the user's canonical model was not refreshed by this check. The aggregate local result is ignored under `.pbi/`.
 
-Production API authentication and the historical canonical Desktop data refresh are verified. The user confirmed IST for the whole report on 2026-10-06; a new canonical IST refresh/native preview is pending. Final business reconciliation, Power BI Service publication/gateway/schedule, fiscal-year assumptions, deliverable/rework sources, platform/cohort definitions and exact project allocation capacity still need verification or inputs. The plugin's generic offline review ran, but its BIM heuristic did not enumerate measures; its zero-finding output is not treated as semantic validation. The native engine evidence above is the calculation check. See [the complete reference](../POWERBI.md) for definitions, source contracts and remaining decisions.
+Production API authentication and the historical canonical Desktop data refresh are verified. The user confirmed IST for the whole report on 2026-10-06; a new canonical IST refresh/native preview is pending. Final business reconciliation, Power BI Service publication/gateway/schedule, fiscal-year assumptions, deliverable/rework sources, platform/cohort definitions and exact project allocation capacity still need verification or inputs. The plugin's generic offline review ran, but its BIM heuristic did not enumerate measures; its zero-finding output is not treated as semantic validation. The native engine evidence above is the calculation check. See [the complete reference](../documentation/POWERBI.md) for definitions, source contracts and remaining decisions.
 
 Reproduce with `node scripts/validate-powerbi.js`, `node --test scripts/powerbi-requirements.test.js`, and `powershell.exe -NoProfile -File scripts/test-powerbi-model.ps1 -Port <Desktop engine port>`. The latter uses Windows PowerShell and Desktop's .NET Framework libraries, creates and removes its own uniquely named test database and does not change the user's report model. `scripts/powerbi-runtime.ps1` locates both MSI and Microsoft Store installations. Regenerate the complete guide with `python scripts/document-powerbi.py`; pass `--reference-date YYYY-MM-DD` when the user's authoring date differs from the host date.

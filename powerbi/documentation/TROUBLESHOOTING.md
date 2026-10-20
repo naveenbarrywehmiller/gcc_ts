@@ -15,7 +15,7 @@ This guide focuses on the most common issues encountered when connecting Power B
 
 In the affected GCC Requirements checkout, Desktop reports that the file is incompatible, and **Copy details to clipboard** includes `NewerLinguisticSchemaVersion`. An earlier release-number update changed an internal schema declaration from `2.0.0` to `2.1.0` without changing its contents. Dashboard v2.2.1 restores that declaration and the separately versioned report format.
 
-The preferred repair is to download/extract the complete **powerbi-v2.2.1** GitHub release into a new folder and open `powerbi/GCC_Requirements/GCC_Requirements.pbip`. Keep its Report and SemanticModel sibling folders together. Configure the source URL and authorized credentials normally, then refresh data.
+The preferred repair is to download/extract the complete **powerbi-v2.2.1** GitHub release into a new folder and open `powerbi/GCC_Requirements/GCC_Requirements_v2.2.1.pbip`. Keep its Report and SemanticModel sibling folders together. Configure the source URL and authorized credentials normally, then refresh data.
 
 To repair this specific older source checkout manually:
 
@@ -65,7 +65,7 @@ Use placeholders and secure configuration, not embedded credentials.
 - Confirm the response is JSON and contains the `data` array expected by the Power Query scripts
 
 ### Fix
-Validate the service response before expanding it in Power Query. The scripts in [powerbi/queries](../queries) fail clearly instead of silently masking an API problem.
+Validate the service response before expanding it in Power Query. The scripts in [powerbi/legacy/queries](../legacy/queries) fail clearly instead of silently masking an API problem.
 
 ---
 
@@ -133,7 +133,7 @@ Keep the relationship pattern simple and single-direction.
 - Confirm `date` filters are using `YYYY-MM-DD`
 
 ### Fix
-Use the DAX-based date table logic in [powerbi/queries/DimDate.dax](../queries/DimDate.dax).
+Use the DAX-based date table logic in [powerbi/legacy/queries/DimDate.dax](../legacy/queries/DimDate.dax).
 
 ---
 

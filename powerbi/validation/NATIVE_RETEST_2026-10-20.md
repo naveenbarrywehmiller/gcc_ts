@@ -1,0 +1,15 @@
+# Native Desktop retest — October 20, 2026
+
+Power BI Desktop was reinstalled as the standard MSI edition, version **2.159.883.0**. Native engine **17.0.93.23** evaluated all **70 measures**, passed **39 synthetic assertions**, and processed a fresh isolated live API snapshot with **94 visual field queries**, **10 filter contexts** and **12 independent reconciliations**, with no calculation errors. See [aggregate model evidence](native-reinstall-model-validation.json).
+
+The canonical report opened successfully. The incompatible linguistic metadata error did not recur. After reopening Desktop normally, native mouse/keyboard control worked. **Home → Refresh** completed with the report timestamp **2026-10-20 15:15:09 IST**. No credentials were entered by automation.
+
+All **nine desktop pages** were inspected in the native app after refresh. Cards, slicers, charts, text and tables rendered without visible error panels. The overview showed **60 actual hours** and **15 active team members**. October's detail table total was **160 raw hours**, including draft/recalled rows. Utilization showed **52 unmapped hours**; forecast showed **26 projects missing planning inputs**. Blank KPIs retain the existing guards for missing classifications, delivered projects and optional registers.
+
+Month, Platform and Division filters were exercised. September cleared submitted/approved actuals; Alliance narrowed the active roster to one member; BW Tec narrowed the division table while retaining 60 actual hours. Resetting the filters restored October, Platform All and Division All, with 60 actual hours and 15 roster members. Other pages retained their saved October selections.
+
+Native phone testing reached the Input readiness phone editor. The user interrupted testing before the remaining phone pages and lower sections could be inspected. **Native phone rendering and interactions are only partially verified.** Saved geometry checks cover all nine pages and 121 placements; those checks do not substitute for phone UI inspection. Physical devices, Power BI Service publication, RLS and scheduled refresh were not exercised.
+
+The folder organization changes only file locations, the PBIP entry-point filename and maintenance/documentation references. The current entry point is [GCC_Requirements_v2.2.1.pbip](../GCC_Requirements/GCC_Requirements_v2.2.1.pbip). Report and semantic-model sibling names remain stable. Desktop's existing saved formatting changes were retained. No DAX formula or business mapping was changed.
+
+Organization checks passed all four requirements tests, the PBIP/report/model reference chain, 189 existing documentation links and 84 generated-guide links. The isolated QA preview retained the version suffix, and the moved legacy models/queries/theme/assets retained their content hashes. The full schema rerun could not finish because Microsoft returned HTTP 404 for Desktop's saved `visualContainer/2.14.0` schema declaration. The earlier 254-document pass remains historical evidence. See [organization validation](organization-validation.json) for this check's exact scope.
