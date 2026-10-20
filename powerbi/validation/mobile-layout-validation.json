@@ -4,50 +4,50 @@
     {
       "name": "01_overview",
       "displayName": "GCC | Management overview",
-      "visuals": 14,
-      "height": 1892
+      "visuals": 15,
+      "height": 1980
     },
     {
       "name": "02_utilization",
       "displayName": "GCC | Utilization",
-      "visuals": 14,
-      "height": 1940
+      "visuals": 15,
+      "height": 2052
     },
     {
       "name": "03_delivery",
       "displayName": "GCC | Delivery & quality",
-      "visuals": 14,
-      "height": 1940
+      "visuals": 15,
+      "height": 2052
     },
     {
       "name": "04_capacity",
       "displayName": "GCC | Capacity & forecast",
-      "visuals": 14,
-      "height": 1764
+      "visuals": 15,
+      "height": 1876
     },
     {
       "name": "05_teams",
       "displayName": "GCC | Dedicated & Flex teams",
-      "visuals": 14,
-      "height": 1940
+      "visuals": 15,
+      "height": 2052
     },
     {
       "name": "06_improvement",
       "displayName": "GCC | Continuous improvement",
-      "visuals": 14,
-      "height": 1940
+      "visuals": 15,
+      "height": 2052
     },
     {
       "name": "07_staffing",
       "displayName": "GCC | Staffing",
-      "visuals": 11,
-      "height": 1636
+      "visuals": 12,
+      "height": 1748
     },
     {
       "name": "08_detail",
       "displayName": "GCC | Timesheet & training detail",
-      "visuals": 12,
-      "height": 1348
+      "visuals": 13,
+      "height": 1460
     },
     {
       "name": "09_inputs",
@@ -58,5 +58,5 @@
   ],
   "errors": [],
   "mobilePages": 9,
-  "mobileVisuals": 113
+  "mobileVisuals": 121
 }

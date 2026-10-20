@@ -312,7 +312,7 @@ write(MODEL/'model.bim',model)
 write(MODEL/'definition.pbism',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json','version':'1.0','settings':{}})
 write(OUT/'GCC_Requirements.pbip',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json','version':'1.0','artifacts':[{'report':{'path':'GCC_Requirements.Report'}}],'settings':{'enableAutoRecovery':True}})
 write(REPORT/'definition.pbir',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json','version':'4.0','datasetReference':{'byPath':{'path':'../GCC_Requirements.SemanticModel'}}})
-write(REPORT/'definition/version.json',{'$schema':SCHEMA+'versionMetadata/1.0.0/schema.json','version':'2.1.0'})
+write(REPORT/'definition/version.json',{'$schema':SCHEMA+'versionMetadata/1.0.0/schema.json','version':'2.0.0'})
 write(REPORT/'definition/report.json',{'$schema':SCHEMA+'report/1.0.0/schema.json','themeCollection':{},'layoutOptimization':'None'})
 
 def lit(v):

@@ -1,7 +1,7 @@
 # Power BI Release Process — GCC Timesheet
 
-> Dashboard Version: 2.2.0
-> Last Updated: 2026-10-16
+> Dashboard Version: 2.2.1
+> Last Updated: 2026-10-20
 
 ---
 
@@ -30,7 +30,9 @@ Use semantic versioning:
 - PATCH: fixes, formatting, documentation, small corrections
 
 Current baseline:
-- Dashboard version: `v2.2.0`
+- Dashboard version: `v2.2.1`
+
+Dashboard versions are product release numbers. Do not copy them into Power BI's internal format metadata. The current Desktop-compatible report `definition/version.json` and semantic-model `linguisticMetadata.Version` values are both `2.0.0`. Keep each `$schema` URL at its own supported schema version. Run `node --test scripts/powerbi-requirements.test.js` to catch accidental release-number substitutions.
 
 ---
 

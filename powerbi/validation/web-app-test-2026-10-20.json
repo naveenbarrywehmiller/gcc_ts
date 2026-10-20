@@ -1,0 +1,1349 @@
+{
+  "source": "http://192.168.0.50:3001/reports",
+  "role": "system admin",
+  "theme": "light",
+  "views": [
+    "Weekly Summary",
+    "Utilization",
+    "Project Hours",
+    "Missing Hours",
+    "Trends"
+  ],
+  "viewports": [
+    [
+      320,
+      568
+    ],
+    [
+      360,
+      640
+    ],
+    [
+      375,
+      667
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      414,
+      896
+    ],
+    [
+      430,
+      932
+    ],
+    [
+      600,
+      800
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      810,
+      1080
+    ],
+    [
+      820,
+      1180
+    ],
+    [
+      834,
+      1194
+    ],
+    [
+      1024,
+      1366
+    ],
+    [
+      1280,
+      720
+    ],
+    [
+      1366,
+      768
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1536,
+      864
+    ],
+    [
+      1600,
+      900
+    ],
+    [
+      1920,
+      1080
+    ],
+    [
+      2560,
+      1440
+    ],
+    [
+      3440,
+      1440
+    ],
+    [
+      3840,
+      2160
+    ],
+    [
+      568,
+      320
+    ],
+    [
+      640,
+      360
+    ],
+    [
+      844,
+      390
+    ],
+    [
+      932,
+      430
+    ],
+    [
+      800,
+      600
+    ],
+    [
+      1024,
+      768
+    ],
+    [
+      1366,
+      1024
+    ]
+  ],
+  "checks": [
+    {
+      "tab": "Weekly Summary",
+      "width": 320,
+      "height": 568,
+      "documentWidth": 314,
+      "scrollWidth": 314,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 360,
+      "height": 640,
+      "documentWidth": 354,
+      "scrollWidth": 354,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 375,
+      "height": 667,
+      "documentWidth": 369,
+      "scrollWidth": 369,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 384,
+      "scrollWidth": 384,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 414,
+      "height": 896,
+      "documentWidth": 408,
+      "scrollWidth": 408,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 430,
+      "height": 932,
+      "documentWidth": 424,
+      "scrollWidth": 424,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 600,
+      "height": 800,
+      "documentWidth": 594,
+      "scrollWidth": 594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 762,
+      "scrollWidth": 762,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 810,
+      "height": 1080,
+      "documentWidth": 804,
+      "scrollWidth": 804,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 820,
+      "height": 1180,
+      "documentWidth": 814,
+      "scrollWidth": 814,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 834,
+      "height": 1194,
+      "documentWidth": 828,
+      "scrollWidth": 828,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1024,
+      "height": 1366,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1274,
+      "scrollWidth": 1274,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1366,
+      "height": 768,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1434,
+      "scrollWidth": 1434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1536,
+      "height": 864,
+      "documentWidth": 1530,
+      "scrollWidth": 1530,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1600,
+      "height": 900,
+      "documentWidth": 1594,
+      "scrollWidth": 1594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1914,
+      "scrollWidth": 1914,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 2560,
+      "height": 1440,
+      "documentWidth": 2554,
+      "scrollWidth": 2554,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 3440,
+      "height": 1440,
+      "documentWidth": 3434,
+      "scrollWidth": 3434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 3840,
+      "height": 2160,
+      "documentWidth": 3840,
+      "scrollWidth": 3840,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 568,
+      "height": 320,
+      "documentWidth": 562,
+      "scrollWidth": 562,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 640,
+      "height": 360,
+      "documentWidth": 634,
+      "scrollWidth": 634,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 844,
+      "height": 390,
+      "documentWidth": 838,
+      "scrollWidth": 838,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 932,
+      "height": 430,
+      "documentWidth": 926,
+      "scrollWidth": 926,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 800,
+      "height": 600,
+      "documentWidth": 794,
+      "scrollWidth": 794,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1024,
+      "height": 768,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Weekly Summary",
+      "width": 1366,
+      "height": 1024,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 320,
+      "height": 568,
+      "documentWidth": 314,
+      "scrollWidth": 314,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 360,
+      "height": 640,
+      "documentWidth": 354,
+      "scrollWidth": 354,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 375,
+      "height": 667,
+      "documentWidth": 369,
+      "scrollWidth": 369,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 384,
+      "scrollWidth": 384,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 414,
+      "height": 896,
+      "documentWidth": 408,
+      "scrollWidth": 408,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 430,
+      "height": 932,
+      "documentWidth": 424,
+      "scrollWidth": 424,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 600,
+      "height": 800,
+      "documentWidth": 594,
+      "scrollWidth": 594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 762,
+      "scrollWidth": 762,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 810,
+      "height": 1080,
+      "documentWidth": 804,
+      "scrollWidth": 804,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 820,
+      "height": 1180,
+      "documentWidth": 814,
+      "scrollWidth": 814,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 834,
+      "height": 1194,
+      "documentWidth": 828,
+      "scrollWidth": 828,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1024,
+      "height": 1366,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1274,
+      "scrollWidth": 1274,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1366,
+      "height": 768,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1434,
+      "scrollWidth": 1434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1536,
+      "height": 864,
+      "documentWidth": 1530,
+      "scrollWidth": 1530,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1600,
+      "height": 900,
+      "documentWidth": 1594,
+      "scrollWidth": 1594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1914,
+      "scrollWidth": 1914,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 2560,
+      "height": 1440,
+      "documentWidth": 2554,
+      "scrollWidth": 2554,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 3440,
+      "height": 1440,
+      "documentWidth": 3434,
+      "scrollWidth": 3434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 3840,
+      "height": 2160,
+      "documentWidth": 3834,
+      "scrollWidth": 3834,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 568,
+      "height": 320,
+      "documentWidth": 562,
+      "scrollWidth": 562,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 640,
+      "height": 360,
+      "documentWidth": 634,
+      "scrollWidth": 634,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 844,
+      "height": 390,
+      "documentWidth": 838,
+      "scrollWidth": 838,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 932,
+      "height": 430,
+      "documentWidth": 926,
+      "scrollWidth": 926,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 800,
+      "height": 600,
+      "documentWidth": 794,
+      "scrollWidth": 794,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1024,
+      "height": 768,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Utilization",
+      "width": 1366,
+      "height": 1024,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 320,
+      "height": 568,
+      "documentWidth": 314,
+      "scrollWidth": 314,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 360,
+      "height": 640,
+      "documentWidth": 354,
+      "scrollWidth": 354,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 375,
+      "height": 667,
+      "documentWidth": 369,
+      "scrollWidth": 369,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 384,
+      "scrollWidth": 384,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 414,
+      "height": 896,
+      "documentWidth": 408,
+      "scrollWidth": 408,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 430,
+      "height": 932,
+      "documentWidth": 424,
+      "scrollWidth": 424,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 600,
+      "height": 800,
+      "documentWidth": 594,
+      "scrollWidth": 594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 762,
+      "scrollWidth": 762,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 810,
+      "height": 1080,
+      "documentWidth": 804,
+      "scrollWidth": 804,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 820,
+      "height": 1180,
+      "documentWidth": 814,
+      "scrollWidth": 814,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 834,
+      "height": 1194,
+      "documentWidth": 828,
+      "scrollWidth": 828,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1024,
+      "height": 1366,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1274,
+      "scrollWidth": 1274,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1366,
+      "height": 768,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1434,
+      "scrollWidth": 1434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1536,
+      "height": 864,
+      "documentWidth": 1530,
+      "scrollWidth": 1530,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1600,
+      "height": 900,
+      "documentWidth": 1594,
+      "scrollWidth": 1594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1914,
+      "scrollWidth": 1914,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 2560,
+      "height": 1440,
+      "documentWidth": 2554,
+      "scrollWidth": 2554,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 3440,
+      "height": 1440,
+      "documentWidth": 3434,
+      "scrollWidth": 3434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 3840,
+      "height": 2160,
+      "documentWidth": 3834,
+      "scrollWidth": 3834,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 568,
+      "height": 320,
+      "documentWidth": 562,
+      "scrollWidth": 562,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 640,
+      "height": 360,
+      "documentWidth": 634,
+      "scrollWidth": 634,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 844,
+      "height": 390,
+      "documentWidth": 838,
+      "scrollWidth": 838,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 932,
+      "height": 430,
+      "documentWidth": 926,
+      "scrollWidth": 926,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 800,
+      "height": 600,
+      "documentWidth": 794,
+      "scrollWidth": 794,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1024,
+      "height": 768,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Project Hours",
+      "width": 1366,
+      "height": 1024,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 320,
+      "height": 568,
+      "documentWidth": 314,
+      "scrollWidth": 314,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 360,
+      "height": 640,
+      "documentWidth": 354,
+      "scrollWidth": 354,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 375,
+      "height": 667,
+      "documentWidth": 369,
+      "scrollWidth": 369,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 384,
+      "scrollWidth": 384,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 414,
+      "height": 896,
+      "documentWidth": 408,
+      "scrollWidth": 408,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 430,
+      "height": 932,
+      "documentWidth": 424,
+      "scrollWidth": 424,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 600,
+      "height": 800,
+      "documentWidth": 594,
+      "scrollWidth": 594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 762,
+      "scrollWidth": 762,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 810,
+      "height": 1080,
+      "documentWidth": 804,
+      "scrollWidth": 804,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 820,
+      "height": 1180,
+      "documentWidth": 814,
+      "scrollWidth": 814,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 834,
+      "height": 1194,
+      "documentWidth": 828,
+      "scrollWidth": 828,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1024,
+      "height": 1366,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1274,
+      "scrollWidth": 1274,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1366,
+      "height": 768,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1434,
+      "scrollWidth": 1434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1536,
+      "height": 864,
+      "documentWidth": 1530,
+      "scrollWidth": 1530,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1600,
+      "height": 900,
+      "documentWidth": 1594,
+      "scrollWidth": 1594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1914,
+      "scrollWidth": 1914,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 2560,
+      "height": 1440,
+      "documentWidth": 2554,
+      "scrollWidth": 2554,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 3440,
+      "height": 1440,
+      "documentWidth": 3434,
+      "scrollWidth": 3434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 3840,
+      "height": 2160,
+      "documentWidth": 3834,
+      "scrollWidth": 3834,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 568,
+      "height": 320,
+      "documentWidth": 562,
+      "scrollWidth": 562,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 640,
+      "height": 360,
+      "documentWidth": 634,
+      "scrollWidth": 634,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 844,
+      "height": 390,
+      "documentWidth": 838,
+      "scrollWidth": 838,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 932,
+      "height": 430,
+      "documentWidth": 926,
+      "scrollWidth": 926,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 800,
+      "height": 600,
+      "documentWidth": 794,
+      "scrollWidth": 794,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1024,
+      "height": 768,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Missing Hours",
+      "width": 1366,
+      "height": 1024,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 320,
+      "height": 568,
+      "documentWidth": 314,
+      "scrollWidth": 314,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 360,
+      "height": 640,
+      "documentWidth": 354,
+      "scrollWidth": 354,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 375,
+      "height": 667,
+      "documentWidth": 369,
+      "scrollWidth": 369,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 384,
+      "scrollWidth": 384,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 414,
+      "height": 896,
+      "documentWidth": 408,
+      "scrollWidth": 408,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 430,
+      "height": 932,
+      "documentWidth": 424,
+      "scrollWidth": 424,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 600,
+      "height": 800,
+      "documentWidth": 594,
+      "scrollWidth": 594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 762,
+      "scrollWidth": 762,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 810,
+      "height": 1080,
+      "documentWidth": 804,
+      "scrollWidth": 804,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 820,
+      "height": 1180,
+      "documentWidth": 814,
+      "scrollWidth": 814,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 834,
+      "height": 1194,
+      "documentWidth": 828,
+      "scrollWidth": 828,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1024,
+      "height": 1366,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1274,
+      "scrollWidth": 1274,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1366,
+      "height": 768,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1434,
+      "scrollWidth": 1434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1536,
+      "height": 864,
+      "documentWidth": 1530,
+      "scrollWidth": 1530,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1600,
+      "height": 900,
+      "documentWidth": 1594,
+      "scrollWidth": 1594,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1914,
+      "scrollWidth": 1914,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 2560,
+      "height": 1440,
+      "documentWidth": 2554,
+      "scrollWidth": 2554,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 3440,
+      "height": 1440,
+      "documentWidth": 3434,
+      "scrollWidth": 3434,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 3840,
+      "height": 2160,
+      "documentWidth": 3834,
+      "scrollWidth": 3834,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 568,
+      "height": 320,
+      "documentWidth": 562,
+      "scrollWidth": 562,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 640,
+      "height": 360,
+      "documentWidth": 634,
+      "scrollWidth": 634,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 844,
+      "height": 390,
+      "documentWidth": 838,
+      "scrollWidth": 838,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 932,
+      "height": 430,
+      "documentWidth": 926,
+      "scrollWidth": 926,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 800,
+      "height": 600,
+      "documentWidth": 794,
+      "scrollWidth": 794,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1024,
+      "height": 768,
+      "documentWidth": 1018,
+      "scrollWidth": 1018,
+      "headerVisible": true
+    },
+    {
+      "tab": "Trends",
+      "width": 1366,
+      "height": 1024,
+      "documentWidth": 1360,
+      "scrollWidth": 1360,
+      "headerVisible": true
+    }
+  ],
+  "interactions": [
+    {
+      "test": "Submitted status total",
+      "pass": true,
+      "actual": 60
+    },
+    {
+      "test": "Approved status empty state",
+      "pass": true,
+      "actual": 0
+    },
+    {
+      "test": "Total hours drilldown opens",
+      "pass": true
+    },
+    {
+      "test": "Escape closes drilldown",
+      "pass": true
+    },
+    {
+      "test": "Previous month reconciles to API",
+      "pass": true,
+      "actual": 92
+    },
+    {
+      "test": "Platform slicer reconciles to October API rows",
+      "pass": true,
+      "actual": 24
+    },
+    {
+      "test": "Project expand all exposes task detail",
+      "pass": true
+    },
+    {
+      "test": "Monthly trend grouping",
+      "pass": true
+    },
+    {
+      "test": "Mobile drilldown fits viewport",
+      "pass": true
+    }
+  ],
+  "downloads": [
+    {
+      "format": "Excel",
+      "filename": "weekly_2026-10-01_to_2026-10-31.xlsx",
+      "bytes": 16176,
+      "failure": null
+    },
+    {
+      "format": "PDF",
+      "filename": "weekly_2026-10-01_to_2026-10-31.pdf",
+      "bytes": 3610,
+      "failure": null
+    }
+  ],
+  "errors": [],
+  "apiErrors": [],
+  "screenshots": "C:/Users/AMSI_Tech/AppData/Local/Temp/gcc-powerbi-web-evidence",
+  "visualInspection": [
+    "Weekly-Summary-375x667",
+    "Utilization-768x1024",
+    "Project-Hours-1366x768",
+    "Trends-1920x1080",
+    "Missing-Hours-3440x1440"
+  ],
+  "workbook": {
+    "sheets": [
+      {
+        "name": "Weekly Summary",
+        "rows": 9,
+        "columns": 8
+      },
+      {
+        "name": "Report Info",
+        "rows": 26,
+        "columns": 2
+      },
+      {
+        "name": "Task Planning",
+        "rows": 13,
+        "columns": 9
+      },
+      {
+        "name": "Timesheet Entries",
+        "rows": 32,
+        "columns": 17
+      },
+      {
+        "name": "Weekly Details",
+        "rows": 11,
+        "columns": 30
+      }
+    ],
+    "totals": {
+      "hours": 160,
+      "approved": 0,
+      "pending": 60
+    },
+    "pass": true
+  }
+}

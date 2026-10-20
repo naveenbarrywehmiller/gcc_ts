@@ -315,16 +315,6 @@
         "value":  null
     },
     {
-        "measure":  "Open Positions",
-        "status":  "Evaluated",
-        "value":  null
-    },
-    {
-        "measure":  "New Joiners",
-        "status":  "Evaluated",
-        "value":  null
-    },
-    {
         "measure":  "Hours Scheduled",
         "status":  "Evaluated",
         "value":  80.000000000000014
@@ -360,6 +350,24 @@
         "value":  "2026-10-01 17:30:00 IST"
     },
     {
+        "test":  "Platform hours match division hours without duplicates",
+        "status":  "Pass",
+        "expected":  24,
+        "actual":  24
+    },
+    {
+        "test":  "Unrelated Platform has no hours",
+        "status":  "Pass",
+        "expected":  0,
+        "actual":  0
+    },
+    {
+        "test":  "Platform filter suppresses unallocated capacity",
+        "status":  "Pass",
+        "expected":  null,
+        "actual":  null
+    },
+    {
         "test":  "Weekly counts not multiplied by days",
         "status":  "Pass",
         "expected":  2,
@@ -372,10 +380,10 @@
         "actual":  16
     },
     {
-        "test":  "Staffing snapshot preserves known zero",
+        "test":  "Open position narrative remains text",
         "status":  "Pass",
-        "expected":  0,
-        "actual":  0
+        "expected":  "No open roles",
+        "actual":  "No open roles"
     },
     {
         "test":  "Missing staffing is unknown",
@@ -408,10 +416,10 @@
         "actual":  null
     },
     {
-        "test":  "New joiners with a mid-month date selection",
+        "test":  "New joiner narrative remains text",
         "status":  "Pass",
-        "expected":  1,
-        "actual":  1
+        "expected":  "One engineer joined",
+        "actual":  "One engineer joined"
     },
     {
         "test":  "Plan allocation reconciles to budget",

@@ -5,6 +5,22 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.2.1] — 2026-10-20
+
+Distributed as a **source prerelease** pending native Desktop canvas/phone preview verification.
+
+### Fixed
+- Restored Desktop linguistic metadata and report format versions to `2.0.0`. These internal schema versions are independent of the dashboard release number; a regression test prevents them from being bumped with a release.
+- Removed Platform/Division phone-filter overlaps on seven pages by preserving dropdown heights and moving the following controls down.
+- Updated Platform input-readiness guidance and repaired two native-test fixture rows to include the required Platform/Division fields.
+
+### Validation and compatibility
+- All 70 DAX measures and 39 native-engine scenarios pass; 254 report schema documents validate. All 121 saved phone placements pass geometry checks.
+- Live snapshot checks passed 12 API reconciliations, 10 measure contexts and 94 visual field queries. Five web report views passed 140 responsive checks.
+- Requires GCC Timesheet v1.29.0+ and reporting API v2.0.0, as for v2.2.0. The application release version is unchanged.
+- Source-only GitHub package excludes local caches and credentials. Category mappings and missing register/planning inputs remain business prerequisites; publication and scheduled refresh are not configured by this release.
+- See [release verification](validation/RELEASE_2.2.1.md) for the final native preview result and coverage limits.
+
 ## [2.2.0] — 2026-10-16
 
 ### Added

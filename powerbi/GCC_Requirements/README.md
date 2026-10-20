@@ -2,9 +2,13 @@
 
 **[User guide: change source URL, password, refresh and report settings](../POWERBI_USER_GUIDE.md)** provides step-by-step maintenance instructions.
 
-Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. The saved project contains **16 tables, 70 DAX measures, 18 relationships, nine report pages and 113 visual containers**. Its semantic model is TMDL in `GCC_Requirements.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
+Open **[GCC_Requirements.pbip](GCC_Requirements.pbip)** in Power BI Desktop. Version **2.2.1** contains **17 tables, 70 DAX measures, 20 relationships, nine report pages and 121 visual containers**. Its semantic model is TMDL in `GCC_Requirements.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
 
-**[Complete Power BI guide — POWERBI.md](../POWERBI.md)** includes every DAX formula, all 11 shared Power Query expressions, all 16 table queries, the full column/relationship dictionary, every visual and its field bindings, phone geometry, connection instructions, troubleshooting and missing inputs.
+**[Complete Power BI guide — POWERBI.md](../POWERBI.md)** includes every DAX formula, shared Power Query expressions, table queries, column/relationship definitions, visual bindings, connection instructions and missing inputs. Its older generated inventories predate the Platform addition; current counts and verification are in [release verification](../validation/RELEASE_2.2.1.md).
+
+## Desktop compatibility repair — 2.2.1 (2026-10-20)
+
+The linguistic metadata and report format versions are restored to `2.0.0`; the dashboard release remains `2.2.1`. Download/extract the complete new source package and open its PBIP. The seven phone-filter overlaps are corrected. See [incompatible linguistic metadata troubleshooting](../documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata) for repairing an older checkout manually.
 
 ## Staffing narratives — 2.0.0 (2026-10-09)
 
@@ -40,7 +44,7 @@ The `DimEmployee[division]` field is each person's primary division. Admin and e
 
 ## Phone layouts
 
-All nine pages have native portrait phone layouts covering all 113 existing visuals. Open **View → Mobile layout** in Desktop and select a page tab. The layouts use a 324-unit canvas, full-width timestamp/dropdown controls, two-column KPI cards, readable wrapped headings/notes and full-width charts. The last-refresh timestamp is small muted text (9 pt label, 10 pt value), with a transparent background and no border/shadow on both desktop and phone views. Detail tables retain all columns with horizontal scrolling; input-readiness definitions wrap into narrow columns.
+All nine pages have native portrait phone layouts covering all 121 existing visuals. Open **View → Mobile layout** in Desktop and select a page tab. The layouts use a 324-unit canvas, full-width timestamp/dropdown controls, two-column KPI cards, readable wrapped headings/notes and full-width charts. The last-refresh timestamp is small muted text (9 pt label, 10 pt value), with a transparent background and no border/shadow on both desktop and phone views. Detail tables retain all columns with horizontal scrolling; input-readiness definitions wrap into narrow columns.
 
 On an actual phone, these layouts appear in the Power BI iOS/Android app in portrait after the report is published and shared. Ordinary web-browser and landscape viewing use the standard report layout. Service publication has not been performed. See [Microsoft's mobile layout overview](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-create-mobile-optimized-report-about).
 

@@ -739,7 +739,7 @@ class PowerBiService {
   getVersion() {
     return {
       apiVersion: '2.0.0',
-      dashboardVersion: '2.2.0',
+      dashboardVersion: '2.2.1',
       apiNamespace: '/api/powerbi',
       serverTime: new Date().toISOString(),
       cacheEnabled: CACHE_TTL_MS > 0,

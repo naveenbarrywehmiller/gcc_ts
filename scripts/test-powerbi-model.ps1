@@ -100,7 +100,7 @@ try {
     $taskScenario=ConvertFrom-Json $taskFixture
     $taskScenario.projects += @{id=2;projectCode='TEST-2';projectName='Completed synthetic project';division='North';startDate='2026-09-01';targetDate='2026-09-29';deliveredDate='2026-09-30';budgetHours=100;projectStatus='Completed';isActive=$true}
     foreach($taskEntry in @(@{id=4;date='2026-08-31';hours=40},@{id=5;date='2026-09-30';hours=80})) {
-        $taskScenario.timesheets += @{id=$taskEntry.id;userId=1;projectId=2;taskId=1;date=$taskEntry.date;hours=$taskEntry.hours;status='approved';division='North';department='Engineering';projectCategory='Development';weeklyRowKey=('test-extra-'+$taskEntry.id);weeklyDetails=@{};updatedDate='2026-09-30T12:00:00'}
+        $taskScenario.timesheets += @{id=$taskEntry.id;userId=1;projectId=2;taskId=1;date=$taskEntry.date;hours=$taskEntry.hours;status='approved';division='North';divisionId=1;platformId=1;platform='Platform North';department='Engineering';projectCategory='Development';weeklyRowKey=('test-extra-'+$taskEntry.id);weeklyDetails=@{};updatedDate='2026-09-30T12:00:00'}
     }
     $taskScenario.timesheets[1].weeklyDetails.fundamental_error_count=3
     $taskScenarioBytes=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($taskScenario | ConvertTo-Json -Depth 20)))

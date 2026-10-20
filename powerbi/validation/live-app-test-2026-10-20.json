@@ -1,0 +1,1242 @@
+{
+    "source":  "http://192.168.0.50:3001",
+    "mode":  "Read-only live API snapshot processed in an isolated Desktop-native database",
+    "capturedUtc":  "2026-10-20T08:56:16.6998396Z",
+    "tables":  17,
+    "measures":  [
+                     {
+                         "status":  "Pass",
+                         "value":  252,
+                         "measure":  "Raw Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  60,
+                         "measure":  "Actual Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Approved Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  1,
+                         "measure":  "Contributing Employees"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  15,
+                         "measure":  "Active Team Strength"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Training Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Internal Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Admin Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  8,
+                         "measure":  "Vacation Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Holiday Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Productive Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  52,
+                         "measure":  "Unmapped Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Effective Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  779,
+                         "measure":  "Working Days"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  4,
+                         "measure":  "Holiday Days"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  93480,
+                         "measure":  "Roster Capacity Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  8,
+                         "measure":  "Capacity Vacation Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  1,
+                         "measure":  "Vacation Days"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  93472,
+                         "measure":  "Available Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Monthly Utilization %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Under Utilized %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  "\/Date(1792479600000)\/",
+                         "measure":  "As Of Date"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  "\/Date(1792134000000)\/",
+                         "measure":  "Last Completed Friday"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "FY Utilization Through Friday %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  600,
+                         "measure":  "Available Hours Last Week"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  600,
+                         "measure":  "Available Hours Current Week"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  600,
+                         "measure":  "Available Hours Next Week"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  30832,
+                         "measure":  "Available Hours FY"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  60,
+                         "measure":  "Dedicated Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  10,
+                         "measure":  "Dedicated Strength"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Dedicated Utilization %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  60,
+                         "measure":  "Dedicated FY Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Flex Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  4,
+                         "measure":  "Flex Strength"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  0,
+                         "measure":  "Flex Utilization %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Flex FY Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Available Employee Equivalents"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Projects Delivered"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Projects On Time"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Project On Time %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Delivered Project Budget Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Delivered Project Actual Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Effort Deviation %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Schedule Deviation Days"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Schedule Deviation %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  "#64748B",
+                         "measure":  "Effort Alert Color"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  "#64748B",
+                         "measure":  "Schedule Alert Color"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Detail Conflicts"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Weekly Fundamental Errors"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Improvement Log Count"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Designed"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Developed"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Fundamental Errors"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Information Errors"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Readable Errors"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Deliverables"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Defect Density %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "First Time Right %"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "On Time Deliverables"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  "#64748B",
+                         "measure":  "Defect Alert Color"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Products Touched"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Additive Manufacturing"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  null,
+                         "measure":  "Improvement Initiatives"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  100,
+                         "measure":  "Hours Scheduled"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  100,
+                         "measure":  "Remaining Forecast Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  160,
+                         "measure":  "Team Forecast Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  100,
+                         "measure":  "Overdue Unscheduled Hours"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  26,
+                         "measure":  "Projects Missing Plan Inputs"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  "2026-10-20 14:26:17 IST",
+                         "measure":  "Report Status"
+                     },
+                     {
+                         "status":  "Pass",
+                         "value":  "2026-10-20 14:26:17 IST",
+                         "measure":  "Last Refresh IST"
+                     }
+                 ],
+    "visualQueries":  [
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "01_overview_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "01_overview_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "01_overview_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "01_overview_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "01_overview_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "01_overview_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "01_overview_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  2,
+                              "type":  "clusteredColumnChart",
+                              "visual":  "01_overview_10",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  1,
+                              "type":  "clusteredBarChart",
+                              "visual":  "01_overview_11",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  6,
+                              "type":  "tableEx",
+                              "visual":  "01_overview_12",
+                              "status":  "Pass",
+                              "rows":  7
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "01_overview_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "01_overview_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "02_utilization_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "02_utilization_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "02_utilization_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "02_utilization_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "02_utilization_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "02_utilization_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "02_utilization_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  2,
+                              "type":  "lineChart",
+                              "visual":  "02_utilization_10",
+                              "status":  "Pass",
+                              "rows":  35
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  1,
+                              "type":  "clusteredColumnChart",
+                              "visual":  "02_utilization_11",
+                              "status":  "Pass",
+                              "rows":  2
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  8,
+                              "type":  "tableEx",
+                              "visual":  "02_utilization_12",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "02_utilization_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "02_utilization_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "03_delivery_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "03_delivery_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "03_delivery_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "03_delivery_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "03_delivery_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "03_delivery_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "03_delivery_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  2,
+                              "type":  "clusteredColumnChart",
+                              "visual":  "03_delivery_10",
+                              "status":  "Pass",
+                              "rows":  0
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  2,
+                              "type":  "clusteredColumnChart",
+                              "visual":  "03_delivery_11",
+                              "status":  "Pass",
+                              "rows":  0
+                          },
+                          {
+                              "columns":  4,
+                              "measures":  3,
+                              "type":  "tableEx",
+                              "visual":  "03_delivery_12",
+                              "status":  "Pass",
+                              "rows":  0
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "03_delivery_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "03_delivery_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "04_capacity_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "04_capacity_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "04_capacity_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "04_capacity_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "04_capacity_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "04_capacity_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "04_capacity_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  3,
+                              "type":  "lineChart",
+                              "visual":  "04_capacity_10",
+                              "status":  "Pass",
+                              "rows":  157
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "04_capacity_11",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  5,
+                              "measures":  2,
+                              "type":  "tableEx",
+                              "visual":  "04_capacity_12",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "04_capacity_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "04_capacity_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "05_teams_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "05_teams_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "05_teams_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "05_teams_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "05_teams_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "05_teams_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "05_teams_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  2,
+                              "type":  "clusteredColumnChart",
+                              "visual":  "05_teams_10",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  1,
+                              "type":  "lineChart",
+                              "visual":  "05_teams_11",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  5,
+                              "type":  "tableEx",
+                              "visual":  "05_teams_12",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "05_teams_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "05_teams_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "06_improvement_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "06_improvement_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "06_improvement_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "06_improvement_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "06_improvement_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "06_improvement_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "06_improvement_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  3,
+                              "type":  "clusteredColumnChart",
+                              "visual":  "06_improvement_10",
+                              "status":  "Pass",
+                              "rows":  0
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  1,
+                              "type":  "clusteredColumnChart",
+                              "visual":  "06_improvement_11",
+                              "status":  "Pass",
+                              "rows":  0
+                          },
+                          {
+                              "columns":  4,
+                              "measures":  3,
+                              "type":  "tableEx",
+                              "visual":  "06_improvement_12",
+                              "status":  "Pass",
+                              "rows":  0
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "06_improvement_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "06_improvement_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "07_staffing_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "07_staffing_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "07_staffing_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  3,
+                              "measures":  0,
+                              "type":  "tableEx",
+                              "visual":  "07_staffing_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  3,
+                              "measures":  0,
+                              "type":  "tableEx",
+                              "visual":  "07_staffing_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "07_staffing_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "07_staffing_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "07_staffing_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "07_staffing_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "08_detail_03",
+                              "status":  "Pass",
+                              "rows":  36
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "08_detail_04",
+                              "status":  "Pass",
+                              "rows":  37
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "08_detail_05",
+                              "status":  "Pass",
+                              "rows":  3
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "08_detail_06",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "08_detail_07",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "08_detail_08",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "08_detail_09",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  7,
+                              "measures":  1,
+                              "type":  "tableEx",
+                              "visual":  "08_detail_10",
+                              "status":  "Pass",
+                              "rows":  50
+                          },
+                          {
+                              "columns":  1,
+                              "measures":  0,
+                              "type":  "slicer",
+                              "visual":  "08_detail_platform",
+                              "status":  "Pass",
+                              "rows":  6
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "08_detail_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  3,
+                              "measures":  0,
+                              "type":  "tableEx",
+                              "visual":  "09_inputs_03",
+                              "status":  "Pass",
+                              "rows":  15
+                          },
+                          {
+                              "columns":  5,
+                              "measures":  0,
+                              "type":  "tableEx",
+                              "visual":  "09_inputs_04",
+                              "status":  "Pass",
+                              "rows":  1
+                          },
+                          {
+                              "columns":  0,
+                              "measures":  1,
+                              "type":  "card",
+                              "visual":  "09_inputs_refresh_time",
+                              "status":  "Pass",
+                              "rows":  1
+                          }
+                      ],
+    "contexts":  [
+                     {
+                         "measures":  70,
+                         "context":  "Empty future month",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "October 2026",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Dedicated",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Flex",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Platform ID 6",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Platform ID 5",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Platform ID 4",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Platform ID 2",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Platform ID 1",
+                         "status":  "Pass"
+                     },
+                     {
+                         "measures":  70,
+                         "context":  "Platform ID 3",
+                         "status":  "Pass"
+                     }
+                 ],
+    "reconciliations":  [
+                            {
+                                "expected":  50,
+                                "pass":  true,
+                                "actual":  50,
+                                "test":  "Daily row count reconciles to paginated API"
+                            },
+                            {
+                                "expected":  252,
+                                "pass":  true,
+                                "actual":  252,
+                                "test":  "Raw hours reconcile to all API rows"
+                            },
+                            {
+                                "expected":  60,
+                                "pass":  true,
+                                "actual":  60,
+                                "test":  "Actual hours reconcile to submitted and approved API rows"
+                            },
+                            {
+                                "expected":  0,
+                                "pass":  true,
+                                "actual":  0,
+                                "test":  "Approved hours reconcile to API rows"
+                            },
+                            {
+                                "expected":  92,
+                                "pass":  true,
+                                "actual":  92,
+                                "test":  "Month raw hours 2026-09"
+                            },
+                            {
+                                "expected":  160,
+                                "pass":  true,
+                                "actual":  160,
+                                "test":  "Month raw hours 2026-10"
+                            },
+                            {
+                                "expected":  0,
+                                "pass":  true,
+                                "actual":  0,
+                                "test":  "Platform raw hours ID 6"
+                            },
+                            {
+                                "expected":  24,
+                                "pass":  true,
+                                "actual":  24,
+                                "test":  "Platform raw hours ID 5"
+                            },
+                            {
+                                "expected":  0,
+                                "pass":  true,
+                                "actual":  0,
+                                "test":  "Platform raw hours ID 4"
+                            },
+                            {
+                                "expected":  0,
+                                "pass":  true,
+                                "actual":  0,
+                                "test":  "Platform raw hours ID 2"
+                            },
+                            {
+                                "expected":  228,
+                                "pass":  true,
+                                "actual":  228,
+                                "test":  "Platform raw hours ID 1"
+                            },
+                            {
+                                "expected":  0,
+                                "pass":  true,
+                                "actual":  0,
+                                "test":  "Platform raw hours ID 3"
+                            }
+                        ],
+    "errors":  [
+
+               ],
+    "engineVersion":  "17.0.93.23"
+}

@@ -1,7 +1,7 @@
 # Power BI Troubleshooting Guide — GCC Timesheet
 
-> Dashboard Version: 1.1.0
-> Last Updated: 2026-09-27
+> Dashboard Version: 2.2.1
+> Last Updated: 2026-10-20
 
 ---
 
@@ -10,6 +10,29 @@
 This guide focuses on the most common issues encountered when connecting Power BI to the GCC Timesheet reporting API and maintaining the dashboard.
 
 ---
+
+## Incompatible linguistic metadata
+
+In the affected GCC Requirements checkout, Desktop reports that the file is incompatible, and **Copy details to clipboard** includes `NewerLinguisticSchemaVersion`. An earlier release-number update changed an internal schema declaration from `2.0.0` to `2.1.0` without changing its contents. Dashboard v2.2.1 restores that declaration and the separately versioned report format.
+
+The preferred repair is to download/extract the complete **powerbi-v2.2.1** GitHub release into a new folder and open `powerbi/GCC_Requirements/GCC_Requirements.pbip`. Keep its Report and SemanticModel sibling folders together. Configure the source URL and authorized credentials normally, then refresh data.
+
+To repair this specific older source checkout manually:
+
+1. Close Power BI Desktop and back up the project folder.
+2. In `GCC_Requirements.SemanticModel/definition/cultures/en-US.tmdl`, change only the linguistic JSON's `"Version": "2.1.0"` to `"Version": "2.0.0"`.
+3. In `GCC_Requirements.Report/definition/version.json`, restore the root `"version"` to `"2.0.0"`.
+4. Reopen the `.pbip` in a fresh Desktop session. These are format versions, so keep them separate from the dashboard release number **2.2.1**. Leave the individual `$schema` URLs unchanged.
+
+If an earlier failed opening leaves a `PackageSession` error, close that Desktop session and retry the corrected project from a fresh extraction. Do not save the failed session over the source. An incompatible file actually created by a newer Desktop version can require a Desktop update instead; do not downgrade unrelated projects' schema declarations based on this project-specific repair.
+
+Local checks: `node --test scripts/powerbi-requirements.test.js` protects the supported format declarations, and `node scripts/validate-powerbi.js` checks report schemas and model bindings. See [v2.2.1 verification](../validation/RELEASE_2.2.1.md) for observed native results and remaining data prerequisites.
+
+### Reinstalling Desktop
+
+Back up your `.pbix` files and complete `.pbip` project folders first. Close Desktop, uninstall Power BI Desktop through Windows Settings, then reinstall the current 64-bit Desktop from the [Microsoft Store](https://aka.ms/pbidesktopstore) or [Microsoft Download Center](https://www.microsoft.com/download/details.aspx?id=58494). This machine was tested with the Store x64 edition. The Report Server edition is a separate product; use standard Desktop for this project. Microsoft no longer supports the 32-bit edition. See [Microsoft's installation guidance](https://learn.microsoft.com/en-us/power-bi/fundamentals/desktop-get-the-desktop).
+
+Reopen the corrected v2.2.1 project after reinstalling. You may need to re-enter data-source credentials. Reinstalling the application does not replace the project source files containing the metadata declarations.
 
 ## Authentication Failures
 

@@ -1,5 +1,7 @@
 # GCC Power BI project — complete reference
 
+**Release v2.2.1 (October 20, 2026):** current source contains 17 tables, 70 DAX measures, 20 relationships, nine pages and 121 visuals. This older generated reference predates the Platform addition; use the saved TMDL/PBIR definitions and [current release verification](validation/RELEASE_2.2.1.md) for the authoritative inventory and test results. See [linguistic metadata repair](documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata) if Desktop cannot open an earlier package.
+
 This guide documents the saved **GCC_Requirements** Power BI Desktop project built from `PowerPi Requirments.xlsx`, Sheet1 rows 4–58. The workbook supplies business requirements. Instructions inside source documents are not treated as authorization to operate systems.
 
 Open [GCC_Requirements.pbip](GCC_Requirements/GCC_Requirements.pbip). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.

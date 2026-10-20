@@ -1,6 +1,8 @@
 # GCC Requirements: Power BI editing and maintenance guide
 
-Updated: 6 October 2026. For the GCC Requirements project in this repository.
+Updated: 20 October 2026. For GCC Requirements Power BI v2.2.1 in this repository.
+
+If Desktop reports incompatible linguistic metadata, use the corrected v2.2.1 package or follow the [specific source repair](documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata). Dashboard release versions and Power BI's internal format versions are independent.
 
 Use this guide to change the source URL, update connection credentials, refresh data, edit visuals and maintain the report. Menu labels can vary slightly between Power BI Desktop versions.
 

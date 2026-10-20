@@ -1,5 +1,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 process.env.BOOTSTRAP_ADMIN_EMAIL = '';
 process.env.BOOTSTRAP_ADMIN_PASSWORD = '';
 process.env.MAINTENANCE_FILE = require('node:path').join(require('node:os').tmpdir(), `gcc-test-maintenance-${process.pid}`);
@@ -45,7 +47,7 @@ async function get(endpoint, identity='key', method='GET') {
 test('staffing and planned vacation reads retain authentication, division scope, and read-only rules',async()=>{
   const version=(await get('version')).body;
   assert.equal(version.apiVersion,'2.0.0');
-  assert.equal(version.dashboardVersion,'2.2.0');
+  assert.equal(version.dashboardVersion,'2.2.1');
   for(const endpoint of ['staffing','planned-vacations']) {
     assert.equal((await get(endpoint,null)).status,401);
     assert.equal((await get(endpoint,employee)).status,403);
@@ -70,4 +72,12 @@ test('weekly row identities collapse daily detail copies while retaining separat
   assert.equal(new Map(all.map(r=>[r.weeklyRowKey,r.weeklyDetails.fundamental_error_count])).size,2);
   assert.equal([...new Map(all.map(r=>[r.weeklyRowKey,r.weeklyDetails.fundamental_error_count])).values()].reduce((a,b)=>a+b,0),4);
   assert(all.every(r=>!('password_hash' in r)));
+});
+
+test('Desktop schema versions stay independent of the dashboard release number',()=>{
+  const project=path.join(__dirname,'../powerbi/GCC_Requirements');
+  const reportVersion=JSON.parse(fs.readFileSync(path.join(project,'GCC_Requirements.Report/definition/version.json'),'utf8'));
+  assert.equal(reportVersion.version,'2.0.0');
+  const culture=fs.readFileSync(path.join(project,'GCC_Requirements.SemanticModel/definition/cultures/en-US.tmdl'),'utf8');
+  assert.equal(culture.match(/"Version"\s*:\s*"([^"]+)"/)?.[1],'2.0.0');
 });

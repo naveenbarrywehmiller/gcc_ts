@@ -1,0 +1,34 @@
+{
+  "desktopVersion": "2.159.883.0 (October 2026, Store x64)",
+  "engineVersion": "17.0.93.23",
+  "canonicalProjectChanged": false,
+  "nativePageRenderingVerified": false,
+  "attempts": [
+    {
+      "project": "Canonical GCC_Requirements.pbip",
+      "result": "Unable to open document: incompatible with current Desktop version"
+    },
+    {
+      "project": "Temporary copy excluding .pbi caches",
+      "result": "Same incompatibility"
+    },
+    {
+      "project": "Temporary copy with report definition/version.json restored to 2.0.0",
+      "result": "Same incompatibility",
+      "diagnosticCode": "NewerLinguisticSchemaVersion"
+    },
+    {
+      "project": "Temporary copy also restoring linguisticMetadata.Version to 2.0.0",
+      "result": "Original error cleared and model loaded, followed by a Desktop session error before report canvas rendered",
+      "error": "Could not find a PackageSession for the given sessionID."
+    }
+  ],
+  "diagnosis": {
+    "file": "GCC_Requirements.SemanticModel/definition/cultures/en-US.tmdl",
+    "line": 5,
+    "currentLinguisticMetadataVersion": "2.1.0",
+    "previousSavedVersion": "2.0.0",
+    "changeCommit": "a2d880b6b65c7b15b5a37ec56b0e1b57a59d31ca"
+  },
+  "scope": "No publication, credential changes, canonical report refresh, or canonical model/report definition edits. Temporary Desktop test process closed."
+}

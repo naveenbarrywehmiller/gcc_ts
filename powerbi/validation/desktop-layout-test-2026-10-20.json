@@ -1,0 +1,60 @@
+{
+  "pages": [
+    {
+      "page": "01_overview",
+      "width": 1440,
+      "height": 960,
+      "visuals": 15
+    },
+    {
+      "page": "02_utilization",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 15
+    },
+    {
+      "page": "03_delivery",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 15
+    },
+    {
+      "page": "04_capacity",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 15
+    },
+    {
+      "page": "05_teams",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 15
+    },
+    {
+      "page": "06_improvement",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 15
+    },
+    {
+      "page": "07_staffing",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 12
+    },
+    {
+      "page": "08_detail",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 13
+    },
+    {
+      "page": "09_inputs",
+      "width": 1440,
+      "height": 1040,
+      "visuals": 6
+    }
+  ],
+  "outOfBounds": [],
+  "desktopOverlaps": []
+}

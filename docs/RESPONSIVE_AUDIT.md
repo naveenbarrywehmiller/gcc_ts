@@ -2,6 +2,18 @@
 
 For future layout tests, use the reusable [Chromium responsive and loading-state checklist](CHROMIUM_LAYOUT_TEST_CHECKLIST.md), including the full 28-viewport list and the route-loading validation baseline.
 
+## Power BI 2.2.1 phone spacing repair (October 20, 2026)
+
+The seven native phone pages with Platform/Division overlap now move Division and every following visual down 24 units. Dropdown heights are retained, with eight units of space after Platform. All 121 saved phone placements pass the geometry checker; all 121 desktop bounds and positions are unchanged and pass their existing geometry check. The web UI was not edited, so the 140 live Chromium checks recorded below remain applicable to its unchanged layout. Native phone drawing, full Desktop canvas rendering, physical devices and Power BI Service preview remain unverified; see [release verification](../powerbi/validation/RELEASE_2.2.1.md).
+
+## Live reporting and Power BI verification (October 20, 2026)
+
+The live application's five populated report views were tested as System Admin in Chromium, light theme, at all 28 checklist sizes: **140 checks**. No document-level horizontal overflow, missing headers, browser exceptions or unexpected API failures occurred. Status/period/Platform filters and reset, an empty approved-status result, drilldown opening/Escape, project expansion/collapse, monthly trend grouping, and a mobile drilldown's viewport bounds passed. Weekly Summary Excel and PDF downloads completed; the Excel workbook's total/pending/approved hours matched the screen and API. Screenshots were captured at five representative sizes per view; mobile Weekly Summary, tablet Utilization, laptop Project Hours, desktop Trends and ultrawide Missing Hours screenshots were inspected.
+
+Separately, saved Power BI report geometry covers nine pages and 121 visuals. Desktop bounds and overlap checks passed, but native phone layouts have seven Platform/Division filter overlaps. Native page rendering remains unverified due Desktop opening/session errors. See [the full Power BI test report](../powerbi/validation/TEST_REPORT_2026-10-20.md) and its linked evidence. Browser screenshots/downloads remain in the machine's temporary `gcc-powerbi-web-evidence` directory.
+
+No frontend layout was changed. This live run did not cover other roles/themes, forced loading/error states, other browser engines, physical devices or assistive technologies. `npm test` passed 153 Node tests and 55 reporting API checks. Build/lint were not rerun for the one-line PowerShell synthetic-fixture repair and evidence-only changes.
+
 ## Route code splitting (October 19, 2026)
 
 Admin screens, Matrix help, manager approvals and Reports now load through dynamic imports when opened. The loading status appears inside the existing responsive shell, preserving navigation and the content container. All route paths, page props, redirects and permission guards are unchanged; the four named catalog screens share one deferred module.

@@ -2,6 +2,16 @@
 
 The deliverable is `../GCC_Requirements/GCC_Requirements.pbip`.
 
+## Power BI 2.2.1 release (October 20, 2026)
+
+The [release verification](RELEASE_2.2.1.md) records the metadata repair, phone spacing corrections and current coverage. Internal format versions are `2.0.0`, independently of dashboard version `2.2.1`. The native engine rerun passes 70 measures and 39 assertions; schema validation passes 254 documents. The latest `mobile-layout-validation.json` now records 121 placements with **zero** errors after correcting the seven overlaps found below. The original incompatible-linguistic-schema error clears in a fresh session; report canvas drawing remains unverified.
+
+## Live application and installed Desktop test (October 20, 2026)
+
+See [the complete test report](TEST_REPORT_2026-10-20.md). Current native-engine evidence covers 17 tables, all 70 measures and 39 passing synthetic assertions. An isolated live LAN snapshot passed 12 API reconciliations, 10 additional measure contexts and 94 visual field queries. All 254 schema documents passed. The web report passed 140 populated-view responsive checks and the exercised filters, drilldowns and downloads; `npm test` passed 153 Node tests plus 55 reporting API checks.
+
+This run found seven saved phone-filter overlaps and a canonical Desktop opening failure (`NewerLinguisticSchemaVersion`). Temporary metadata restoration cleared that error, but a later Desktop `PackageSession` failure prevented native canvas inspection. Live utilization remains blank for 52 unmapped hours, and 26 projects are flagged for missing planning inputs. These findings supersede older blanket geometry/preview statements below. The canonical report/model definitions were retained; only two synthetic test rows were repaired to include the current required Platform/Division fields.
+
 ## Staffing narratives (October 9, 2026)
 
 Application v1.21.0 and reporting API v2.0.0 convert Open Position and New Joiner values from counts to text. The migration test preserved legacy values, including zero, as strings; monthly update and scoped reporting tests passed. The saved TMDL deserialized with Desktop's TOM library (16 tables, 70 measures), and local checks resolved every field reference across 113 report visuals. All 113 phone placements passed the saved-layout checker with no overlaps or width violations. The full Microsoft schema validator remains blocked by HTTP 404 for the existing `visualContainer/2.13.0` schema URL. Desktop is not running, so the native synthetic engine test and refreshed report preview were not run for this version. The older validation JSON files below document the previous model and are not current calculation evidence.
