@@ -35,7 +35,17 @@ Validation date: October 20, 2026. See [the repository map](REPOSITORY_STRUCTURE
 | Graphify | Rebuilt: 1,555 nodes / 3,499 edges / 88 communities |
 | Git whitespace check | **Passed** |
 
-Link checks validate local files and Markdown anchors; external URLs are checked separately where recorded below. The source-only candidate excludes ignored local review reports and caches.
+Link checks validate local files and Markdown anchors. Additionally, all 31 non-GitHub reference URLs passed HTTP/redirect checks (including the Microsoft Store app link); six upstream GitHub references returned HTTP 200. All 62 changelog commit links resolve to existing commit objects, and both endpoints of all 62 comparison links exist among the preserved published tags. Release downloads were checked independently below. Authentication portals were checked for reachability, without signing in. The source-only candidate excludes ignored local review reports and caches.
+
+## GitHub Actions validation
+
+The implementation commit `66d281725d647ab37b2cdd893444897e791df86c` passed all applicable pull-request jobs:
+
+- [Repository validation](https://github.com/naveenbarrywehmiller/gcc_ts/actions/runs/39423233303): mapping checks, tests, lint, and frontend build.
+- [Docker builds](https://github.com/naveenbarrywehmiller/gcc_ts/actions/runs/39423233164): actual Linux AMD64 and ARM64 images built successfully.
+- [GCC Timesheet Linux Admin](https://github.com/naveenbarrywehmiller/gcc_ts/actions/runs/39423233234): syntax/unit/reference checks, image build, and actual disposable Ubuntu/Docker/Nginx installation, backup, restore, reset, ports, timers, and launcher smoke tests passed. Release assets were built successfully.
+
+Publishing and manifest-push jobs were correctly skipped for the pull request. No production deployment was performed.
 
 ## GitHub release verification
 
@@ -59,8 +69,8 @@ The direct high-severity packages are server `pm2` and client `axios`; the remai
 ## Coverage limits
 
 - The pre-existing Desktop edits use Microsoft's `visualContainer/2.14.0` schema URL, which returned HTTP 404. The working-tree schema run therefore stops at that unavailable schema. Those edits were preserved rather than downgraded. The isolated reorganization candidate retains the existing supported schema declarations and passes all 254 checks.
-- Docker is not installed locally, so an actual container build, Compose runtime, Ubuntu/Nginx install, restore, and deployment smoke test must run in the pull request's Docker/Linux-admin workflows. No production deployment or database was modified by source validation.
+- Docker is not installed locally. Actual container and Ubuntu deployment checks passed in the GitHub workflows above on disposable runners. They do not certify a specific production host's DNS, credentials, storage, or network settings. No production deployment or database was modified.
 - Native Power BI canvas rendering, refresh against production data, Power BI Service publication, and Microsoft sign-in were not exercised. Native model reading is not a full Desktop UI certification.
 - Browser validation used the production frontend with the actual local API and an isolated in-memory SQLite database containing synthetic users. Firefox, Safari, physical devices, and assistive technology were not tested. Routes and permissions were not changed; existing regression tests cover access behavior.
-- Destructive or external operational commands (factory reset, production restore, SharePoint provisioning/export against real systems) were not executed. Historical plans and example tenant/host URLs are reference material, not deployment targets.
+- Destructive or external operational commands were not executed against real systems. Factory reset/restore were exercised only with isolated test data and disposable CI runners. SharePoint provisioning/export against live systems was not run. Historical plans and example tenant/host URLs are reference material, not deployment targets.
 - Raw logs, release snapshots, original edit backups, screenshots, and machine-readable check results are stored locally under `%TEMP%/gcc-reorganization/`; generated runtime artifacts are not added to the repository.

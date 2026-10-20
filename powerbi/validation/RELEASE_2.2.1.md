@@ -29,7 +29,7 @@ The live task category `BW Tec Drawing update` accounts for 52 submitted hours a
 
 ## Install or repair
 
-The original `gcc-dashboard-powerbi-v2.2.1.zip` GitHub prerelease uses `powerbi/GCC_Dashboard/GCC_Dashboard.pbip`. The subsequently organized repository uses `powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip`, moves guides into `documentation/`, and groups older assets under `legacy/`. Both entry points reference the same stable Report and SemanticModel sibling names. Keep the complete project folder together. Configure `ApiBaseUrl` and Web credentials locally, then refresh data. Source packages exclude `.pbi` caches, imported production data and credential settings.
+Historical release archives, including the byte-identical canonical alias `gcc-dashboard-powerbi-v2.2.1.zip`, retain the original entry point `powerbi/GCC_Requirements/GCC_Requirements.pbip`. The reorganized repository uses `powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip`, with guides in `documentation/` and older assets under `legacy/`. Each entry point references its own matching Report and SemanticModel siblings; do not mix the two layouts. Keep the complete project folder together. Configure `ApiBaseUrl` and Web credentials locally, then refresh data. Source packages exclude `.pbi` caches, imported production data and credential settings.
 
 For an existing checkout, close Desktop before pulling the release. The [specific metadata repair steps](../documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata) explain the two format declarations. If an old failed Desktop session reports `PackageSession`, close that session and retry the corrected source from a fresh extraction; do not overwrite source with the failed session.
 
