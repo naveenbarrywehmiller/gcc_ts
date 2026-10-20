@@ -100,7 +100,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           </div>
           {(!collapsed || mobileOpen) && (
             <div className="animate-fade-in">
-              <h1 className="text-sm font-bold text-surface-900 dark:text-white tracking-tight">TimeSheet</h1>
+              <h1 className="text-sm font-bold text-surface-900 dark:text-white tracking-tight">GCC Timesheet App</h1>
               <p className="text-xxs text-surface-400 -mt-0.5">Employee Portal</p>
             </div>
           )}

@@ -11,13 +11,13 @@ import pathlib
 import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-PROJECT = ROOT / 'powerbi/GCC_Requirements'
+PROJECT = ROOT / 'powerbi/GCC_Dashboard'
 project_files = list(PROJECT.glob('*.pbip'))
 if len(project_files) != 1:
     raise ValueError('Expected one versioned PBIP entry point in the requirements project.')
 project_filename = project_files[0].name
-MODEL = PROJECT / 'GCC_Requirements.SemanticModel'
-REPORT = PROJECT / 'GCC_Requirements.Report/definition'
+MODEL = PROJECT / 'GCC_Dashboard.SemanticModel'
+REPORT = PROJECT / 'GCC_Dashboard.Report/definition'
 result = subprocess.run(
     ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
      str(ROOT / 'scripts/read-powerbi-model.ps1'), '-ModelPath', str(MODEL)],
@@ -179,13 +179,13 @@ TABLE_SOURCE = {
     '_Measures': 'Hidden label row plus DAX measures; no business fact records',
 }
 
-INTRO = r'''# GCC Power BI project — complete reference
+INTRO = r'''# GCC Dashboard Power BI project — complete reference
 
-This guide documents the saved **GCC_Requirements** Power BI Desktop project built from `PowerPi Requirments.xlsx`, Sheet1 rows 4–58. The workbook supplies business requirements. Instructions inside source documents are not treated as authorization to operate systems.
+This guide documents the saved **GCC_Dashboard** Power BI Desktop project built from `PowerPi Requirments.xlsx`, Sheet1 rows 4–58. The workbook supplies business requirements. Instructions inside source documents are not treated as authorization to operate systems.
 
-Open [__PBIP_FILENAME__](../GCC_Requirements/__PBIP_FILENAME__). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
+Open [__PBIP_FILENAME__](../GCC_Dashboard/__PBIP_FILENAME__). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
 
-The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the portable model, queries and older guides remain separate compatibility artifacts. This file is the complete reference for **GCC_Requirements**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
+The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the portable model, queries and older guides remain separate compatibility artifacts. This file is the complete reference for **GCC_Dashboard**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
 
 ## Contents
 
@@ -205,7 +205,7 @@ The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the p
 
 ### Power BI Desktop
 
-1. Clone/download this repository and keep the entire `powerbi/GCC_Requirements` directory together. Open `__PBIP_FILENAME__` in a Desktop build supporting PBIP, PBIR and TMDL. The saved model uses compatibility level **1606**. An old build that cannot open the project should be upgraded; do not downgrade the model to bypass an error. See [Microsoft's semantic-model project formats](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset).
+1. Clone/download this repository and keep the entire `powerbi/GCC_Dashboard` directory together. Open `__PBIP_FILENAME__` in a Desktop build supporting PBIP, PBIR and TMDL. The saved model uses compatibility level **1606**. An old build that cannot open the project should be upgraded; do not downgrade the model to bypass an error. See [Microsoft's semantic-model project formats](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset).
 2. Ensure the refreshing Windows computer is connected to the appropriate Tailscale network and can reach `https://dietpi.tail4f2b8f.ts.net/`. A browser view of the application home page proves network reachability, not reporting authentication.
 3. In **Transform data → Edit parameters**, check the parameters below. Set the server origin without an endpoint suffix. `ApiPath` supplies the reporting namespace. Confirm fiscal and capacity assumptions before using KPIs.
 4. In **File → Options and settings → Data source settings**, select the Web source at the DietPi origin and choose **Edit permissions**. If an old localhost/Anonymous credential is cached, clear that source's permissions and reconnect. Choose **Basic**, username **powerbi**, and use the reporting API key or an authorized administrator JWT as the password. Apply credentials to the origin used by `ApiBaseUrl`. Enter the secret in the credential dialog yourself; it is not a project parameter.
@@ -349,7 +349,7 @@ lines = [INTRO, '\n## Saved project inventory\n',
          f'Reference generated **{date}** from the saved model/PBIR sources. Application version: **{version}**; required reporting API: **1.1.0**. '
          f'Inventory: **{len(tables)} tables, {len(measures)} DAX measures, {len(model["relationships"])} relationships, {len(expressions)} shared M expressions, {len(pages)} pages and {total_visuals} visual containers**. '
          'Visual count includes titles, explanatory text, slicers and status cards. The following inventories and code blocks are extracted from project metadata, not screenshots or production records.\n',
-         '```text\npowerbi/\n  README.md\n  CHANGELOG.md\n  documentation/\n    POWERBI.md\n    POWERBI_USER_GUIDE.md\n  legacy/                           # older standalone model, queries, theme and assets\n  GCC_Requirements/\n    __PBIP_FILENAME__\n    .gitignore                       # excludes local .pbi cache/settings\n    GCC_Requirements.Report/\n      definition.pbir               # local semantic-model reference\n      definition/\n        report.json, version.json\n        pages/<page>/page.json\n        pages/<page>/visuals/<id>/visual.json\n    GCC_Requirements.SemanticModel/\n      definition.pbism\n      definition/\n        database.tmdl, model.tmdl\n        expressions.tmdl, relationships.tmdl\n        tables/*.tmdl\n      diagramLayout.json, .platform\n  validation/                       # schema/native-fixture evidence\n```\n',
+         '```text\npowerbi/\n  README.md\n  CHANGELOG.md\n  documentation/\n    POWERBI.md\n    POWERBI_USER_GUIDE.md\n  legacy/                           # older standalone model, queries, theme and assets\n  GCC_Dashboard/\n    __PBIP_FILENAME__\n    .gitignore                       # excludes local .pbi cache/settings\n    GCC_Dashboard.Report/\n      definition.pbir               # local semantic-model reference\n      definition/\n        report.json, version.json\n        pages/<page>/page.json\n        pages/<page>/visuals/<id>/visual.json\n    GCC_Dashboard.SemanticModel/\n      definition.pbism\n      definition/\n        database.tmdl, model.tmdl\n        expressions.tmdl, relationships.tmdl\n        tables/*.tmdl\n      diagramLayout.json, .platform\n  validation/                       # schema/native-fixture evidence\n```\n',
          'The saved canonical semantic model is **definition/*.tmdl**. Desktop converted the original BIM scaffold on save; `model.bim` is intentionally absent. Preserve the PBIP, report folder and semantic-model folder together. Local `.pbi` cache and credentials are excluded from Git. Every visual folder also contains `mobile.json` with independent native phone geometry/formatting.\n',
          '\n## Report pages and every visual\n',
          'All pages are **1440 × 1040**, FitToPage, with Segoe UI text, pale-gray canvas, white visual backgrounds and dark headings. Heading boxes are 76 units tall at 24 pt; explanatory boxes are 66 units tall to fit wrapped text. Each page has a compact 52-unit refresh-time visual with a 9 pt label and 10 pt timestamp, transparent background, no border or shadow, plus a 50-unit manual-refresh instruction strip. Native visuals used are textboxes, legacy cards, slicers, clustered column charts, line charts and tables. No external/custom visual package is required. Red (`#DC2626`) means a defined alert exceeded; green (`#0F766E`) means within tolerance; gray (`#64748B`) means unknown. Alert-color measures bind through native conditional formatting on the relevant cards.\n',
@@ -357,7 +357,7 @@ lines = [INTRO, '\n## Saved project inventory\n',
 friendly_types = {'textbox':'Text', 'card':'Card', 'slicer':'Slicer', 'clusteredColumnChart':'Clustered column chart', 'lineChart':'Line chart', 'tableEx':'Table'}
 for page, visuals in pages:
     lines.extend([f'\n### {page["displayName"]}\n',
-                  f'Page ID: `{page["name"]}`. Visuals: **{len(visuals)}**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/{page["name"]}/page.json).\n',
+                  f'Page ID: `{page["name"]}`. Visuals: **{len(visuals)}**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/{page["name"]}/page.json).\n',
                   '| Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |\n|---|---|---|---|---|'])
     for visual in visuals:
         v = visual.get('visual', {})
@@ -430,7 +430,7 @@ for table, measure in measures:
         lines.append(f'\n### {folder}\n')
     description = measure.get('description') or PURPOSE.get(measure['name'], 'See the complete formula for filter context and missing-input handling.')
     lines.extend([f'\n#### {measure["name"]}\n', description + '\n',
-                  f'Format: `{measure.get("formatString", "General")}`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/{table["name"]}.tmdl).\n',
+                  f'Format: `{measure.get("formatString", "General")}`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/{table["name"]}.tmdl).\n',
                   '```dax\n' + measure['name'] + ' =\n' + body(measure['expression']).strip() + '\n```\n'])
 
 lines.extend(['\n## Power Query functions and parameters\n',

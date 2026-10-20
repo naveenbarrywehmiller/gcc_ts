@@ -57,7 +57,7 @@ export default function Login() {
           <div className="w-full h-24 bg-white rounded-2xl p-4 flex items-center justify-center mb-4 shadow-xl border border-surface-200">
             <img src="/logo.png" alt="Barry Wehmiller Logo" className="h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">TimeSheet</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight text-center">GCC Timesheet App</h1>
           <p className="text-sm text-surface-400 mt-1">Employee Time Tracking Portal</p>
         </div>
 

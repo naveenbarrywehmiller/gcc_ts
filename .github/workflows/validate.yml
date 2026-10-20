@@ -1,0 +1,32 @@
+name: Repository validation
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+            client/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - run: npm --prefix server ci
+      - run: npm --prefix client ci
+      - run: python scripts/validate-repository.py --self-test
+      - run: npm run check:repository
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build

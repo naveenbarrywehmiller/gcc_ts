@@ -1,6 +1,6 @@
 # Validation evidence
 
-The current deliverable is [GCC_Requirements_v2.2.1.pbip](../GCC_Requirements/GCC_Requirements_v2.2.1.pbip).
+The current deliverable is [GCC_Dashboard_v2.2.1.pbip](../GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip).
 
 ## Reinstalled Desktop retest (October 20, 2026)
 

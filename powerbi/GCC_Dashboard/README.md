@@ -1,0 +1,71 @@
+# GCC Dashboard Power BI project
+
+**[User guide: change source URL, password, refresh and report settings](../documentation/POWERBI_USER_GUIDE.md)** provides step-by-step maintenance instructions.
+
+Open **[GCC_Dashboard_v2.2.1.pbip](GCC_Dashboard_v2.2.1.pbip)** in Power BI Desktop. Version **2.2.1** contains **17 tables, 70 DAX measures, 20 relationships, nine report pages and 121 visual containers**. Its semantic model is TMDL in `GCC_Dashboard.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
+
+**[Complete Power BI guide — POWERBI.md](../documentation/POWERBI.md)** includes every DAX formula, shared Power Query expressions, table queries, column/relationship definitions, visual bindings, connection instructions and missing inputs. Its older generated inventories predate the Platform addition; current counts and verification are in [release verification](../validation/RELEASE_2.2.1.md).
+
+## Desktop compatibility repair — 2.2.1 (2026-10-20)
+
+The linguistic metadata and report format versions are restored to `2.0.0`; the dashboard release remains `2.2.1`. Download/extract the complete new source package and open its PBIP. The seven phone-filter overlaps are corrected. See [incompatible linguistic metadata troubleshooting](../documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata) for repairing an older checkout manually.
+
+## Staffing narratives — 2.0.0 (2026-10-09)
+
+The Staffing page displays separate Open Position and New Joiner text tables by division and month. The old count cards and monthly count charts were removed. Upgrade the application to v1.21.0, then reopen this PBIP and refresh its data. The reporting API v2.0.0 returns text for both staffing fields; an older numeric model cannot refresh them. The phone layout retains wrapped note values and internal table scrolling.
+
+## Platform hierarchy — 2.2.0 (2026-10-16)
+
+Requires GCC Timesheet App v1.29.0+ and reporting API v2.0.0. DimPlatform filters Divisions and effective timesheet Division keys without joining user assignment bridges. Platform slicers precede Division on every page. Deploy the application first, then refresh the PBIP using existing credentials. Source validation and API reconciliation pass; live refresh and native DAX execution remain a required pre-publication check. See [implementation details](../../docs/PLATFORM_MANAGEMENT.md).
+
+## Task planning — 2.1.0 (2026-10-14)
+
+DimTask includes estimated hours and the input received, start, target, and delivered dates. DimProject includes its productive and non-productive assigned task IDs, summed estimated task hours, and task counts. Upgrade the application to v1.28.0+ and refresh this PBIP to load the additive reporting API fields.
+
+## Management overview design — 1.1.1 (2026-10-06)
+
+The report opens on **GCC | Management overview**. Compact filters lead into four prominent KPI cards, followed by input guidance, monthly actual/training hours, a descending horizontal comparison of actual hours by division, and a division table that includes on-time delivery. Training is a subset of actual hours; the monthly chart follows the selected period. The footer retains manual refresh guidance and the header retains the IST timestamp. Blank KPIs are not presented as zero or assigned an invented target/status. All existing measure calculations are retained.
+
+The overview includes descriptive alt text, reading-order keyboard navigation and a shorter phone layout. The other eight analytical pages remain available for investigation. Local schema, field-binding and layout checks cover the saved project; runtime/data validation is separate from those static checks.
+
+The redesigned overview opened successfully in Desktop using its cached data. Final text-box spacing changes were saved after Windows locked; their native visual review and the phone visual review remain pending. Reopen the project to load the latest file changes. See [management overview validation](../validation/management-overview-validation.json) for the exact check scope.
+
+## DAX optimization — 1.1.2
+
+The saved model includes six tested DAX variable refactors (1.1.2, 2026-10-06). See the [DAX optimization review](../documentation/DAX_OPTIMIZATION_REVIEW.md) for formulas, comparison tests, synthetic benchmark scope and the current report-schema validation limitation. Reopen this project to load the saved formula changes into Desktop.
+
+## Training category mapping — 1.1.3
+
+The saved HourCategoryMap maps `Trainings/Webinars` to Training. This also covers non-productive hours logged without a project. DAX measures and visuals are unchanged; refresh the Desktop report to import the updated category. Other unmapped task labels still block utilization until their classifications are confirmed. See the [validation notes](../validation/README.md) for current test limits.
+
+## Multiple division assignments — 1.1.4
+
+The `DimEmployee[division]` field is each person's primary division. Admin and employee checkbox assignments do not create extra roster rows or split capacity, regardless of Dedicated/Flex category. Timesheet hours use the division booked on each entry. Model descriptions and the [complete guide](../documentation/POWERBI.md) now state this distinction; calculations, data sources, and visuals are unchanged.
+
+## Phone layouts
+
+All nine pages have native portrait phone layouts covering all 121 existing visuals. Open **View → Mobile layout** in Desktop and select a page tab. The layouts use a 324-unit canvas, full-width timestamp/dropdown controls, two-column KPI cards, readable wrapped headings/notes and full-width charts. The last-refresh timestamp is small muted text (9 pt label, 10 pt value), with a transparent background and no border/shadow on both desktop and phone views. Detail tables retain all columns with horizontal scrolling; input-readiness definitions wrap into narrow columns.
+
+On an actual phone, these layouts appear in the Power BI iOS/Android app in portrait after the report is published and shared. Ordinary web-browser and landscape viewing use the standard report layout. Service publication has not been performed. See [Microsoft's mobile layout overview](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-create-mobile-optimized-report-about).
+
+## Connect
+
+1. Connect the refreshing computer to Tailscale and confirm it can reach `https://dietpi.tail4f2b8f.ts.net/`.
+2. Open the PBIP and check **Transform data → Edit parameters**. The saved origin is DietPi, `ApiPath=api/powerbi`, January fiscal start and eight-hour weekdays. Optional register endpoint parameters are empty.
+3. Set that origin’s Web credentials to **Basic**: username `powerbi`, password the reporting API key or an authorized administrator JWT. Enter credentials in Desktop’s credential store; no token is included in source. Clear obsolete localhost/Anonymous permissions if needed.
+4. Use **Home → Refresh → Data** to fetch the latest API data for all tables, then select the reporting month/division. Automatic refresh is **off**, as selected for this Desktop report. Every page shows a separate **Last refreshed (IST)** date/time card, including seconds. The saved month is **October 2026**, not a moving current-month selection. Review **Input readiness**, unmapped hours, weekly conflicts and missing project plan inputs.
+5. Save intended Desktop edits. Maintain the saved TMDL project; the original `scripts/build-powerbi.py` BIM scaffold refuses to overwrite it.
+
+The live server was verified on 2026-10-02 at application **v1.15.0** and reporting API **v1.1.0**; this is historical evidence, not validation of the v2.0.0 staffing contract. The canonical Desktop report was refreshed and saved on 2026-10-05 local date. Its saved header before the IST update showed **2026-10-06 06:25:03 UTC**; an aggregate query returned **10 daily rows, 72 raw hours and 32 actual/approved hours**. October utilization remains blank pending the requested task mapping. The overview headings and input-readiness descriptions were checked in Desktop; descriptions wrap without a horizontal scrollbar. No Power BI Service publication or automatic schedule is configured. A fresh clone needs its own local credentials and refresh.
+
+The report uses **Indian Standard Time (IST, UTC+05:30)** for every viewer. The refresh timestamp and the reporting date used by fiscal/forecast calculations share the same IST clock; they do not change with a viewer's location or the refreshing computer's timezone. Source date-only business fields retain their original dates. The historical UTC refresh evidence above predates this update. **Reopen the canonical project, then use Home → Refresh → Data** to import the IST model; a production IST refresh/native preview is pending because Desktop automation was stopped with Escape.
+
+## Inputs still needed
+
+Utilization remains blank until the live categories **SOP 1234** and **vgnn** have approved hour mappings, as requested. Productive does not automatically mean Productive. Additional gaps include monthly staffing submissions, explicit deliverable/error/rework and improvement registers, fiscal/tolerance confirmation, employment/project allocation history and platform/cohort definitions. The complete guide describes each contract and its affected KPIs.
+
+## Validation and sharing
+
+The saved TMDL deserializes through Desktop’s TOM library as 16 tables and 70 measures. All 113 report visual field references resolve, and all 113 phone placements fit the canvas width without overlaps across nine pages. The full Microsoft schema check is currently blocked by HTTP 404 for the report's `visualContainer/2.13.0` schema URL. The previous native synthetic run evaluated the former 72-measure model; a new engine run and live Desktop refresh remain pending. See [validation evidence](../validation/README.md).
+
+GitHub stores source definitions, not credentials or imported production data. A clone needs connection and refresh. Pushing to GitHub updates the application through its Docker workflow; publishing the report, configuring a gateway and scheduling Power BI Service refresh are separate actions. See the complete guide before sharing an imported dataset: the model has no RLS roles.

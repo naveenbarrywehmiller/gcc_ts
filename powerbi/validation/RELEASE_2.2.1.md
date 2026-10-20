@@ -1,6 +1,6 @@
-# GCC Requirements Power BI 2.2.1
+# GCC Dashboard Power BI 2.2.1
 
-Release date: October 20, 2026. **Source prerelease** for reporting API v2.0.0 and GCC Timesheet v1.29.0+. The application release version remains 1.31.5. The [post-reinstall retest](NATIVE_RETEST_2026-10-20.md) verified all nine desktop pages and canonical refresh; native phone inspection remains partial.
+Release date: October 20, 2026. **Source prerelease** for reporting API v2.0.0 and GCC Timesheet App v1.29.0+. The application release version remains 1.31.5. The [post-reinstall retest](NATIVE_RETEST_2026-10-20.md) verified all nine desktop pages and canonical refresh; native phone inspection remains partial.
 
 ## Changes
 
@@ -29,7 +29,7 @@ The live task category `BW Tec Drawing update` accounts for 52 submitted hours a
 
 ## Install or repair
 
-The original `gcc-requirements-powerbi-v2.2.1.zip` GitHub prerelease uses `powerbi/GCC_Requirements/GCC_Requirements.pbip`. The subsequently organized repository uses `powerbi/GCC_Requirements/GCC_Requirements_v2.2.1.pbip`, moves guides into `documentation/`, and groups older assets under `legacy/`. Both entry points reference the same stable Report and SemanticModel sibling names. Keep the complete project folder together. Configure `ApiBaseUrl` and Web credentials locally, then refresh data. Source packages exclude `.pbi` caches, imported production data and credential settings.
+The original `gcc-dashboard-powerbi-v2.2.1.zip` GitHub prerelease uses `powerbi/GCC_Dashboard/GCC_Dashboard.pbip`. The subsequently organized repository uses `powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip`, moves guides into `documentation/`, and groups older assets under `legacy/`. Both entry points reference the same stable Report and SemanticModel sibling names. Keep the complete project folder together. Configure `ApiBaseUrl` and Web credentials locally, then refresh data. Source packages exclude `.pbi` caches, imported production data and credential settings.
 
 For an existing checkout, close Desktop before pulling the release. The [specific metadata repair steps](../documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata) explain the two format declarations. If an old failed Desktop session reports `PackageSession`, close that session and retry the corrected source from a fresh extraction; do not overwrite source with the failed session.
 

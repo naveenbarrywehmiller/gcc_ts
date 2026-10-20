@@ -1,4 +1,4 @@
-/// GCC Timesheet enterprise measure table.
+/// GCC Timesheet App enterprise measure table.
 table _Measures
 	lineageTag: 2bb830ec-4f5d-4361-b48f-760c4eacb8ad
 
@@ -198,4 +198,4 @@ table _Measures
 
 	partition _Measures = calculated
 		mode: import
-		source = DATATABLE("Measure Group", STRING, {{"GCC Timesheet Measures"}})
+		source = DATATABLE("Measure Group", STRING, {{"GCC Timesheet App Measures"}})

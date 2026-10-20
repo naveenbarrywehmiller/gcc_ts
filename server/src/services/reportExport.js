@@ -286,7 +286,7 @@ function sheet(workbook, name, headers, rows) {
 }
 async function excel(report, entries, actor, spec) {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'GCC Timesheet';
+  workbook.creator = 'GCC Timesheet App';
   workbook.created = new Date();
   const info = infoRows(report, actor, spec, workbook.created.toISOString());
   const table = reportRows(report, spec.view, entries);
@@ -526,7 +526,7 @@ async function pdf(report, entries, actor, spec) {
         .font('Helvetica')
         .fontSize(7)
         .text(
-          `GCC Timesheet - ${titles[spec.view]} - Page ${i + 1} of ${range.count}`,
+          `GCC Timesheet App - ${titles[spec.view]} - Page ${i + 1} of ${range.count}`,
           30,
           doc.page.height - 22,
           { width, align: 'right', lineBreak: false }

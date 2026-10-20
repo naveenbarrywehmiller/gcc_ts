@@ -1,4 +1,4 @@
-# GCC Timesheet Power BI Visualization Blueprint
+# GCC Dashboard Power BI Visualization Blueprint
 
 Version: 1.1.0
 

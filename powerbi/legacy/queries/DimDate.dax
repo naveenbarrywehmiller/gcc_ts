@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// DimDate — Date Dimension Table for GCC Timesheet Power BI
+// DimDate — Date Dimension Table for GCC Dashboard Power BI
 // ═══════════════════════════════════════════════════════════════
 // Usage: In Power BI Desktop → Home → New Table → paste this DAX
 // Business week starts on Monday; weekend is Saturday or Sunday.

@@ -20,6 +20,16 @@ jobs:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          release-type: node
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+      - name: Set application release title
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          version="${RELEASE_TAG#gcc-timesheet-app-v}"
+          gh release edit "$RELEASE_TAG" --title "GCC Timesheet App v$version"
 
 

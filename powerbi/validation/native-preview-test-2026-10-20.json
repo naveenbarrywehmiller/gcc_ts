@@ -5,7 +5,7 @@
   "nativePageRenderingVerified": false,
   "attempts": [
     {
-      "project": "Canonical GCC_Requirements.pbip",
+      "project": "Canonical GCC_Dashboard.pbip",
       "result": "Unable to open document: incompatible with current Desktop version"
     },
     {
@@ -24,7 +24,7 @@
     }
   ],
   "diagnosis": {
-    "file": "GCC_Requirements.SemanticModel/definition/cultures/en-US.tmdl",
+    "file": "GCC_Dashboard.SemanticModel/definition/cultures/en-US.tmdl",
     "line": 5,
     "currentLinguisticMetadataVersion": "2.1.0",
     "previousSavedVersion": "2.0.0",

@@ -27,7 +27,7 @@ export default function Footer() {
     <footer className="py-4 px-3 md:px-6 border-t border-surface-200 dark:border-surface-800 text-sm text-surface-500 mt-auto bg-white dark:bg-surface-900">
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <p>
-          &copy; TimeSheet
+          &copy; GCC Timesheet App
           {version && (
             <span className="ml-2 px-1.5 py-0.5 rounded text-xs font-mono bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400">
               {version}

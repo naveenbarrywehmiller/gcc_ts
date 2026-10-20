@@ -1,4 +1,4 @@
-# Power BI Setup Guide — GCC Timesheet
+# Power BI Setup Guide — GCC Timesheet App
 
 > **Dashboard Version:** 1.1.0
 > **API Version:** v1.x  
@@ -30,8 +30,8 @@
 | Requirement | Details |
 |------------|---------|
 | **Power BI Desktop** | Latest version (free download from Microsoft) |
-| **GCC Timesheet Server** | v1.3.0+ running and accessible |
-| **Network Access** | Power BI PC must reach the GCC Timesheet server (HTTP/HTTPS) |
+| **GCC Timesheet App Server** | v1.3.0+ running and accessible |
+| **Network Access** | Power BI PC must reach the GCC Timesheet App server (HTTP/HTTPS) |
 | **API Key** | Generated and configured on the server |
 
 ### Optional (for sharing & scheduled refresh)
@@ -307,7 +307,7 @@ All Power BI client PCs connect to the same central REST API:
 
 ```
 Power BI PC 1 ──┐
-Power BI PC 2 ──┼──→ GCC Timesheet REST API ──→ Database
+Power BI PC 2 ──┼──→ GCC Timesheet App REST API ──→ Database
 Power BI PC 3 ──┘
 ```
 
@@ -336,4 +336,4 @@ Power BI PC 3 ──┘
 
 ---
 
-*GCC Timesheet Power BI Setup Guide v1.1.0*
+*GCC Dashboard Power BI Setup Guide v1.1.0*

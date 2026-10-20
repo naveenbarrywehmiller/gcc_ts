@@ -1,7 +1,7 @@
 {
-  "name": "timesheet-server",
+  "name": "gcc-timesheet-app-server",
   "version": "1.0.0",
-  "description": "Internal Employee Timesheet API Server",
+  "description": "GCC Timesheet App API server",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

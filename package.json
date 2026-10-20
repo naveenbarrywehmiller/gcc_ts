@@ -1,7 +1,7 @@
 {
-  "name": "timesheet",
+  "name": "gcc-timesheet-app",
   "version": "1.31.5",
-  "description": "Employee Time Tracking System — server + client monorepo",
+  "description": "GCC Timesheet App - React client and Express API",
   "scripts": {
     "install:server": "cd server && npm install",
     "install:client": "cd client && npm install",
@@ -16,6 +16,7 @@
     "graph:query": "npm run graphify -- query",
     "dev": "npm run dev:server & npm run dev:client & wait",
     "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev"
+    "dev:client": "cd client && npm run dev",
+    "check:repository": "python scripts/validate-repository.py"
   }
 }

@@ -15,3 +15,13 @@ client/dist
 .codex
 .graphifyignore
 graphify-out
+
+# Local state and products that are not part of the application image
+**/*.pid
+**/__pycache__
+server/backup
+server/logs
+server/.env
+powerbi
+deploy
+docs

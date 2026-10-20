@@ -1,4 +1,4 @@
-# Power BI Release Process — GCC Timesheet
+# Power BI Release Process — GCC Timesheet App
 
 > Dashboard Version: 2.2.1
 > Last Updated: 2026-10-20
@@ -7,13 +7,13 @@
 
 ## Purpose
 
-This document defines the controlled release process for the GCC Timesheet Power BI dashboard so that changes are versioned, documented, validated, and published without exposing credentials or breaking the production reporting model.
+This document defines the controlled release process for the GCC Dashboard Power BI dashboard so that changes are versioned, documented, validated, and published without exposing credentials or breaking the production reporting model.
 
 ---
 
 ## Release Principles
 
-1. The dashboard version is independent from the GCC Timesheet application version.
+1. The dashboard version is independent from the GCC Timesheet App version.
 2. The Power BI report must remain compatible with the read-only API at `/api/powerbi/*`.
 3. No credentials or secrets may be committed to source control.
 4. Each release must include a changelog entry and compatibility notes.
@@ -32,7 +32,7 @@ Use semantic versioning:
 Current baseline:
 - Dashboard version: `v2.2.1`
 
-The single PBIP entry point is `GCC_Requirements/GCC_Requirements_v2.2.1.pbip`. Its suffix must match the dashboard version returned by `/api/powerbi/version`. On the next release, rename this file and update `dashboardVersion` together; keep the sibling Report and SemanticModel names and their relative references stable. Update the legacy scaffold's output filename too. The QA-preview and documentation generators discover the single PBIP file automatically. Run `node --test scripts/powerbi-requirements.test.js` to verify the filename and resolved report/model chain.
+The single PBIP entry point is `GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip`. Its suffix must match the dashboard version returned by `/api/powerbi/version`. On the next release, rename this file and update `dashboardVersion` together; keep the sibling Report and SemanticModel names and their relative references stable. Update the legacy scaffold's output filename too. The QA-preview and documentation generators discover the single PBIP file automatically. Run `node --test scripts/powerbi-requirements.test.js` to verify the filename and resolved report/model chain.
 
 Dashboard versions are product release numbers. Do not copy them into Power BI's internal format metadata. The current Desktop-compatible report `definition/version.json` and semantic-model `linguisticMetadata.Version` values are both `2.0.0`. Keep each `$schema` URL at its own supported schema version. Run `node --test scripts/powerbi-requirements.test.js` to catch accidental release-number substitutions.
 

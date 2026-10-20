@@ -1,5 +1,5 @@
 // Power Query M — Tasks (DimTask)
-// GCC Timesheet Power BI Dashboard v1.0.0
+// GCC Dashboard Power BI Dashboard v1.0.0
 
 let
     // ═══ CONFIGURATION — UPDATE THESE VALUES ═══

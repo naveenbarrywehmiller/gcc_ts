@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGES = ROOT / 'powerbi/GCC_Requirements/GCC_Requirements.Report/definition/pages'
+PAGES = ROOT / 'powerbi/GCC_Dashboard/GCC_Dashboard.Report/definition/pages'
 SCHEMA = ('https://developer.microsoft.com/json-schemas/fabric/item/report/'
           'definition/visualContainerMobileState/2.7.0/schema.json')
 WIDTH, MARGIN, GAP = 324, 8, 8

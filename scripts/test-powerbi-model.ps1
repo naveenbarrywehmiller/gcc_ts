@@ -6,14 +6,14 @@ Add-Type -Path (Join-Path $taskBin 'Microsoft.PowerBI.Tabular.dll')
 Add-Type -Path (Join-Path $taskBin 'Microsoft.PowerBI.AdomdClient.dll')
 $taskRoot = Split-Path -Parent $PSScriptRoot
 $taskFixture = Get-Content (Join-Path $PSScriptRoot 'powerbi-fixture.json') -Raw
-$taskModelPath = Join-Path $taskRoot 'powerbi/GCC_Requirements/GCC_Requirements.SemanticModel'
+$taskModelPath = Join-Path $taskRoot 'powerbi/GCC_Dashboard/GCC_Dashboard.SemanticModel'
 $taskDefinition = Join-Path $taskModelPath 'definition'
 if (Test-Path -LiteralPath $taskDefinition) {
     $taskDb = [Microsoft.AnalysisServices.Tabular.TmdlSerializer]::DeserializeDatabaseFromFolder($taskDefinition)
 } else {
     $taskDb = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase((Get-Content (Join-Path $taskModelPath 'model.bim') -Raw))
 }
-$taskDb.Name = 'GCC requirements isolated validation'
+$taskDb.Name = 'GCC Dashboard isolated validation'
 if ($VerifyDaxCandidates) {
     # Keep comparisons meaningful after candidates have been applied to source.
     $taskBaselinePath = Join-Path $PSScriptRoot 'powerbi-dax-baseline.json'

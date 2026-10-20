@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-// DAX Measures Library — GCC Timesheet Power BI Dashboard v1.1.0
+// DAX Measures Library — GCC Dashboard Power BI Dashboard v1.1.0
 // ═══════════════════════════════════════════════════════════════════════
 // Usage: Create a measures table in Power BI Desktop:
 //   Home → Enter Data → name it "_Measures" → Load
@@ -467,7 +467,7 @@ CALCULATE(
 // ─────────────────────────────────────────────────────────────
 
 Dashboard Version =
-"GCC Timesheet Power BI v1.0.0"
+"GCC Dashboard Power BI v1.0.0"
 
 Dashboard Info =
 "Version 1.0.0 | API v1.x | " & FORMAT(NOW(), "YYYY-MM-DD HH:MM")

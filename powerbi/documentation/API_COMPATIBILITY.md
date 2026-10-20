@@ -1,4 +1,4 @@
-# Power BI API Compatibility — GCC Timesheet
+# Power BI API Compatibility — GCC Timesheet App
 
 ## Platform integration (October 16, 2026)
 
@@ -163,7 +163,7 @@ New query parameters may be added in future minor versions.
 
 ## Migration Guide
 
-### When upgrading the GCC Timesheet Application:
+### When upgrading the GCC Timesheet App:
 
 1. Check the application CHANGELOG for API changes
 2. Verify the Power BI API compatibility in this document
@@ -180,4 +180,4 @@ New query parameters may be added in future minor versions.
 
 ---
 
-*GCC Timesheet Power BI API Compatibility v2.0.0*
+*GCC Dashboard Power BI API Compatibility v2.0.0*

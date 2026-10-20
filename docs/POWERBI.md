@@ -1,14 +1,14 @@
-# GCC Timesheet Power BI Integration Guide
+# GCC Dashboard Power BI Integration Guide
 
-This guide explains how authorized users can connect Microsoft Power BI Desktop and Power BI Service to the **GCC Timesheet Read-Only REST API** for corporate reporting, business intelligence, and timesheet analytics.
+This guide explains how authorized users can connect Microsoft Power BI Desktop and Power BI Service to the **GCC Timesheet App Read-Only REST API** for corporate reporting, business intelligence, and timesheet analytics.
 
-For the saved **GCC_Requirements** project, use the **[complete project reference](../powerbi/documentation/POWERBI.md)**. It includes every DAX formula and Power Query definition, the full table/relationship/visual inventory, current Basic-credential connection steps, missing inputs and TMDL maintenance instructions. This API integration guide also covers earlier, separately maintained models; follow the project's own connection instructions when opening its PBIP.
+For the saved **GCC_Dashboard** project, use the **[complete project reference](../powerbi/documentation/POWERBI.md)**. It includes every DAX formula and Power Query definition, the full table/relationship/visual inventory, current Basic-credential connection steps, missing inputs and TMDL maintenance instructions. This API integration guide also covers earlier, separately maintained models; follow the project's own connection instructions when opening its PBIP.
 
 ---
 
 ## 1. Overview & Purpose
 
-The GCC Timesheet application provides a dedicated, read-only REST API namespace (`/api/powerbi/*`) designed specifically for Power BI reporting.
+The GCC Timesheet App provides a dedicated, read-only REST API namespace (`/api/powerbi/*`) designed specifically for Power BI reporting.
 
 ### Core Architecture
 
@@ -21,7 +21,7 @@ The GCC Timesheet application provides a dedicated, read-only REST API namespace
                    │ HTTPS (or HTTP in local dev)
                    ▼
 ┌───────────────────────────────────────┐
-│     GCC Timesheet Backend REST API    │
+│     GCC Timesheet App Backend REST API    │
 │    (/api/powerbi/* Read-Only Engine)  │
 └──────────────────┬────────────────────┘
                    │
@@ -263,7 +263,7 @@ Returns employees and system users with organizational assignments and active st
 
 ## 7. Step-by-Step Power BI Desktop Connection
 
-Follow these steps to connect Power BI Desktop to the GCC Timesheet REST API:
+Follow these steps to connect Power BI Desktop to the GCC Timesheet App REST API:
 
 ### Step 1: Open Power BI Desktop
 1. Launch **Power BI Desktop**.
@@ -363,4 +363,4 @@ The existing Docker configuration exposes only the application web/API port (def
 
 ---
 
-*Documentation version: 1.0 — GCC Timesheet Management System*
+*Documentation version: 1.0 — GCC Timesheet App Management System*

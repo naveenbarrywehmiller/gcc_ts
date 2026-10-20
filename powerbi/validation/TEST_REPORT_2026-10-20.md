@@ -4,7 +4,7 @@ This records the initial inspection before the subsequent **2.2.1** repairs. See
 
 **Result: calculation and web checks passed; native report preview and phone layouts are not release-ready.**
 
-Tested the repository's `GCC_Requirements.pbip` definitions and the live application at `http://192.168.0.50:3001` using the supplied System Admin access. The installed Microsoft Power BI Desktop Store application is version **2.159.883.0**, with native engine **17.0.93.23**. This is a local test with a live API snapshot, not a Power BI Service certification.
+Tested the repository's `GCC_Dashboard.pbip` definitions and the live application at `http://192.168.0.50:3001` using the supplied System Admin access. The installed Microsoft Power BI Desktop Store application is version **2.159.883.0**, with native engine **17.0.93.23**. This is a local test with a live API snapshot, not a Power BI Service certification.
 
 ## Findings
 

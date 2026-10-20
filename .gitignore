@@ -33,6 +33,9 @@ Thumbs.db
 
 # Logs
 *.log
+*.pid
+__pycache__/
+*.pyc
 npm-debug.log*
 
 # Testing

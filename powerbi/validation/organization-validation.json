@@ -1,7 +1,7 @@
 {
   "date": "2026-10-20",
   "dashboardVersion": "2.2.1",
-  "entryPoint": "GCC_Requirements/GCC_Requirements_v2.2.1.pbip",
+  "entryPoint": "GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip",
   "scope": "Folder organization, entry-point naming and maintenance references; no DAX or visual layout changes",
   "checks": {
     "requirementsTests": { "passed": 4, "failed": 0 },

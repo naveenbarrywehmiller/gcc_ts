@@ -1,133 +1,174 @@
-# GitHub and application help
+# GCC project help
 
-Use this guide for repository setup, GitHub Actions, container publishing, and common application problems. Start with the [main README](../README.md) for installation and features.
+Installation, GitHub workflows, releases, and troubleshooting for **GCC Timesheet App**, **GCC Dashboard Power BI**, and **GCC Timesheet Linux Admin**.
 
-## Quick links
+[Set up](#1-choose-your-setup) · [Configure](#2-configure-the-application) · [Validate](#3-validate-a-change) · [GitHub Actions](#4-github-actions) · [Releases](#5-releases-and-downloads) · [Troubleshoot](#6-troubleshooting) · [Get help](#7-report-a-problem)
 
-- [Source repository](https://github.com/naveenbarrywehmiller/gcc_ts)
-- [Actions](https://github.com/naveenbarrywehmiller/gcc_ts/actions)
-- [Releases](https://github.com/naveenbarrywehmiller/gcc_ts/releases)
-- [Changelog](../CHANGELOG.md)
-- [Docker workflow](workflows/docker-build.yml)
-- [Release workflow](workflows/release-please.yml)
+## 1. Choose your setup
 
-## Configuration checklist
-
-| Context | Environment file | Important details |
+| Goal | Follow this guide | Source location |
 | --- | --- | --- |
-| Local backend | `server/.env` | JWT secrets, bootstrap account, database, integrations |
+| Run or develop GCC Timesheet App | [Application README](../README.md#getting-started) | `client/`, `server/`, `shared/` |
+| Deploy and maintain an Ubuntu server | [GCC Timesheet Linux Admin](../deploy/linux-admin/README.md) | `deploy/linux-admin/` |
+| Open and configure the dashboard | [GCC Dashboard Power BI](../powerbi/README.md) and [connection guide](../powerbi/documentation/POWERBI_USER_GUIDE.md) | `powerbi/GCC_Dashboard/` |
+| Find technical reference material | [Documentation index](../docs/README.md) | `docs/`, `powerbi/documentation/` |
+| Understand renamed paths and compatibility | [Repository and release mapping](../docs/REPOSITORY_STRUCTURE.md) | All three products |
+
+### Local application development
+
+From the repository root:
+
+```sh
+npm ci --ignore-scripts
+npm --prefix server ci
+npm --prefix client ci
+```
+
+Copy the [root environment example](../.env.example) to `server/.env`. Configure the bootstrap account and secrets before running:
+
+```sh
+npm run setup
+npm run dev:server
+```
+
+In a second terminal, run `npm run dev:client`. Open the Vite URL (normally port 5173); the development proxy sends API requests to port 3001. The server and client commands work in PowerShell, macOS, and Linux terminals.
+
+For production containers, use [Docker deployment](../README.md#docker-deployment) or the Linux-admin guide. Keep existing database volumes and backups when upgrading.
+
+## 2. Configure the application
+
+| Context | Configuration | Key points |
+| --- | --- | --- |
+| Local API | `server/.env` | JWT secrets, bootstrap account, database path, integrations |
 | Local frontend | `client/.env` | Public `VITE_ENTRA_*` settings only |
-| Docker Compose | Root `.env` | Passed into container; Compose overrides production mode, container port, and database location |
-| GitHub Actions | Repository Actions secrets/variables | Registry publishing settings; never commit tokens |
+| Root Docker Compose | Root `.env` | Container configuration; Compose sets production mode, port, database location |
+| Linux-admin installation | Managed `/opt/gcc-timesheet/.env` | Follow the administrator menu; preserve its data directories |
+| GitHub Actions | Repository Actions secrets/variables | Registry publishing credentials and policy |
 
-Before first login, configure `BOOTSTRAP_ADMIN_EMAIL` and a unique `BOOTSTRAP_ADMIN_PASSWORD` of at least 12 characters. After provisioning, remove both values and restart/recreate as applicable. Existing credentials are not reset by changing the bootstrap values.
+1. Set `BOOTSTRAP_ADMIN_EMAIL` and a unique `BOOTSTRAP_ADMIN_PASSWORD` of at least 12 characters before first setup. Remove both after provisioning and restart. Bootstrap settings do not reset existing passwords.
+2. Set independent JWT secrets of at least 32 characters for production. Use exact allowed origins and the HTTPS cookie settings appropriate to the deployment.
+3. Preserve the database path/volume and take a recoverable backup before changing deployment settings.
+4. Validate Compose with `docker compose config --quiet`. The non-quiet command may expose resolved secrets.
+5. Rebuild the frontend after changing public Vite settings; runtime environment changes do not rewrite an existing frontend bundle.
 
-Before a production rollout, generate independent JWT secrets, set exact CORS origins, confirm HTTPS cookie settings, preserve database storage, and download a recoverable backup. Check effective Compose configuration with `docker compose config --quiet`; the non-quiet form may print secrets.
+## 3. Validate a change
 
-## GitHub Actions configuration
+Run from the root:
 
-Two workflows are currently present:
+```sh
+npm run check:repository
+npm test
+npm run lint
+npm run build
+git diff --check
+```
 
-| Workflow | Trigger | Result |
+The mapping check validates repository-owned documentation links, package names/lockfiles, product entry points, and moved paths. Tests exercise application behavior and reporting APIs with isolated data. See [script guidance](../scripts/README.md) for Power BI and Linux checks. A passing build does not replace a live deployment smoke test.
+
+UI changes must also pass the [responsive rules](../RESPONSIVE_WEB_DESIGN_RULES.md) and [Chromium checklist](../docs/CHROMIUM_LAYOUT_TEST_CHECKLIST.md). Record actual checks and limits in the [responsive audit](../docs/RESPONSIVE_AUDIT.md).
+
+## 4. GitHub Actions
+
+[Open Actions](https://github.com/naveenbarrywehmiller/gcc_ts/actions). The workflow files are the source of truth for triggers, permissions, and job names.
+
+| Workflow | Runs when | Result |
 | --- | --- | --- |
-| Release Please | Push to `main` | Updates release PRs and creates releases from eligible merged changes |
-| Build & Publish Docker Image | Main pushes, `v*` tag pushes, PRs targeting main, manual dispatch | Builds AMD64/ARM64 images; publishes only for non-PR events |
+| [Repository validation](workflows/validate.yml) | Main pushes, pull requests, manual dispatch | Mapping check, application tests, lint, frontend build |
+| [Release Please](workflows/release-please.yml) | Push to `main` | Application release PRs, versions, changelog, product-prefixed tags |
+| [Build & Publish Docker Image](workflows/docker-build.yml) | Main pushes, application tag pushes, main PRs, manual dispatch | AMD64/ARM64 validation; non-PR events publish a combined image |
+| [GCC Timesheet Linux Admin](workflows/linux-admin.yml) | Relevant main pushes/PRs, administrator tags, manual dispatch | Syntax/unit/package checks and actual Ubuntu/Docker/Nginx smoke test; tagged builds publish admin assets |
 
-Repository administrators should confirm Actions are enabled and permitted to use the referenced actions. Under **Settings → Actions → General**, allow GitHub Actions to create pull requests if required by repository policy. Release Please requests contents and pull-request write permissions. Docker publishing requests package write permissions.
+Repository administrators must allow the referenced actions and, where policy permits, allow GitHub Actions to create pull requests. Release Please needs contents/pull-request write permissions; container publishing needs package write permissions. Branch protection and required-check settings are managed in GitHub, separately from source files.
 
-Branch protection, required checks, package visibility, and live repository settings are not encoded entirely in these files. The checked-in workflows do not automatically run the application's regression tests or frontend lint; run `npm test`, `npm run lint`, and `npm run build` before merging. Adding those jobs and requiring them is a possible future improvement.
+### Container registry configuration
 
-### Manual Docker build
-
-1. Open **Actions → Build & Publish Docker Image**.
-2. Choose **Run workflow** and select `main` or the intended existing release tag.
-3. Wait for both architecture builds, then the manifest merge.
-4. If Docker Hub is enabled, check its copy job separately.
-5. Review published tags and verify the deployed `/api/health` version.
-
-A successful architecture build alone does not mean the multi-platform tag was published: the merge job must also succeed.
-
-## Container registries
-
-### GitHub Container Registry
-
-The image name is derived from the GitHub repository. For this repository it is:
+The existing image address is stable:
 
 ```text
 ghcr.io/naveenbarrywehmiller/gcc_ts
 ```
 
-| Build source | Tags configured by the workflow |
+| Build | Tags |
 | --- | --- |
-| `main` | `main`, `latest`, short commit SHA, `v<package-version>`, `<package-version>` |
-| Semantic version tag such as `v1.2.3` | `1.2.3`, `1.2`, short commit SHA; Docker metadata may also provide its automatic `latest` tag |
-| Pull request | Build validation only; no registry publishing |
+| Main | `main`, `latest`, short SHA, `v<package-version>`, `<package-version>` |
+| New application tag | Full `gcc-timesheet-app-vX.Y.Z` tag and normalized `X.Y.Z` |
+| Legacy `vX.Y.Z` tag | Full tag, `X.Y.Z`, `X.Y`, short SHA; metadata may emit `latest` |
+| Pull request | Validation only; no publishing |
 
-`latest` and version tags emitted from main can be overwritten by later builds. Use a verified image digest for immutable deployment references. See the workflow's metadata output for the exact tags of a particular run.
+Inspect metadata from the specific run for exact tags. Mutable tags can be replaced; deploy a verified digest when an immutable reference is needed. Private images require package-read credentials.
 
-If a package is private, authenticate with a token permitted to read that package. Use password-stdin or a credential helper; do not paste a token into commands saved in shell history. Package access and visibility are managed separately from this documentation. See [GitHub's container registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+Optional Docker Hub publishing uses:
 
-### Optional Docker Hub copy
-
-Configure **Settings → Secrets and variables → Actions**:
-
-| Type | Name | Value |
+| Type | Name | Purpose |
 | --- | --- | --- |
-| Variable | `DOCKERHUB_USERNAME` | Docker Hub login account; nonempty enables publishing |
-| Secret | `DOCKERHUB_TOKEN` | Token with permission to read/write the destination repository |
-| Variable, optional | `DOCKERHUB_IMAGE` | Lowercase `namespace/repository`; default is `<username>/gcc_ts` |
+| Variable | `DOCKERHUB_USERNAME` | Nonempty enables the copy job |
+| Secret | `DOCKERHUB_TOKEN` | Access to the destination repository |
+| Optional variable | `DOCKERHUB_IMAGE` | Lowercase `namespace/repository`; defaults to `<username>/gcc_ts` |
 
-Create the destination Docker Hub repository with the desired visibility before enabling the copy. For organizations, grant the login account access and set `DOCKERHUB_IMAGE` accordingly.
+Create the destination repository before enabling publishing. The copy job transfers the completed multi-platform GHCR manifest by digest. A failed Docker Hub job does not undo a successful GHCR publish.
 
-The job copies all platforms and the generated tags from the completed GHCR manifest digest. A missing/invalid token fails this job visibly; the already-published GHCR image remains available. Without `DOCKERHUB_USERNAME`, the job is skipped. Pull-request builds do not publish.
+### Manually publish an existing application revision
 
-## Releases
+1. Open **Actions → Build & Publish Docker Image → Run workflow**.
+2. Select the intended branch or existing application release tag.
+3. Wait for both architecture builds and the manifest merge.
+4. Check the optional Docker Hub copy separately.
+5. Verify the resulting image/digest and deployed `/api/health` version.
 
-Use conventional commit subjects such as `feat: add vacation planning`, `fix: correct approval scope`, and `docs: update setup guide`. Release Please decides release eligibility from commit metadata; documentation-only changes do not necessarily create a release.
+Release Please uses `GITHUB_TOKEN`. Tag events created by that token do not guarantee another workflow run. If a release has no matching image, inspect the main build first, then dispatch Docker **on the existing release tag** if needed.
 
-Review the generated release PR, including version and changelog changes, before merging. The root `package.json` is the application version source; health responses add a `v` prefix.
+## 5. Releases and downloads
 
-### A release exists but its image did not build
+[Browse releases](https://github.com/naveenbarrywehmiller/gcc_ts/releases).
 
-Release Please currently uses the default repository `GITHUB_TOKEN`. Events generated by that token generally do not start another workflow; tag creation therefore does not guarantee a Docker run. See [GitHub's token event behavior](https://docs.github.com/en/actions/concepts/security/github_token).
+| Product | Version source | New tag | Download |
+| --- | --- | --- | --- |
+| GCC Timesheet App | Root `package.json` | `gcc-timesheet-app-vX.Y.Z` | Container image or GitHub source archive |
+| GCC Dashboard Power BI | API `dashboardVersion` and PBIP suffix | `gcc-dashboard-powerbi-vX.Y.Z` | `gcc-dashboard-powerbi-vX.Y.Z.zip` and checksum |
+| GCC Timesheet Linux Admin | `deploy/linux-admin/VERSION` | `gcc-timesheet-linux-admin-vX.Y.Z` | Tar/ZIP, checksum, installer, guides |
 
-The merged main push may have published the package version already. Check Docker workflow runs and GHCR tags first. If the intended release image is absent, manually dispatch the Docker workflow **on that existing release tag**, then verify the result. Using a GitHub App token or explicit dispatch from the release workflow could automate this later, but that is not configured here.
+Use conventional commit subjects such as `feat: add vacation planning` or `fix: correct approval scope`; review generated version/changelog changes before merging a release PR. Documentation-only commits do not necessarily trigger an app release.
 
-## Troubleshooting
+Historical releases retain their original tags and URLs, with canonical tag aliases and asset names added. Old checksums and downloads remain valid. Historical archives keep their original internal layout; use the current checkout for renamed source folders. See [compatibility details](../docs/REPOSITORY_STRUCTURE.md#release-compatibility-and-history).
 
-| Symptom | Checks and resolution |
+For Linux administration, use the published installer and verify its guide. App releases, dashboard releases, and Linux-admin releases have independent versions; never choose an administrator update using the repository's overall “latest release.”
+
+## 6. Troubleshooting
+
+| Symptom | Resolution |
 | --- | --- |
-| No login works after fresh setup | Set both bootstrap values in the correct environment file, run setup/start, and inspect provisioning errors. There is no default production password. |
-| Bootstrap password change does nothing | Provisioning is one-time. Use an authorized user-management/recovery process for existing accounts. |
-| Production refuses to start | Supply both JWT secrets with at least 32 characters; inspect the startup error. Do not retain example strings. |
-| Login succeeds but browser returns to login | Check `COOKIE_SECURE`: true requires HTTPS. Confirm the actual browser origin is in `CORS_ORIGIN` and the proxy forwards the correct scheme. |
-| Frontend API requests fail locally | Start API on port 3001 or update Vite's proxy target; access the frontend on 5173. |
-| SSO button is absent | Configure backend feature flag/IDs and frontend `VITE_ENTRA_*`; restart/rebuild the client. Runtime Compose variables do not alter an existing frontend build. |
-| Microsoft login rejects a token | Check tenant/client ID agreement, registered redirect origin, account permissions, and server validation logs. |
-| Power BI returns 401/403 | Confirm reporting is enabled, the dedicated API key is configured, and the client sends supported credentials. Employee JWTs do not grant admin reporting access. |
-| Power BI data appears delayed | Check the reporting cache TTL and refresh status. `POWERBI_CACHE_TTL=0` currently uses 60 seconds. |
-| API returns 429 | Wait for the configured rate-limit window; inspect request loops and load before increasing limits. |
-| Health/API returns 503 | Check maintenance mode in the system-admin workflow. Maintenance deliberately blocks health and most APIs. |
-| Database appears empty after update | Confirm the same database path and volume are mounted. Do not seed over or remove a volume before checking existing storage/backups. |
-| CLI backup says sqlite3 unavailable | Install the CLI for online snapshots or stop the server before using the file-copy fallback; prefer the system-admin online download. |
-| GHCR push is denied | Check workflow package-write permissions, package repository association/access, and organization Actions policy. |
-| Docker Hub job fails | Confirm variable/secret names, token permission, destination existence, and lowercase image name. GHCR may still be successful. |
-| ARM image missing | Check the ARM runner build and manifest merge; verify the workflow run's multi-platform manifest. |
-| Released version differs from deployed version | Check the deployed image digest/tag, main package version, pull/recreate result, and `/api/health`; `latest` may reference a different build. |
-| Power BI Desktop model validation cannot run | Follow the separate Power BI validation prerequisites; these checks require the relevant local model/engine setup. |
+| No first login | Check bootstrap email/password in the correct environment file, run setup, inspect provisioning errors. No default production password is provided. |
+| Bootstrap password change has no effect | Provisioning is one-time. Use authorized account recovery for existing users. |
+| Production refuses to start | Supply both JWT secrets with at least 32 characters and inspect the startup error. |
+| Login immediately returns to login | Check HTTPS/`COOKIE_SECURE`, exact CORS origin, and proxy scheme forwarding. |
+| Local frontend API failure | Start API on port 3001 or update Vite's proxy; use port 5173 for the frontend. |
+| Microsoft sign-in unavailable/fails | Check backend feature flags, tenant/client agreement, public Vite settings, redirect origin, and permissions; rebuild/restart as needed. |
+| Power BI returns 401/403 | Enable reporting, configure the dedicated API key, and use supported credentials. Follow the dashboard connection guide. |
+| Power BI data delayed | Check cache/refresh state; `POWERBI_CACHE_TTL=0` currently falls back to 60 seconds. |
+| Renamed PBIP cannot find its model | Keep Report and SemanticModel siblings together; close Desktop and reopen the versioned PBIP. Avoid mixing old/new folders. |
+| Model validation cannot run | Install the local Desktop/TOM prerequisites described in [Power BI validation](../powerbi/validation/README.md). |
+| API returns 429 | Wait for the rate-limit window and inspect request loops before changing limits. |
+| Health/API returns 503 | Check maintenance mode. `/api/health/live` remains the liveness endpoint. |
+| Database empty after upgrade | Confirm the same mounted volume/path. Inspect backups before changing data or seeding. |
+| CLI backup lacks sqlite3 | Install the CLI for online snapshots or stop the server before file-copy fallback; prefer the online system-admin download. |
+| GHCR push denied | Check package-write permission, package association/access, and Actions policy. |
+| Docker Hub copy fails | Check variable/secret names, token access, destination existence, and lowercase image name. |
+| ARM image absent | Check the ARM build and combined-manifest merge; a single successful build is insufficient. |
+| Release and deployed versions differ | Verify image digest/tag, pull/recreate result, and `/api/health`; `latest` can change. |
+| Linux-admin update not found | Check stable releases under either admin prefix and the dedicated asset/checksum. App/Power BI tags are intentionally ignored. |
 
-## Reporting a problem
+## 7. Report a problem
 
-Include enough information for someone to reproduce it:
+Include:
 
-- Application version from `/api/health`, or explain if maintenance blocks it.
-- Deployment type, OS/CPU architecture, browser, and local Node version if relevant.
-- User role, affected screen, steps, expected outcome, and actual outcome.
-- Sanitized error text, request status, or the relevant Actions run link/job name.
-- Whether the problem began after a release, configuration change, or database restore.
+- Product and version; for the app, use `/api/health` if maintenance permits it.
+- Deployment type, operating system/CPU architecture, browser, and relevant runtime versions.
+- User role, affected screen, reproduction steps, expected result, and actual result.
+- Sanitized error text/status or the Actions run link and failing job.
+- The preceding upgrade, configuration change, or restore, if any.
 
-Remove cookies, bearer tokens, API keys, passwords, webhook signatures, and personal/customer data. For sensitive problems, use your organization's private support channel. This repository does not declare a public security-reporting address.
+Remove cookies, tokens, API keys, passwords, webhook signatures, and personal/customer data. Use your organization's private support channel for sensitive problems; the repository does not specify a public security-reporting address.
 
-## Further reading
+## Reference library
 
-[Main setup and features](../README.md) · [API](../API_REFERENCE.md) · [Deployment history](../DEPLOYMENT_NOTES.md) · [Power BI integration](../docs/POWERBI.md) · [Power BI project](../powerbi/documentation/POWERBI.md)
+[Documentation index](../docs/README.md) · [API](../docs/API_REFERENCE.md) · [Architecture](../docs/ARCHITECTURE.md) · [App changelog](../CHANGELOG.md) · [Power BI changelog](../powerbi/CHANGELOG.md) · [Linux operations](../deploy/linux-admin/README.md)

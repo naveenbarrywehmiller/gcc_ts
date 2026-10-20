@@ -75,22 +75,22 @@ test('weekly row identities collapse daily detail copies while retaining separat
 });
 
 test('Desktop schema versions stay independent of the dashboard release number',()=>{
-  const project=path.join(__dirname,'../powerbi/GCC_Requirements');
-  const reportVersion=JSON.parse(fs.readFileSync(path.join(project,'GCC_Requirements.Report/definition/version.json'),'utf8'));
+  const project=path.join(__dirname,'../powerbi/GCC_Dashboard');
+  const reportVersion=JSON.parse(fs.readFileSync(path.join(project,'GCC_Dashboard.Report/definition/version.json'),'utf8'));
   assert.equal(reportVersion.version,'2.0.0');
-  const culture=fs.readFileSync(path.join(project,'GCC_Requirements.SemanticModel/definition/cultures/en-US.tmdl'),'utf8');
+  const culture=fs.readFileSync(path.join(project,'GCC_Dashboard.SemanticModel/definition/cultures/en-US.tmdl'),'utf8');
   assert.equal(culture.match(/"Version"\s*:\s*"([^"]+)"/)?.[1],'2.0.0');
 });
 
 test('Power BI project filename matches the advertised dashboard release and resolves its model',async()=>{
   const {dashboardVersion}=(await get('version')).body;
-  const project=path.join(__dirname,'../powerbi/GCC_Requirements');
-  const filename=`GCC_Requirements_v${dashboardVersion}.pbip`;
+  const project=path.join(__dirname,'../powerbi/GCC_Dashboard');
+  const filename=`GCC_Dashboard_v${dashboardVersion}.pbip`;
   assert.deepEqual(fs.readdirSync(project).filter(name=>name.endsWith('.pbip')),[filename]);
   const manifest=JSON.parse(fs.readFileSync(path.join(project,filename),'utf8'));
   const report=path.join(project,manifest.artifacts[0].report.path);
   const definition=JSON.parse(fs.readFileSync(path.join(report,'definition.pbir'),'utf8'));
   const model=path.resolve(report,definition.datasetReference.byPath.path);
-  assert.equal(model,path.join(project,'GCC_Requirements.SemanticModel'));
+  assert.equal(model,path.join(project,'GCC_Dashboard.SemanticModel'));
   assert(fs.existsSync(path.join(model,'definition.pbism')));
 });

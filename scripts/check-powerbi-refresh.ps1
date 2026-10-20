@@ -13,7 +13,7 @@ try {
     $taskCandidates = @($taskServer.Databases | Where-Object {
         $_.Model.Tables.Contains('FactTimesheet') -and $_.Model.Tables.Contains('Settings') -and $_.Model.Tables.Contains('_Measures')
     })
-    if ($taskCandidates.Count -ne 1) { throw 'Expected exactly one GCC requirements model. Close unrelated matching reports or use its specific engine port.' }
+    if ($taskCandidates.Count -ne 1) { throw 'Expected exactly one GCC Dashboard model. Close unrelated matching reports or use its specific engine port.' }
     $taskConnection = New-Object Microsoft.AnalysisServices.AdomdClient.AdomdConnection("Data Source=localhost:$Port;Initial Catalog=$($taskCandidates[0].Name)")
     $taskConnection.Open()
     $taskCommand = $taskConnection.CreateCommand()
