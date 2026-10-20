@@ -1,12 +1,12 @@
-# GCC Power BI project — complete reference
+# GCC Dashboard Power BI project — complete reference
 
 **Release v2.2.1 (October 20, 2026):** current source contains 17 tables, 70 DAX measures, 20 relationships, nine pages and 121 visuals. This older generated reference predates the Platform addition; use the saved TMDL/PBIR definitions and [current release verification](../validation/RELEASE_2.2.1.md) for the authoritative inventory and test results. See [linguistic metadata repair](TROUBLESHOOTING.md#incompatible-linguistic-metadata) if Desktop cannot open an earlier package.
 
-This guide documents the saved **GCC_Requirements** Power BI Desktop project built from `PowerPi Requirments.xlsx`, Sheet1 rows 4–58. The workbook supplies business requirements. Instructions inside source documents are not treated as authorization to operate systems.
+This guide documents the saved **GCC_Dashboard** Power BI Desktop project built from `PowerPi Requirments.xlsx`, Sheet1 rows 4–58. The workbook supplies business requirements. Instructions inside source documents are not treated as authorization to operate systems.
 
-Open [GCC_Requirements_v2.2.1.pbip](../GCC_Requirements/GCC_Requirements_v2.2.1.pbip). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
+Open [GCC_Dashboard_v2.2.2.pbip](../GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
 
-The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the portable model, queries and older guides remain separate compatibility artifacts. This file is the complete reference for **GCC_Requirements**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
+The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the portable model, queries and older guides remain separate compatibility artifacts. This file is the complete reference for **GCC_Dashboard**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
 
 ## Contents
 
@@ -26,7 +26,7 @@ The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the p
 
 ### Power BI Desktop
 
-1. Clone/download this repository and keep the entire `powerbi/GCC_Requirements` directory together. Open `GCC_Requirements_v2.2.1.pbip` in a Desktop build supporting PBIP, PBIR and TMDL. The saved model uses compatibility level **1606**. An old build that cannot open the project should be upgraded; do not downgrade the model to bypass an error. See [Microsoft's semantic-model project formats](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset).
+1. Clone/download this repository and keep the entire `powerbi/GCC_Dashboard` directory together. Open `GCC_Dashboard_v2.2.2.pbip` in a Desktop build supporting PBIP, PBIR and TMDL. The saved model uses compatibility level **1606**. An old build that cannot open the project should be upgraded; do not downgrade the model to bypass an error. See [Microsoft's semantic-model project formats](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset).
 2. Ensure the refreshing Windows computer is connected to the appropriate Tailscale network and can reach `https://dietpi.tail4f2b8f.ts.net/`. A browser view of the application home page proves network reachability, not reporting authentication.
 3. In **Transform data → Edit parameters**, check the parameters below. Set the server origin without an endpoint suffix. `ApiPath` supplies the reporting namespace. Confirm fiscal and capacity assumptions before using KPIs.
 4. In **File → Options and settings → Data source settings**, select the Web source at the DietPi origin and choose **Edit permissions**. If an old localhost/Anonymous credential is cached, clear that source's permissions and reconnect. Choose **Basic**, username **powerbi**, and use the reporting API key or an authorized administrator JWT as the password. Apply credentials to the origin used by `ApiBaseUrl`. Enter the secret in the credential dialog yourself; it is not a project parameter.
@@ -173,16 +173,16 @@ Reference updated **2026-10-09** from the saved model/PBIR sources. Application 
 ```text
 powerbi/
   POWERBI.md
-  GCC_Requirements/
-    GCC_Requirements_v2.2.1.pbip
+  GCC_Dashboard/
+    GCC_Dashboard_v2.2.2.pbip
     .gitignore                       # excludes local .pbi cache/settings
-    GCC_Requirements.Report/
+    GCC_Dashboard.Report/
       definition.pbir               # local semantic-model reference
       definition/
         report.json, version.json
         pages/<page>/page.json
         pages/<page>/visuals/<id>/visual.json
-    GCC_Requirements.SemanticModel/
+    GCC_Dashboard.SemanticModel/
       definition.pbism
       definition/
         database.tmdl, model.tmdl
@@ -204,7 +204,7 @@ The inventory below lists every visual ID, type, title and bound query role. `Va
 
 ### GCC | Management overview
 
-Page ID: `01_overview`. Visuals: **14**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/01_overview/page.json).
+Page ID: `01_overview`. Visuals: **14**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/01_overview/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -226,7 +226,7 @@ Page ID: `01_overview`. Visuals: **14**. Source: [page.json](../GCC_Requirements
 
 ### GCC | Utilization
 
-Page ID: `02_utilization`. Visuals: **14**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/02_utilization/page.json).
+Page ID: `02_utilization`. Visuals: **14**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/02_utilization/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -248,7 +248,7 @@ Page ID: `02_utilization`. Visuals: **14**. Source: [page.json](../GCC_Requireme
 
 ### GCC | Delivery & quality
 
-Page ID: `03_delivery`. Visuals: **14**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/03_delivery/page.json).
+Page ID: `03_delivery`. Visuals: **14**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/03_delivery/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -270,7 +270,7 @@ Page ID: `03_delivery`. Visuals: **14**. Source: [page.json](../GCC_Requirements
 
 ### GCC | Capacity & forecast
 
-Page ID: `04_capacity`. Visuals: **14**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/04_capacity/page.json).
+Page ID: `04_capacity`. Visuals: **14**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/04_capacity/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -292,7 +292,7 @@ Page ID: `04_capacity`. Visuals: **14**. Source: [page.json](../GCC_Requirements
 
 ### GCC | Dedicated & Flex teams
 
-Page ID: `05_teams`. Visuals: **14**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/05_teams/page.json).
+Page ID: `05_teams`. Visuals: **14**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/05_teams/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -314,7 +314,7 @@ Page ID: `05_teams`. Visuals: **14**. Source: [page.json](../GCC_Requirements/GC
 
 ### GCC | Continuous improvement
 
-Page ID: `06_improvement`. Visuals: **14**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/06_improvement/page.json).
+Page ID: `06_improvement`. Visuals: **14**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/06_improvement/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -336,7 +336,7 @@ Page ID: `06_improvement`. Visuals: **14**. Source: [page.json](../GCC_Requireme
 
 ### GCC | Staffing
 
-Page ID: `07_staffing`. Visuals: **11**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/07_staffing/page.json).
+Page ID: `07_staffing`. Visuals: **11**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/07_staffing/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -355,7 +355,7 @@ Page ID: `07_staffing`. Visuals: **11**. Source: [page.json](../GCC_Requirements
 
 ### GCC | Timesheet & training detail
 
-Page ID: `08_detail`. Visuals: **12**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/08_detail/page.json).
+Page ID: `08_detail`. Visuals: **12**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/08_detail/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -375,7 +375,7 @@ Page ID: `08_detail`. Visuals: **12**. Source: [page.json](../GCC_Requirements/G
 
 ### GCC | Input readiness
 
-Page ID: `09_inputs`. Visuals: **6**. Source: [page.json](../GCC_Requirements/GCC_Requirements.Report/definition/pages/09_inputs/page.json).
+Page ID: `09_inputs`. Visuals: **6**. Source: [page.json](../GCC_Dashboard/GCC_Dashboard.Report/definition/pages/09_inputs/page.json).
 
 | Visual ID | Type | Title / text | Query bindings and formatting | Phone x, y / width × height |
 |---|---|---|---|---|
@@ -708,7 +708,7 @@ These are the **complete saved formulas**, in the model's display-folder order. 
 
 All statuses including drafts/rejected. Use Actual Hours for reported work.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Raw Hours =
@@ -720,7 +720,7 @@ CALCULATE(SUM(FactTimesheet[hours]), KEEPFILTERS(FILTER(ALL(FactTimesheet[divisi
 
 Submitted and approved hours; drafts, rejected and recalled entries do not count.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Actual Hours =
@@ -732,7 +732,7 @@ CALCULATE([Raw Hours], KEEPFILTERS(FactTimesheet[status] IN {"submitted", "appro
 
 Approved hours only, for comparison with submitted plus approved actuals.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Approved Hours =
@@ -744,7 +744,7 @@ CALCULATE([Raw Hours], KEEPFILTERS(FactTimesheet[status] = "approved"))
 
 Distinct employees with submitted or approved entries in the selected work scope.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Contributing Employees =
@@ -756,7 +756,7 @@ CALCULATE(DISTINCTCOUNT(FactTimesheet[userId]), KEEPFILTERS(FactTimesheet[status
 
 Current roster; does not change with date or project selection.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Active Team Strength =
@@ -771,7 +771,7 @@ CALCULATE(COUNTROWS(DimEmployee), KEEPFILTERS(DimEmployee[isActive] = TRUE()), K
 
 Actual hours explicitly mapped to Training.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Training Hours =
@@ -783,7 +783,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Training"))
 
 Actual hours explicitly mapped to Internal, including the provisional meeting mapping.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Internal Hours =
@@ -795,7 +795,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Internal"))
 
 Actual hours explicitly mapped to Admin.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Admin Hours =
@@ -807,7 +807,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Admin"))
 
 Recorded actual hours mapped to Vacation; distinct from planned vacation capacity.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Vacation Hours =
@@ -819,7 +819,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Vacation"))
 
 Recorded actual hours mapped to Holiday; distinct from calendar holiday days.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Holiday Hours =
@@ -831,7 +831,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Holiday"))
 
 Actual hours explicitly mapped to Productive; based on the separately confirmed HourCategoryMap.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Productive Hours =
@@ -843,7 +843,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Productive"))
 
 Actual hours with no approved mapping; a positive result blocks utilization.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Unmapped Hours =
@@ -855,7 +855,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FactTimesheet[hourCategory]="Unmapped"))
 
 Actuals minus training, internal, admin, vacation and holiday hours; blank when unmapped hours exist.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Effective Hours =
@@ -867,7 +867,7 @@ IF(COALESCE([Unmapped Hours],0)=0,[Actual Hours]-COALESCE([Training Hours],0)-CO
 
 Selected Monday–Friday dates excluding company holidays.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Working Days =
@@ -879,7 +879,7 @@ COALESCE(CALCULATE(COUNTROWS(DimDate),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEE
 
 Company holidays that fall on a selected weekday.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Holiday Days =
@@ -891,7 +891,7 @@ CALCULATE(COUNTROWS(DimDate),KEEPFILTERS(DimDate[IsWeekday]=TRUE()),KEEPFILTERS(
 
 Current roster estimate. Blank at project/task grain because allocations are unavailable.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Roster Capacity Hours =
@@ -903,7 +903,7 @@ IF(NOT ISCROSSFILTERED(DimProject) && NOT ISCROSSFILTERED(DimTask), [Working Day
 
 Per employee/day capped at daily hours. Future plans supersede recorded leave, preventing double subtraction. Only weekdays excluding holidays.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Capacity Vacation Hours =
@@ -923,7 +923,7 @@ RETURN MIN(H,IF(D>=A && Planned>0,H,COALESCE(Recorded,0)))))
 
 Capacity vacation hours divided by the standard daily hours.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Vacation Days =
@@ -935,7 +935,7 @@ DIVIDE([Capacity Vacation Hours],SELECTEDVALUE(Settings[DailyHours],8))
 
 Current active-roster capacity less capacity vacation hours, bounded at zero.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Available Hours =
@@ -952,7 +952,7 @@ RETURN
 
 Selected-period utilization using current roster estimate; monthly when grouped/filtered by YearMonth.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Monthly Utilization % =
@@ -964,7 +964,7 @@ DIVIDE([Effective Hours],[Available Hours])
 
 One minus monthly/selected-period utilization; retains blank when utilization is unknown.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Under Utilized % =
@@ -980,7 +980,7 @@ RETURN IF ( NOT ISBLANK ( Utilization ), 1 - Utilization )
 
 IST calendar date captured from the shared refresh clock after removing its zone without converting to the refreshing machine's local time.
 
-Format: `yyyy-mm-dd`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `yyyy-mm-dd`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 As Of Date =
@@ -992,7 +992,7 @@ MAX(Settings[AsOfDate])
 
 Friday strictly before the refresh date, including a seven-day lookback when refreshed on Friday.
 
-Format: `yyyy-mm-dd`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `yyyy-mm-dd`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Last Completed Friday =
@@ -1007,7 +1007,7 @@ Last Completed Friday =
 
 Workbook annual numerator excludes training but retains internal/admin. Current-roster FY estimate; exact project-start denominator needs allocation history.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 FY Utilization Through Friday % =
@@ -1025,7 +1025,7 @@ RETURN CALCULATE(IF(COALESCE([Unmapped Hours],0)=0,DIVIDE([Actual Hours]-COALESC
 
 Estimated available roster capacity for the previous Monday–Sunday week.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Available Hours Last Week =
@@ -1037,7 +1037,7 @@ VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(-7) RETURN CALCULATE([Available Ho
 
 Estimated available roster capacity for the week containing the refresh date.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Available Hours Current Week =
@@ -1049,7 +1049,7 @@ VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(0) RETURN CALCULATE([Available Hou
 
 Estimated available roster capacity for the following week.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Available Hours Next Week =
@@ -1061,7 +1061,7 @@ VAR S=[As Of Date]-WEEKDAY([As Of Date],2)+1+(7) RETURN CALCULATE([Available Hou
 
 Estimated available hours from the selected/current fiscal-year start through the strictly previous Friday.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Available Hours FY =
@@ -1076,7 +1076,7 @@ VAR A=[As Of Date] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1) VAR S=DATE
 
 Actual hours for employees whose supportingCategory is Dedicated Team.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Dedicated Hours =
@@ -1088,7 +1088,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategor
 
 Current active-roster strength for Dedicated Team employees.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Dedicated Strength =
@@ -1100,7 +1100,7 @@ CALCULATE([Active Team Strength],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportin
 
 Monthly/selected-period utilization filtered to Dedicated Team employees.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Dedicated Utilization % =
@@ -1112,7 +1112,7 @@ CALCULATE([Monthly Utilization %],KEEPFILTERS(FILTER(VALUES(DimEmployee[supporti
 
 Dedicated Team actual hours during the fiscal-year window through the previous Friday.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Dedicated FY Hours =
@@ -1124,7 +1124,7 @@ VAR E=[Last Completed Friday] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1)
 
 Actual hours for employees whose supportingCategory is Flex Team.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Flex Hours =
@@ -1136,7 +1136,7 @@ CALCULATE([Actual Hours],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportingCategor
 
 Current active-roster strength for Flex Team employees.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Flex Strength =
@@ -1148,7 +1148,7 @@ CALCULATE([Active Team Strength],KEEPFILTERS(FILTER(VALUES(DimEmployee[supportin
 
 Monthly/selected-period utilization filtered to Flex Team employees.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Flex Utilization % =
@@ -1160,7 +1160,7 @@ CALCULATE([Monthly Utilization %],KEEPFILTERS(FILTER(VALUES(DimEmployee[supporti
 
 Flex Team actual hours during the fiscal-year window through the previous Friday.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Flex FY Hours =
@@ -1172,7 +1172,7 @@ VAR E=[Last Completed Friday] VAR FM=SELECTEDVALUE(Settings[FiscalStartMonth],1)
 
 Unused hours converted to full-period employee equivalents; not a named cohort or staff assignment.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Available Employee Equivalents =
@@ -1187,7 +1187,7 @@ IF(NOT ISBLANK([Monthly Utilization %]),DIVIDE(MAX(0,[Available Hours]-[Effectiv
 
 Distinct projects with a delivered date in the selected dates.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Projects Delivered =
@@ -1199,7 +1199,7 @@ CALCULATE(COUNTROWS(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) && 
 
 Selected delivered projects with delivered date on or before target date.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Projects On Time =
@@ -1211,7 +1211,7 @@ CALCULATE(COUNTROWS(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDat
 
 On-time projects divided by delivered projects; project grain, not deliverable grain.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Project On Time % =
@@ -1223,7 +1223,7 @@ VAR Known=CALCULATE(COUNTROWS(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[de
 
 Complete known budgets for the selected delivered-project cohort; blank on incomplete coverage.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Delivered Project Budget Hours =
@@ -1235,7 +1235,7 @@ VAR P=CALCULATETABLE(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate]) &&
 
 Lifetime actual hours for the same delivered-project cohort as the budget, preventing partial-period vs lifetime-budget comparisons.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Delivered Project Actual Hours =
@@ -1247,7 +1247,7 @@ VAR P=CALCULATETABLE(SELECTCOLUMNS(FILTER(DimProject,NOT ISBLANK(DimProject[deli
 
 Lifetime actual minus lifetime budget, divided by lifetime budget for the same delivered cohort; blank at employee/task grain.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Effort Deviation % =
@@ -1266,7 +1266,7 @@ RETURN
 
 Mean delivered minus planned target date in calendar days. Positive is late.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Schedule Deviation Days =
@@ -1278,7 +1278,7 @@ CALCULATE(AVERAGEX(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate
 
 Provisional normalized schedule deviation: days late/early divided by planned elapsed duration.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Schedule Deviation % =
@@ -1290,7 +1290,7 @@ CALCULATE(AVERAGEX(FILTER(FILTER(DimProject,NOT ISBLANK(DimProject[deliveredDate
 
 Red beyond absolute 5% effort deviation, green within tolerance, gray when unknown.
 
-Format: `General`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `General`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Effort Alert Color =
@@ -1305,7 +1305,7 @@ RETURN
 
 Red beyond absolute 3% provisional normalized schedule deviation, green within tolerance, gray when unknown.
 
-Format: `General`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `General`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Schedule Alert Color =
@@ -1323,7 +1323,7 @@ RETURN
 
 Number of weekly row identities with contradictory daily metadata copies.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Detail Conflicts =
@@ -1335,7 +1335,7 @@ CALCULATE(COUNTROWS(FactWeeklyDetails),FactWeeklyDetails[detailConflict]=TRUE(),
 
 Sum of deduplicated weekly fundamental error counts; blank on conflicting copies.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Weekly Fundamental Errors =
@@ -1347,7 +1347,7 @@ IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[fundamental_
 
 Sum of deduplicated weekly improvement_count; separate from initiative IDs.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Improvement Log Count =
@@ -1359,7 +1359,7 @@ IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[improvement_
 
 Sum of deduplicated weekly designed counts; blank on conflicting copies.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Designed =
@@ -1371,7 +1371,7 @@ IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[designed]),K
 
 Sum of deduplicated weekly developed counts; blank on conflicting copies.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Developed =
@@ -1383,7 +1383,7 @@ IF(COALESCE([Detail Conflicts],0)=0,CALCULATE(SUM(FactWeeklyDetails[developed]),
 
 Explicit deliverable fundamental errors; blank if any selected deliverable count is unknown.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Fundamental Errors =
@@ -1395,7 +1395,7 @@ VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]
 
 Explicit deliverable information errors; blank on incomplete selected counts.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Information Errors =
@@ -1407,7 +1407,7 @@ VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]
 
 Explicit deliverable readable errors; blank on incomplete selected counts.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Readable Errors =
@@ -1419,7 +1419,7 @@ VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]
 
 Distinct explicit deliverable IDs; projects and weekly rows are not substitute deliverables.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Deliverables =
@@ -1431,7 +1431,7 @@ CALCULATE(DISTINCTCOUNT(FactDeliverable[deliverableId]),KEEPFILTERS(FILTER(ALL(D
 
 Explicit fundamental errors divided by explicit deliverables. The ratio can exceed 100% when multiple errors occur per deliverable.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Defect Density % =
@@ -1443,7 +1443,7 @@ DIVIDE([Fundamental Errors],[Deliverables])
 
 Explicit deliverables with hadRework=false divided by deliverables; unknown flags keep the result blank.
 
-Format: `0.0%`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `0.0%`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 First Time Right % =
@@ -1455,7 +1455,7 @@ VAR T=CALCULATETABLE(FactDeliverable,KEEPFILTERS(FILTER(ALL(DimProject[division]
 
 Explicit deliverables delivered on or before their planned date; blank on missing selected dates.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 On Time Deliverables =
@@ -1467,7 +1467,7 @@ CALCULATE(COUNTROWS(FILTER(FactDeliverable,NOT ISBLANK(FactDeliverable[delivered
 
 Red beyond 0.05 absolute ratio points from DefectTarget, green within tolerance, gray when unknown.
 
-Format: `General`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `General`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Defect Alert Color =
@@ -1486,7 +1486,7 @@ RETURN
 
 Distinct nonblank project products associated with submitted/approved work in the selected dates.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Products Touched =
@@ -1498,7 +1498,7 @@ VAR IDs=CALCULATETABLE(VALUES(FactTimesheet[projectId]),FactTimesheet[status] IN
 
 Distinct improvement initiative IDs whose explicit additive-manufacturing flag is true.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Additive Manufacturing =
@@ -1510,7 +1510,7 @@ CALCULATE(DISTINCTCOUNT(FactImprovement[improvementId]),FactImprovement[isAdditi
 
 Distinct initiative IDs from the optional improvement register, including category-filtered counts.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Improvement Initiatives =
@@ -1529,7 +1529,7 @@ Open Position and New Joiner narratives are shown directly from FactStaffing. No
 
 Project budget spread over weekdays excluding holidays; blank under employee/task filters without allocations.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Hours Scheduled =
@@ -1541,7 +1541,7 @@ IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SU
 
 Selected future remaining-budget allocation; blank under employee/task filters without allocations.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Remaining Forecast Hours =
@@ -1553,7 +1553,7 @@ IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILTERED(DimTask),CALCULATE(SU
 
 Past actuals plus future remaining budget. Past and future do not overlap.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Team Forecast Hours =
@@ -1565,7 +1565,7 @@ VAR A=[As Of Date] RETURN IF(NOT ISCROSSFILTERED(DimEmployee) && NOT ISCROSSFILT
 
 Remaining Inprogress budget for projects whose target is before the refresh date; separate from scheduled future hours.
 
-Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0.0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Overdue Unscheduled Hours =
@@ -1577,7 +1577,7 @@ VAR A=[As Of Date] RETURN CALCULATE(SUMX(FILTER(DimProject,DimProject[projectSta
 
 Count of projects missing budget/start/target or with a target before start.
 
-Format: `#,##0`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `#,##0`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Projects Missing Plan Inputs =
@@ -1592,7 +1592,7 @@ CALCULATE(COUNTROWS(FILTER(DimProject,DimProject[projectStatus]="Inprogress" && 
 
 Successful import timestamp for the page header. Never use NOW(), which changes without fetching data.
 
-Format: `General`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `General`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Report Status =
@@ -1604,7 +1604,7 @@ COALESCE([Last Refresh IST], "Not refreshed yet")
 
 Refresh timestamp text captured in Settings in Indian Standard Time (UTC+05:30), including seconds.
 
-Format: `General`. Source: [TMDL measure table](../GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl).
+Format: `General`. Source: [TMDL measure table](../GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl).
 
 ```dax
 Last Refresh IST =
@@ -1985,7 +1985,7 @@ Authored source-readiness definitions; static explanatory rows.
 Hidden label row plus DAX measures; no business fact records.
 
 ```powerquery
-#table(type table [Label=text],{{"GCC requirements"}})
+#table(type table [Label=text],{{"GCC Dashboard"}})
 ```
 
 

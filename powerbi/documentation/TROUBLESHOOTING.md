@@ -1,4 +1,4 @@
-# Power BI Troubleshooting Guide — GCC Timesheet
+# Power BI Troubleshooting Guide — GCC Timesheet App
 
 > Dashboard Version: 2.2.1
 > Last Updated: 2026-10-20
@@ -7,21 +7,21 @@
 
 ## Overview
 
-This guide focuses on the most common issues encountered when connecting Power BI to the GCC Timesheet reporting API and maintaining the dashboard.
+This guide focuses on the most common issues encountered when connecting Power BI to the GCC Timesheet App reporting API and maintaining the dashboard.
 
 ---
 
 ## Incompatible linguistic metadata
 
-In the affected GCC Requirements checkout, Desktop reports that the file is incompatible, and **Copy details to clipboard** includes `NewerLinguisticSchemaVersion`. An earlier release-number update changed an internal schema declaration from `2.0.0` to `2.1.0` without changing its contents. Dashboard v2.2.1 restores that declaration and the separately versioned report format.
+In the affected GCC Dashboard checkout, Desktop reports that the file is incompatible, and **Copy details to clipboard** includes `NewerLinguisticSchemaVersion`. An earlier release-number update changed an internal schema declaration from `2.0.0` to `2.1.0` without changing its contents. Dashboard v2.2.1 restores that declaration and the separately versioned report format.
 
-The preferred repair is to download/extract the complete **powerbi-v2.2.1** GitHub release into a new folder and open `powerbi/GCC_Requirements/GCC_Requirements_v2.2.1.pbip`. Keep its Report and SemanticModel sibling folders together. Configure the source URL and authorized credentials normally, then refresh data.
+The preferred repair is to download/extract the complete **powerbi-v2.2.1** GitHub release into a new folder and open `powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip`. Keep its Report and SemanticModel sibling folders together. Configure the source URL and authorized credentials normally, then refresh data.
 
 To repair this specific older source checkout manually:
 
 1. Close Power BI Desktop and back up the project folder.
-2. In `GCC_Requirements.SemanticModel/definition/cultures/en-US.tmdl`, change only the linguistic JSON's `"Version": "2.1.0"` to `"Version": "2.0.0"`.
-3. In `GCC_Requirements.Report/definition/version.json`, restore the root `"version"` to `"2.0.0"`.
+2. In `GCC_Dashboard.SemanticModel/definition/cultures/en-US.tmdl`, change only the linguistic JSON's `"Version": "2.1.0"` to `"Version": "2.0.0"`.
+3. In `GCC_Dashboard.Report/definition/version.json`, restore the root `"version"` to `"2.0.0"`.
 4. Reopen the `.pbip` in a fresh Desktop session. These are format versions, so keep them separate from the dashboard release number **2.2.1**. Leave the individual `$schema` URLs unchanged.
 
 If an earlier failed opening leaves a `PackageSession` error, close that Desktop session and retry the corrected project from a fresh extraction. Do not save the failed session over the source. An incompatible file actually created by a newer Desktop version can require a Desktop update instead; do not downgrade unrelated projects' schema declarations based on this project-specific repair.

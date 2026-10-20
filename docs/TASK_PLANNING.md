@@ -28,7 +28,7 @@ Project Hours shows the current full-task estimate alongside period-filtered act
 
 Project Excel exports replace Classification Type with Productive Task IDs and Non-Productive Task IDs. Use semicolon-separated IDs; the Task Reference sheet lists IDs, categories and planning fields. Missing/invalid assignments reject the entire import. Task Reference is informational; importing projects does not edit task master data. Both Projects and Task Name/Number now support exporting, editing and reimporting existing records, plus deactivation of removed export rows; see [CATALOG_IMPORT_EXPORT.md](CATALOG_IMPORT_EXPORT.md).
 
-Power BI task/project API payloads, reusable Power Query files, and the GCC Requirements model dimensions expose the new planning fields. Preserve one row per task/project in dimensions. Existing actual-hours measures keep their original grain; assignment ID lists must not be expanded into fact rows. No live Power BI content was published or refreshed.
+Power BI task/project API payloads, reusable Power Query files, and the GCC Dashboard model dimensions expose the new planning fields. Preserve one row per task/project in dimensions. Existing actual-hours measures keep their original grain; assignment ID lists must not be expanded into fact rows. No live Power BI content was published or refreshed.
 
 ## Migration and deployment
 

@@ -1,8 +1,8 @@
-# GCC Requirements DAX optimization review
+# GCC Dashboard DAX optimization review
 
 Date: 2026-10-06. Evidence: local source review and native-engine synthetic tests. Six variable refactors are applied to the saved TMDL model.
 
-The `power-bi-dax-optimization` skill was run from `github/awesome-copilot`, and its complete output was read. It supplied no supporting-files directory or relative references. This review applies its performance, readability, blank-handling and maintainability checks to the existing GCC Requirements measures and relationships.
+The `power-bi-dax-optimization` skill was run from `github/awesome-copilot`, and its complete output was read. It supplied no supporting-files directory or relative references. This review applies its performance, readability, blank-handling and maintainability checks to the existing GCC Dashboard measures and relationships.
 
 ## Findings and priorities
 
@@ -36,7 +36,7 @@ Capture original and candidate visual queries separately with identical filters 
 
 ## Applied changes and results
 
-Applied the six variable refactors to `GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl`. Measure names, formatting, lineage tags, thresholds and business conditions are retained. The employee/day capacity iterator is unchanged; a larger structural rewrite needs representative-scale evidence.
+Applied the six variable refactors to `GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl`. Measure names, formatting, lineage tags, thresholds and business conditions are retained. The employee/day capacity iterator is unchanged; a larger structural rewrite needs representative-scale evidence.
 
 - Native comparisons against the original formulas: zero mismatches over month/division, total, empty-date, project, employee and task contexts in two synthetic fixtures.
 - Boundary comparisons: 26 per fixture, 52 total, covering blanks, zero denominators, over-capacity and positive/negative alert boundaries.

@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const Ajv = require(require.resolve('ajv', { paths: [path.join(__dirname, '../client')] }));
-const root = path.join(__dirname, '../powerbi/GCC_Requirements');
+const root = path.join(__dirname, '../powerbi/GCC_Dashboard');
 const cache = path.join(__dirname, '../powerbi/validation/schema-cache');
 fs.mkdirSync(cache, { recursive: true });
 async function loadSchema(uri) {
@@ -24,7 +24,7 @@ function files(dir) {
   const ajv = new Ajv({ loadSchema, allErrors: true, schemaId: 'auto', unknownFormats: 'ignore', logger: false });
   let count=0;
   const errors=[];
-  const modelPath=path.join(root,'GCC_Requirements.SemanticModel');
+  const modelPath=path.join(root,'GCC_Dashboard.SemanticModel');
   const read=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(__dirname,'read-powerbi-model.ps1'),'-ModelPath',modelPath],{encoding:'utf8',maxBuffer:16*1024*1024});
   if(read.error || read.status!==0) throw new Error(read.error?.message || read.stderr || 'TOM model deserialization failed');
   const model=JSON.parse(read.stdout.replace(/^\uFEFF/,''));

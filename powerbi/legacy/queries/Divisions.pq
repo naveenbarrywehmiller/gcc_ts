@@ -1,5 +1,5 @@
 // Power Query M — Divisions (DimDivision)
-// GCC Timesheet Power BI Dashboard v1.0.0
+// GCC Dashboard Power BI Dashboard v1.0.0
 
 let
     ApiBaseUrl = "http://localhost:3001",

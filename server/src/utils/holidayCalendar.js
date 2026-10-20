@@ -80,7 +80,7 @@ function parseHolidays(source, year) {
 function exportHolidays(holidays) {
   const calendar = new ICAL.Component('vcalendar');
   calendar.addPropertyWithValue('version', '2.0');
-  calendar.addPropertyWithValue('prodid', '-//GCC Timesheet//Holidays//EN');
+  calendar.addPropertyWithValue('prodid', '-//GCC Timesheet App//Holidays//EN');
   calendar.addPropertyWithValue('calscale', 'GREGORIAN');
   for (const holiday of holidays) {
     const event = new ICAL.Event();

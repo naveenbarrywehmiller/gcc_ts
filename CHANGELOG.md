@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.6] — 2026-10-20
+
+- Standardize product branding as GCC Timesheet App, GCC Dashboard Power BI, and GCC Timesheet Linux Admin.
+- Organize Power BI, Linux administration, and documentation paths; redesign GitHub Help and validate references/imports in CI.
+- Publish consistent product-prefixed tags and packages while preserving historical tags, download URLs, and data/configuration paths.
+- Advertise dashboard v2.2.2 independently of reporting API v2.0.0. Dependency versions and database schema are unchanged.
+
 ## [1.31.5](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.4...v1.31.5) (2026-10-20)
 
 ### Bug Fixes

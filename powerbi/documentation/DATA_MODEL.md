@@ -1,4 +1,4 @@
-# Power BI Data Model — GCC Timesheet
+# Power BI Data Model — GCC Timesheet App
 
 ## Platform integration (October 16, 2026)
 
@@ -205,4 +205,4 @@ The following database tables feed the REST API. Power BI never accesses these d
 
 ---
 
-*GCC Timesheet Power BI Data Model v1.1.0*
+*GCC Dashboard Power BI Data Model v1.1.0*

@@ -1,5 +1,5 @@
 param(
-    [string]$ModelPath = (Join-Path (Split-Path -Parent $PSScriptRoot) 'powerbi/GCC_Requirements/GCC_Requirements.SemanticModel'),
+    [string]$ModelPath = (Join-Path (Split-Path -Parent $PSScriptRoot) 'powerbi/GCC_Dashboard/GCC_Dashboard.SemanticModel'),
     [string]$OutputPath
 )
 # Read-only TOM deserialization supports Desktop's TMDL save format and older BIM models.

@@ -9,9 +9,9 @@ import pathlib
 import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[1] / 'powerbi'
-OUT = ROOT / 'GCC_Requirements'
-MODEL = OUT / 'GCC_Requirements.SemanticModel'
-REPORT = OUT / 'GCC_Requirements.Report'
+OUT = ROOT / 'GCC_Dashboard'
+MODEL = OUT / 'GCC_Dashboard.SemanticModel'
+REPORT = OUT / 'GCC_Dashboard.Report'
 SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/'
 
 if (MODEL / 'definition').exists():
@@ -304,14 +304,14 @@ m('Overdue Unscheduled Hours',f'VAR A=[As Of Date] RETURN CALCULATE(SUMX(FILTER(
 m('Projects Missing Plan Inputs',f'CALCULATE(COUNTROWS(FILTER(DimProject,DimProject[projectStatus]="Inprogress" && (ISBLANK(DimProject[startDate]) || ISBLANK(DimProject[targetDate]) || ISBLANK(DimProject[budgetHours]) || DimProject[targetDate]<DimProject[startDate]))),{project_scope})','03 Capacity','#,##0')
 m('Report Status','IF(ISBLANK([Last Refresh IST]),"API refresh required","Refreshed " & [Last Refresh IST]) & " • see Input readiness for missing source contracts"','09 Metadata','')
 m('Last Refresh IST','SELECTEDVALUE(Settings[RefreshIST])','09 Metadata','')
-table('_Measures',[('Label','string')],'#table(type table [Label=text],{{"GCC requirements"}})')
+table('_Measures',[('Label','string')],'#table(type table [Label=text],{{"GCC Dashboard"}})')
 tables[-1]['columns'][0]['isHidden']=True
 tables[-1]['measures']=measures
-model=dict(name='GCC Requirements',compatibilityLevel=1606,model=dict(culture='en-US',defaultPowerBIDataSourceVersion='powerBI_V3',sourceQueryCulture='en-US',tables=tables,relationships=relationships,expressions=expressions,annotations=[dict(name='__PBI_TimeIntelligenceEnabled',value='0')]))
+model=dict(name='GCC Dashboard Power BI',compatibilityLevel=1606,model=dict(culture='en-US',defaultPowerBIDataSourceVersion='powerBI_V3',sourceQueryCulture='en-US',tables=tables,relationships=relationships,expressions=expressions,annotations=[dict(name='__PBI_TimeIntelligenceEnabled',value='0')]))
 write(MODEL/'model.bim',model)
 write(MODEL/'definition.pbism',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json','version':'1.0','settings':{}})
-write(OUT/'GCC_Requirements_v2.2.1.pbip',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json','version':'1.0','artifacts':[{'report':{'path':'GCC_Requirements.Report'}}],'settings':{'enableAutoRecovery':True}})
-write(REPORT/'definition.pbir',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json','version':'4.0','datasetReference':{'byPath':{'path':'../GCC_Requirements.SemanticModel'}}})
+write(OUT/'GCC_Dashboard_v2.2.2.pbip',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json','version':'1.0','artifacts':[{'report':{'path':'GCC_Dashboard.Report'}}],'settings':{'enableAutoRecovery':True}})
+write(REPORT/'definition.pbir',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json','version':'4.0','datasetReference':{'byPath':{'path':'../GCC_Dashboard.SemanticModel'}}})
 write(REPORT/'definition/version.json',{'$schema':SCHEMA+'versionMetadata/1.0.0/schema.json','version':'2.0.0'})
 write(REPORT/'definition/report.json',{'$schema':SCHEMA+'report/1.0.0/schema.json','themeCollection':{},'layoutOptimization':'None'})
 

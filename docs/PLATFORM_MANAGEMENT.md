@@ -129,7 +129,7 @@ The existing offline `scripts/export-to-sharepoint-csv.js` includes a Platform c
 
 ## Power BI
 
-The standalone `powerbi/` deployment structure is preserved. The canonical `GCC_Requirements` PBIP, legacy TMDL/BIM model and reference Power Query sources include DimPlatform and Division Platform keys. Each of the eight canonical report pages has a Platform slicer immediately before Division, including an adjusted mobile layout.
+The standalone `powerbi/` deployment structure is preserved. The canonical `GCC_Dashboard` PBIP, legacy TMDL/BIM model and reference Power Query sources include DimPlatform and Division Platform keys. Each of the eight canonical report pages has a Platform slicer immediately before Division, including an adjusted mobile layout.
 
 `DimPlatform[id] → DimDivision[platformId] → FactTimesheet[divisionId]` uses single-direction one-to-many filtering. Existing Division-aware measures inherit the Platform filter. Staffing follows DimDivision; project/employee-derived measures retain their established Division filtering. User assignment bridges are deliberately absent from the fact model. Platform-filtered roster capacity is blank because allocation is undefined.
 
@@ -153,7 +153,7 @@ Authentication, cache TTL, refresh clock, manual-refresh help/buttons and existi
 | Validation/access | `server/src/utils/{platformAssignments,projectFields,timesheetValidation}.js`, `server/src/repositories/TimesheetRepository.js` |
 | Reporting/exports | `server/src/services/{reporting,reportExport,powerBiService}.js`, `scripts/export-to-sharepoint-csv.js` |
 | UI | `client/src/components/ui/MultiSelectPicker.jsx`, `ProjectTaskPicker.jsx`, `layout/Sidebar.jsx`, `client/src/App.jsx`, `client/src/pages/admin/{SimpleListManager,Users,Projects}.jsx`, `client/src/pages/Reports.jsx` |
-| Power BI | `powerbi/GCC_Requirements/` model and eight page definitions, `powerbi/legacy/GCC_Timesheet_Model/`, `powerbi/legacy/GCC_Timesheet_Model.bim`, `powerbi/legacy/queries/{Platforms,Divisions,Projects,Timesheets}.pq` |
+| Power BI | `powerbi/GCC_Dashboard/` model and eight page definitions, `powerbi/legacy/GCC_Timesheet_Model/`, `powerbi/legacy/GCC_Timesheet_Model.bim`, `powerbi/legacy/queries/{Platforms,Divisions,Projects,Timesheets}.pq` |
 | Tests/evidence | `scripts/platforms.test.js`, `scripts/permission-matrix.test.js`, `scripts/powerbi-requirements.test.js`, `scripts/powerbi-fixture.json`, `scripts/test-powerbi-model.ps1`, `powerbi/validation/schema-validation.json`, `docs/RESPONSIVE_AUDIT.md` |
 
 ## Verification and rollout

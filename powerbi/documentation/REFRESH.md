@@ -1,4 +1,4 @@
-# Power BI Refresh Architecture — GCC Timesheet
+# Power BI Refresh Architecture — GCC Timesheet App
 
 > **Dashboard Version:** 1.1.0
 > **Last Updated:** 2026-09-27
@@ -7,7 +7,7 @@
 
 ## Refresh Overview
 
-The GCC Timesheet Power BI solution uses **Import mode** — Power BI pulls data from the REST API into its in-memory model. This provides the best query performance for dashboards while requiring periodic refreshes to reflect new data.
+The GCC Dashboard Power BI solution uses **Import mode** — Power BI pulls data from the REST API into its in-memory model. This provides the best query performance for dashboards while requiring periodic refreshes to reflect new data.
 
 ---
 
@@ -48,7 +48,7 @@ The GCC Timesheet Power BI solution uses **Import mode** — Power BI pulls data
    - **Username:** `powerbi`
    - **Password:** `<YOUR_POWERBI_API_KEY>`
 4. Enable scheduled refresh and set frequency
-5. If the GCC Timesheet server is on a private network, configure an **On-Premises Data Gateway**
+5. If the GCC Timesheet App server is on a private network, configure an **On-Premises Data Gateway**
 
 ### Power BI Desktop — Limitations
 
@@ -89,7 +89,7 @@ The original requirement targets approximately 1-minute refresh intervals. Here 
 
 ### Recommendation
 
-For the GCC Timesheet architecture (SQLite + REST API + Import mode):
+For the GCC Timesheet App architecture (SQLite + REST API + Import mode):
 
 1. **Configure scheduled refresh** at 30-minute intervals in Power BI Service
 2. **Use manual refresh** for immediate data needs
@@ -171,4 +171,4 @@ Before confirming refresh works correctly:
 
 ---
 
-*GCC Timesheet Power BI Refresh Architecture v1.1.0*
+*GCC Dashboard Power BI Refresh Architecture v1.1.0*

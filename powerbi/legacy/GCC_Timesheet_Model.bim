@@ -1434,7 +1434,7 @@
       },
       {
         "name": "_Measures",
-        "description": "GCC Timesheet enterprise measure table.",
+        "description": "GCC Timesheet App enterprise measure table.",
         "lineageTag": "2bb830ec-4f5d-4361-b48f-760c4eacb8ad",
         "modifiedTime": "2026-09-27T15:48:05.273333",
         "structureModifiedTime": "2026-09-27T15:48:18.653333",
@@ -1482,7 +1482,7 @@
             "refreshedTime": "2026-09-27T15:48:28.056667",
             "source": {
               "type": "calculated",
-              "expression": "DATATABLE(\"Measure Group\", STRING, {{\"GCC Timesheet Measures\"}})"
+              "expression": "DATATABLE(\"Measure Group\", STRING, {{\"GCC Timesheet App Measures\"}})"
             }
           }
         ],

@@ -1,6 +1,6 @@
-# GCC Requirements: Power BI editing and maintenance guide
+# GCC Dashboard: Power BI editing and maintenance guide
 
-Updated: 20 October 2026. For GCC Requirements Power BI v2.2.1 in this repository.
+Updated: 20 October 2026. For GCC Dashboard Power BI v2.2.1 in this repository.
 
 If Desktop reports incompatible linguistic metadata, use the corrected v2.2.1 package or follow the [specific source repair](TROUBLESHOOTING.md#incompatible-linguistic-metadata). Dashboard release versions and Power BI's internal format versions are independent.
 
@@ -26,19 +26,19 @@ Use this guide to change the source URL, update connection credentials, refresh 
 Open:
 
 ```text
-C:\gcc_ts\powerbi\GCC_Requirements\GCC_Requirements_v2.2.1.pbip
+C:\gcc_ts\powerbi\GCC_Dashboard\GCC_Dashboard_v2.2.2.pbip
 ```
 
 The `.pbip` is the entry point. Keep it together with both sibling folders:
 
 ```text
-GCC_Requirements/
-├── GCC_Requirements_v2.2.1.pbip
-├── GCC_Requirements.Report/
-└── GCC_Requirements.SemanticModel/
+GCC_Dashboard/
+├── GCC_Dashboard_v2.2.2.pbip
+├── GCC_Dashboard.Report/
+└── GCC_Dashboard.SemanticModel/
 ```
 
-Save your current Desktop edits before changing anything. To make a backup, save and close Desktop, then copy the entire `GCC_Requirements` folder. Copying only the small `.pbip` file does not copy the report and model definitions. A copied project may also contain cached business data; keep the backup in an appropriate location.
+Save your current Desktop edits before changing anything. To make a backup, save and close Desktop, then copy the entire `GCC_Dashboard` folder. Copying only the small `.pbip` file does not copy the report and model definitions. A copied project may also contain cached business data; keep the backup in an appropriate location.
 
 This guide describes the PBIP project above. A separately exported `.pbix` is a separate copy; editing it will not automatically update this project's source files.
 
@@ -212,10 +212,10 @@ Prefer Desktop for ordinary edits. If editing files directly, save and close Des
 
 | File or folder | Purpose |
 | --- | --- |
-| `GCC_Requirements/GCC_Requirements.SemanticModel/definition/expressions.tmdl` | Source parameters, shared API function and hour-category map |
-| `GCC_Requirements/GCC_Requirements.SemanticModel/definition/tables/_Measures.tmdl` | DAX measures |
-| `GCC_Requirements/GCC_Requirements.SemanticModel/definition/relationships.tmdl` | Model relationships |
-| `GCC_Requirements/GCC_Requirements.Report/definition/pages/` | Report page and visual definitions |
+| `GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/expressions.tmdl` | Source parameters, shared API function and hour-category map |
+| `GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/tables/_Measures.tmdl` | DAX measures |
+| `GCC_Dashboard/GCC_Dashboard.SemanticModel/definition/relationships.tmdl` | Model relationships |
+| `GCC_Dashboard/GCC_Dashboard.Report/definition/pages/` | Report page and visual definitions |
 | Each visual's `mobile.json` | Phone layout and formatting |
 | [POWERBI.md](POWERBI.md) | Detailed model, query, measure and visual reference |
 

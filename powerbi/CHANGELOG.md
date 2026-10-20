@@ -1,9 +1,16 @@
-# GCC Timesheet Power BI Changelog
+# GCC Dashboard Power BI Changelog
 
 All notable changes to the Power BI Dashboard are documented in this file.
 This project uses [Semantic Versioning](https://semver.org/).
 
 ---
+
+## [2.2.2] — 2026-10-20
+
+- Source prerelease of the renamed GCC Dashboard Power BI project, with `GCC_Dashboard_v2.2.2.pbip` and matching Report/SemanticModel siblings.
+- Update source, guide, tool, API diagnostic, and package references to the new names; preserve DAX, lineage IDs, and internal format versions.
+- Packages are exported from the committed release tree and exclude unrelated local Desktop edits, local caches/credentials, and the historical database backup.
+- Requires reporting API v2.0.0 and GCC Timesheet App v1.29.0+. Native UI/phone and business-input caveats remain; this is not a new production refresh certification.
 
 ## [2.2.1] — 2026-10-20
 
@@ -15,14 +22,14 @@ Distributed as a **source prerelease** pending native Desktop canvas/phone previ
 - Updated Platform input-readiness guidance and repaired two native-test fixture rows to include the required Platform/Division fields.
 
 ### Repository organization
-- Renamed the entry point to `GCC_Requirements_v2.2.1.pbip`; the filename suffix follows the dashboard release and is checked against the reporting API version response.
+- Renamed the entry point to `GCC_Dashboard_v2.2.1.pbip`; the filename suffix follows the dashboard release and is checked against the reporting API version response.
 - Grouped the complete reference and user guide under `documentation/`, and older standalone model/query/theme/assets under `legacy/`. Updated links, QA preview naming and documentation generation; report/model definitions are retained.
 - Post-reinstall native testing verified refresh, all nine desktop pages and the exercised filters. Phone inspection remains partial; see [the retest](validation/NATIVE_RETEST_2026-10-20.md).
 
 ### Validation and compatibility
 - All 70 DAX measures and 39 native-engine scenarios pass; 254 report schema documents validate. All 121 saved phone placements pass geometry checks.
 - Live snapshot checks passed 12 API reconciliations, 10 measure contexts and 94 visual field queries. Five web report views passed 140 responsive checks.
-- Requires GCC Timesheet v1.29.0+ and reporting API v2.0.0, as for v2.2.0. The application release version is unchanged.
+- Requires GCC Timesheet App v1.29.0+ and reporting API v2.0.0, as for v2.2.0. The application release version is unchanged.
 - Source-only GitHub package excludes local caches and credentials. Category mappings and missing register/planning inputs remain business prerequisites; publication and scheduled refresh are not configured by this release.
 - See [release verification](validation/RELEASE_2.2.1.md) for the final native preview result and coverage limits.
 
@@ -90,7 +97,7 @@ Distributed as a **source prerelease** pending native Desktop canvas/phone previ
 ## [1.1.1] — 2026-10-06
 
 ### Changed
-- Redesigned the GCC Requirements overview for managers with compact filters, larger KPI values, taller charts, clearer input guidance and a compact refresh footer.
+- Redesigned the GCC Dashboard overview for managers with compact filters, larger KPI values, taller charts, clearer input guidance and a compact refresh footer.
 - Corrected chart titles to match their measures; ranked division hours in a horizontal bar chart and added on-time delivery to the division table.
 - Made Management overview the opening page, added descriptive alt text and logical keyboard order, and updated the overview phone layout and its generator.
 - Preserved KPI calculations, source connections, reporting-month selection and all eight supporting pages.
@@ -166,7 +173,7 @@ Distributed as a **source prerelease** pending native Desktop canvas/phone previ
 ### API Compatibility
 
 - **Power BI API Version:** v1.x
-- **GCC Timesheet Application:** v1.3.0+
+- **GCC Timesheet App:** v1.3.0+
 
 ### Known Limitations
 

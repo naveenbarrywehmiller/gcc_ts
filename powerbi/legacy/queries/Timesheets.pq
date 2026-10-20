@@ -1,5 +1,5 @@
 // Power Query M — Timesheets (FactTimesheet)
-// GCC Timesheet Power BI Dashboard v1.1.0
+// GCC Dashboard Power BI Dashboard v1.1.0
 //
 // Instructions:
 //   1. In Power BI Desktop → Get Data → Blank Query

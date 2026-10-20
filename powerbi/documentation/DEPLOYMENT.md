@@ -1,4 +1,4 @@
-# Power BI Deployment Guide — GCC Timesheet
+# Power BI Deployment Guide — GCC Timesheet App
 
 > **Dashboard Version:** 1.1.0
 > **Last Updated:** 2026-09-27
@@ -54,7 +54,7 @@ services:
 ```
 
 ### What Docker does:
-- ✅ Runs the GCC Timesheet application
+- ✅ Runs the GCC Timesheet App
 - ✅ Serves the Power BI REST API on the same port
 - ✅ Stores the SQLite database in a Docker volume
 - ✅ Exposes port 3001 for all API traffic
@@ -192,7 +192,7 @@ In Power BI Service → Dataset Settings:
 
 ### On-Premises Data Gateway
 
-Required if the GCC Timesheet server is **not** accessible from the public internet.
+Required if the GCC Timesheet App server is **not** accessible from the public internet.
 
 1. Download and install **On-Premises Data Gateway** on a machine with network access to the server
 2. Sign in with your Power BI account
@@ -220,7 +220,7 @@ Required if the GCC Timesheet server is **not** accessible from the public inter
 
 ```
 Tag: v1.11.2
-Title: GCC Timesheet Power BI Dashboard v1.1.0
+Title: GCC Dashboard Power BI Dashboard v1.1.0
 
 Artifacts:
   - GCC_Timesheet_Model.bim
@@ -268,4 +268,4 @@ Before releasing a Power BI version:
 
 ---
 
-*GCC Timesheet Power BI Deployment Guide v1.1.0*
+*GCC Dashboard Power BI Deployment Guide v1.1.0*

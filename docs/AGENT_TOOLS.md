@@ -1,6 +1,6 @@
 # Development skills and code maps
 
-GCC TimeSheet uses selected workflows from the three repositories below as development tools. Skills live in `.agents/skills/` and load when relevant. Graphify runs separately from the React/Express application. No npm runtime dependency is added.
+GCC Timesheet App uses selected workflows from the three repositories below as development tools. Skills live in `.agents/skills/` and load when relevant. Graphify runs separately from the React/Express application. No npm runtime dependency is added.
 
 ## Included tools
 
@@ -61,7 +61,7 @@ Imported on October 20, 2026:
 | Agent Skills | [`aeac41d4d005999432bb7312f7ff06383a91d59d`](https://github.com/addyosmani/agent-skills/tree/aeac41d4d005999432bb7312f7ff06383a91d59d) | [MIT](../.agents/licenses/agent-skills/LICENSE) |
 | Graphify CLI/skill 0.9.92 | [`86c57be8204673c2a1b9849a3292a7dd3ab373d8`](https://github.com/Graphify-Labs/graphify/tree/86c57be8204673c2a1b9849a3292a7dd3ab373d8), PyPI `graphifyy==0.9.92` | [Apache-2.0](../.agents/licenses/graphify/LICENSE), [original MIT](../.agents/licenses/graphify/LICENSE-MIT), [NOTICE](../.agents/licenses/graphify/NOTICE) |
 
-Skill contents and references are vendored from those sources; Graphify's Codex skill is stored under `.agents/skills/graphify/` alongside the other project skills. Project-specific overrides live in `AGENTS.md`, not in upstream skill text. These third-party licenses apply to the imported material; GCC TimeSheet's existing usage terms remain in its README.
+Skill contents and references are vendored from those sources; Graphify's Codex skill is stored under `.agents/skills/graphify/` alongside the other project skills. Project-specific overrides live in `AGENTS.md`, not in upstream skill text. These third-party licenses apply to the imported material; GCC Timesheet App's existing usage terms remain in its README.
 
 To update, review an explicit upstream revision, replace the selected skill directories and their referenced checklists together, retain license notices, update the table and CLI pin, then run a build and representative queries. Do not rerun a general plugin installer over `AGENTS.md`: an installer can add hooks and overwrite the project-specific graph guidance.
 

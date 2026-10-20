@@ -1,4 +1,4 @@
-# Power BI Development Guide — GCC Timesheet
+# Power BI Development Guide — GCC Timesheet App
 
 > Dashboard Version: 1.1.0
 > API Compatibility: v1.x
@@ -8,7 +8,7 @@
 
 ## Purpose
 
-This guide explains how another engineer can maintain and extend the GCC Timesheet Power BI dashboard without breaking the reporting API contract or the application runtime.
+This guide explains how another engineer can maintain and extend the GCC Dashboard Power BI dashboard without breaking the reporting API contract or the application runtime.
 
 The design is intentionally conservative:
 - Power BI remains an external client
@@ -24,10 +24,10 @@ The design is intentionally conservative:
 powerbi/
 ├── README.md
 ├── CHANGELOG.md
-├── GCC_Requirements/
-│   ├── GCC_Requirements_v2.2.1.pbip
-│   ├── GCC_Requirements.Report/
-│   └── GCC_Requirements.SemanticModel/
+├── GCC_Dashboard/
+│   ├── GCC_Dashboard_v2.2.2.pbip
+│   ├── GCC_Dashboard.Report/
+│   └── GCC_Dashboard.SemanticModel/
 ├── documentation/
 │   ├── POWERBI.md
 │   ├── POWERBI_USER_GUIDE.md

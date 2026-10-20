@@ -1,14 +1,14 @@
-# GCC TimeSheet
+# GCC Timesheet App
 
 Employee time tracking, team approvals, administration, and reporting in one application. Built with React and Express, backed by SQLite, with optional Microsoft 365 integrations and a companion Power BI project.
 
-[Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](API_REFERENCE.md) · [Changelog](CHANGELOG.md)
+[Documentation](docs/README.md) · [Repository map](docs/REPOSITORY_STRUCTURE.md) · [Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](docs/API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
-**Releases:** [Application v1.31.5](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/v1.31.5) · [Power BI v2.2.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/powerbi-v2.2.0) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/powerbi-v2.2.0/gcc-requirements-powerbi-v2.2.0.zip))
+**Releases:** [GCC Timesheet App v1.31.6](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-app-v1.31.6) · [GCC Dashboard Power BI v2.2.2](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-dashboard-powerbi-v2.2.2) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-dashboard-powerbi-v2.2.2/gcc-dashboard-powerbi-v2.2.2.zip)) · [GCC Timesheet Linux Admin v1.1.1](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.1.1)
 
-**Current source versions:** Application v1.31.5 · Power BI v2.2.0 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing data.
+**Current source versions:** GCC Timesheet App v1.31.6 · GCC Dashboard Power BI v2.2.2 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing data.
 
-**Ubuntu server administration:** [Interactive installer and maintenance guide](deploy/ubuntu/README.md) — run `timesheet` for Docker setup, Avahi, ports, backups, scheduled updates, pause/resume controls and diagnostics. Administrator releases use separate `timesheet-admin-v*` tags.
+**GCC Timesheet Linux Admin:** [Interactive installer and maintenance guide](deploy/linux-admin/README.md) — run `timesheet` for Docker setup, Avahi, ports, backups, scheduled updates, pause/resume controls and diagnostics. New administrator releases use `gcc-timesheet-linux-admin-v*` tags; historical tags remain compatible.
 
 **Frontend development:** All UI changes must follow the permanent [Responsive Web Design Rules](RESPONSIVE_WEB_DESIGN_RULES.md). The [responsive audit](docs/RESPONSIVE_AUDIT.md) records the current implementation and validation baseline.
 
@@ -166,7 +166,7 @@ The supplied Dockerfile does not forward SSO build arguments. Adding `VITE_*` va
 
 ### SharePoint and Power Automate
 
-Enable `ENABLE_SHAREPOINT_SYNC` or `ENABLE_POWER_AUTOMATE` only after configuring the corresponding credentials, site/flow URL, and callback secret. See [SharePoint setup](SHAREPOINT_SETUP.md) and [Power Automate setup](POWER_AUTOMATE_SETUP.md). Review older examples against the current environment table and implemented routes.
+Enable `ENABLE_SHAREPOINT_SYNC` or `ENABLE_POWER_AUTOMATE` only after configuring the corresponding credentials, site/flow URL, and callback secret. See [SharePoint setup](docs/integrations/SHAREPOINT_SETUP.md) and [Power Automate setup](docs/integrations/POWER_AUTOMATE_SETUP.md). Review older examples against the current environment table and implemented routes.
 
 ## Docker deployment
 
@@ -200,7 +200,7 @@ docker compose -f docker-compose.yml -f compose.registry.yml pull
 docker compose -f docker-compose.yml -f compose.registry.yml up -d --no-build
 ```
 
-GHCR images support `linux/amd64` and `linux/arm64`. For controlled upgrades, replace `latest` with an available version tag or a verified digest. Registry authentication is required if the package is private; see [GitHub help](.github/HELP.md#container-registries).
+GHCR images support `linux/amd64` and `linux/arm64`. For controlled upgrades, replace `latest` with an available version tag or a verified digest. Registry authentication is required if the package is private; see [GitHub help](.github/HELP.md#container-registry-configuration).
 
 ### Health and HTTPS
 
@@ -251,15 +251,15 @@ For a local production run, build first and set `NODE_ENV=production` in `server
 | Administration | `/api/audit`, `/api/import`, `/api/admin-ownership`, `/api/division-updates`, `/api/error-logs` |
 | System | `/api/system/maintenance`, `/database/download`, `/database/restore-upload`, `/tokens` |
 
-Paths after the first entry in a row share that row's prefix. See [API_REFERENCE.md](API_REFERENCE.md) for expanded examples; route handlers in `server/src/routes/` are authoritative where older examples differ.
+Paths after the first entry in a row share that row's prefix. See [docs/API_REFERENCE.md](docs/API_REFERENCE.md) for expanded examples; route handlers in `server/src/routes/` are authoritative where older examples differ.
 
 ## GitHub builds and releases
 
-The Docker workflow builds both supported architectures on pull requests without publishing. Pushes to `main`, `v*` tag pushes, and manual dispatch publish GHCR images. Optional Docker Hub publishing copies the completed multi-platform image by digest, without rebuilding.
+The Docker workflow builds both supported architectures on pull requests without publishing. Pushes to `main`, `gcc-timesheet-app-v*` and legacy `v*` tag pushes, and manual dispatch publish GHCR images. Optional Docker Hub publishing copies the completed multi-platform image by digest, without rebuilding.
 
 Release Please manages release pull requests, version updates, tags, and changelog entries. Its default `GITHUB_TOKEN` cannot be assumed to trigger Docker builds from the tag it creates. See the [GitHub help guide](.github/HELP.md) for repository permissions, registry secrets, tag behavior, release recovery, and troubleshooting.
 
-The current workflows build images but do not run `npm test` or frontend lint as an automatic merge gate. Run the validation commands above before merging; configure required checks/branch protection in repository settings if your team requires enforced gates.
+The repository validation workflow runs mapping checks, application tests, frontend lint and the production build. Configure its required-check policy in GitHub branch protection if enforced merge gates are needed.
 
 ## Project map and documentation
 
@@ -269,20 +269,22 @@ server/src/routes/      Express endpoints
 server/src/config/      Environment, SQLite, migrations, seed, backup/restore
 server/src/middleware/  Authentication, permissions, maintenance, errors
 scripts/                Regression tests and Power BI generation/validation
-powerbi/                Power BI report, semantic model, and documentation
-.github/workflows/      Docker publishing and Release Please
+powerbi/GCC_Dashboard/  GCC Dashboard Power BI report and semantic model
+deploy/linux-admin/     GCC Timesheet Linux Admin source and tests
+docs/                   Reference, integrations, archive, and validation guides
+.github/workflows/      Validation, Docker, Release Please, and Linux admin
 ```
 
 | Guide | Use it for |
 | --- | --- |
 | [GitHub help](.github/HELP.md) | Actions, releases, registries, support, and troubleshooting |
-| [API reference](API_REFERENCE.md) | Endpoint usage and examples |
-| [Architecture](ARCHITECTURE.md) | Application structure and design |
-| [Deployment notes](DEPLOYMENT_NOTES.md) | Infrastructure history and deployment fixes |
-| [Migration guide](MIGRATION.md) | Migration guidance |
+| [API reference](docs/API_REFERENCE.md) | Endpoint usage and examples |
+| [Architecture](docs/ARCHITECTURE.md) | Application structure and design |
+| [Deployment notes](docs/DEPLOYMENT_NOTES.md) | Infrastructure history and deployment fixes |
+| [Migration guide](docs/archive/M365_MIGRATION.md) | Migration guidance |
 | [Power BI API integration](docs/POWERBI.md) | Read-only feed configuration |
 | [Power BI project guide](powerbi/documentation/POWERBI.md) | Requirements, model, queries, and report setup |
-| [Power BI project README](powerbi/GCC_Requirements/README.md) | Opening and configuring the report project |
+| [Power BI project README](powerbi/GCC_Dashboard/README.md) | Opening and configuring the report project |
 | [Power BI validation](powerbi/validation/README.md) | Model validation prerequisites and evidence |
 | [Changelog](CHANGELOG.md) | Release history |
 
@@ -298,7 +300,7 @@ Internal use only. This repository does not provide an open-source license grant
 
 ### Clean setup and factory reset
 
-Fresh installations ship no business/test records. Existing deployments are preserved during upgrades; clearing an existing installation is an explicit factory reset. In the Ubuntu administrator, menu **33** warns before resetting and requires `FACTORY RESET`. It creates a full safety snapshot, clears application data/uploads/logs, recreates only the factory System Admin, pauses automatic jobs and leaves web maintenance enabled. Menu **32** controls automatic startup after OS reboot (enabled by default). See [the Linux operations guide](deploy/ubuntu/README.md).
+Fresh installations ship no business/test records. Existing deployments are preserved during upgrades; clearing an existing installation is an explicit factory reset. In the Ubuntu administrator, menu **33** warns before resetting and requires `FACTORY RESET`. It creates a full safety snapshot, clears application data/uploads/logs, recreates only the factory System Admin, pauses automatic jobs and leaves web maintenance enabled. Menu **32** controls automatic startup after OS reboot (enabled by default). See [the Linux operations guide](deploy/linux-admin/README.md).
 
 For an offline local database reset, stop all server workers first, then run `npm --prefix server run factory-reset -- --confirm`. A timestamped safety database is required and saved to `server/backup` before replacement. This local command resets the database; the Linux menu additionally resets uploaded files and application logs. The factory account uses an ID above all previous users so old sessions cannot become the new administrator. Sign in through the maintenance page to reopen access.
 

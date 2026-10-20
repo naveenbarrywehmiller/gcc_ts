@@ -1,16 +1,16 @@
-# React + Vite
+# GCC Timesheet App — frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React pages, shared components, authentication contexts, and API clients for GCC Timesheet App. Run commands from the repository root:
 
-Currently, two official plugins are available:
+```sh
+npm --prefix client ci
+npm run dev:client
+npm run lint
+npm run build
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Vite serves development traffic on port 5173 and proxies API requests to port 3001. Start the API separately with `npm run dev:server`. Copy [the client environment example](.env.example) to `client/.env` for optional public Microsoft sign-in settings; keep server secrets in `server/.env`.
 
-## React Compiler
+The production build writes `client/dist/`, served by Express or copied into the application image. Imports also use the repository's [shared policies](../shared/).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Follow the [responsive rules](../RESPONSIVE_WEB_DESIGN_RULES.md) and [28-viewport checklist](../docs/CHROMIUM_LAYOUT_TEST_CHECKLIST.md) for interface changes. See [the main README](../README.md) for setup and [GitHub Help](../.github/HELP.md) for builds and releases.
