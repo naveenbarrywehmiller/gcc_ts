@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.6](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.5...v1.31.6) (2026-10-20)
+
+
+### Bug Fixes
+
+* **powerbi:** repair Desktop metadata and prepare v2.2.1 ([744ed5a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/744ed5a47f833aa3163f854584f09d8d08cc70e8))
+
 ## [1.31.5](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.4...v1.31.5) (2026-10-20)
 
 ### Bug Fixes
