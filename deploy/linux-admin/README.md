@@ -1,6 +1,6 @@
-# GCC Timesheet Linux Admin v1.1.0 — Ubuntu setup and operations
+# GCC Timesheet Linux Admin v1.1.1 — Ubuntu setup and operations
 
-**Release source:** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/timesheet-admin-v1.1.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/timesheet-admin-v1.1.0/install.sh) · [Complete script reference](SCRIPTS.md)
+**Release source:** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.1.1) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.1.1/install.sh) · [Complete script reference](SCRIPTS.md)
 
 On your **Ubuntu VM**, run:
 
@@ -8,9 +8,9 @@ On your **Ubuntu VM**, run:
 sudo apt update
 sudo apt install -y curl ca-certificates
 curl -fL --retry 3 \
-  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/timesheet-admin-v1.1.0/install.sh \
+  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.1.1/install.sh \
   -o /tmp/timesheet-install.sh
-sudo bash /tmp/timesheet-install.sh timesheet-admin-v1.1.0
+sudo bash /tmp/timesheet-install.sh gcc-timesheet-linux-admin-v1.1.1
 timesheet
 ```
 
@@ -24,7 +24,7 @@ The tool reads the existing system hostname and timezone. It does not run `hostn
 
 Ubuntu Server **24.04 or 26.04 LTS**, Python 3.12+, a sudo account and outbound HTTPS access are required. Python and basic download tools are installed by the bootstrap. A starting VM size is 2 vCPU, 4 GB RAM and 60 GB SSD; actual capacity depends on usage. IT should provide a DHCP reservation/static IP and allow access to Ubuntu mirrors, Docker's package repository, GitHub, GHCR and their download endpoints. Configure APT/Docker proxies through IT if required.
 
-**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **8** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle timesheet-admin-v1.1.0`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
+**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **8** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.1.1`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
 
 ## First installation, in order
 

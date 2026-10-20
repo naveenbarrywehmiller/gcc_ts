@@ -5,6 +5,13 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.2.2] — 2026-10-20
+
+- Source prerelease of the renamed GCC Dashboard Power BI project, with `GCC_Dashboard_v2.2.2.pbip` and matching Report/SemanticModel siblings.
+- Update source, guide, tool, API diagnostic, and package references to the new names; preserve DAX, lineage IDs, and internal format versions.
+- Packages are exported from the committed release tree and exclude unrelated local Desktop edits, local caches/credentials, and the historical database backup.
+- Requires reporting API v2.0.0 and GCC Timesheet App v1.29.0+. Native UI/phone and business-input caveats remain; this is not a new production refresh certification.
+
 ## [2.2.1] — 2026-10-20
 
 Distributed as a **source prerelease** pending native Desktop canvas/phone preview verification.

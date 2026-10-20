@@ -47,7 +47,7 @@ async function get(endpoint, identity='key', method='GET') {
 test('staffing and planned vacation reads retain authentication, division scope, and read-only rules',async()=>{
   const version=(await get('version')).body;
   assert.equal(version.apiVersion,'2.0.0');
-  assert.equal(version.dashboardVersion,'2.2.1');
+  assert.equal(version.dashboardVersion,'2.2.2');
   for(const endpoint of ['staffing','planned-vacations']) {
     assert.equal((await get(endpoint,null)).status,401);
     assert.equal((await get(endpoint,employee)).status,403);

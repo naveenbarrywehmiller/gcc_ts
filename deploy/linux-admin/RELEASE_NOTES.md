@@ -1,10 +1,10 @@
-GCC Timesheet App Administrator v1.1.0
+# GCC Timesheet Linux Admin v1.1.1
 
-- Clean setup: only the initial System Admin, no sample business data.
-- Default reboot startup via Docker always policy; menu 32 / autostart enable|disable.
-- Factory reset with explicit warning, required automatic backup, failure recovery, paused jobs and factory System Admin; menu 33 / factory-reset --confirm.
-- Backup/restore/reset automatically enter persistent web maintenance. Only System Admin web login releases access after operations finish.
-- Backup menus/status print absolute snapshot and database locations.
-- Requires application v1.30.0 or later; the archive format stays at 1, but restored app images must support the new maintenance/health contract.
+- Publish the Linux administrator under the GCC Timesheet Linux Admin name with the canonical `gcc-timesheet-linux-admin-v1.1.1` tag and matching tar/ZIP filenames.
+- Support discovery/validation of canonical and legacy administrator release tags; keep the `timesheet` command, installed paths, data, backups, configuration, and schedules compatible.
+- Update source/workflow/documentation paths to `deploy/linux-admin/` and regenerate the complete script reference.
+- Keep the existing Ubuntu 24.04/26.04, application v1.30.0+, maintenance, backup/restore, and factory-reset contracts unchanged.
 
-Install with `sudo bash install.sh timesheet-admin-v1.1.0`, then run `timesheet`. See the included README.md and complete SCRIPTS.md reference. Application v1.30.0 is released separately.
+Install with `sudo bash install.sh gcc-timesheet-linux-admin-v1.1.1`, then run `timesheet`. Existing older builds that only discover legacy `timesheet-admin-v*` releases need this bootstrap once to enter the canonical release stream. Their application data and configuration are preserved.
+
+The release workflow runs syntax/unit/package checks, builds the matching app revision, and exercises installation, Nginx, ports, timers, backup, restore, and reset on a disposable Ubuntu runner before publishing.

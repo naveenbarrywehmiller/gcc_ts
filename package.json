@@ -1,6 +1,6 @@
 {
   "name": "gcc-timesheet-app",
-  "version": "1.31.5",
+  "version": "1.31.6",
   "description": "GCC Timesheet App - React client and Express API",
   "scripts": {
     "install:server": "cd server && npm install",

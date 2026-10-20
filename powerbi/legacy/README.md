@@ -1,4 +1,4 @@
-> Legacy compatibility assets. Open the [current versioned requirements report](../GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip) for the active dashboard. The historical setup below describes this separate model.
+> Legacy compatibility assets. Open the [current versioned requirements report](../GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip) for the active dashboard. The historical setup below describes this separate model.
 
 # GCC Timesheet App — Power BI Dashboard
 
@@ -48,7 +48,7 @@ Power BI connects **exclusively** via the REST API — never directly to the dat
 
 ## Quick Start
 
-The requirements-driven report is available at **[GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip](../GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip)**. Read the **[complete POWERBI.md guide](../documentation/POWERBI.md)** for connection steps, every DAX formula and Power Query function, table/relationship definitions, every visual, missing inputs and troubleshooting. Its saved TMDL model has 17 tables and 70 measures, with nine native PBIR pages. It requires reporting API v2.0.0 and application v1.29.0+. Version 2.2.1 fixes internal format metadata and phone-filter overlap; see [release verification](../validation/RELEASE_2.2.1.md). The original model and PBIX described below remain separate compatibility artifacts; their header version and setup steps do not describe the new requirements project.
+The requirements-driven report is available at **[GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip](../GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip)**. Read the **[complete POWERBI.md guide](../documentation/POWERBI.md)** for connection steps, every DAX formula and Power Query function, table/relationship definitions, every visual, missing inputs and troubleshooting. Its saved TMDL model has 17 tables and 70 measures, with nine native PBIR pages. It requires reporting API v2.0.0 and application v1.29.0+. Version 2.2.1 fixes internal format metadata and phone-filter overlap; see [release verification](../validation/RELEASE_2.2.1.md). The original model and PBIX described below remain separate compatibility artifacts; their header version and setup steps do not describe the new requirements project.
 
 1. **Generate API Key** on the server:
    ```bash

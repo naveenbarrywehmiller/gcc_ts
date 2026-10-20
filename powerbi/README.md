@@ -1,8 +1,8 @@
-# GCC Dashboard Power BI — v2.2.1
+# GCC Dashboard Power BI — v2.2.2
 
-Open **[GCC_Dashboard_v2.2.1.pbip](GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip)** in Power BI Desktop. Keep the entire `GCC_Dashboard` folder together: the PBIP references its sibling Report and SemanticModel folders.
+Open **[GCC_Dashboard_v2.2.2.pbip](GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip)** in Power BI Desktop. Keep the entire `GCC_Dashboard` folder together: the PBIP references its sibling Report and SemanticModel folders.
 
-The Power BI dashboard version is **2.2.1**, independent of application version **1.31.5** and reporting API version **2.0.0**. Requires GCC Timesheet App **v1.29.0+**.
+The Power BI dashboard version is **2.2.2**, independent of application version **1.31.6** and reporting API version **2.0.0**. Requires GCC Timesheet App **v1.29.0+**.
 
 | Location | Contents |
 |---|---|
@@ -19,7 +19,7 @@ powerbi/
   README.md
   CHANGELOG.md
   GCC_Dashboard/
-    GCC_Dashboard_v2.2.1.pbip
+    GCC_Dashboard_v2.2.2.pbip
     GCC_Dashboard.Report/
     GCC_Dashboard.SemanticModel/
   documentation/
@@ -36,4 +36,4 @@ Open the versioned PBIP after updating an existing checkout; an already-open Des
 
 The filename suffix follows the **dashboard** release. When releasing a new dashboard version, rename this single PBIP entry point and update the API's `dashboardVersion` together. The filename/link regression test detects mismatches. Internal report/linguistic format versions remain `2.0.0`.
 
-The reinstalled Desktop successfully refreshed and rendered all nine desktop pages. Native phone testing was interrupted after opening Input readiness; saved phone geometry checks cover all 121 placements. See [the retest record](validation/NATIVE_RETEST_2026-10-20.md) and [release verification](validation/RELEASE_2.2.1.md). Utilization still needs the unmapped category approved; optional quality/improvement registers and project planning inputs remain business prerequisites.
+The reinstalled Desktop successfully refreshed and rendered all nine desktop pages. Native phone testing was interrupted after opening Input readiness; saved phone geometry checks cover all 121 placements. See [the retest record](validation/NATIVE_RETEST_2026-10-20.md) and [release verification](validation/RELEASE_2.2.2.md). Utilization still needs the unmapped category approved; optional quality/improvement registers and project planning inputs remain business prerequisites.

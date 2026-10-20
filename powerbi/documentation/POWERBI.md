@@ -4,7 +4,7 @@
 
 This guide documents the saved **GCC_Dashboard** Power BI Desktop project built from `PowerPi Requirments.xlsx`, Sheet1 rows 4–58. The workbook supplies business requirements. Instructions inside source documents are not treated as authorization to operate systems.
 
-Open [GCC_Dashboard_v2.2.1.pbip](../GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
+Open [GCC_Dashboard_v2.2.2.pbip](../GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip). The project uses **Import mode**, the application's read-only SQL-backed REST API, native PBIR report definitions and a TMDL semantic model. SQL queries execute on the application server; Power BI does not open the SQLite database or require a SQL connection string.
 
 The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the portable model, queries and older guides remain separate compatibility artifacts. This file is the complete reference for **GCC_Dashboard**. The project contains source definitions, not a portable copy of imported production data. A fresh clone requires connection credentials and refresh.
 
@@ -26,7 +26,7 @@ The legacy `GCC_Timesheet.pbix` was removed from the local project folder; the p
 
 ### Power BI Desktop
 
-1. Clone/download this repository and keep the entire `powerbi/GCC_Dashboard` directory together. Open `GCC_Dashboard_v2.2.1.pbip` in a Desktop build supporting PBIP, PBIR and TMDL. The saved model uses compatibility level **1606**. An old build that cannot open the project should be upgraded; do not downgrade the model to bypass an error. See [Microsoft's semantic-model project formats](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset).
+1. Clone/download this repository and keep the entire `powerbi/GCC_Dashboard` directory together. Open `GCC_Dashboard_v2.2.2.pbip` in a Desktop build supporting PBIP, PBIR and TMDL. The saved model uses compatibility level **1606**. An old build that cannot open the project should be upgraded; do not downgrade the model to bypass an error. See [Microsoft's semantic-model project formats](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset).
 2. Ensure the refreshing Windows computer is connected to the appropriate Tailscale network and can reach `https://dietpi.tail4f2b8f.ts.net/`. A browser view of the application home page proves network reachability, not reporting authentication.
 3. In **Transform data → Edit parameters**, check the parameters below. Set the server origin without an endpoint suffix. `ApiPath` supplies the reporting namespace. Confirm fiscal and capacity assumptions before using KPIs.
 4. In **File → Options and settings → Data source settings**, select the Web source at the DietPi origin and choose **Edit permissions**. If an old localhost/Anonymous credential is cached, clear that source's permissions and reconnect. Choose **Basic**, username **powerbi**, and use the reporting API key or an authorized administrator JWT as the password. Apply credentials to the origin used by `ApiBaseUrl`. Enter the secret in the credential dialog yourself; it is not a project parameter.
@@ -174,7 +174,7 @@ Reference updated **2026-10-09** from the saved model/PBIR sources. Application 
 powerbi/
   POWERBI.md
   GCC_Dashboard/
-    GCC_Dashboard_v2.2.1.pbip
+    GCC_Dashboard_v2.2.2.pbip
     .gitignore                       # excludes local .pbi cache/settings
     GCC_Dashboard.Report/
       definition.pbir               # local semantic-model reference

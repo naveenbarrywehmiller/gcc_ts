@@ -26,14 +26,14 @@ Use this guide to change the source URL, update connection credentials, refresh 
 Open:
 
 ```text
-C:\gcc_ts\powerbi\GCC_Dashboard\GCC_Dashboard_v2.2.1.pbip
+C:\gcc_ts\powerbi\GCC_Dashboard\GCC_Dashboard_v2.2.2.pbip
 ```
 
 The `.pbip` is the entry point. Keep it together with both sibling folders:
 
 ```text
 GCC_Dashboard/
-├── GCC_Dashboard_v2.2.1.pbip
+├── GCC_Dashboard_v2.2.2.pbip
 ├── GCC_Dashboard.Report/
 └── GCC_Dashboard.SemanticModel/
 ```

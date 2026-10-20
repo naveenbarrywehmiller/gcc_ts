@@ -15,7 +15,7 @@ This guide focuses on the most common issues encountered when connecting Power B
 
 In the affected GCC Dashboard checkout, Desktop reports that the file is incompatible, and **Copy details to clipboard** includes `NewerLinguisticSchemaVersion`. An earlier release-number update changed an internal schema declaration from `2.0.0` to `2.1.0` without changing its contents. Dashboard v2.2.1 restores that declaration and the separately versioned report format.
 
-The preferred repair is to download/extract the complete **powerbi-v2.2.1** GitHub release into a new folder and open `powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip`. Keep its Report and SemanticModel sibling folders together. Configure the source URL and authorized credentials normally, then refresh data.
+The preferred repair is to download/extract the complete **powerbi-v2.2.1** GitHub release into a new folder and open `powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip`. Keep its Report and SemanticModel sibling folders together. Configure the source URL and authorized credentials normally, then refresh data.
 
 To repair this specific older source checkout manually:
 

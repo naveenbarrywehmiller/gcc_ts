@@ -5,7 +5,7 @@
 | Product | Source entry point | Version source | New release tag | Distribution |
 | --- | --- | --- | --- | --- |
 | GCC Timesheet App | [client](../client/), [API](../server/), [shared policies](../shared/) | [package.json](../package.json) | `gcc-timesheet-app-vX.Y.Z` | Existing GHCR image and optional Docker Hub copy |
-| GCC Dashboard Power BI | [GCC_Dashboard_v2.2.1.pbip](../powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip) | API `dashboardVersion` and PBIP suffix | `gcc-dashboard-powerbi-vX.Y.Z` | `gcc-dashboard-powerbi-vX.Y.Z.zip` |
+| GCC Dashboard Power BI | [GCC_Dashboard_v2.2.2.pbip](../powerbi/GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip) | API `dashboardVersion` and PBIP suffix | `gcc-dashboard-powerbi-vX.Y.Z` | `gcc-dashboard-powerbi-vX.Y.Z.zip` |
 | GCC Timesheet Linux Admin | [manager.py](../deploy/linux-admin/manager.py) | [VERSION](../deploy/linux-admin/VERSION) | `gcc-timesheet-linux-admin-vX.Y.Z` | `gcc-timesheet-linux-admin.tar.gz` and `.zip` |
 
 The reporting API version is separate from app/dashboard versions. PBIR and linguistic schema versions are format identifiers, not release versions.

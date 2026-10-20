@@ -7,7 +7,7 @@ See [the setup and operations guide](README.md) for installation, menus and trou
 ## VERSION
 
 ```text
-1.1.0
+1.1.1
 ```
 
 ## install.sh

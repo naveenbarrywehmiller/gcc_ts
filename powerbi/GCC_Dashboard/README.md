@@ -2,13 +2,13 @@
 
 **[User guide: change source URL, password, refresh and report settings](../documentation/POWERBI_USER_GUIDE.md)** provides step-by-step maintenance instructions.
 
-Open **[GCC_Dashboard_v2.2.1.pbip](GCC_Dashboard_v2.2.1.pbip)** in Power BI Desktop. Version **2.2.1** contains **17 tables, 70 DAX measures, 20 relationships, nine report pages and 121 visual containers**. Its semantic model is TMDL in `GCC_Dashboard.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
+Open **[GCC_Dashboard_v2.2.2.pbip](GCC_Dashboard_v2.2.2.pbip)** in Power BI Desktop. Version **2.2.2** contains **17 tables, 70 DAX measures, 20 relationships, nine report pages and 121 visual containers**. Its semantic model is TMDL in `GCC_Dashboard.SemanticModel/definition/`; report pages are native PBIR JSON. The unused legacy timesheet PBIX was removed locally; the portable model remains a separate artifact.
 
-**[Complete Power BI guide — POWERBI.md](../documentation/POWERBI.md)** includes every DAX formula, shared Power Query expressions, table queries, column/relationship definitions, visual bindings, connection instructions and missing inputs. Its older generated inventories predate the Platform addition; current counts and verification are in [release verification](../validation/RELEASE_2.2.1.md).
+**[Complete Power BI guide — POWERBI.md](../documentation/POWERBI.md)** includes every DAX formula, shared Power Query expressions, table queries, column/relationship definitions, visual bindings, connection instructions and missing inputs. Its older generated inventories predate the Platform addition; current counts and verification are in [release verification](../validation/RELEASE_2.2.2.md).
 
 ## Desktop compatibility repair — 2.2.1 (2026-10-20)
 
-The linguistic metadata and report format versions are restored to `2.0.0`; the dashboard release remains `2.2.1`. Download/extract the complete new source package and open its PBIP. The seven phone-filter overlaps are corrected. See [incompatible linguistic metadata troubleshooting](../documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata) for repairing an older checkout manually.
+The linguistic metadata and report format versions are restored to `2.0.0`; the current dashboard release is `2.2.2` (the repair was introduced in `2.2.1`). Download/extract the complete new source package and open its PBIP. The seven phone-filter overlaps are corrected. See [incompatible linguistic metadata troubleshooting](../documentation/TROUBLESHOOTING.md#incompatible-linguistic-metadata) for repairing an older checkout manually.
 
 ## Staffing narratives — 2.0.0 (2026-10-09)
 

@@ -25,7 +25,7 @@ powerbi/
 ├── README.md
 ├── CHANGELOG.md
 ├── GCC_Dashboard/
-│   ├── GCC_Dashboard_v2.2.1.pbip
+│   ├── GCC_Dashboard_v2.2.2.pbip
 │   ├── GCC_Dashboard.Report/
 │   └── GCC_Dashboard.SemanticModel/
 ├── documentation/

@@ -32,7 +32,7 @@ Use semantic versioning:
 Current baseline:
 - Dashboard version: `v2.2.1`
 
-The single PBIP entry point is `GCC_Dashboard/GCC_Dashboard_v2.2.1.pbip`. Its suffix must match the dashboard version returned by `/api/powerbi/version`. On the next release, rename this file and update `dashboardVersion` together; keep the sibling Report and SemanticModel names and their relative references stable. Update the legacy scaffold's output filename too. The QA-preview and documentation generators discover the single PBIP file automatically. Run `node --test scripts/powerbi-requirements.test.js` to verify the filename and resolved report/model chain.
+The single PBIP entry point is `GCC_Dashboard/GCC_Dashboard_v2.2.2.pbip`. Its suffix must match the dashboard version returned by `/api/powerbi/version`. On the next release, rename this file and update `dashboardVersion` together; keep the sibling Report and SemanticModel names and their relative references stable. Update the legacy scaffold's output filename too. The QA-preview and documentation generators discover the single PBIP file automatically. Run `node --test scripts/powerbi-requirements.test.js` to verify the filename and resolved report/model chain.
 
 Dashboard versions are product release numbers. Do not copy them into Power BI's internal format metadata. The current Desktop-compatible report `definition/version.json` and semantic-model `linguisticMetadata.Version` values are both `2.0.0`. Keep each `$schema` URL at its own supported schema version. Run `node --test scripts/powerbi-requirements.test.js` to catch accidental release-number substitutions.
 
