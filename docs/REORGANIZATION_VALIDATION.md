@@ -15,7 +15,7 @@ Validation date: October 20, 2026. See [the repository map](REPOSITORY_STRUCTURE
 
 | Check | Result |
 | --- | --- |
-| Candidate repository mapping | **Passed**: 56 owned Markdown files, 516 extracted links, 602 relative JavaScript imports; no missing local targets/anchors/imports |
+| Candidate repository mapping | **Passed**: 56 owned Markdown files, 519 extracted links, 602 relative JavaScript imports; no missing local targets/anchors/imports |
 | Mapping validator self-checks | **Passed**: valid links, duplicate-heading anchor, fenced examples, missing path/anchor detection, module resolution |
 | Application regression tests | **155 passed**, zero failed, in both the working tree and isolated source candidate |
 | Reporting API tests | **55 passed**, zero failed, in both candidates |
@@ -33,9 +33,9 @@ Validation date: October 20, 2026. See [the repository map](REPOSITORY_STRUCTURE
 | Responsive Chromium | **707 checks passed**, 28 viewports, five roles, both themes; no browser exceptions or server failures |
 | Screenshot review | Login and application shell inspected at 375×667, 768×1024, 1366×768, 1920×1080, and 3440×1440; 33 additional screenshot-run checks passed |
 | Graphify | Rebuilt: 1,555 nodes / 3,499 edges / 88 communities |
-| Git whitespace check | **Passed** |
+| Reorganization diff whitespace check | **Passed**; the preserved, unrelated local edits retain three pre-existing end-of-file blank-line warnings |
 
-Link checks validate local files and Markdown anchors. Additionally, all 31 non-GitHub reference URLs passed HTTP/redirect checks (including the Microsoft Store app link); six upstream GitHub references returned HTTP 200. All 62 changelog commit links resolve to existing commit objects, and both endpoints of all 62 comparison links exist among the preserved published tags. Release downloads were checked independently below. Authentication portals were checked for reachability, without signing in. The source-only candidate excludes ignored local review reports and caches.
+Link checks validate local files and Markdown anchors. Additionally, all 31 non-GitHub reference URLs passed HTTP/redirect checks (including the Microsoft Store app link); six upstream GitHub references and eight repository/release/package views returned HTTP 200. All 62 changelog commit links resolve to existing commit objects, and both endpoints of all 62 comparison links exist among the preserved published tags. Release downloads were checked independently below. Authentication portals were checked for reachability, without signing in. The source-only candidate excludes ignored local review reports and caches.
 
 ## GitHub Actions validation
 
