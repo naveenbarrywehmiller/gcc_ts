@@ -9,3 +9,9 @@ client/dist
 .git
 .gitignore
 .dockerignore
+
+# Development skills and generated code maps
+.agents
+.codex
+.graphifyignore
+graphify-out

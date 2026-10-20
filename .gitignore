@@ -54,3 +54,6 @@ server/.maintenance
 server/.maintenance-operation
 server/data/.maintenance*
 server/data/*.factory-*
+
+# Local code relationship map (regenerate with npm run graph:build)
+graphify-out/

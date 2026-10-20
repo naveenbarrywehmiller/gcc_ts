@@ -1,0 +1,21 @@
+# Source analysis only. Keep dependencies, generated files, skills and local data out.
+node_modules/
+**/node_modules/
+.git/
+.agents/
+.codex/
+graphify-out/
+client/dist/
+coverage/
+powerbi/
+**/package-lock.json
+**/.env
+**/.env.*
+**/*.db
+**/*.db-wal
+**/*.db-shm
+server/data/
+server/backup/
+server/logs/
+server/uploads/
+server/.maintenance*

@@ -1,6 +1,6 @@
 {
   "name": "timesheet",
-  "version": "1.31.3",
+  "version": "1.31.4",
   "description": "Employee Time Tracking System — server + client monorepo",
   "scripts": {
     "install:server": "cd server && npm install",
@@ -11,6 +11,9 @@
     "build": "npm --prefix client run build",
     "lint": "npm --prefix client run lint",
     "test": "npm --prefix server test",
+    "graphify": "uvx --python 3.12 --from graphifyy==0.9.92 graphify",
+    "graph:build": "npm run graphify -- extract . --code-only --max-workers 4 && npm run graphify -- cluster-only . --no-label",
+    "graph:query": "npm run graphify -- query",
     "dev": "npm run dev:server & npm run dev:client & wait",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev"

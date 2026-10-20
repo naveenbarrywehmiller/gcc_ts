@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.31.4](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.3...v1.31.4) (2026-10-20)
+
+### Development tooling
+
+* Add project-local Ponytail coding, review and audit skills, plus Agent Skills workflows for frontend, security and API work.
+* Add the Graphify skill and a pinned local code-only CLI with npm commands for building and querying code relationship maps.
+* Retain upstream versions, license notices and supporting references; document setup and project-specific overrides while preserving the responsive requirements.
+* Exclude generated maps and local data from analysis, and exclude development skills and maps from Docker builds.
+
+### Validation
+
+* Application regression tests and all 55 reporting API checks passed; frontend lint, production build and whitespace checks passed.
+* Graph build, query, explain and path checks passed; the local map contains 1,526 nodes and 3,449 relationships with zero LLM tokens.
+* Skill manifests, local references, upstream text, licenses and data exclusions were verified. No UI source changed, so viewport checks were not rerun.
+
 ## [1.31.3](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.2...v1.31.3) (2026-10-19)
 
 ### Performance
