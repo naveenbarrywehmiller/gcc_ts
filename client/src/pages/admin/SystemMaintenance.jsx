@@ -2,6 +2,7 @@ import  { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../contexts/toast';
+import { copyText } from '../../utils/clipboard';
 import {
   ShieldAlert,
   DatabaseBackup,
@@ -35,6 +36,19 @@ export default function SystemMaintenance() {
   const [isRestoringUpload, setIsRestoringUpload] = useState(false);
   const [restoreSuccessMsg, setRestoreSuccessMsg] = useState('');
   const fileInputRef = useRef(null);
+  const powerBiAddresses = [
+    { id: 'powerbi-api-url', label: 'Power BI API URL (timesheet export)', value: `${window.location.origin}/api/powerbi/export`, copyLabel: 'Copy API URL' },
+    { id: 'powerbi-server-address', label: 'Report server address (ApiBaseUrl)', value: window.location.origin, copyLabel: 'Copy server address' },
+  ];
+
+  const handleCopy = async (value, label) => {
+    try {
+      await copyText(value);
+      showToast(`${label} copied to clipboard`, 'success');
+    } catch {
+      showToast('Copy failed. Select the text and copy it manually.', 'error');
+    }
+  };
 
   // Fetch Maintenance Status
   const { data: maintenanceData, isLoading } = useQuery({
@@ -389,11 +403,12 @@ function getFormattedTimestamp(d = new Date()) {
       {/* Token Generation Panel */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-          <Key className="w-5 h-5 mr-2 text-green-500" /> API Token Generation
+          <Key className="w-5 h-5 mr-2 text-green-500 shrink-0" /> API Token Generation
         </h2>
         <div className="space-y-4">
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <select
+              aria-label="Token expiry"
               value={tokenExpiry}
               onChange={(e) => setTokenExpiry(e.target.value)}
               className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
@@ -416,22 +431,50 @@ function getFormattedTimestamp(d = new Date()) {
           {generatedToken && (
             <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-700">
               <p className="text-sm text-gray-400 mb-2">Generated Token (Copy this now, it won't be shown again):</p>
-              <div className="flex items-center">
-                <code className="text-green-400 break-all text-sm flex-1 font-mono">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                <code className="text-green-400 break-all text-sm flex-1 min-w-0 font-mono">
                   {generatedToken}
                 </code>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(generatedToken);
-                    showToast('Token copied to clipboard', 'success');
-                  }}
-                  className="ml-4 px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded text-sm transition-colors"
+                  type="button"
+                  onClick={() => handleCopy(generatedToken, 'Token')}
+                  className="min-h-11 shrink-0 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500"
                 >
-                  Copy
+                  Copy token
                 </button>
               </div>
             </div>
           )}
+
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Connect Power BI</h3>
+            {powerBiAddresses.map(({ id, label, value, copyLabel }) => (
+              <div key={id}>
+                <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    id={id}
+                    readOnly
+                    value={value}
+                    onFocus={(event) => event.target.select()}
+                    className="w-full min-w-0 flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(value, 'Address')}
+                    className="min-h-11 shrink-0 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500"
+                  >
+                    {copyLabel}
+                  </button>
+                </div>
+              </div>
+            ))}
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <p><strong>New connection:</strong> Home → Get data → Web. Paste the API URL into <strong>URL</strong>. Choose <strong>Basic</strong> authentication, enter <strong>powerbi</strong> as the user name, and paste the generated token into <strong>Password</strong> (without a Bearer prefix).</p>
+              <p><strong>Existing GCC report:</strong> Transform data → Edit parameters → <strong>ApiBaseUrl</strong>: paste the server address. Keep <strong>ApiPath</strong> as <strong>api/powerbi</strong>. Update the token in File → Options and settings → Data source settings → Edit permissions → Edit → <strong>Basic → Password</strong>, then refresh.</p>
+              <a href="https://learn.microsoft.com/en-us/power-query/connectors/web/web" target="_blank" rel="noreferrer" className="inline-block text-green-700 dark:text-green-400 underline">Power BI connection help</a>
+            </div>
+          </div>
         </div>
       </div>
 

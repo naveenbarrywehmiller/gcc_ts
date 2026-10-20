@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.31.5](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.4...v1.31.5) (2026-10-20)
+
+### Bug Fixes
+
+* Fix Maintenance API token copying when browser clipboard access is unavailable or denied; show success only after copying finishes and offer manual-copy guidance if copying is blocked.
+* Keep token controls and long generated tokens usable on narrow screens, with keyboard focus restored after fallback copying.
+
+### Features
+
+* Add copyable Power BI timesheet API and report server addresses to Maintenance, using the current application origin.
+* Add concise setup hints for new Web connections and existing GCC reports, including where to paste the address and token for Basic authentication.
+
+### Validation
+
+* All 153 Node tests (including five clipboard regressions), 55 reporting API checks, frontend lint, production build and whitespace checks passed.
+* Chromium passed 112 responsive checks across 28 viewports, two token states and both themes; native/fallback copying, error feedback and keyboard interactions passed.
+* A generated token authenticated successfully with the reporting API using Basic credentials. Live Power BI Desktop/Service refresh was not tested.
+* Dependency audits reported existing advisories; dependency versions are unchanged. See [release validation and dependency triage](docs/RELEASE_VALIDATION_1.31.5.md).
+
 ## [1.31.4](https://github.com/naveenbarrywehmiller/gcc_ts/compare/v1.31.3...v1.31.4) (2026-10-20)
 
 ### Development tooling
