@@ -9,6 +9,7 @@ import Modal from '../../components/ui/Modal';
 import FieldHelp from '../../components/ui/FieldHelp';
 import ProjectTaskPicker from '../../components/ProjectTaskPicker';
 import ProjectStatus from '../../components/ProjectStatus';
+import ActiveLabel from '../../components/ActiveLabel';
 import { downloadCatalog, importSummary } from '../../utils/catalogTransfer';
 
 const fields = [
@@ -111,13 +112,14 @@ export default function AdminProjects() {
       <select className="input" aria-label="Filter status" value={filters.project_status} onChange={e => updateFilter('project_status', e.target.value)}><option value="">All statuses</option>{['Inprogress', 'Hold', 'Completed'].map(s => <option key={s}>{s}</option>)}</select>
       <select className="input" aria-label="Filter active projects" value={filters.active} onChange={e => updateFilter('active', e.target.value)}><option value="1">Active projects</option><option value="0">Inactive projects</option><option value="all">All projects</option></select>
     </div>
+    <p aria-hidden="true" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-surface-500 dark:text-surface-400"><ActiveLabel active>Active</ActiveLabel><ActiveLabel active={false}>Inactive</ActiveLabel></p>
     {(isError || options.isError) && <p role="alert" className="text-red-600">Unable to load projects. Please refresh and try again.</p>}
     <div className="table-container overflow-x-auto"><table className="w-full text-sm">
       <thead><tr>{['Project Code', 'Project Name', 'Platform', 'Division', 'Location', 'Status', 'Budget Hours', 'Productive Tasks', 'Non-Productive Tasks', 'Task Estimated Hours', 'Actions'].map(h => <th key={h} className="p-3 text-left">{h}</th>)}</tr></thead>
       <tbody>{data?.projects.map(p => <tr key={p.id} className="border-t border-surface-200 dark:border-surface-700">
-        <td className="p-3">{p.project_code}</td><td className="p-3">{p.project_name}</td><td className="p-3">{p.platform_name || 'Unmapped'}</td><td className="p-3">{p.division_name || 'Unassigned'}</td><td className="p-3">{p.subdivision_name || '—'}</td>
+        <td className="p-3 whitespace-nowrap"><ActiveLabel active={p.active}>{p.project_code}</ActiveLabel></td><td className="p-3">{p.project_name}</td><td className="p-3">{p.platform_name || 'Unmapped'}</td><td className="p-3">{p.division_name || 'Unassigned'}</td><td className="p-3">{p.subdivision_name || '—'}</td>
         <td className="p-3"><ProjectStatus status={p.project_status} /></td><td className="p-3">{p.budget_hours ?? '—'}</td>
-        {['Productive', 'Non-Productive'].map(type => <td key={type} className="p-3"><ul className="min-w-32 space-y-1">{p.tasks?.filter(t => t.classification === type).map(t => <li key={t.id} className="[overflow-wrap:anywhere]">{t.task_category}{!t.active ? ' (inactive)' : ''}</li>)}</ul></td>)}
+        {['Productive', 'Non-Productive'].map(type => <td key={type} className="p-3"><ul className="min-w-32 space-y-1">{p.tasks?.filter(t => t.classification === type).map(t => <li key={t.id} className="[overflow-wrap:anywhere]"><ActiveLabel active={t.active}>{t.task_category}{!t.active ? ' (inactive)' : ''}</ActiveLabel></li>)}</ul></td>)}
         <td className="p-3">{p.task_estimated_hours ?? '—'}<span className="block text-xs text-surface-500">{p.estimated_task_count}/{p.assigned_task_count} tasks estimated</span></td>
         <td className="p-3"><div className="flex flex-wrap items-center gap-2"><button className="btn-secondary btn-sm" disabled={busy} onClick={() => setForm({ ...p })}>{canManage && p.can_edit ? 'Edit' : 'View'}</button>{canManage && p.can_edit && <>{p.active === 1 && <button disabled={busy} className="btn-ghost btn-sm" onClick={() => openAction(p, 'deactivate')}>Deactivate</button>}<button disabled={busy} className="btn-ghost btn-sm text-red-600 dark:text-red-400" onClick={() => openAction(p, 'delete')}>Delete</button></>}</div></td>
       </tr>)}{!data?.projects.length && <tr><td colSpan={11} className="p-6 text-center">{isLoading ? 'Loading…' : 'No matching projects'}</td></tr>}</tbody>
