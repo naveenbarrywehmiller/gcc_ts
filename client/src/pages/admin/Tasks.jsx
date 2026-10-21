@@ -8,6 +8,7 @@ import { useToast } from '../../contexts/toast';
 import { useAuth } from '../../contexts/auth';
 import { hasPermission } from '../../utils/permissions';
 import Modal from '../../components/ui/Modal';
+import ActiveLabel from '../../components/ActiveLabel';
 import { LoadingSkeleton } from '../../components/ui/Skeleton';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 
@@ -103,6 +104,7 @@ export default function AdminTasks() {
         <option value="1">Active tasks</option><option value="0">Inactive tasks</option><option value="all">All tasks</option>
       </select>
       </div>
+      <p aria-hidden="true" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-surface-500 dark:text-surface-400"><ActiveLabel active>Active</ActiveLabel><ActiveLabel active={false}>Inactive</ActiveLabel></p>
       <div className="table-container">
         <table className="w-full">
           <thead>
@@ -123,7 +125,7 @@ export default function AdminTasks() {
                     {t.classification || 'N/A'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200">{t.task_category}</td>
+                <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200"><ActiveLabel active={t.active}>{t.task_category}</ActiveLabel></td>
                 <td className="px-4 py-3 text-sm text-surface-500">{t.task_description || '—'}</td>
                 {taskPlanningFields.map(([key]) => <td key={key} className="px-4 py-3 text-sm text-surface-500 whitespace-nowrap">{t[key] ?? '—'}</td>)}
                 <td className="px-4 py-3 text-sm text-surface-500">{t.active ? 'Active' : 'Inactive'}</td>

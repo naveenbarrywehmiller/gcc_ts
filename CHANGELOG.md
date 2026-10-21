@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.31.7](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.31.6...gcc-timesheet-app-v1.31.7) (2026-10-21)
+
+- Add small filled green indicators for active projects and tasks, and hollow gray indicators for inactive records, including tasks assigned to projects.
+- Add legends, accessible status names and tooltips, with light/dark theme support. Keep project codes together and task names readable on narrow screens.
+- Chromium validation passed 124 responsive checks across 28 viewport sizes and 15 functional checks using synthetic API responses. See [the responsive audit](docs/RESPONSIVE_AUDIT.md#project-and-task-activity-indicators-october-20-2026) for coverage and limits.
+- Full application regression tests, all 55 reporting API checks, repository validation, frontend lint and the production build passed before release.
+- Application version is now 1.31.7; dependency versions, API contracts and database schema are unchanged.
+
 ## [1.31.6] — 2026-10-20
 
 - Standardize product branding as GCC Timesheet App, GCC Dashboard Power BI, and GCC Timesheet Linux Admin.

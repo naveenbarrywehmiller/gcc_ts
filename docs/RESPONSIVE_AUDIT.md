@@ -2,6 +2,16 @@
 
 For future layout tests, use the reusable [Chromium responsive and loading-state checklist](CHROMIUM_LAYOUT_TEST_CHECKLIST.md), including the full 28-viewport list and the route-loading validation baseline.
 
+## Project and task activity indicators (October 20, 2026)
+
+Projects and Task Name/Number now show a small filled green marker for active records and a hollow gray marker for inactive records. The same markers appear beside assigned tasks in Projects. Both pages include a legend; each record marker has an accessible status name and a tooltip. Project activity remains separate from Inprogress/Hold/Completed workflow status. Labels keep the marker beside the first text line, project codes stay on one line, and task names retain normal word wrapping.
+
+Headed Chromium against the production build with synthetic intercepted API responses passed **124 responsive checks**: mixed active/inactive lists on both pages in light and dark themes at all 28 checklist viewports (112), Manager and Viewer lists at mobile/laptop sizes (8), and empty System Admin lists at mobile/laptop sizes (4). Checks covered document overflow, contained horizontal table scrolling, the shared header, marker dimensions, tooltip/accessibility names, filled versus hollow appearance, and marker/text alignment. Fifteen functional checks covered active/inactive/all filters in both themes, independent project/task activity, workflow status, and keyboard navigation without extra marker focus stops. No browser exceptions, console errors or unexpected API requests occurred.
+
+Twenty screenshots were captured at the five representative sizes for both pages and themes. Screenshots at all five sizes were inspected, with additional dark-theme samples. Initial review found markers wrapping above project codes and excessive task-name word breaking; both were corrected before the final run. Evidence and the temporary Playwright script are in the machine's temporary directory (`gcc-activity-indicators-evidence` and `playwright-test-activity.js`). Production build, lint and whitespace checks on the changed frontend files pass. The local code map was rebuilt.
+
+Coverage limits: API responses were intercepted; live records, backend mutations, forced loading/error states, Admin-role coverage, other browser engines, physical devices and assistive technology were not exercised. No routing, permissions or loading behavior changed.
+
 ## Power BI 2.2.1 phone spacing repair (October 20, 2026)
 
 The seven native phone pages with Platform/Division overlap now move Division and every following visual down 24 units. Dropdown heights are retained, with eight units of space after Platform. All 121 saved phone placements pass the geometry checker; all 121 desktop bounds and positions are unchanged and pass their existing geometry check. The web UI was not edited, so the 140 live Chromium checks recorded below remain applicable to its unchanged layout. Native phone drawing, full Desktop canvas rendering, physical devices and Power BI Service preview remain unverified; see [release verification](../powerbi/validation/RELEASE_2.2.1.md).
