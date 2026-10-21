@@ -14,6 +14,8 @@ Run commands from the repository root. Use existing manifests and lockfiles; thi
 | `python deploy/linux-admin/build_release.py --check` | Check generated script reference against shipped source |
 | `npm run graph:build` / `npm run graph:query -- "question"` | Rebuild/query the ignored code map |
 
+`npm test` preloads `test-console.js` for the Node unit suite. It sends console logs to stderr so Unicode progress messages cannot corrupt Node 22's test-result stream ([upstream issue](https://github.com/nodejs/node/issues/65934)). Logs remain visible; test isolation, concurrency and assertion failures are preserved. The reporting API checks run separately as before.
+
 Power BI build/documentation generators are retained maintenance tools. Review output in an isolated copy: the saved active project uses TMDL, while the older generator can emit BIM and older report definitions. Do not overwrite the current model or reviewed documentation by running generators as routine validation. Model formats must not coexist in one canonical SemanticModel folder.
 
 SharePoint CSV export and integrity audit scripts are operational tools. Inspect options, configuration, and the target database before use. They are not required to start or build GCC Timesheet App.
