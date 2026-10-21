@@ -1,5 +1,93 @@
 # Changelog
 
+## [1.32.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.31.7...gcc-timesheet-app-v1.32.0) (2026-10-21)
+
+
+### Features
+
+* add companywide Viewer access and user role counts ([e5b320a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e5b320a8490328c114473bfefc32b13a9fb94e11))
+* Add department ownership details feature ([d1a55e3](https://github.com/naveenbarrywehmiller/gcc_ts/commit/d1a55e3d35614297189d3b353950b431f20f91a8))
+* add direct PC database download and restore upload options in System Maintenance ([07dee0f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/07dee0f1c00267be77d5b2a18796ad12979ff44a))
+* add missing Power Query M scripts for new API endpoints ([588d9a7](https://github.com/naveenbarrywehmiller/gcc_ts/commit/588d9a7b0d7a1b68e976ec0b55667076c88c8f25))
+* add platform management, assignments and reporting ([b7c7490](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b7c7490c491e98feba51657677a6af579a434ff8))
+* add platform management, assignments and reporting ([76d0d51](https://github.com/naveenbarrywehmiller/gcc_ts/commit/76d0d51bab770b2f8069d61c261a329865158ccf))
+* add requirements-based Power BI project and reporting inputs ([e3ddccc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e3ddcccf7dbfa63341857ccc0f596db2a03e644e))
+* add role-scoped help center ([336c4c4](https://github.com/naveenbarrywehmiller/gcc_ts/commit/336c4c4ab47f2a926383490318b3277872b8c7d3))
+* add task planning and project task assignments ([210befc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/210befc1d2db5dfe6ddd9cd615f659b8ef717e08))
+* add task planning and project task assignments ([a2d880b](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a2d880b6b65c7b15b5a37ec56b0e1b57a59d31ca))
+* add zero-restart maintenance mode and documentation ([d7b0de1](https://github.com/naveenbarrywehmiller/gcc_ts/commit/d7b0de1e83f55a1f199077a56bed039b7a32bdd2))
+* allow authorized admins to permanently delete projects ([f7c360f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f7c360f6ec72a05630c1652d9efe90018412579b))
+* change default sysadmin password to systemadmin and fix role dropdown ([fa28764](https://github.com/naveenbarrywehmiller/gcc_ts/commit/fa287647775667e56ec178c637f836a6e6d85ebd))
+* clean setup, productive classifications and Linux admin 1.1.0 ([42833eb](https://github.com/naveenbarrywehmiller/gcc_ts/commit/42833ebb2a4796cb68049f2ebab277e8f735e6c7))
+* **docker:** add complete docker-compose configuration and deployment guide ([1539a3f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/1539a3f7a87519df798a0f6cd106bbd16f2b03d3))
+* enforce employee admin assignment and simplify project time entry ([91dd229](https://github.com/naveenbarrywehmiller/gcc_ts/commit/91dd22950b10ecb6acd63daa3dc83f6f294b7e7a))
+* enforce management permissions and add matrix help ([eec5cf9](https://github.com/naveenbarrywehmiller/gcc_ts/commit/eec5cf99b32312650b57d658b04b8685f4e0e85a))
+* enforce timesheet routing and required project billing rules ([6c43dda](https://github.com/naveenbarrywehmiller/gcc_ts/commit/6c43dda6ced0a9823cf865863afb10508e438c30))
+* expand project and timesheet workflows ([72dd903](https://github.com/naveenbarrywehmiller/gcc_ts/commit/72dd903e6cab6135902bfd87d9345c650f9ce143))
+* format backup filename timestamp as clean YYYY-MM-DD_HH-mm-ss and expose Content-Disposition ([b223809](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b2238092c947ff1db676d4eaa69d1c2a1ff19d4d))
+* implement comprehensive Power BI dashboard with dedicated reporting API ([9f7f684](https://github.com/naveenbarrywehmiller/gcc_ts/commit/9f7f684e76be44e05565d1b60e0b32d5901849f3))
+* implement secure read-only REST API for Power BI reporting ([646c9fa](https://github.com/naveenbarrywehmiller/gcc_ts/commit/646c9face00e64a5461fc56e23f3fc4a8595f0ae))
+* implement strict admin ownership, timesheet history for all weeks, and recall workflow ([0b33c7a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/0b33c7a3092473faa8b4b1b52c315523479b1162))
+* implement system maintenance and sysadmin role protection ([149cd6b](https://github.com/naveenbarrywehmiller/gcc_ts/commit/149cd6b7050fa79b20a618539cf90ee0e926abcb))
+* improve dashboard actions, status accuracy, and weekly progress ([26332fb](https://github.com/naveenbarrywehmiller/gcc_ts/commit/26332fb2174039cc8e55d2b7901c2b6134490a0e))
+* improve macOS start.command launcher and update better-sqlite3 for Node 26 ([a8e5de6](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a8e5de68dabee4efa47701aef9c2412b88b5029c))
+* improve responsive layouts and document standards ([fd77c82](https://github.com/naveenbarrywehmiller/gcc_ts/commit/fd77c82087c7b6bd1c5014f30793889d2f1fbc89))
+* migrate timesheet application to Microsoft 365 Architecture (SharePoint, MSAL, Power Automate, Power BI) ([2cf2cf3](https://github.com/naveenbarrywehmiller/gcc_ts/commit/2cf2cf34b112278251651f564f4e53a068c28a86))
+* **ops:** add versioned Ubuntu timesheet administrator menu ([f9068a4](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f9068a4f6282a15f0f6c9331f54ccbbaad2d2827))
+* **powerbi:** improve management overview and DAX measures ([68dc2b3](https://github.com/naveenbarrywehmiller/gcc_ts/commit/68dc2b3900340d806afce48ea7d0ed05c0b0c955))
+* project and task workbook editing (v1.31.0) ([a36dfd7](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a36dfd7706e880805b509942a4963c6b1ef3a98d))
+* release clean setup and Linux administration improvements ([f915838](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f915838e48611a085347c3bcd7f557a5fb8ed0b8))
+* release project and task workbook editing v1.31.0 ([2533315](https://github.com/naveenbarrywehmiller/gcc_ts/commit/2533315df1b10dd978333025d0540746abcf77c2))
+* replace staffing counts with narrative updates ([db56e8a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/db56e8a592bc167de2a6181ac695956add43a96f))
+* **reports:** add Last Week date preset ([d2e6154](https://github.com/naveenbarrywehmiller/gcc_ts/commit/d2e6154b71c10692afdc6f5cd95d8c834c222f47))
+* show github release version in footer and login page instead of hardcoded year ([e0a17bc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e0a17bcab1116390d3e19fb2ea7eb9dfab6058d3))
+* show server date and time in IST in logged-in headers ([1696ddc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/1696ddca0f51d90268f0154a8b578812125d6ec4))
+* support multi-division user assignments ([de8a79a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/de8a79ae6e30af12d0b4bdf6a44396f3adde3c83))
+* upgrade reports with analytics, filters, drilldowns and exports ([91b8b80](https://github.com/naveenbarrywehmiller/gcc_ts/commit/91b8b80d527c00bdeb75ec7b5dd45742086d926f))
+
+
+### Bug Fixes
+
+* allow non-billable timesheet rows without a project ([c1f9031](https://github.com/naveenbarrywehmiller/gcc_ts/commit/c1f90316c54d9a2f740b5f010db67773c6d35fcb))
+* allow recalled timesheets with multiple project tasks ([ab97449](https://github.com/naveenbarrywehmiller/gcc_ts/commit/ab974496023559c5a18ba00e1b71c287f098667e))
+* bump version to test integrated docker build ([8cb0388](https://github.com/naveenbarrywehmiller/gcc_ts/commit/8cb038886d1c59ec8cdb42f8c34046224a8b59ac))
+* **ci:** remove single-arch docker-build from release-please and add package version tagging to multi-arch workflow ([a562058](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a56205881f62814095426f52b50c3350e97e1645))
+* clarify multi-division help and Power BI roster semantics ([b621b8a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b621b8a5ee1d3ba4b423faf9575b5535c2519022))
+* correct DB path resolution — was writing to src/data/ instead of volume-mounted data/ ([b12b91b](https://github.com/naveenbarrywehmiller/gcc_ts/commit/b12b91bef2fcd02b915cc00a52b44621f634b1b9))
+* correctly expose release version in /api/health — copy root package.json into Docker image ([ce5602d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/ce5602d616b4142d6edc4a53adb9c7f0d95dd79b))
+* CORS wildcard breaks cookie auth — reflect request origin when CORS_ORIGIN=* ([a1d166d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/a1d166d159aa4656c8339761a4a5793988ea9513))
+* destructure msalEnabled and loginWithMicrosoft from useAuth in Login ([08ece47](https://github.com/naveenbarrywehmiller/gcc_ts/commit/08ece47dce679274b879f95badca217edff492e8))
+* display header clock in 12-hour format with AM/PM ([795354d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/795354dcc36bbc3dfab9eca02c733cd9eb1e4486))
+* **docker:** add build dependencies for better-sqlite3 in builder stage ([36cf3a2](https://github.com/naveenbarrywehmiller/gcc_ts/commit/36cf3a28371f3d65cf833830cc0bb992b1e1dfb6))
+* **docker:** switch base image to debian-slim to eliminate better-sqlite3 segfault on ARM64 ([386514e](https://github.com/naveenbarrywehmiller/gcc_ts/commit/386514e7241dfa03f858feeb8c39031e4dc5827a))
+* **docker:** upgrade to Node 22 — required by better-sqlite3 v13 (engines: node&gt;=22) ([33c750f](https://github.com/naveenbarrywehmiller/gcc_ts/commit/33c750f6958996ee9500c8cd142f4af0575b37a8))
+* ensure sysadmin user is created on existing databases during migration ([2af032d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/2af032d5612c3cc04bb93d68f3851cfefc06407e))
+* escape redirection operator in start.bat to prevent accidental file creation ([f4ab14e](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f4ab14e3a00d18a0d6afb1a0c8efd15800b229c0))
+* grant system admin role full access in authorize middleware and admin routes ([c58209a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/c58209a7b2649e76b22ca0ea5994faa50d2ead4a))
+* hide weekly details for projectless non-billable tasks ([e45a2a7](https://github.com/naveenbarrywehmiller/gcc_ts/commit/e45a2a7b76fdc3e347a9707bdd5da83534bf0f99))
+* improve start.bat with DB setup, correct working dir, better startup waits ([f636ce7](https://github.com/naveenbarrywehmiller/gcc_ts/commit/f636ce7de269aaa42f371d2efb07ac3c20f6fb46))
+* make remaining seed inserts idempotent (INSERT OR IGNORE) ([c464c49](https://github.com/naveenbarrywehmiller/gcc_ts/commit/c464c4921cc4c25e171845ddcc4b0cde5d64b621))
+* **powerbi:** map trainings and webinars to training ([728c896](https://github.com/naveenbarrywehmiller/gcc_ts/commit/728c8961064fc199267c14e40c9ba9faa8695038))
+* **powerbi:** repair Desktop metadata and prepare v2.2.1 ([744ed5a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/744ed5a47f833aa3163f854584f09d8d08cc70e8))
+* prevent UNIQUE constraint crash on container restart ([17b9669](https://github.com/naveenbarrywehmiller/gcc_ts/commit/17b9669daa53c4811eb58675fd2cafd830ee44e4))
+* release v1.13.1 with explicit popup dismissal ([86fc11c](https://github.com/naveenbarrywehmiller/gcc_ts/commit/86fc11c6f36c4433bada99c31eadf59140ea84fc))
+* remove legacy data import and improve dark mode form readability ([cc5c8e1](https://github.com/naveenbarrywehmiller/gcc_ts/commit/cc5c8e18176e4c9048180d8372085ec560cc212b))
+* remove non-existent submitted_at column from SQL query to prevent server crash ([7bd898d](https://github.com/naveenbarrywehmiller/gcc_ts/commit/7bd898dc8b12418354603eb806114830f5f1e968))
+* repair maintenance token copy and release v1.31.5 ([5bfd01a](https://github.com/naveenbarrywehmiller/gcc_ts/commit/5bfd01aa5c5552ff307503614c608d7fb5e40f67))
+* restore Escape key dismissal for popups ([cb404f5](https://github.com/naveenbarrywehmiller/gcc_ts/commit/cb404f5d766cfaa6eb682076473c166048f7d2a5))
+* show holidays and highlight selected vacation dates ([02cf9c6](https://github.com/naveenbarrywehmiller/gcc_ts/commit/02cf9c67a6f47481d29774f72c3590aefb868df8))
+* support HTTP LAN deployments by relaxing cookie Secure flag and adding Bearer token fallback ([7ab0769](https://github.com/naveenbarrywehmiller/gcc_ts/commit/7ab0769ff4cd61cc99950e02f3ffab0a22c59175))
+* timestamp project and task exports (v1.31.1) ([92d57c3](https://github.com/naveenbarrywehmiller/gcc_ts/commit/92d57c3f418902a1891568380cd1d0e811bc06e6))
+* timestamp project and task exports for v1.31.1 ([422f655](https://github.com/naveenbarrywehmiller/gcc_ts/commit/422f6558b05dfb43fc09bacf2b5ecaeb935649b4))
+* use absolute DB_PATH in docker-compose to avoid path.resolve() issues ([5b836f4](https://github.com/naveenbarrywehmiller/gcc_ts/commit/5b836f4c47d20fa4310d50db8c13e7a962c0defb))
+* use INSERT OR IGNORE for users seed to prevent UNIQUE constraint crash on restart ([d8ef0e8](https://github.com/naveenbarrywehmiller/gcc_ts/commit/d8ef0e88609683fac3fead9ff9a9f47f13de2ca7))
+* use packaged client field definitions for report builds ([985bc31](https://github.com/naveenbarrywehmiller/gcc_ts/commit/985bc31fd11ffa7f9629957787282059f66a2b81))
+
+
+### Performance Improvements
+
+* lazy-load admin routes and release v1.31.3 ([0c59317](https://github.com/naveenbarrywehmiller/gcc_ts/commit/0c5931740ea79e93cec60cd45aff1d7498960df7))
+
 ## [1.31.7](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.31.6...gcc-timesheet-app-v1.31.7) (2026-10-21)
 
 - Add small filled green indicators for active projects and tasks, and hollow gray indicators for inactive records, including tasks assigned to projects.
