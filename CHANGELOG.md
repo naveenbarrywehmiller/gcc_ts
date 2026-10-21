@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.32.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.32.0...gcc-timesheet-app-v1.32.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **ci:** keep console logs out of Node 22 test result stream ([3829fbc](https://github.com/naveenbarrywehmiller/gcc_ts/commit/3829fbcbf76060a4c1d9a9836830e9a8be6705d5))
+* **ci:** prevent Node 22 test output deserialization failures ([084acf9](https://github.com/naveenbarrywehmiller/gcc_ts/commit/084acf9cfa1ded149e3e96519feeb6cb8e7157eb))
+
 ## [1.32.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.31.7...gcc-timesheet-app-v1.32.0) (2026-10-21)
 
 
