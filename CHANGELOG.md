@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.32.1...gcc-timesheet-app-v1.33.0) (2026-10-22)
+
+
+### Features
+
+* manage required job titles and reorder sidebar ([#64](https://github.com/naveenbarrywehmiller/gcc_ts/issues/64)) ([c222d1c](https://github.com/naveenbarrywehmiller/gcc_ts/commit/c222d1c53fa466c4b83d8997f48019d47f9ee4ca))
+
 ## [1.32.1](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.32.0...gcc-timesheet-app-v1.32.1) (2026-10-21)
 
 
