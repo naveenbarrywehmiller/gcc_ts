@@ -4,9 +4,9 @@ Employee time tracking, team approvals, administration, and reporting in one app
 
 [Documentation](docs/README.md) · [Repository map](docs/REPOSITORY_STRUCTURE.md) · [Getting started](#getting-started) · [Features](#features) · [Configuration](#configuration) · [Docker](#docker-deployment) · [Help](.github/HELP.md) · [API](docs/API_REFERENCE.md) · [Changelog](CHANGELOG.md)
 
-**Releases:** [GCC Timesheet App v1.33.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-app-v1.33.0) · [GCC Dashboard Power BI v2.2.2](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-dashboard-powerbi-v2.2.2) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-dashboard-powerbi-v2.2.2/gcc-dashboard-powerbi-v2.2.2.zip)) · [GCC Timesheet Linux Admin v1.1.1](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.1.1)
+**Releases:** [GCC Timesheet App v1.34.0](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-app-v1.34.0) · [GCC Dashboard Power BI v2.2.2](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-dashboard-powerbi-v2.2.2) ([Power BI project and tools ZIP](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-dashboard-powerbi-v2.2.2/gcc-dashboard-powerbi-v2.2.2.zip)) · [GCC Timesheet Linux Admin v1.1.1](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.1.1)
 
-**Current source versions:** GCC Timesheet App v1.33.0 · GCC Dashboard Power BI v2.2.2 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing data.
+**Current source versions:** GCC Timesheet App v1.34.0 · GCC Dashboard Power BI v2.2.2 · reporting API v2.0.0. Upgrade the application and PBIP together before refreshing data.
 
 **GCC Timesheet Linux Admin:** [Interactive installer and maintenance guide](deploy/linux-admin/README.md) — run `timesheet` for Docker setup, Avahi, ports, backups, scheduled updates, pause/resume controls and diagnostics. New administrator releases use `gcc-timesheet-linux-admin-v*` tags; historical tags remain compatible.
 

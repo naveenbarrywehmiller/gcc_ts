@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.33.0...gcc-timesheet-app-v1.34.0) (2026-10-22)
+
+
+### Features
+
+* add Department ownership selection to tasks ([#66](https://github.com/naveenbarrywehmiller/gcc_ts/issues/66)) ([3cbff62](https://github.com/naveenbarrywehmiller/gcc_ts/commit/3cbff62ad1b5cfbe7daca7af4414fa3e5f2aaa9b))
+
 ## [1.33.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.32.1...gcc-timesheet-app-v1.33.0) (2026-10-22)
 
 
