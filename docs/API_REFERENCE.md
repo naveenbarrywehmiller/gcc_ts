@@ -271,7 +271,7 @@ Standard REST patterns (`GET /`, `POST /`, `PUT /:id`, `DELETE /:id`):
 | **Users** | `/api/users` | `name`, `email`, `role`, `division_id`, `department_id` |
 | **Active Users Count** | `/api/users/active-count` | Returns `{ online: N, total: M }` |
 | **Projects** | `/api/projects` | `project_name`, `project_code`, `project_status`, `division_id`, `billable_task_ids`, `non_billable_task_ids` |
-| **Tasks** | `/api/tasks` | `classification`, `task_category`, `task_description`, optional `estimated_hours`, `input_received_date`, `start_date`, `target_date`, `delivered_date` |
+| **Tasks** | `/api/tasks` | `classification`, `task_category`, `task_description`, `ownership_id` (required for Productive tasks; optional for Non-Productive), optional planning fields |
 | **Divisions** | `/api/divisions` | `name`, `code` |
 | **Subdivisions** | `/api/subdivisions` | `name`, `division_id` |
 | **Departments** | `/api/departments` | `name`, `division_id` |
@@ -308,7 +308,9 @@ Content-Type: multipart/form-data
 
 ### Task planning and project assignments
 
-`POST/PUT /api/tasks` accepts nullable `estimated_hours` (finite, nonnegative; zero is valid) and four optional ISO calendar dates: `input_received_date`, `start_date`, `target_date`, `delivered_date`. Omitted fields survive updates; empty strings/null clear optional values. Classification must be Billable or Non-Billable and cannot change once assigned or used in time records.
+Ownership Details remain managed under Departments. Tasks select an entry using `ownership_id`: required for Productive tasks and optional for Non-Productive tasks. Read/create/update responses include `ownership_label` and `ownership_department_name`. Existing task assignments can be retained when their ownership entry or Department becomes inactive; new selections must be active. Excel/CSV task imports enforce the same classification rule. See [Task Ownership Details](TASK_OWNERSHIP.md) for migration and workbook behavior.
+
+`POST/PUT /api/tasks` accepts nullable `estimated_hours` (finite, nonnegative; zero is valid) and four optional ISO calendar dates: `input_received_date`, `start_date`, `target_date`, `delivered_date`. Omitted fields survive updates; empty strings/null clear optional values. Classification must be Productive or Non-Productive and cannot change once assigned or used in time records.
 
 `POST/PUT /api/projects` accepts `billable_task_ids` and `non_billable_task_ids` arrays of task IDs. At least one task is required across the two categories. New assignments require active tasks with the matching classification. Omitted lists on an update retain existing assignments; an empty list clears that category. Existing inactive assignments may be retained for history. Project creation/editing no longer requires a single billing type.
 

@@ -54,6 +54,7 @@ before(async () => {
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, system);
   db.prepare('INSERT INTO activities(name) VALUES (?)').run('Engineering');
   db.prepare('INSERT INTO supporting_categories(name) VALUES (?)').run('Dedicated');
+  db.exec("INSERT INTO departments(id,name) VALUES (1,'Catalog'); INSERT INTO department_ownerships(id,department_id,label) VALUES (1,1,'Engineering ownership')");
   server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve)); base = `http://127.0.0.1:${server.address().port}/api`;
 });
 after(() => { server?.close(); db.close(); });
@@ -66,7 +67,7 @@ test('empty exports contain reusable headers and native dropdown rules without d
     assert.equal(sheet.views[0].ySplit, 1);
     assert.equal(book.getWorksheet('_Import Manifest').state, 'veryHidden');
     assert.equal(book.getWorksheet('_Dropdowns').state, 'veryHidden');
-    const labels = kind === 'projects' ? ['Platform', 'Division', 'Location', 'Status', 'Work Type', 'Dedicated/Flex', 'Active', 'User Assignment'] : ['Classification', 'Active'];
+    const labels = kind === 'projects' ? ['Platform', 'Division', 'Location', 'Status', 'Work Type', 'Dedicated/Flex', 'Active', 'User Assignment'] : ['Classification', 'Ownership Details', 'Active'];
     for (const label of labels) {
       const rule = cell(book, kind, 2, label).dataValidation;
       assert.equal(rule.type, 'list'); assert.equal(rule.errorStyle, 'stop'); assert.equal(rule.showErrorMessage, true);
@@ -77,8 +78,8 @@ test('empty exports contain reusable headers and native dropdown rules without d
       assert(!JSON.stringify(book.getWorksheet('_Dropdowns').getSheetValues()).includes('Division B'));
     }
   }
-  productive = (await request('/tasks', { classification: 'Productive', task_category: 'Engineering' })).body.task.id;
-  nonProductive = (await request('/tasks', { classification: 'Non-Productive', task_category: 'Meetings' })).body.task.id;
+  productive = (await request('/tasks', { ownership_id: 1, classification: 'Productive', task_category: 'Engineering' })).body.task.id;
+  nonProductive = (await request('/tasks', { ownership_id: 1, classification: 'Non-Productive', task_category: 'Meetings' })).body.task.id;
 });
 
 test('project exports enforce platform and division scope even when filters request another division', async () => {
@@ -194,8 +195,8 @@ test('legacy CSV updates by project code and never deactivates omitted projects'
 });
 
 test('task workbook edits preserve IDs/planning and removed rows deactivate only the exported tasks', async () => {
-  const one = (await request('/tasks', { classification: 'Productive', task_category: 'TASK-ONE', estimated_hours: 2, target_date: '2026-11-01' })).body.task;
-  const two = (await request('/tasks', { classification: 'Productive', task_category: 'TASK-TWO' })).body.task;
+  const one = (await request('/tasks', { ownership_id: 1, classification: 'Productive', task_category: 'TASK-ONE', estimated_hours: 2, target_date: '2026-11-01' })).body.task;
+  const two = (await request('/tasks', { ownership_id: 1, classification: 'Productive', task_category: 'TASK-TWO' })).body.task;
   const book = await exported('tasks', 'search=TASK-');
   cell(book, 'tasks', 2, 'Task Name/Number').value = 'TASK-EDITED';
   cell(book, 'tasks', 2, 'Estimated Hours').value = 0;
@@ -213,7 +214,7 @@ test('task imports reject all rows for invalid dates, estimates, classifications
   for (const invalid of [
     'Bad,Productive,-2,2026-10-01', 'Bad,Productive,2,2026-02-30', 'Bad,Typo,2,2026-10-01', 'Good,Productive,2,2026-10-01',
   ]) {
-    const response = await csv('tasks', `Task Name/Number,Classification,Estimated Hours,Start Date\nGood,Productive,1,2026-10-01\n${invalid}`);
+    const response = await csv('tasks', `Task Name/Number,Classification,Estimated Hours,Start Date,Ownership Details\nGood,Productive,1,2026-10-01,1\n${invalid},1`);
     assert.equal(response.status, 400); assert(response.body.errors.some(e => e.startsWith('Row 3:')));
     assert.equal(db.prepare("SELECT COUNT(*) n FROM tasks WHERE task_category='Good'").get().n, 0);
   }
@@ -228,7 +229,7 @@ test('task classification history guards apply equally to workbook imports', asy
 });
 
 test('new task rows and explicit reactivation work, with shared catalog permissions enforced', async () => {
-  const response = await csv('tasks', 'Task Name/Number,Classification,Active\nCSV-TASK,Productive,Yes');
+  const response = await csv('tasks', 'Task Name/Number,Classification,Active,Ownership Details\nCSV-TASK,Productive,Yes,1');
   assert.equal(response.status, 200, JSON.stringify(response.body)); assert.equal(response.body.created, 1);
   const inactive = db.prepare("SELECT id FROM tasks WHERE task_category='TASK-TWO'").get().id;
   const book = await exported('tasks', 'search=TASK-TWO&active=0'); cell(book, 'tasks', 2, 'Active').value = 'Yes';

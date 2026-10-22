@@ -21,12 +21,26 @@ export default function AdminTasks() {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [ownerships, setOwnerships] = useState([]);
+  const [ownershipError, setOwnershipError] = useState(false);
+  const [ownershipLoading, setOwnershipLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [active, setActive] = useState('1');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ classification: '', task_category: '', task_description: '' });
+  const [form, setForm] = useState({ classification: '', task_category: '', task_description: '', ownership_id: '' });
+  const ownershipRequired = form.classification === 'Productive';
+  const selectedOwnership = ownerships.find(item => item.id === Number(form.ownership_id));
+  const selectedOwnershipText = selectedOwnership
+    ? `${selectedOwnership.department_name} — ${selectedOwnership.label}`
+    : editing && Number(form.ownership_id) === editing.ownership_id ? `${editing.ownership_department_name} — ${editing.ownership_label}` : '';
+  const loadOwnerships = useCallback(() => {
+    setOwnershipLoading(true);
+    setOwnershipError(false);
+    api.get('/department-ownerships').then(res => setOwnerships(res.data.ownerships.filter(item => item.department_active)))
+      .catch(() => setOwnershipError(true)).finally(() => setOwnershipLoading(false));
+  }, []);
 
   const load = useCallback(() => {
     api.get('/tasks', { params: { active } }).then(res => setTasks(res.data.tasks)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
@@ -39,15 +53,16 @@ export default function AdminTasks() {
     (t.task_description || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const openCreate = () => { setEditing(null); setForm({ classification: '', task_category: '', task_description: '' }); setShowModal(true); };
-  const openEdit = (t) => { setEditing(t); setForm({ ...t }); setShowModal(true); };
+  const openCreate = () => { setEditing(null); setForm({ classification: '', task_category: '', task_description: '', ownership_id: '' }); loadOwnerships(); setShowModal(true); };
+  const openEdit = (t) => { setEditing(t); setForm({ ...t, ownership_id: t.ownership_id || '' }); loadOwnerships(); setShowModal(true); };
 
   const handleSave = async () => {
     try {
       if (!form.task_category.trim() || !form.classification) { toast.error('Enter a task name and select a classification'); return; }
+      if (ownershipRequired && !form.ownership_id) { toast.error('Ownership Details is required for Productive tasks'); document.getElementById('task-ownership')?.focus(); return; }
       if (editing) { await api.put(`/tasks/${editing.id}`, form); toast.success('Task updated'); }
       else { await api.post('/tasks', form); toast.success('Task created'); }
-      setShowModal(false); load();
+      setShowModal(false); load(); cache.invalidateQueries({ queryKey: ['project-options'] });
     } catch (err) { toast.error(err.response?.data?.error || 'Failed to save'); }
   };
 
@@ -92,7 +107,7 @@ export default function AdminTasks() {
       </div>
       {!canManage && <p className="text-sm text-surface-500">View shared tasks used across all divisions.</p>}
       {canManage && <div className="space-y-1 text-xs text-surface-500">
-        <p>Export Tasks downloads the current filters, or headers for an empty list. Edit and reimport to update tasks; keep existing Task IDs and leave IDs blank for new rows. Excel includes Classification and Active dropdowns.</p>
+        <p>Export Tasks downloads the current filters, or headers for an empty list. Edit and reimport to update tasks; keep existing Task IDs and leave IDs blank for new rows. Excel includes Classification, Ownership Details, and Active dropdowns. Ownership Details is required for Productive tasks and optional for Non-Productive tasks. Maintain ownership entries under Departments.</p>
         <p>Removing a row from an exported Excel file deactivates that exported task. CSV and older files update or add rows without deactivating missing tasks. Any invalid row rejects the entire import. Keep the workbook’s hidden sheets. Tasks are shared across all divisions; classification cannot change after assignment or time entry.</p>
       </div>}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -112,6 +127,7 @@ export default function AdminTasks() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Classification</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Category</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Description</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Ownership Details</th>
               {taskPlanningFields.map(([key, label]) => <th key={key} className="text-left px-4 py-3 text-xs font-semibold text-surface-500 whitespace-nowrap">{label}</th>)}
               <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Status</th>
               {canManage && <th className="text-right px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Actions</th>}
@@ -127,6 +143,7 @@ export default function AdminTasks() {
                 </td>
                 <td className="px-4 py-3 text-sm font-medium text-surface-800 dark:text-surface-200"><ActiveLabel active={t.active}>{t.task_category}</ActiveLabel></td>
                 <td className="px-4 py-3 text-sm text-surface-500">{t.task_description || '—'}</td>
+                <td className="px-4 py-3 text-sm text-surface-500"><span className="block text-xs">{t.ownership_department_name}</span>{t.ownership_label || (t.classification === 'Productive' ? 'Not assigned' : '—')}</td>
                 {taskPlanningFields.map(([key]) => <td key={key} className="px-4 py-3 text-sm text-surface-500 whitespace-nowrap">{t[key] ?? '—'}</td>)}
                 <td className="px-4 py-3 text-sm text-surface-500">{t.active ? 'Active' : 'Inactive'}</td>
                 {canManage && <td className="px-4 py-3 text-right">
@@ -143,7 +160,7 @@ export default function AdminTasks() {
       </div>
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Task' : 'Create Task'}
-        footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} className="btn-primary btn-sm">{editing ? 'Update' : 'Create'}</button></>}>
+        footer={<><button onClick={() => setShowModal(false)} className="btn-secondary btn-sm">Cancel</button><button onClick={handleSave} disabled={ownershipRequired && (ownershipLoading || ownershipError)} className="btn-primary btn-sm">{editing ? 'Update' : 'Create'}</button></>}>
         <div className="space-y-4">
           <div>
             <label htmlFor="task-classification" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Classification *</label>
@@ -160,6 +177,17 @@ export default function AdminTasks() {
           <div>
             <label className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5" htmlFor="task-description">Description<FieldHelp label="Task Description" /></label>
             <textarea id="task-description" className="input" rows={3} value={form.task_description || ''} onChange={e => setForm({ ...form, task_description: e.target.value })} placeholder="Task description" />
+          </div>
+          <div>
+            <label htmlFor="task-ownership" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Ownership Details {ownershipRequired ? '*' : '(optional)'}</label>
+            <select id="task-ownership" required={ownershipRequired} disabled={ownershipLoading || ownershipError} aria-describedby="task-ownership-help" className="input" value={form.ownership_id} onChange={e => setForm({ ...form, ownership_id: e.target.value })}>
+              <option value="">{ownershipLoading ? 'Loading ownership details…' : 'Select ownership details'}</option>
+              {form.ownership_id && !ownerships.some(item => item.id === Number(form.ownership_id)) && <option value={form.ownership_id}>{editing?.ownership_department_name} — {editing?.ownership_label} (inactive)</option>}
+              {ownerships.map(item => <option key={item.id} value={item.id}>{item.department_name} — {item.label}</option>)}
+            </select>
+            {selectedOwnershipText && <p className="mt-1 text-xs text-surface-600 dark:text-surface-300 break-words">{selectedOwnershipText}</p>}
+            <p id="task-ownership-help" className="mt-1 text-xs text-surface-500 dark:text-surface-400">{ownershipLoading ? 'Loading the Department ownership list.' : ownershipError ? 'Unable to load ownership details.' : ownerships.length ? 'Choose an entry maintained under Departments.' : 'No active ownership entries. Ask a Manager or System Admin to add Ownership Details under Departments.'}</p>
+            {ownershipError && <button type="button" onClick={loadOwnerships} className="btn-secondary btn-sm mt-2">Retry ownership details</button>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {taskPlanningFields.map(([key, label, type]) => <div key={key} className="min-w-0"><label htmlFor={`task-${key}`} className="block text-xs font-medium mb-1.5">{label} <span className="text-surface-500">(optional)</span></label><input id={`task-${key}`} type={type} className="input" min={type === 'number' ? 0 : undefined} step={type === 'number' ? 'any' : undefined} value={form[key] ?? ''} onChange={e => setForm({ ...form, [key]: e.target.value })} /></div>)}

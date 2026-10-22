@@ -9,7 +9,7 @@ const router = express.Router();
 // GET /api/department-ownerships - List ownerships, optionally filtered by department_id
 router.get('/', authenticate, (req, res) => {
   const { department_id, active } = req.query;
-  let query = 'SELECT do_.*, d.name as department_name FROM department_ownerships do_ JOIN departments d ON do_.department_id = d.id WHERE 1=1';
+  let query = 'SELECT do_.*, d.name as department_name, d.active AS department_active FROM department_ownerships do_ JOIN departments d ON do_.department_id = d.id WHERE 1=1';
   const params = [];
 
   if (department_id) {

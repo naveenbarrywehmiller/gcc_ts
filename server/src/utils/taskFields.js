@@ -6,6 +6,20 @@ function validateTask(input, existing = {}) {
   if (!['Productive', 'Non-Productive'].includes(data.classification)) fail('Select Productive or Non-Productive classification');
   const result = { task_category: data.task_category.trim(), classification: data.classification, task_description: data.task_description || null };
   if (result.task_category.length > 1000 || (result.task_description !== null && typeof result.task_description !== 'string')) fail('Invalid task name or description');
+  const ownershipId = data.ownership_id;
+  if (ownershipId === '' || ownershipId === null || ownershipId === undefined) {
+    if (data.classification === 'Productive') fail('Select Ownership Details (required for Productive tasks)');
+    result.ownership_id = null;
+  } else {
+    if (!['string', 'number'].includes(typeof ownershipId) || !/^[1-9]\d*$/.test(String(ownershipId)) || !Number.isSafeInteger(Number(ownershipId))) {
+      fail('Select valid Ownership Details');
+    }
+    const ownership = require('../config/db').prepare(`SELECT o.id FROM department_ownerships o
+      JOIN departments d ON d.id = o.department_id
+      WHERE o.id = ? AND ((o.active = 1 AND d.active = 1) OR o.id = ?)`).get(Number(ownershipId), existing.ownership_id || null);
+    if (!ownership) fail('Select active Ownership Details from an active Department');
+    result.ownership_id = ownership.id;
+  }
   for (const key of planningFields) {
     const value = data[key];
     result[key] = value === '' || value === undefined || value === null ? null : value;

@@ -11,7 +11,7 @@ const projectColumns = [
 ];
 const taskColumns = [
   ['id', 'Task ID'], ['classification', 'Classification'], ['task_category', 'Task Name/Number'],
-  ['task_description', 'Description'], ['estimated_hours', 'Estimated Hours'],
+  ['task_description', 'Description'], ['ownership_id', 'Ownership Details'], ['estimated_hours', 'Estimated Hours'],
   ['input_received_date', 'Input Received Date'], ['start_date', 'Start Date'],
   ['target_date', 'Target Date'], ['delivered_date', 'Delivered Date'], ['active', 'Active'],
 ];

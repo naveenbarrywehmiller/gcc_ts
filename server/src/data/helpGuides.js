@@ -120,7 +120,7 @@ const adminGuides = [
       'Task Name/Number offers Export Tasks and Import Excel with the same update, validation and deactivation behavior. Tasks remain shared companywide. Keep Task IDs; assigned or logged task classifications cannot change. Any invalid row rejects the entire project or task import and the error popup identifies the affected rows.',
       'Select at least one task using the searchable Productive and Non-Productive lists. A project may include either or both categories. Estimates and four planning dates are optional on Task Name/Number.',
       'Set the division and location in each project. Managers and System Admins maintain locations in Division; Admins can view the existing locations.',
-      'Admins maintain Task Name/Number. Divisions, Departments, Dedicated/Flex and Work Type are read-only for Admins; Managers and System Admins maintain these lists.',
+      'Admins maintain Task Name/Number. Productive tasks require Ownership Details selected from Departments; this is optional for Non-Productive tasks. Department names distinguish the choices, and task imports enforce the same rule. Divisions, Departments, Dedicated/Flex and Work Type are read-only for Admins; Managers and System Admins maintain these lists.',
       'Check the record and your scope before changing or deactivating an item.',
     ],
   },

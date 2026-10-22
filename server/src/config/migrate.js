@@ -530,6 +530,10 @@ function migrate({ bootstrap = true } = {}) {
   require('./auditScopeMigration')(db);
   require('./platformMigration')(db);
   require('./classificationMigration')(db);
+  if (!db.prepare('PRAGMA table_info(tasks)').all().some(column => column.name === 'ownership_id')) {
+    // Existing tasks need an explicit selection; historical timesheet ownership stays unchanged.
+    db.exec('ALTER TABLE tasks ADD COLUMN ownership_id INTEGER REFERENCES department_ownerships(id)');
+  }
   db.exec(`CREATE TABLE IF NOT EXISTS job_titles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL COLLATE NOCASE UNIQUE,
