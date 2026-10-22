@@ -72,6 +72,7 @@ Use a fresh browser context and temporarily hold a lazy route's JavaScript reque
 | Team Approvals | `/manager/approvals` |
 | Reports | `/reports` |
 | Users | `/admin/users` |
+| Job Title | `/admin/job-titles` |
 | Projects | `/admin/projects` |
 | Task Name/Number | `/admin/tasks` |
 | Platforms | `/admin/platforms` |

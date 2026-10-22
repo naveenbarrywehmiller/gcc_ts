@@ -20,6 +20,7 @@ const MatrixHelp = lazy(() => import('./pages/MatrixHelp'));
 const Reports = lazy(() => import('./pages/Reports'));
 const ManagerApprovals = lazy(() => import('./pages/manager/ManagerApprovals'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const AdminJobTitles = lazy(() => import('./pages/admin/SimpleListManager').then(module => ({ default: module.AdminJobTitles })));
 const AdminProjects = lazy(() => import('./pages/admin/Projects'));
 const AdminTasks = lazy(() => import('./pages/admin/Tasks'));
 const AdminPlatforms = lazy(() => import('./pages/admin/SimpleListManager').then(module => ({ default: module.AdminPlatforms })));
@@ -76,6 +77,7 @@ function AppRoutes() {
           {/* Admin Routes */}
           <Route path="/reports" element={<PermissionRoute permission="reports"><Reports /></PermissionRoute>} />
           <Route path="/admin/users" element={<PermissionRoute permission="usersView"><AdminUsers /></PermissionRoute>} />
+          <Route path="/admin/job-titles" element={<PermissionRoute permission="catalogView"><AdminJobTitles /></PermissionRoute>} />
           <Route path="/admin/projects" element={<PermissionRoute permission="projectsView"><AdminProjects /></PermissionRoute>} />
           <Route path="/admin/tasks" element={<PermissionRoute permission="tasksView"><AdminTasks /></PermissionRoute>} />
           <Route path="/admin/platforms" element={<PermissionRoute permission="catalogView"><AdminPlatforms /></PermissionRoute>} />

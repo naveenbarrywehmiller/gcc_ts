@@ -40,6 +40,7 @@ before(async () => {
     db.prepare('INSERT INTO project_tasks(project_id,task_id) VALUES (?,?)').run(id,task); return id;
   };
   project=makeProject('ALPHA',a); foreignProject=makeProject('BETA',b);
+  db.exec("INSERT INTO job_titles(id,name) VALUES (1,'Test Engineer'); UPDATE users SET job_title_id = 1");
   server=app.listen(0,'127.0.0.1'); await new Promise(resolve=>server.once('listening',resolve)); base=`http://127.0.0.1:${server.address().port}/api`;
 });
 after(()=>{ server?.close(); db.close(); });

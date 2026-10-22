@@ -45,6 +45,7 @@ before(async () => {
   db.exec("UPDATE projects SET billing_type = 'Productive'");
   task = Number(db.prepare("INSERT INTO tasks(task_category,classification) VALUES ('Design','Productive')").run().lastInsertRowid);
   db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
+  db.exec("INSERT INTO job_titles(id,name) VALUES (1,'Test Engineer'); UPDATE users SET job_title_id = 1");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -149,7 +150,7 @@ test('user management checks both the original and destination division on every
   assert.equal((await request(admin, `/users/${employee}`, { name: 'Updated employee' }, 'PUT')).status, 200);
   assert.equal((await request(unassigned, `/users/${employee}`, { name: 'Denied' }, 'PUT')).status, 403);
   for (const [division, status] of [[a, 201], [b, 403]]) {
-    assert.equal((await request(admin, '/users', { name: 'New Employee', email: `new-${division}@test.invalid`, password: 'password123', division_id: division }, 'POST')).status, status);
+    assert.equal((await request(admin, '/users', { name: 'New Employee', email: `new-${division}@test.invalid`, password: 'password123', job_title_id: 1, division_id: division }, 'POST')).status, status);
   }
   assert.equal(db.prepare('SELECT active FROM users WHERE id = ?').get(foreign).active, 1);
 });
@@ -186,7 +187,7 @@ test('employee division checkboxes control which project divisions they can book
   assert.equal((await request(system, `/users/${employee}`, { supporting_category_id: flexCategory, division_id: a, division_ids: [a] }, 'PUT')).status, 200);
   assert.equal((await request(employee, '/timesheets', { task_id: task, project_description: 'Design work', project_id: projectB, division_id: b, work_date: '2026-10-03', hours: 1 }, 'POST')).status, 403);
   const created = await request(system, '/users', {
-    name: 'Cross Division', email: 'cross@test.invalid', password: 'password123', role: 'employee',
+    job_title_id: 1, name: 'Cross Division', email: 'cross@test.invalid', password: 'password123', role: 'employee',
     division_id: a, division_ids: [a, b], supporting_category_id: dedicatedCategory,
   }, 'POST');
   assert.equal(created.status, 201);

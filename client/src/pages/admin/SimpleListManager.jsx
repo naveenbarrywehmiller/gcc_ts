@@ -118,6 +118,10 @@ export default function SimpleListManager({ endpoint, title, fieldName = 'name',
 }
 
 // Wrapper components
+export function AdminJobTitles() {
+  return <SimpleListManager endpoint="/job-titles" title="Job Title" />;
+}
+
 export function AdminDivisions() {
   return <SimpleListManager endpoint="/divisions" title="Divisions" fieldName="name" withLocations />;
 }

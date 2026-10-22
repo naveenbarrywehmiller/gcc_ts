@@ -50,6 +50,7 @@ before(async () => {
   }
   db.prepare("INSERT INTO division_updates(division_id,month,travel_visa,open_positions,new_joiners) VALUES (?,'2026-10','South travel','South vacancies','South joiners')").run(south);
   for (const divisionId of [north, south, null]) db.prepare("INSERT INTO audit_logs(user_id,action,details,division_id) VALUES (?,'VIEWER_FIXTURE','Viewer audit fixture',?)").run(users.system, divisionId);
+  db.exec("INSERT INTO job_titles(id,name) VALUES (1,'Test Engineer'); UPDATE users SET job_title_id = 1");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -193,7 +194,7 @@ test('Viewer can authenticate and change their password; only System Admin can g
   assert.equal((await request('/auth/logout', 'POST', {})).status, 200);
   assert.equal((await request(`/users/${users.employee}`, 'PUT', { role: 'viewer' }, 'admin')).status, 403);
   assert.equal((await request(`/users/${users.viewer}`, 'PUT', { name: 'Changed' }, 'admin')).status, 403);
-  const created = await request('/users', 'POST', { name: 'New Viewer', email: 'new@viewer.test', password: 'Viewer-test-123', role: 'viewer' }, 'system');
+  const created = await request('/users', 'POST', { job_title_id: 1, name: 'New Viewer', email: 'new@viewer.test', password: 'Viewer-test-123', role: 'viewer' }, 'system');
   assert.equal(created.status, 201); assert.equal(created.body.user.role, 'viewer');
   assert.equal((await request(`/users/${users.manager}`, 'PUT', { role: 'viewer' }, 'system')).status, 200);
   const enabled = config.enableMsalAuth; config.enableMsalAuth = true;

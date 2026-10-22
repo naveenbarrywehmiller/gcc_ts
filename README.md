@@ -47,6 +47,8 @@ The backend checks permissions independently of the UI. Matrix help is hidden an
 
 Only a System Admin can assign the Viewer role, because it grants companywide visibility. The Users page shows total registered accounts and counts for every role, including active and inactive accounts and excluding anonymized deleted accounts. Counts stay companywide when the directory is filtered; selecting a role count filters the list. Startup migrations preserve existing user IDs and linked records while adding Viewer to the database role constraint.
 
+Job Title is a separate shared list under Users in the sidebar. Managers and System Admins maintain titles; authorized user administrators select a required title when creating or saving a profile. Titles can be changed after a promotion and appear on the user's dashboard. Existing accounts keep their current access and show `Not assigned` until a title is selected. See [the Job Title API contract](docs/JOB_TITLES.md).
+
 ### Timesheet workflow
 
 Save hours as drafts, submit the week for review, then approve or reject it through the applicable approval screen. Recall moves eligible entries back to an editable state; the server enforces ownership, division scope, and eligible status. Planned vacation does not create timesheet hours or submit an approval request.
@@ -105,7 +107,7 @@ A fresh database contains only **systemadmin@barry-wehmiller.com / systemadmin**
 npm run setup
 ```
 
-This runs migrations without adding sample users, platforms, divisions, projects, tasks, departments, supporting categories, activities or holidays. The former demo-seed flag no longer inserts test data. Migrations also run automatically on server startup.
+This runs migrations without adding sample users, platforms, divisions, projects, tasks, departments, job titles, supporting categories, activities or holidays. The former demo-seed flag no longer inserts test data. Migrations also run automatically on server startup.
 
 Open two terminals at the repository root:
 
@@ -123,7 +125,7 @@ Visit **http://localhost:5173** and sign in with the bootstrap credentials. The 
 
 ### 4. First administrator setup
 
-1. Create or review divisions, departments, supporting categories, and activities.
+1. Create or review divisions, departments, job titles, supporting categories, and activities.
 2. Configure projects, tasks, and holiday dates.
 3. Create employees and managers; assign roles and organization membership.
 4. Assign division ownership for administrators as appropriate.

@@ -30,7 +30,7 @@ function authenticate(req, res, next) {
     const decoded = jwt.verify(token, config.jwtSecret);
     const user = db.prepare(`
       SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active,
-             u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
+             u.job_title_id, jt.name AS job_title_name, u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
              d.name as division_name,
              dept.name as department_name,
              sc.name as supporting_category_name
@@ -38,6 +38,7 @@ function authenticate(req, res, next) {
       LEFT JOIN divisions d ON u.division_id = d.id
       LEFT JOIN departments dept ON u.department_id = dept.id
       LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN job_titles jt ON u.job_title_id = jt.id
       WHERE u.id = ? AND u.active = 1
     `).get(decoded.userId);
 

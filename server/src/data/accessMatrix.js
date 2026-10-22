@@ -46,7 +46,7 @@ add('Task Name/Number', 'View and search the shared task directory', 'tasksView'
 add('Task Name/Number', 'Create, edit and deactivate shared tasks', 'tasks', 'Companywide', 'Task management remains with Admins and System Admins.');
 add('Task Name/Number', 'Export tasks for editing or new rows', 'tasksView', 'Companywide', 'Current filters apply. Empty results export headers; Excel includes Classification and Active dropdowns.');
 add('Task Name/Number', 'Import task changes and deactivate removed export rows', 'tasks', 'Companywide', 'Any invalid row rejects all changes. Task IDs preserve existing links and assigned/logged classification history.');
-for (const area of ['Divisions', 'Locations', 'Departments', 'Department Ownership', 'Dedicated/Flex', 'Work Type']) {
+for (const area of ['Divisions', 'Locations', 'Departments', 'Department Ownership', 'Job Title', 'Dedicated/Flex', 'Work Type']) {
   add(area, 'View and search reference settings', 'catalogView', 'Companywide', 'Employees can use relevant choices through their existing forms.');
   add(area, 'Add and edit reference settings', 'catalogEdit', 'Companywide', 'Manager changes affect all divisions.');
   add(area, 'Delete/deactivate or change activation status', 'catalogDelete', 'Companywide', 'Existing historical records are retained for deactivated choices.');

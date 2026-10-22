@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/auth';
 import {
   LayoutDashboard, Clock, Users, FolderKanban, ListTodo, Building2,
   Activity, Calendar, ClipboardCheck, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Timer, Shield, X, CircleHelp, Grid2X2
+  ChevronLeft, ChevronRight, Timer, Shield, X, CircleHelp, Grid2X2, BriefcaseBusiness
 } from 'lucide-react';
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
@@ -50,14 +50,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
   const managementItems = [
     { to: isAdmin ? '/admin/approvals' : '/manager/approvals', icon: ClipboardCheck, label: 'Approvals', permission: 'approvalsView' },
-    { to: '/admin/users', icon: Users, label: 'Users', permission: 'usersView' },
     { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projectsView' },
     { to: '/admin/tasks', icon: ListTodo, label: 'Task Name/Number', permission: 'tasksView' },
     { to: '/admin/platforms', icon: Building2, label: 'Platform', permission: 'catalogView' },
     { to: '/admin/divisions', icon: Building2, label: 'Division', permission: 'catalogView' },
-    { to: '/admin/departments', icon: Users, label: 'Departments', permission: 'catalogView' },
-    { to: '/admin/supporting-categories', icon: Users, label: 'Dedicated/Flex', permission: 'catalogView' },
     { to: '/admin/activities', icon: Activity, label: 'Work Type', permission: 'catalogView' },
+    { to: '/admin/departments', icon: Users, label: 'Departments', permission: 'catalogView' },
+    { to: '/admin/users', icon: Users, label: 'Users', permission: 'usersView' },
+    { to: '/admin/job-titles', icon: BriefcaseBusiness, label: 'Job Title', permission: 'catalogView' },
+    { to: '/admin/supporting-categories', icon: Users, label: 'Dedicated/Flex', permission: 'catalogView' },
     { to: '/admin/travel', icon: Activity, label: 'Travel & VISA', permission: 'divisionUpdateView' },
     { to: '/admin/staffing', icon: Users, label: 'Open Position / New Joiners', permission: 'divisionUpdateView' },
     { to: '/admin/holidays', icon: Calendar, label: 'Holidays', permission: 'catalogView' },

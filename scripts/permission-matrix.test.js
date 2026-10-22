@@ -46,6 +46,7 @@ before(async () => {
   location = Number(db.prepare("INSERT INTO subdivisions(name,division_id) VALUES ('Matrix Location',?)").run(a).lastInsertRowid);
   holiday = Number(db.prepare("INSERT INTO holidays(date,name) VALUES ('2026-10-14','Matrix Holiday')").run().lastInsertRowid);
   for (const actor of ['employee', 'outsider']) db.prepare("INSERT INTO planned_vacations(user_id,vacation_date) VALUES (?,'2026-10-05')").run(users[actor]);
+  db.exec("INSERT INTO job_titles(id,name) VALUES (1,'Test Engineer'); UPDATE users SET job_title_id = 1");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;
