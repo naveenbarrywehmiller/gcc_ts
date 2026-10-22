@@ -40,7 +40,7 @@ router.post(['/login', '/maintenance-login'], (req, res) => {
 
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.password_hash, u.role, u.division, u.core, u.team_type, u.active,
-           u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
+           u.job_title_id, jt.name AS job_title_name, u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
            d.name as division_name,
            dept.name as department_name,
            sc.name as supporting_category_name
@@ -48,6 +48,7 @@ router.post(['/login', '/maintenance-login'], (req, res) => {
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN job_titles jt ON u.job_title_id = jt.id
     WHERE u.email = ? AND u.active = 1
   `).get(email.toLowerCase().trim());
   if (!user) {
@@ -107,6 +108,8 @@ router.post(['/login', '/maintenance-login'], (req, res) => {
       core: user.core,
       team_type: user.team_type,
       employee_id: user.employee_id,
+      job_title_id: user.job_title_id,
+      job_title_name: user.job_title_name,
       division_id: user.division_id,
       department_id: user.department_id,
       supporting_category_id: user.supporting_category_id,

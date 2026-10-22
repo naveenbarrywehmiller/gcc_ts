@@ -134,7 +134,9 @@ router.post('/ms-callback', (req, res) => {
       role: user.role,
       division: user.division,
       core: user.core,
-      team_type: user.team_type
+      team_type: user.team_type,
+      job_title_id: user.job_title_id,
+      job_title_name: db.prepare('SELECT name FROM job_titles WHERE id = ?').get(user.job_title_id)?.name || null
     };
 
     res.json({ token: accessToken, user: userProfile });

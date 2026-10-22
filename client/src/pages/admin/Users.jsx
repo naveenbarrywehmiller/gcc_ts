@@ -26,6 +26,7 @@ export default function AdminUsers() {
   const [, setSubdivisions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [supportingCategories, setSupportingCategories] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Filters and Sort State
@@ -46,7 +47,7 @@ export default function AdminUsers() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ 
     name: '', email: '', password: '', role: 'employee', 
-    division_id: '', department_id: '', supporting_category_id: '', employee_id: '' 
+    division_id: '', department_id: '', supporting_category_id: '', employee_id: '', job_title_id: ''
   });
   const [formPlatformIds, setFormPlatformIds] = useState([]);
   const [formDivisionIds, setFormDivisionIds] = useState([]);
@@ -90,8 +91,10 @@ export default function AdminUsers() {
       api.get('/departments'),
       api.get('/supporting-categories'),
       api.get('/projects/options'),
-      api.get('/platforms')
-    ]).then(([uRes, divRes, subRes, deptRes, scRes, optionsRes, platformsRes]) => {
+      api.get('/platforms'),
+      api.get('/job-titles')
+    ]).then(([uRes, divRes, subRes, deptRes, scRes, optionsRes, platformsRes, jobTitlesRes]) => {
+      setJobTitles(jobTitlesRes.data.jobTitles);
       setPlatforms(platformsRes.data.platforms);
       setUsers(uRes.data.users);
       setSummary(uRes.data.summary);
@@ -119,7 +122,7 @@ export default function AdminUsers() {
     const defaultDivision = !isSystemAdmin && managedDivisions.length === 1 ? managedDivisions[0].id : '';
     setForm({ 
       name: '', email: '', password: '', role: 'employee', 
-      division_id: defaultDivision, department_id: '', supporting_category_id: '', employee_id: ''
+      division_id: defaultDivision, department_id: '', supporting_category_id: '', employee_id: '', job_title_id: ''
     });
     setFormDivisionIds(defaultDivision ? [Number(defaultDivision)] : []);
     setOriginalDivisionIds([]);
@@ -155,7 +158,8 @@ export default function AdminUsers() {
         : user.division_id || '',
       department_id: user.department_id || '', 
       supporting_category_id: user.supporting_category_id || '',
-      employee_id: user.employee_id || ''
+      employee_id: user.employee_id || '',
+      job_title_id: user.job_title_id || ''
     });
     setShowPassword(false);
     setShowModal(true);
@@ -180,6 +184,11 @@ export default function AdminUsers() {
   };
 
   const handleSave = async () => {
+    if (!form.job_title_id) {
+      toast.error('Job title is required');
+      document.getElementById('user-form-job-title')?.focus();
+      return;
+    }
     try {
       const hasDivisionChoices = form.role === 'admin' || form.role === 'employee';
       if (hasDivisionChoices && formDivisionIds.length === 0) { toast.error('Select at least one division'); return; }
@@ -192,7 +201,7 @@ export default function AdminUsers() {
         if (!payload.password) delete payload.password;
         await api.put(`/users/${editing.id}`, payload);
         toast.success('User updated');
-        if (editing.id === currentUser?.id && form.role !== currentUser.role) {
+        if (editing.id === currentUser?.id) {
           window.location.reload();
           return;
         }
@@ -414,6 +423,7 @@ export default function AdminUsers() {
               <tr className="bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-800">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Name</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Employee ID</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Job Title</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Email</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Division</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Department</th>
@@ -439,6 +449,7 @@ export default function AdminUsers() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.employee_id || '—'}</td>
+                  <td className="px-4 py-3 text-sm text-surface-500">{user.job_title_name || 'Not assigned'}</td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.email}</td>
                   <td className="px-4 py-3 text-sm text-surface-500"><span className="block text-xs text-surface-500">{user.platforms?.map(p => p.name).join(', ') || 'Unmapped'}</span>{user.division_name || user.division || '—'}</td>
                   <td className="px-4 py-3 text-sm text-surface-500">{user.department_name || '—'}</td>
@@ -533,6 +544,15 @@ export default function AdminUsers() {
           <div>
             <label htmlFor="user-form-employee-id" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Employee ID<FieldHelp label="Employee - ID" /></label>
             <input id="user-form-employee-id" className="input" value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. EMP-001" />
+          </div>
+          <div>
+            <label htmlFor="user-form-job-title" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">Job Title *</label>
+            <select id="user-form-job-title" required aria-describedby="job-title-help" className="input" value={form.job_title_id} onChange={e => setForm({ ...form, job_title_id: e.target.value })}>
+              <option value="">Select job title</option>
+              {form.job_title_id && !jobTitles.some(title => title.id === Number(form.job_title_id)) && <option value={form.job_title_id}>{editing?.job_title_name} (inactive)</option>}
+              {jobTitles.map(title => <option key={title.id} value={title.id}>{title.name}</option>)}
+            </select>
+            <p id="job-title-help" className="mt-1 text-xs text-surface-500 dark:text-surface-400">{jobTitles.length ? 'Select a title. You can update it when the person’s position changes.' : 'No active job titles. Ask a Manager or System Admin to add one in Job Title.'}</p>
           </div>
           <div>
             <label htmlFor="user-form-password" className="block text-xs font-medium text-surface-600 dark:text-surface-400 mb-1.5">

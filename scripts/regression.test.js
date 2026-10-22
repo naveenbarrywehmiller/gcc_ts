@@ -54,6 +54,7 @@ before(async () => {
   project = Number(db.prepare("INSERT INTO projects(project_code,project_name,billing_type,division_id) VALUES ('TEST','Test','Productive',?)").run(a).lastInsertRowid);
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(manager, admin, admin);
   db.exec("INSERT INTO project_tasks(project_id,task_id) SELECT p.id,t.id FROM projects p JOIN tasks t ON t.classification = p.billing_type");
+  db.exec("INSERT INTO job_titles(id,name) VALUES (1,'Test Engineer'); UPDATE users SET job_title_id = 1");
   server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}/api`;

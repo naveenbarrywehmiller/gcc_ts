@@ -66,6 +66,7 @@ app.use(require('./middleware/maintenance').maintenance);
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/auth', require('./routes/auth-ms'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/job-titles', require('./routes/job-titles'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/platforms', require('./routes/platforms'));

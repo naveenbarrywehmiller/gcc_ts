@@ -102,9 +102,9 @@ const adminGuides = [
     description: 'Find people and maintain roles, team categories, and division access within your assigned scope.',
     steps: [
       'Search or filter by division, department, supporting category, role, or status.',
-      'Open a user to edit their details, or select Create User when your permissions allow it. Role and Dedicated/Flex are separate fields.',
+      'Open a user to edit their details, or select Create User when your permissions allow it. Select a required Job Title from the shared list. Managers and System Admins can add titles such as Senior engineer or Lead engineer under Job Title. Access role and Dedicated/Flex are separate fields.',
       'For an admin or employee, check every division they need and mark one checked division as Primary. Admin assignments control management access; employee assignments control which divisions appear when booking project time. The same checkboxes apply to Dedicated and Flex users.',
-      'Edit a user later to change their checked divisions, primary division, role, or Dedicated/Flex category. Only a System Admin can change privileged roles or administrator division access. Admins cannot expand their own access.',
+      'Edit a user later to change their Job Title when their position changes; it also appears on their login dashboard. Existing users without a title must have one selected when their profile is saved. Only a System Admin can change privileged roles or administrator division access. Admins cannot expand their own access.',
       'Use the assignment and history controls to manage or inspect users assigned to you. Employees must be assigned to an active admin before they can sign in or enter time.',
     ],
   },

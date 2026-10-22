@@ -530,6 +530,16 @@ function migrate({ bootstrap = true } = {}) {
   require('./auditScopeMigration')(db);
   require('./platformMigration')(db);
   require('./classificationMigration')(db);
+  db.exec(`CREATE TABLE IF NOT EXISTS job_titles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  if (!db.prepare('PRAGMA table_info(users)').all().some(column => column.name === 'job_title_id')) {
+    // Existing positions must be assigned explicitly rather than guessed during migration.
+    db.exec('ALTER TABLE users ADD COLUMN job_title_id INTEGER REFERENCES job_titles(id)');
+  }
   if (bootstrap) require('./bootstrapAdmin').bootstrapAdmin(db);
 
   console.log('✅ Database migrations complete.');

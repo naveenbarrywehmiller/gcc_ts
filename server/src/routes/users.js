@@ -12,6 +12,12 @@ const { permit } = require('../middleware/permissions');
 const router = express.Router();
 const { userAssignments, validatePlatforms, savePlatforms } = require('../utils/platformAssignments');
 
+function validJobTitle(value, currentId = null) {
+  if (!((typeof value === 'number' && Number.isSafeInteger(value)) || (typeof value === 'string' && /^\d+$/.test(value)))) return false;
+  const id = Number(value);
+  return id > 0 && Number.isSafeInteger(id) && Boolean(db.prepare('SELECT id FROM job_titles WHERE id = ? AND (active = 1 OR id = ?)').get(id, currentId));
+}
+
 // Admin account credentials and division grants control access across the app.
 router.use('/:id', authenticate, (req, res, next) => {
   if (req.method === 'GET' || req.user.role === 'system admin') return next();
@@ -132,7 +138,7 @@ router.get('/', authenticate, permit('usersView'), (req, res) => {
   const { search, division, division_id, department_id, supporting_category_id, role, active, sort_by, sort_dir } = req.query;
   let query = `
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
-           u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
+           u.job_title_id, jt.name AS job_title_name, u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
            d.name as division_name,
            dept.name as department_name,
            sc.name as supporting_category_name,
@@ -142,6 +148,7 @@ router.get('/', authenticate, permit('usersView'), (req, res) => {
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN job_titles jt ON u.job_title_id = jt.id
     LEFT JOIN user_admin_assignments uaa ON uaa.user_id = u.id
     LEFT JOIN users admin_u ON uaa.admin_id = admin_u.id
     WHERE u.name != '[Deleted User]'
@@ -206,7 +213,7 @@ router.get('/', authenticate, permit('usersView'), (req, res) => {
 router.get('/:id', authenticate, permit('usersView'), (req, res) => {
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active, u.created_at,
-           u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
+           u.job_title_id, jt.name AS job_title_name, u.division_id, u.department_id, u.supporting_category_id, u.employee_id,
            d.name as division_name,
            dept.name as department_name,
            sc.name as supporting_category_name,
@@ -216,6 +223,7 @@ router.get('/:id', authenticate, permit('usersView'), (req, res) => {
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN job_titles jt ON u.job_title_id = jt.id
     LEFT JOIN user_admin_assignments uaa ON uaa.user_id = u.id
     LEFT JOIN users admin_u ON uaa.admin_id = admin_u.id
     WHERE u.id = ?
@@ -286,7 +294,7 @@ router.put('/:id/divisions', authenticate, permit('accessGrants'), (req, res) =>
 // POST /api/users - Create user
 router.post('/', authenticate, permit('users'), (req, res) => {
   req.body = normalizeUserReferences(req.body);
-  const { name, email, password, role, division, core, team_type, division_id, division_ids, department_id, supporting_category_id, employee_id } = req.body;
+  const { name, email, password, role, division, core, team_type, division_id, division_ids, department_id, supporting_category_id, employee_id, job_title_id } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email, and password are required' });
@@ -322,12 +330,13 @@ router.post('/', authenticate, permit('users'), (req, res) => {
   }
 
   const platformIds = validatePlatforms(req.user, req.body.platform_ids, division_ids || [division_id].filter(Boolean));
+  if (!validJobTitle(job_title_id)) return res.status(400).json({ error: 'Select a valid active job title (required)' });
   const hash = bcrypt.hashSync(password, 12);
   const result = db.transaction(() => {
     const created = db.prepare(`
-      INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(name.trim(), email.toLowerCase().trim(), hash, role || 'employee', divisionName, core || null, teamType, division_id || null, department_id || null, supporting_category_id || null, employee_id || null);
+      INSERT INTO users (name, email, password_hash, role, division, core, team_type, division_id, department_id, supporting_category_id, employee_id, job_title_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name.trim(), email.toLowerCase().trim(), hash, role || 'employee', divisionName, core || null, teamType, division_id || null, department_id || null, supporting_category_id || null, employee_id || null, Number(job_title_id));
     if (division_ids) replaceUserDivisions(created.lastInsertRowid, role || 'employee', division_ids);
     savePlatforms(created.lastInsertRowid, platformIds);
     return created;
@@ -339,12 +348,13 @@ router.post('/', authenticate, permit('users'), (req, res) => {
 
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active,
-           u.division_id, u.department_id, u.supporting_category_id,
+           u.job_title_id, jt.name AS job_title_name, u.division_id, u.department_id, u.supporting_category_id,
            d.name as division_name, dept.name as department_name, sc.name as supporting_category_name
     FROM users u
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN job_titles jt ON u.job_title_id = jt.id
     WHERE u.id = ?
   `).get(result.lastInsertRowid);
   res.status(201).json({ user: { ...user, ...userAssignments(user) } });
@@ -353,7 +363,7 @@ router.post('/', authenticate, permit('users'), (req, res) => {
 // PUT /api/users/:id - Update user
 router.put('/:id', authenticate, permit('users'), (req, res) => {
   req.body = normalizeUserReferences(req.body);
-  const { name, email, password, role, division, core, team_type, active, division_id, division_ids, department_id, supporting_category_id, employee_id } = req.body;
+  const { name, email, password, role, division, core, team_type, active, division_id, division_ids, department_id, supporting_category_id, employee_id, job_title_id } = req.body;
   const userId = req.params.id;
 
   const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
@@ -383,6 +393,9 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
   const assignmentsChanged = ['platform_ids','division_ids','division_id','role'].some(key => Object.hasOwn(req.body,key));
   const effectiveDivisions = division_ids || (division_id !== undefined ? [division_id].filter(Boolean) : userAssignments(existing).division_ids);
   const platformIds = assignmentsChanged ? validatePlatforms(req.user, req.body.platform_ids, effectiveDivisions, existing) : null;
+  if (!validJobTitle(job_title_id === undefined ? existing.job_title_id : job_title_id, existing.job_title_id)) {
+    return res.status(400).json({ error: 'Select a valid active job title (required)' });
+  }
 
   if (email) {
     const emailExists = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email.toLowerCase().trim(), userId);
@@ -398,6 +411,7 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
   if (core !== undefined) { updateFields.push('core = ?'); params.push(core); }
   if (active !== undefined) { updateFields.push('active = ?'); params.push(active ? 1 : 0); }
   if (employee_id !== undefined) { updateFields.push('employee_id = ?'); params.push(employee_id || null); }
+  if (job_title_id !== undefined) { updateFields.push('job_title_id = ?'); params.push(Number(job_title_id)); }
   if (password) {
     updateFields.push('password_hash = ?');
     params.push(bcrypt.hashSync(password, 12));
@@ -461,12 +475,13 @@ router.put('/:id', authenticate, permit('users'), (req, res) => {
 
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active,
-           u.division_id, u.department_id, u.supporting_category_id,
+           u.job_title_id, jt.name AS job_title_name, u.division_id, u.department_id, u.supporting_category_id,
            d.name as division_name, dept.name as department_name, sc.name as supporting_category_name
     FROM users u
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN job_titles jt ON u.job_title_id = jt.id
     WHERE u.id = ?
   `).get(userId);
   res.json({ user: { ...user, ...userAssignments(user) } });
@@ -524,12 +539,13 @@ router.post('/:id/toggle-active', authenticate, permit('users'), (req, res) => {
 
   const user = db.prepare(`
     SELECT u.id, u.name, u.email, u.role, u.division, u.core, u.team_type, u.active,
-           u.division_id, u.department_id, u.supporting_category_id,
+           u.job_title_id, jt.name AS job_title_name, u.division_id, u.department_id, u.supporting_category_id,
            d.name as division_name, dept.name as department_name, sc.name as supporting_category_name
     FROM users u
     LEFT JOIN divisions d ON u.division_id = d.id
     LEFT JOIN departments dept ON u.department_id = dept.id
     LEFT JOIN supporting_categories sc ON u.supporting_category_id = sc.id
+    LEFT JOIN job_titles jt ON u.job_title_id = jt.id
     WHERE u.id = ?
   `).get(userId);
   res.json({ user, message: `User ${actionText.toLowerCase()} successfully` });
@@ -573,6 +589,7 @@ router.delete('/:id/permanent', authenticate, permit('users'), (req, res) => {
         department_id = NULL,
         supporting_category_id = NULL,
         employee_id = NULL,
+        job_title_id = NULL,
         active = 0,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
