@@ -21,13 +21,14 @@ before(async () => {
   division = Number(db.prepare("INSERT INTO divisions(name) VALUES ('Planning')").run().lastInsertRowid);
   const user = role => Number(db.prepare('INSERT INTO users(name,email,password_hash,role,division_id) VALUES (?,?,?,?,?)').run(role, role+'@planning.test', 'unused', role, division).lastInsertRowid);
   system = user('system admin'); admin = user('admin'); manager = user('manager'); employee = user('employee');
+  db.exec("INSERT INTO departments(id,name) VALUES (1,'Planning'); INSERT INTO department_ownerships(id,department_id,label) VALUES (1,1,'Engineering ownership')");
   db.prepare('INSERT INTO user_admin_assignments(user_id,admin_id,assigned_by) VALUES (?,?,?)').run(employee, admin, system);
   server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); base = `http://127.0.0.1:${server.address().port}/api`;
 });
 after(() => { server?.close(); db.close(); });
 
 test('task planning fields validate, preserve omitted values and explicitly clear to null', async () => {
-  const created = await request('/tasks', { classification: 'Productive', task_category: 'Engineering', estimated_hours: 12.5, input_received_date: '2026-10-01', start_date: '2026-10-02', target_date: '2026-10-15', delivered_date: '2026-10-14' });
+  const created = await request('/tasks', { ownership_id: 1, classification: 'Productive', task_category: 'Engineering', estimated_hours: 12.5, input_received_date: '2026-10-01', start_date: '2026-10-02', target_date: '2026-10-15', delivered_date: '2026-10-14' });
   assert.equal(created.status, 201); bill = created.body.task.id;
   const changed = await request(`/tasks/${bill}`, { task_description: 'Updated' }, 'PUT');
   assert.equal(changed.body.task.estimated_hours, 12.5); assert.equal(changed.body.task.delivered_date, '2026-10-14');
@@ -37,11 +38,11 @@ test('task planning fields validate, preserve omitted values and explicitly clea
   const cleared = await request(`/tasks/${bill}`, { delivered_date: '', estimated_hours: 0 }, 'PUT');
   assert.equal(cleared.body.task.delivered_date, null); assert.equal(cleared.body.task.estimated_hours, 0);
   await request(`/tasks/${bill}`, { estimated_hours: 12.5 }, 'PUT');
-  nonbill = (await request('/tasks', { classification: 'Non-Productive', task_category: 'Coordination' })).body.task.id;
-  unassigned = (await request('/tasks', { classification: 'Productive', task_category: 'Other project' })).body.task.id;
+  nonbill = (await request('/tasks', { ownership_id: 1, classification: 'Non-Productive', task_category: 'Coordination' })).body.task.id;
+  unassigned = (await request('/tasks', { ownership_id: 1, classification: 'Productive', task_category: 'Other project' })).body.task.id;
   const tasks = (await request('/tasks', undefined, 'GET')).body.tasks;
   assert.equal(tasks.find(t => t.id === nonbill).estimated_hours, null);
-  assert.equal((await request('/tasks', { classification: 'Productive', task_category: 'Denied' }, 'POST', manager)).status, 403);
+  assert.equal((await request('/tasks', { ownership_id: 1, classification: 'Productive', task_category: 'Denied' }, 'POST', manager)).status, 403);
 });
 
 test('project assignments require at least one task, validate categories and save atomically', async () => {

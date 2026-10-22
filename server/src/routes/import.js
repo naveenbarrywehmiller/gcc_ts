@@ -76,6 +76,9 @@ function prepareProject(input, existing, req) {
 
 function prepareTask(input, existing) {
   if (Object.hasOwn(input, 'active')) input.active = input.active === '' && !existing ? 1 : activeValue(input.active);
+  // Excel choices carry the stable ID before the display label; CSV may use the ID alone.
+  const choice = typeof input.ownership_id === 'string' && /^([1-9]\d*) — .+$/s.exec(input.ownership_id);
+  if (choice) input.ownership_id = choice[1];
   const data = validateTask(input, existing);
   validateTaskHistory(data, existing);
   const duplicate = db.prepare('SELECT id FROM tasks WHERE LOWER(TRIM(task_category))=LOWER(?) AND classification=? AND id!=?')
