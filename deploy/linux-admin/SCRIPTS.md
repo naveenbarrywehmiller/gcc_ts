@@ -7,7 +7,7 @@ See [the setup and operations guide](README.md) for installation, menus and trou
 ## VERSION
 
 ```text
-1.1.1
+1.2.1
 ```
 
 ## install.sh
@@ -90,7 +90,7 @@ if [[ ${1:-} == --version ]]; then
   exit 0
 fi
 if [[ $EUID != 0 ]]; then
-  exec sudo -- /usr/local/bin/timesheet "$@"
+  exec sudo --preserve-env=NO_COLOR,TIMESHEET_NO_EMOJI -- /usr/local/bin/timesheet "$@"
 fi
 exec python3 /usr/local/lib/gcc-timesheet-admin/current/manager.py "$@"
 ```
@@ -103,6 +103,7 @@ exec python3 /usr/local/lib/gcc-timesheet-admin/current/manager.py "$@"
 from __future__ import annotations
 import argparse
 import getpass
+import json
 import os
 from pathlib import Path
 import re
@@ -112,6 +113,8 @@ import sys
 import admin_common as c
 import admin_ops as ops
 import admin_release as release
+import admin_ui as ui
+import admin_system as host
 
 def prompt(label, default=None):
     answer = input(f"{label}" + (f" [{default}]" if default is not None else "") + ": ").strip()
@@ -203,7 +206,7 @@ def list_backups():
     print(f"Backup location: {c.BACKUPS}\nDatabase safety backups: {c.ROOT}/app-backup\nApplication database: {c.ROOT}/data/timesheet.db")
     paths = sorted(c.BACKUPS.glob("timesheet-*.tgz"), reverse=True)
     for index, path in enumerate(paths, 1):
-        print(f"{index:3}  {path}  {path.stat().st_size / 1024**2:.1f} MiB")
+        print(f"[{index}] {path.name}\n    Size: {path.stat().st_size / 1024**2:.1f} MiB")
     if not paths: print("No snapshots yet.")
     return paths
 
@@ -226,7 +229,85 @@ def channel_menu():
     execute("image-channel", lambda: c.save_config(cfg))
     print("Channel saved. Choose Update app to deploy it.")
 
+def panel_status(terminal):
+    terminal.section("Application")
+    if c.CONFIG.exists():
+        cfg = c.config()
+        terminal.field("Website", c.origin(cfg), "good")
+        try:
+            state = json.loads(ops.inspect("{{json .State}}", check=False) or "{}")
+        except ValueError:
+            state = {}
+        health = state.get("Health", {}).get("Status", "not reported")
+        running = state.get("Status", "unavailable (check Docker / installation)")
+        terminal.field("Container", f"{running} | health: {health}", "good" if health == "healthy" else "warning")
+        if state.get("Running"):
+            terminal.field("Started (UTC)", state.get("StartedAt", "unavailable"))
+        terminal.field("Update channel", cfg["image_target"])
+        terminal.field("Internal port", f"127.0.0.1:{cfg['app_port']} (Nginx connects here)")
+        gate = (c.ROOT / "maintenance.flag").exists()
+        web = (c.ROOT / "data/.maintenance").exists()
+        terminal.field("Maintenance", "ON - website gated" if gate else "OFF", "warning" if gate else "muted")
+        terminal.field("Employee access", "System Admin sign-in required" if web else "No web maintenance flag",
+                       "warning" if web else "muted")
+        terminal.section("Startup and saved data")
+        terminal.field("Start after reboot", "Enabled" if cfg.get("autostart", True) else "Disabled")
+        terminal.field("Docker restart policy", ops.inspect("{{.HostConfig.RestartPolicy.Name}}", check=False) or "Unavailable")
+        terminal.field("Backups", c.BACKUPS)
+        terminal.field("Database", c.ROOT / "data/timesheet.db")
+    else:
+        terminal.line("Application not configured. Choose Setup and configuration > Install / resume setup.", "warning")
+    terminal.section("Automatic jobs (" + c.timezone() + ")")
+    settings = ops.schedules()
+    for job in ops.JOBS:
+        result = c.run(["systemctl", "show", f"timesheet-{job}.timer", "--no-pager",
+                        "--property=LoadState,ActiveState,UnitFileState,NextElapseUSecRealtime"],
+                       check=False, display=False, timeout=5)
+        properties = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
+        actual = properties.get("ActiveState", "unavailable")
+        installed = properties.get("LoadState") == "loaded"
+        label = job.replace("self-update", "Tool update").replace("backup", "Backup").replace("update", "Update")
+        preference = "enabled" if settings[job]["enabled"] else "paused"
+        terminal.field(label, f"saved: {preference} | timer: {actual if installed else 'not installed / unavailable'}")
+        terminal.field("Schedule", settings[job]["calendar"])
+        next_run = properties.get("NextElapseUSecRealtime", "")
+        terminal.field("Next run", next_run if actual == "active" and next_run and next_run != "n/a" else "Not scheduled")
+
+
+def panel_diagnostics(terminal):
+    terminal.section("Server resources")
+    stats = host.HostStats()
+    for label, value in stats.snapshot()[0]:
+        terminal.field(label, value)
+    commands = (
+        ("Services: Docker / Nginx / Avahi", ["systemctl", "show", "docker", "nginx", "avahi-daemon", "--no-pager", "--property=Id,ActiveState,SubState"]),
+        ("Docker version", ["docker", "version", "--format", "Client: {{.Client.Version}}\nServer: {{if .Server}}{{.Server.Version}}{{else}}unavailable{{end}}"]),
+        ("Compose version", ["docker", "compose", "version", "--short"]),
+        ("Containers", ["docker", "ps", "-a", "--format", "Name: {{.Names}}\nState: {{.Status}}\nPorts: {{.Ports}}\n"]),
+        ("Listening TCP ports", ["ss", "-lnt", "--no-header"]),
+        ("Nginx configuration", ["nginx", "-t"]),
+        ("Failed system services", ["systemctl", "--failed", "--no-pager", "--no-legend"]),
+    )
+    for title, args in commands:
+        terminal.section(title)
+        try:
+            result = c.run(args, check=False, display=False, timeout=10)
+            output = (result.stdout + result.stderr).strip()
+            for line in output.splitlines():
+                terminal.line(line, "muted" if result.returncode == 0 else "warning", "  ")
+            if not output:
+                terminal.line("None reported." if result.returncode == 0 else "Check failed; see administrator log.",
+                              "muted" if result.returncode == 0 else "warning", "  ")
+        except (OSError, subprocess.TimeoutExpired) as error:
+            terminal.line(f"Unavailable: {error}", "warning")
+    terminal.field("Detailed diagnostics", "timesheet diagnostics")
+    terminal.field("Administrator log", c.LOGDIR / "admin.log")
+
+
 def status():
+    terminal = getattr(sys.stdout, "terminal", None)
+    if terminal is not None:
+        return panel_status(terminal)
     print(f"GCC Timesheet Linux Admin {c.VERSION} | host {socket.gethostname()} | timezone {c.timezone()}")
     if c.CONFIG.exists():
         cfg = c.config()
@@ -275,101 +356,144 @@ def factory_reset_menu():
     else:
         print("Factory reset cancelled.")
 
-def menu():
-    while True:
-        print(f"\nGCC Timesheet Linux Admin v{c.VERSION} | {socket.gethostname()} | {c.timezone()}")
-        if c.CONFIG.exists(): print(c.origin(c.config()))
-        print("""
-  1  Setup new VM / install application
-  2  Status, versions and schedules
-  3  Start / apply environment changes
-  4  Stop (maintenance page)
-  5  Restart application
-  6  Pull and update app now (backup + rollback)
-  7  Retry a previously failed app image
-  8  Choose app image tag / update channel
-  9  Host address, website port, internal port, HTTPS
- 10  Install/repair dependencies
- 11  Enable/repair Avahi using system hostname
- 12  Add UFW rules for selected web port and Avahi
- 13  Back up now
- 14  List backups
- 15  Restore selected backup
- 16  Verify SQLite database
- 17  Configure automatic backup/app/tool update schedules
- 18  Pause automatic jobs (one or all)
- 19  Resume automatic jobs (one or all)
- 20  Backup retention and off-VM copy settings
- 21  Preview/delete expired local backups
- 22  Application logs (last 200 lines)
- 23  Administrator error/operation logs
- 24  Diagnostics (ports, disk, services, Docker, Avahi)
- 25  Check latest administrator release on GitHub
- 26  Update administrator from GitHub
- 27  Roll back administrator version
- 28  Remove bootstrap credentials after first login
- 29  Edit application environment (private editor)
- 30  Ubuntu/Docker package maintenance
- 31  Open installed guide
- 32  Configure app automatic startup after OS reboot (default enabled)
- 33  Factory reset ALL application data (warning + automatic backup)
-  0  Exit
-""")
+def run_menu_action(choice):
+    simple = {"2": ("status", status), "3": ("start", ops.start),
+              "5": ("restart", ops.restart), "6": ("update", ops.app_update),
+              "7": ("retry-update", lambda: ops.app_update(True)),
+              "10": ("dependencies", ops.install_dependencies), "13": ("backup", ops.backup),
+              "14": ("backups", list_backups), "16": ("check-db", ops.check_db),
+              "22": ("app-logs", lambda: c.run(["docker", "logs", "--tail", "200", "timesheet-app"])),
+              "24": ("diagnostics", lambda: panel_diagnostics(sys.stdout.terminal)
+                     if isinstance(sys.stdout, ui.ActionOutput) else ops.diagnostics()),
+              "25": ("check-self-update", release.check)}
+    if choice in simple:
+        label, action = simple[choice]
+        execute(label, action)
+    elif choice == "1": setup_menu()
+    elif choice == "4":
+        if confirm("Stop the application? Employees cannot use it until it is started again."):
+            execute("stop", ops.stop)
+    elif choice == "8": channel_menu()
+    elif choice == "9": network_menu()
+    elif choice == "15": restore_menu()
+    elif choice == "17": schedule_menu()
+    elif choice in ("18", "19"):
+        job = prompt("Job: backup / update / self-update / all", "all")
+        execute("schedule-pause-resume", lambda: ops.pause(job, choice == "19"))
+    elif choice == "20": backup_settings_menu()
+    elif choice == "21":
+        execute("prune-preview", ops.prune)
+        if confirm("Delete the listed expired snapshots?"): execute("prune", lambda: ops.prune(True))
+    elif choice == "23": print((c.LOGDIR / "admin.log").read_text()[-30000:])
+    elif choice in ("26", "27"):
+        if confirm("Update administrator?" if choice == "26" else "Roll back administrator code?"):
+            execute("self-update" if choice == "26" else "self-rollback", release.update if choice == "26" else release.rollback)
+            os.execv("/usr/local/bin/timesheet", ["timesheet"])
+    elif choice == "28":
+        if confirm("Have you successfully signed in with the bootstrap account?"):
+            execute("remove-bootstrap", remove_bootstrap)
+    elif choice == "29":
+        with c.lock():
+            subprocess.run([os.environ.get("EDITOR", "nano"), str(c.ROOT / ".env")], check=True)
+        print("Apply saved environment changes with App control > Start / apply saved settings.")
+    elif choice == "30":
+        print("This upgrades Ubuntu packages, including Docker; a restart may be required.")
+        if confirm("Pause jobs, back up and run package upgrades?"): execute("os-maintenance", os_maintenance)
+    elif choice == "31": subprocess.run(["less", str(c.SOURCE / "README.md")], check=True)
+    elif choice == "32": autostart_menu()
+    elif choice == "33": factory_reset_menu()
+    else: raise ValueError("Unknown menu action.")
+
+
+def menu(plain=False):
+    terminal = ui.Terminal(plain)
+    group = None
+    zone = c.timezone()
+    stats = host.HostStats()
+
+    def home(live):
+        terminal.line(f"GCC Timesheet Linux Admin v{c.VERSION} | {socket.gethostname()}", "title")
         try:
-            choice = prompt("Choose", "0")
-            simple = {"2": ("status", status), "3": ("start", ops.start), "4": ("stop", ops.stop),
-                      "5": ("restart", ops.restart), "6": ("update", ops.app_update),
-                      "7": ("retry-update", lambda: ops.app_update(True)),
-                      "10": ("dependencies", ops.install_dependencies), "11": ("avahi", ops.avahi),
-                      "12": ("firewall", ops.firewall), "13": ("backup", ops.backup),
-                      "14": ("backups", list_backups), "16": ("check-db", ops.check_db),
-                      "22": ("app-logs", lambda: c.run(["docker", "logs", "--tail", "200", "timesheet-app"])),
-                      "24": ("diagnostics", ops.diagnostics), "25": ("check-self-update", release.check)}
-            if choice == "0": return
-            if choice in simple:
-                label, action = simple[choice]
-                execute(label, action)
-            elif choice == "1": setup_menu()
-            elif choice == "8": channel_menu()
-            elif choice == "9": network_menu()
-            elif choice == "15": restore_menu()
-            elif choice == "17": schedule_menu()
-            elif choice in ("18", "19"):
-                job = prompt("Job: backup / update / self-update / all", "all")
-                execute("schedule-pause-resume", lambda: ops.pause(job, choice == "19"))
-            elif choice == "20": backup_settings_menu()
-            elif choice == "21":
-                execute("prune-preview", ops.prune)
-                if confirm("Delete the listed expired snapshots?"): execute("prune", lambda: ops.prune(True))
-            elif choice == "23": print((c.LOGDIR / "admin.log").read_text()[-30000:])
-            elif choice in ("26", "27"):
-                if confirm("Update administrator?" if choice == "26" else "Roll back administrator code?"):
-                    execute("self-update" if choice == "26" else "self-rollback", release.update if choice == "26" else release.rollback)
-                    os.execv("/usr/local/bin/timesheet", ["timesheet"])
-            elif choice == "28":
-                if confirm("Have you successfully signed in with the bootstrap account?"): execute("remove-bootstrap", remove_bootstrap)
-            elif choice == "29":
-                with c.lock():
-                    subprocess.run([os.environ.get("EDITOR", "nano"), str(c.ROOT / ".env")], check=True)
-                print("Apply saved environment changes with Start / apply environment changes.")
-            elif choice == "30":
-                print("This upgrades Ubuntu packages, including Docker; a restart may be required.")
-                if confirm("Pause jobs, back up and run package upgrades?"): execute("os-maintenance", os_maintenance)
-            elif choice == "31": subprocess.run(["less", str(c.SOURCE / "README.md")], check=True)
-            elif choice == "32": autostart_menu()
-            elif choice == "33": factory_reset_menu()
-            else: print("Choose one of the listed numbers.")
-        except (Exception, KeyboardInterrupt) as error:
+            if c.CONFIG.exists():
+                cfg = c.config()
+                terminal.line(f"{c.origin(cfg)} | {zone}", "good")
+                active_jobs = sum(bool(ops.schedules()[job]["enabled"]) for job in ops.JOBS)
+                maintenance = (c.ROOT / "maintenance.flag").exists() or (c.ROOT / "data/.maintenance").exists()
+                terminal.line(f"Saved: startup {'ON' if cfg.get('autostart', True) else 'OFF'} | "
+                              f"jobs {active_jobs}/3 | maintenance {'ON' if maintenance else 'OFF'}")
+            else:
+                terminal.line("New VM? Choose 5 > 1 to install or resume setup.", "warning")
+        except (OSError, ValueError, KeyError) as error:
+            terminal.line(f"Cannot read saved settings: {error}", "warning")
+        rows, updated = stats.snapshot()
+        for label, value in rows:
+            terminal.field(label, value)
+        terminal.line()
+        for index, (title, icon, _, _) in enumerate(ui.GROUPS, 1):
+            terminal.entry("H" if index == len(ui.GROUPS) else str(index), title, "", icon, details=False)
+        terminal.line(f"Updated {updated} | " + ("LIVE: every 5s" if live else "Snapshot: R refresh"), "accent")
+        terminal.line("[R] Refresh | [0] Exit | Number + Enter to open a category")
+
+    while True:
+        try:
+            if group is None:
+                choice = terminal.home_choice(home, lambda: prompt("Choose", "0")).lower()
+            else:
+                terminal.clear()
+                title, icon, description, entries = ui.GROUPS[group]
+                terminal.heading(title, icon)
+                terminal.line(description)
+                if group == 6:
+                    terminal.line("CAUTION: These actions can interrupt service or delete application data.", "warning")
+                for index, entry in enumerate(entries, 1):
+                    terminal.entry(str(index), entry[0], entry[2])
+                terminal.line("[0] Back | [M] Home | [Q] Exit | ?number: description and example")
+                choice = prompt("Choose", "0").lower()
+            if choice == "q" or (choice == "0" and group is None): return
+            if choice in ("0", "m"):
+                group = None
+                continue
+            if group is None:
+                if choice == "r": continue
+                elif choice == "h": group = len(ui.GROUPS) - 1
+                elif choice.isascii() and choice.isdigit() and 1 <= int(choice) < len(ui.GROUPS): group = int(choice) - 1
+                else: terminal.line("Choose a displayed category, H for help, or 0 to exit.", "warning")
+                continue
+            explain = choice.startswith("?")
+            number = choice[1:] if explain else choice
+            entries = ui.GROUPS[group][3]
+            if not number.isascii() or not number.isdigit() or not 1 <= int(number) <= len(entries):
+                terminal.line("Choose a displayed action, or use ?1 to read its example.", "warning")
+                continue
+            entry = entries[int(number) - 1]
+            terminal.clear()
+            terminal.action_help(entry)
+            if not explain:
+                if entry[1] == "display": terminal.display_check()
+                else:
+                    terminal.section("Result / progress")
+                    with terminal.action_output():
+                        run_menu_action(entry[1])
+                terminal.section("Return to " + ui.GROUPS[group][0])
+                terminal.line("Review the result above, then press Enter to go back.")
+        except EOFError:
+            return
+        except KeyboardInterrupt:
+            terminal.line("Cancelled. Review any running operation before trying again.", "warning")
+        except Exception as error:
             c.LOG.exception("MENU operation failed")
-            print(f"\nOperation failed/cancelled: {error}\nLog: {c.LOGDIR}/admin.log")
-        try: input("\nPress Enter to return to the menu...")
+            terminal.line(f"ERROR: {error}", "error")
+            terminal.line(f"Log: {c.LOGDIR}/admin.log. The menu is still available.")
+        try: input("\nPress Enter to return to this category...")
         except (EOFError, KeyboardInterrupt): return
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", nargs="?", default="menu")
     parser.add_argument("value", nargs="?")
     parser.add_argument("--version", action="version", version=c.VERSION)
+    parser.add_argument("--plain", action="store_true", help="ASCII menu without ANSI colors or emoji")
     parser.add_argument("--scheduled", action="store_true")
     parser.add_argument("--confirm", action="store_true")
     parser.add_argument("--retry", action="store_true")
@@ -380,7 +504,7 @@ def main():
     try:
         if args.command == "menu":
             if not sys.stdin.isatty(): raise ValueError("Menu needs a terminal; use CLI subcommands in automation.")
-            menu()
+            menu(args.plain)
             return
         if args.command == "setup":
             setup_menu()
@@ -423,6 +547,399 @@ def main():
         raise SystemExit(1)
 
 if __name__ == "__main__": main()
+```
+
+## admin_ui.py
+
+```python
+"""Terminal presentation and help text; operations stay in manager/admin_ops."""
+from __future__ import annotations
+import os
+from contextlib import contextmanager, redirect_stdout
+import io
+import re
+import select
+import shutil
+import sys
+import textwrap
+import time
+import unicodedata
+
+# Entries retain the existing operation IDs, independent of submenu numbering.
+# title, operation, description, example, warning (if any)
+GROUPS = (
+    ("App control", "🚀", "Status, start, restart and reboot startup", (
+        ("Status and website", "2", "Show container health, versions, website and timer states.", "timesheet status", ""),
+        ("Start / apply saved settings", "3", "Start the app and apply saved environment changes.", "timesheet start", ""),
+        ("Restart application", "5", "Stop and start the app, then wait for healthy startup.", "timesheet restart", "Brief downtime"),
+        ("Stop application", "4", "Take the website offline until you start it again.", "timesheet stop", "Downtime"),
+        ("Startup after reboot", "32", "Choose whether the app starts automatically after an OS reboot.", "timesheet autostart enable", ""),
+    )),
+    ("Backups and database", "💾", "Create, check, restore and manage snapshots", (
+        ("Create a backup", "13", "Save a full snapshot; System Admin login reopens employee access.", "timesheet backup", "Brief downtime; web login required"),
+        ("List saved backups", "14", "Show snapshot paths, sizes and database backup locations.", "timesheet backups", ""),
+        ("Check database integrity", "16", "Check SQLite for corruption without changing business data.", "timesheet check-db", ""),
+        ("Restore a snapshot", "15", "Choose a backup to replace current app data and settings.", "timesheet restore /var/backups/gcc-timesheet/timesheet-FILENAME.tgz --confirm", "Replaces data; confirmation required"),
+        ("Retention and off-VM copies", "20", "Set how long backups are kept and an optional SSH copy destination.", "Example: 30 days; backupuser@backup.company.example:/srv/backups/gcc-timesheet/", ""),
+        ("Review expired backups", "21", "Preview old snapshots before confirming deletion; keep the newest three.", "timesheet prune  (preview only)", "Deletion requires confirmation"),
+    )),
+    ("Application and tool updates", "📦", "Update the app or this administrator", (
+        ("Update application", "6", "Pull the selected image; back up and roll back if startup fails.", "timesheet update", "Brief downtime if the image changes"),
+        ("Choose application version", "8", "Pin an image tag or digest; run Update application to deploy it.", "Example image tag: 1.34.0; latest follows main-branch builds.", ""),
+        ("Retry a failed app image", "7", "Retry a blocked image only after fixing its previous failure.", "timesheet update --retry", "Brief downtime if the image changes"),
+        ("Check administrator release", "25", "Compare this tool with the latest stable administrator on GitHub.", "timesheet check-self-update", ""),
+        ("Update administrator", "26", "Verify and install new tool scripts, then reload this menu.", "timesheet self-update", "Confirmation required"),
+        ("Roll back administrator", "27", "Select the previous tool version; application data stays in place.", "timesheet self-rollback", "Confirmation required"),
+    )),
+    ("Automatic jobs", "⏰", "Schedules for backup, app and tool updates", (
+        ("Configure schedules", "17", "Set local-time schedules and enable each automatic job independently.", "Example: *-*-* 02:00:00 = every day at 02:00 in the server timezone.", "Backup/app jobs can interrupt employee access"),
+        ("Pause jobs", "18", "Pause one job or all jobs; a running operation finishes normally.", "timesheet pause backup", ""),
+        ("Resume jobs", "19", "Enable one job or all jobs using their saved schedules.", "timesheet resume backup", ""),
+    )),
+    ("Setup and configuration", "🧰", "Install, website address and private settings", (
+        ("Install / resume setup", "1", "Install on a new VM, or resume an interrupted setup safely.", "timesheet setup", "Installs system packages on a new VM"),
+        ("Website address, ports and HTTPS", "9", "Change the browser address or ports; optionally supply an HTTPS certificate.", "Example: server IP, website port 8080, internal port 3001; HTTPS is optional.", "Backup and brief downtime"),
+        ("Repair dependencies", "10", "Install or repair Docker, Nginx and required Ubuntu packages.", "timesheet dependencies", "Changes system packages"),
+        ("Remove bootstrap credentials", "28", "Remove one-time credentials from the environment after a successful login.", "timesheet remove-bootstrap", "Keeps the created account; confirm login first"),
+        ("Edit private environment", "29", "Open the protected settings file; apply saved changes with Start.", "Example: edit .env, save and exit, then App control > Start / apply saved settings.", "Advanced; never paste secrets into logs"),
+    )),
+    ("Logs and diagnostics", "🔎", "Investigate errors, disk, ports and services", (
+        ("Application logs", "22", "Read the latest 200 lines from the timesheet container.", "timesheet logs", ""),
+        ("Administrator logs", "23", "Read recent tool operations and error details from the private log.", "Log file: /var/log/gcc-timesheet-admin/admin.log", ""),
+        ("Server diagnostics", "24", "Inspect disk space, listening ports, Docker and supporting services.", "timesheet diagnostics", ""),
+    )),
+    ("Advanced maintenance", "🚧", "System upgrades and destructive recovery", (
+        ("Ubuntu / Docker package upgrades", "30", "Pause jobs, back up and upgrade OS packages; jobs stay paused.", "timesheet os-maintenance", "Downtime; an OS reboot may be needed"),
+        ("Factory reset all application data", "33", "Take a safety backup, then remove business data and recreate the factory admin.", "timesheet factory-reset --confirm", "DELETES ALL APP DATA; type FACTORY RESET"),
+    )),
+    ("Help and display", "📖", "Guide, examples and terminal appearance", (
+        ("Read the installed guide", "31", "Open the full local guide; press q to leave the reader.", "Guide: /usr/local/lib/gcc-timesheet-admin/current/README.md", ""),
+        ("Check colors and emoji", "display", "Preview the palette and icons, plus plain-text alternatives.", "timesheet --plain  (no ANSI colors or emoji)", ""),
+    )),
+)
+
+
+class Terminal:
+    COLORS = {"title": "1;96", "accent": "96", "good": "92", "warning": "93", "error": "91", "muted": "37"}
+
+    def __init__(self, plain=False):
+        interactive = sys.stdout.isatty() and os.environ.get("TERM") != "dumb"
+        self.output = sys.stdout
+        self.screen = interactive and not plain
+        self.color = interactive and not plain and "NO_COLOR" not in os.environ
+        try:
+            "📦".encode(sys.stdout.encoding or "ascii")
+            unicode_ok = True
+        except UnicodeEncodeError:
+            unicode_ok = False
+        self.emoji = interactive and unicode_ok and not plain and "TIMESHEET_NO_EMOJI" not in os.environ
+
+    @property
+    def width(self):
+        return max(20, min(96, shutil.get_terminal_size((80, 24)).columns - 1))
+
+    def style(self, text, tone):
+        return f"\033[{self.COLORS[tone]}m{text}\033[0m" if self.color else text
+
+    def line(self, text="", tone="muted", indent=""):
+        text = clean(text)
+        available = self.width - len(indent)
+        width = max(1, available)
+        # Emoji occupy two terminal cells even though Python counts one character.
+        while True:
+            lines = textwrap.wrap(str(text), width, break_on_hyphens=False) or [""]
+            if width == 1 or all(sum(0 if unicodedata.combining(char) else
+                                    2 if unicodedata.east_asian_width(char) in "WF" else 1
+                                    for char in line) <= available for line in lines):
+                break
+            width -= 1
+        for line in lines:
+            print(self.style(indent + line, tone), file=self.output)
+
+    def heading(self, title, icon=""):
+        print(file=self.output)
+        self.line((icon + "  " if self.emoji and icon else "") + title, "title")
+        self.line("-" * (self.width - 2), "accent")
+
+    def entry(self, key, title, description, icon="", details=True):
+        self.line(f"[{key}] " + (icon + "  " if self.emoji and icon else "") + title, "accent", "  ")
+        if details:
+            self.line(description, indent="      ")
+
+    def clear(self):
+        if self.screen:
+            self.output.write("\033[2J\033[H")
+            self.output.flush()
+
+    def section(self, title):
+        self.line()
+        self.line(title, "title")
+        self.line("-" * (self.width - 2), "accent")
+
+    def field(self, label, value, tone="muted"):
+        self.line(f"{label}: {value}", tone, "  ")
+
+    @contextmanager
+    def action_output(self):
+        stream = ActionOutput(self)
+        with redirect_stdout(stream):
+            try:
+                yield
+            finally:
+                stream.flush()
+
+    def home_choice(self, render, fallback, interval=5):
+        """Refresh only the home screen, preserving input and terminal settings."""
+        live = self.screen and sys.stdin.isatty() and os.name == "posix"
+        if not live:
+            render(False)
+            return fallback()
+        import termios
+        import tty
+        fd = sys.stdin.fileno()
+        saved = termios.tcgetattr(fd)
+        answer = ""
+        escaping = False
+        try:
+            tty.setcbreak(fd)
+            while True:
+                # Buffer a frame first. Small windows use a scrollable snapshot.
+                frame = io.StringIO()
+                original = self.output
+                try:
+                    self.output = frame
+                    render(True)
+                finally:
+                    self.output = original
+                fits = len(frame.getvalue().splitlines()) + 1 <= shutil.get_terminal_size((80, 24)).lines
+                if not fits:
+                    frame = io.StringIO()
+                    try:
+                        self.output = frame
+                        render(False)
+                    finally:
+                        self.output = original
+                self.clear()
+                self.output.write(frame.getvalue())
+                self.output.write(self.style("Choose [0]: " + answer, "accent"))
+                self.output.flush()
+                deadline = time.monotonic() + interval
+                while True:
+                    ready, _, _ = select.select([fd], [], [], max(0, deadline - time.monotonic()) if fits else None)
+                    if not ready:
+                        break
+                    char = os.read(fd, 1)
+                    if not char or char == b"\x04":
+                        raise EOFError
+                    if char == b"\x03":
+                        raise KeyboardInterrupt
+                    if char == b"\x1b":
+                        escaping = True
+                        continue
+                    if escaping:
+                        if char.isalpha() or char == b"~":
+                            escaping = False
+                        continue
+                    if char in (b"\r", b"\n"):
+                        self.output.write("\n")
+                        return answer.strip() or "0"
+                    if char in (b"\x7f", b"\x08"):
+                        answer = answer[:-1]
+                    elif char == b"\x15":
+                        answer = ""
+                    elif char.isalnum() and len(answer) < 8:
+                        answer += char.decode("ascii")
+                    self.output.write("\r\033[2K" + self.style("Choose [0]: " + answer, "accent"))
+                    self.output.flush()
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+
+
+    def action_help(self, entry):
+        title, _, description, example, warning = entry
+        self.heading(title)
+        self.line(description)
+        self.line(example, "accent")
+        if warning:
+            self.line("CAUTION: " + warning, "warning")
+
+    def display_check(self):
+        self.heading("Terminal display check", "🎨")
+        for tone, text in (("title", "Headings"), ("accent", "Choices and examples"), ("good", "SUCCESS"),
+                           ("warning", "CAUTION / downtime"), ("error", "ERROR")):
+            self.line(text, tone)
+        self.line("Icons: " + ("🚀  💾  📦  ⏰  🧰  🔎  🚧  📖" if self.emoji else "text labels (emoji disabled)"))
+        self.line("Color: " + ("enabled" if self.color else "disabled"))
+        self.line("Use timesheet --plain for ASCII text. NO_COLOR=1 disables colors; TIMESHEET_NO_EMOJI=1 disables icons.")
+        self.line("Labels and CAUTION messages remain readable without color or icons.")
+
+
+def clean(text):
+    # Command output and log text must not control the terminal or its clipboard.
+    text = re.sub(r"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)", "", str(text))
+    text = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", text)
+    return "".join(char for char in text if char.isprintable() or char == "\t").expandtabs(4)
+
+
+class ActionOutput:
+    """Wrap operation output as it arrives; input/editor processes stay interactive."""
+    def __init__(self, terminal):
+        self.terminal = terminal
+        self.buffer = ""
+
+    def __getattr__(self, name):
+        return getattr(self.terminal.output, name)
+
+    def write(self, text):
+        self.buffer += text
+        while "\n" in self.buffer:
+            line, self.buffer = self.buffer.split("\n", 1)
+            if line.startswith("$ "):
+                # Full commands remain in the administrator log.
+                words = line[2:].split()
+                label = " ".join(words[:2])
+                self.terminal.section("Working: " + label)
+            else:
+                tone = "warning" if re.search(r"\b(warning|caution|cancelled|paused)\b", line, re.I) else "muted"
+                self.terminal.line(line, tone)
+        return len(text)
+
+    def flush(self):
+        if self.buffer:
+            self.terminal.output.write(self.terminal.style(clean(self.buffer), "accent"))
+            self.buffer = ""
+        self.terminal.output.flush()
+```
+
+## admin_system.py
+
+```python
+"""Read-only Linux host measurements for the administrator home screen."""
+from __future__ import annotations
+from datetime import datetime
+import json
+import os
+from pathlib import Path
+import platform
+import shutil
+import subprocess
+
+
+def read(path):
+    try:
+        return Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def command(*args):
+    try:
+        result = subprocess.run(args, capture_output=True, text=True, timeout=2,
+                                env={**os.environ, "LC_ALL": "C"})
+        return result.stdout.strip() if result.returncode == 0 else ""
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+
+
+def gib(size):
+    return f"{size / 1024**3:.1f} GiB"
+
+
+def cpu_counters():
+    try:
+        fields = read("/proc/stat").splitlines()[0].split()
+        if fields[0] != "cpu" or len(fields) < 5:
+            return None
+        # Guest time is already included in user/nice; do not count it twice.
+        values = list(map(int, fields[1:9]))
+        return sum(values), values[3] + (values[4] if len(values) > 4 else 0)
+    except (ValueError, IndexError):
+        return None
+
+
+class HostStats:
+    def __init__(self):
+        self.previous_cpu = cpu_counters()
+        self.static = self.hardware()
+
+    def hardware(self):
+        try:
+            cpu = {item["field"].rstrip(":"): item["data"]
+                   for item in json.loads(command("lscpu", "-J") or "{}").get("lscpu", [])}
+        except (ValueError, TypeError, KeyError):
+            cpu = {}
+        count = cpu.get("CPU(s)", str(os.cpu_count() or "unknown"))
+        topology = f"{count} vCPUs"
+        try:
+            cores = int(cpu["Core(s) per socket"]) * int(cpu["Socket(s)"])
+            topology += f" ({cores} cores x {cpu['Thread(s) per core']} threads)"
+        except (KeyError, ValueError, TypeError):
+            pass
+        processor = cpu.get("Model name", platform.machine() or "Unavailable")
+        try:
+            processor += f" | max {float(cpu['CPU max MHz']) / 1000:.2f} GHz"
+        except (KeyError, ValueError, TypeError):
+            pass
+        release = dict(line.split("=", 1) for line in read("/etc/os-release").splitlines() if "=" in line)
+        system = release.get("PRETTY_NAME", platform.system()).strip('"')
+        system += " | " + (platform.machine() or "unknown architecture")
+        virtual = command("systemd-detect-virt") or "Not detected"
+        virtual = {"microsoft": "Microsoft Hyper-V", "kvm": "KVM", "vmware": "VMware",
+                   "none": "Physical machine"}.get(virtual, virtual)
+        disks = []
+        for line in command("lsblk", "-bdn", "-o", "SIZE,TYPE").splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[1] == "disk":
+                try:
+                    disks.append(int(parts[0]))
+                except ValueError:
+                    pass
+        storage = f"{gib(sum(disks))} total ({len(disks)} disk{'s' if len(disks) != 1 else ''})" if disks else "Unavailable"
+        return topology, processor, system, virtual, storage
+
+    def snapshot(self):
+        current = cpu_counters()
+        usage = "sampling..."
+        if current is None:
+            usage = "unavailable"
+        elif self.previous_cpu:
+            total = current[0] - self.previous_cpu[0]
+            idle = current[1] - self.previous_cpu[1]
+            if total > 0 and idle >= 0:
+                usage = f"{max(0, min(100, 100 * (total - idle) / total)):.1f}% used"
+        self.previous_cpu = current
+        memory = {}
+        for line in read("/proc/meminfo").splitlines():
+            key, _, value = line.partition(":")
+            try:
+                memory[key] = int(value.split()[0]) * 1024
+            except (ValueError, IndexError):
+                pass
+        ram = swap = "Unavailable"
+        if memory.get("MemTotal") and "MemAvailable" in memory:
+            total, available = memory["MemTotal"], memory["MemAvailable"]
+            ram = f"{gib(total)} total | {gib(max(0, total - available))} used | {gib(available)} available"
+        if "SwapTotal" in memory and "SwapFree" in memory:
+            swap = f"{gib(memory['SwapTotal'])} total | {gib(max(0, memory['SwapTotal'] - memory['SwapFree']))} used"
+        try:
+            disk = shutil.disk_usage("/")
+            root = f"{gib(disk.total)} total | {gib(disk.used)} used | {gib(disk.free)} available"
+        except OSError:
+            root = "Unavailable"
+        address = "Unavailable"
+        try:
+            routes = json.loads(command("ip", "-j", "route", "show", "default") or "[]")
+            device = next(route["dev"] for route in routes if "dev" in route)
+            interfaces = json.loads(command("ip", "-j", "addr", "show", "dev", device, "scope", "global") or "[]")
+            addresses = [item["local"] for interface in interfaces for item in interface.get("addr_info", [])
+                         if item.get("family") in ("inet", "inet6") and item.get("local")]
+            address = ", ".join(addresses) or "Unavailable"
+        except (ValueError, KeyError, TypeError, StopIteration):
+            pass
+        topology, processor, system, virtual, storage = self.static
+        return [("CPU", f"{topology} | {usage}"), ("Processor", processor), ("RAM", ram),
+                ("Swap", swap), ("Storage", storage), ("Root /", root), ("OS", system),
+                ("Host type", virtual), ("IP address", address)], datetime.now().astimezone().strftime("%H:%M:%S %Z")
 ```
 
 ## admin_common.py
@@ -1325,7 +1842,7 @@ def validate_tag(tag):
 def install(source, version):
     if (source / "VERSION").read_text().strip() != version:
         raise ValueError("Bundle version does not match selected release.")
-    for name in ("manager.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
+    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
         if not (source / name).is_file() or (source / name).is_symlink():
             raise ValueError(f"Incomplete bundle: {name}")
     c.run([sys.executable, "-m", "py_compile", *map(str, source.glob("*.py"))], display=False)
@@ -1463,7 +1980,7 @@ import tarfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_common.py",
+SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_ui.py", "admin_system.py", "admin_common.py",
            "admin_ops.py", "admin_release.py", "compose.yaml", "build_release.py"]
 
 def source_reference():
