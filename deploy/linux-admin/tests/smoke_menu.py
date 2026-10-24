@@ -9,6 +9,7 @@ import shutil
 import sqlite3
 import subprocess
 import termios
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -73,6 +74,13 @@ def run(maintenance_login):
     action("5", 4, [("Type YES to continue:", "YES")])
     assert "BOOTSTRAP_ADMIN_PASSWORD=" not in (c.ROOT / ".env").read_text()
     print("PASS actual status, backups, integrity, logs, diagnostics, guide, display, editor handoff and bootstrap removal")
+
+    action("3", 2, [("Image tag", "admin-ci")])
+    ops.app_update()
+    ops.app_update(True)
+    panel([("Choose [0]:", "3"), ("Choose [0]:", "5"), ("Type YES to continue:", "YES"),
+           ("Choose [0]:", "0")])
+    print("PASS image-channel menu, unchanged-image update/retry and actual administrator-update menu reload")
 
     action("1", 4, [("Type YES to continue:", "YES")])
     assert not ops.running()
@@ -159,12 +167,13 @@ def run(maintenance_login):
     print("PASS real schedule/timer enable, pause and resume")
 
     image_before = ops.inspect("{{.Id}}")
-    with __import__('tempfile').TemporaryDirectory() as temporary:
+    with tempfile.TemporaryDirectory() as temporary:
         source = Path(temporary) / "tool"
         shutil.copytree(c.SOURCE, source, ignore=shutil.ignore_patterns("__pycache__"))
         (source / "VERSION").write_text("1.3.99\n")
         release.install(source, "1.3.99")
-        release.rollback()
+        panel([("Choose [0]:", "3"), ("Choose [0]:", "6"), ("Type YES to continue:", "YES"),
+               ("Choose [0]:", "0")])
     assert (c.LIB / "current").resolve().name == c.VERSION
     assert ops.inspect("{{.Id}}") == image_before
     assert release.update() is False  # Published release is older than this local 1.4.0 candidate.

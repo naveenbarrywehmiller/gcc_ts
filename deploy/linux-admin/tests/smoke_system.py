@@ -90,6 +90,8 @@ def run(action, maintenance_login, saved):
         funnel.connect()  # Needs browser login; its one-time URL must not enter CI logs.
         funnel.status()
         funnel.disable()
+    action("5", 6, [("Choose [0]:", "1")])
+    action("5", 6, [("Choose [0]:", "4"), ("Type YES to continue:", "YES")])
     try:
         funnel.state()
         raise AssertionError("Unapproved CI device must not join the company tailnet")
