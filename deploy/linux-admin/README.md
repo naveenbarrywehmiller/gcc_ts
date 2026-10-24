@@ -1,8 +1,8 @@
 # GCC Timesheet Linux Admin v1.4.0 — Ubuntu setup and operations
 
-**Installer (v1.3.0):** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.3.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.3.0/install.sh) · [Complete script reference](SCRIPTS.md)
+**Installer (v1.4.0):** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.4.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.4.0/install.sh) · [Complete script reference](SCRIPTS.md)
 
-The Power BI management controls and separate LAN/public/API home addresses are new in **v1.4.0**, currently a local build. The published installer above installs v1.3.0. Build this source with `python3 deploy/linux-admin/build_release.py`, extract the bundle and run `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.4.0` to install the local build. Reporting is not enabled by installing this administrator.
+The Power BI management controls and separate LAN/public/API home addresses are new in **v1.4.0**. Choose **Setup and configuration > Power BI reporting management** for status, connection guidance, testing and private reporting controls. Reporting is not enabled by installing this administrator.
 
 On your **Ubuntu VM**, run:
 
@@ -10,9 +10,9 @@ On your **Ubuntu VM**, run:
 sudo apt update
 sudo apt install -y curl ca-certificates
 curl -fL --retry 3 \
-  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.3.0/install.sh \
+  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.4.0/install.sh \
   -o /tmp/timesheet-install.sh
-sudo bash /tmp/timesheet-install.sh gcc-timesheet-linux-admin-v1.3.0
+sudo bash /tmp/timesheet-install.sh gcc-timesheet-linux-admin-v1.4.0
 timesheet
 ```
 

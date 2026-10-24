@@ -1,6 +1,6 @@
 # Linux Admin v1.4.0 full menu test report
 
-Test date: October 23, 2026 (America/Los_Angeles). Source is on `codex/linux-admin-full-menu-tests`; v1.4.0 is not a published release. Live company-server checks used Ubuntu 26.04.1 and the installed v1.4.0 tool with application v1.34.0. Destructive integration tests ran on disposable GitHub-hosted Ubuntu 24.04 runners, with synthetic users/data and an application image built from the tested source.
+Test date: October 23, 2026 (America/Los_Angeles). Pre-release source was tested on `codex/linux-admin-full-menu-tests` before publication as v1.4.0. Live company-server checks used Ubuntu 26.04.1 and the installed v1.4.0 tool with application v1.34.0. Destructive integration tests ran on disposable GitHub-hosted Ubuntu 24.04 runners, with synthetic users/data and an application image built from the tested source.
 
 ## Evidence
 
