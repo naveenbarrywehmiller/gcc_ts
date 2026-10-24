@@ -20,7 +20,8 @@ def offsite_copy(saved):
     """Use a pinned host key and disposable loopback SSH receiver, never a company host."""
     if not shutil.which("sshd"):
         c.run(["apt-get", "install", "-y", "openssh-server"])
-    with tempfile.TemporaryDirectory(prefix="gcc-offsite-ci-") as temporary:
+    # OpenSSH StrictModes checks parent directories; /tmp is intentionally writable.
+    with tempfile.TemporaryDirectory(prefix="gcc-offsite-ci-", dir="/root") as temporary:
         root = Path(temporary)
         for name in ("identity", "host"):
             c.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", root / name], display=False)
@@ -28,14 +29,15 @@ def offsite_copy(saved):
         Path("/run/sshd").mkdir(exist_ok=True)
         c.atomic(root / "sshd.conf", f"Port 12222\nListenAddress 127.0.0.1\nHostKey {root}/host\n"
                  f"PidFile {root}/sshd.pid\nAuthorizedKeysFile {root}/identity.pub\n"
-                 "PermitRootLogin prohibit-password\nPasswordAuthentication no\nUsePAM no\n")
+                 "PermitRootLogin prohibit-password\nPasswordAuthentication no\nUsePAM yes\nLogLevel VERBOSE\n")
         c.atomic(root / "known_hosts", "[127.0.0.1]:12222 " + (root / "host.pub").read_text())
         ssh_config = Path("/root/.ssh/config")
         original = ssh_config.read_text() if ssh_config.exists() else None
         c.atomic(ssh_config, f"Host gcc-menu-backup\n HostName 127.0.0.1\n Port 12222\n"
                  f" IdentityFile {root}/identity\n UserKnownHostsFile {root}/known_hosts\n IdentitiesOnly yes\n\n" + (original or ""))
-        daemon = subprocess.Popen([shutil.which("sshd"), "-D", "-e", "-f", str(root / "sshd.conf")],
-                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        with (root / "sshd.log").open("w") as daemon_log:
+            daemon = subprocess.Popen([shutil.which("sshd"), "-D", "-e", "-f", str(root / "sshd.conf")],
+                                      stdout=subprocess.DEVNULL, stderr=daemon_log)
         settings = ops.schedules()
         previous = settings["offsite"]
         try:
@@ -50,6 +52,9 @@ def offsite_copy(saved):
             ops.copy_offsite(saved)
             assert c.sha256(root / "copy" / saved.name) == c.sha256(saved)
             assert (root / "copy" / (saved.name + ".sha256")).read_bytes() == Path(str(saved) + ".sha256").read_bytes()
+        except BaseException:
+            print((root / "sshd.log").read_text()[-4000:])  # Disposable receiver diagnostics; no private key contents.
+            raise
         finally:
             settings["offsite"] = previous
             ops.save_schedules(settings)
