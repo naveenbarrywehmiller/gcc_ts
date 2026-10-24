@@ -1,6 +1,8 @@
-# GCC Timesheet Linux Admin v1.2.1 — Ubuntu setup and operations
+# GCC Timesheet Linux Admin v1.3.0 — Ubuntu setup and operations
 
-**Installer (v1.2.1):** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.2.1) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.2.1/install.sh) · [Complete script reference](SCRIPTS.md)
+**Installer (v1.3.0):** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.3.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.3.0/install.sh) · [Complete script reference](SCRIPTS.md)
+
+The optional Tailscale Funnel controls below are new in **v1.3.0**. Choose **Setup and configuration > Tailscale Funnel** to connect an account and manage the public HTTPS link. Existing LAN installations keep their current settings until Funnel is explicitly enabled.
 
 On your **Ubuntu VM**, run:
 
@@ -8,9 +10,9 @@ On your **Ubuntu VM**, run:
 sudo apt update
 sudo apt install -y curl ca-certificates
 curl -fL --retry 3 \
-  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.2.1/install.sh \
+  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.3.0/install.sh \
   -o /tmp/timesheet-install.sh
-sudo bash /tmp/timesheet-install.sh gcc-timesheet-linux-admin-v1.2.1
+sudo bash /tmp/timesheet-install.sh gcc-timesheet-linux-admin-v1.3.0
 timesheet
 ```
 
@@ -24,7 +26,7 @@ The tool reads the existing system hostname and timezone. It does not run `hostn
 
 Ubuntu Server **24.04 or 26.04 LTS**, Python 3.12+, a sudo account and outbound HTTPS access are required. Python and basic download tools are installed by the bootstrap. A starting VM size is 2 vCPU, 4 GB RAM and 60 GB SSD; actual capacity depends on usage. IT should provide a DHCP reservation/static IP and allow access to Ubuntu mirrors, Docker's package repository, GitHub, GHCR and their download endpoints. Configure APT/Docker proxies through IT if required.
 
-**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **Application and tool updates > Choose application version** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.2.1`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
+**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **Application and tool updates > Choose application version** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.3.0`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
 
 ## First installation, in order
 
@@ -44,7 +46,7 @@ If an installation is interrupted after environment creation, choose **Setup and
 
 The Docker image is **`ghcr.io/naveenbarrywehmiller/gcc_ts:latest`** ([package](https://github.com/naveenbarrywehmiller/gcc_ts/pkgs/container/gcc_ts)). `latest` follows main-branch builds, including changes before a tagged app release. **Application and tool updates > Choose application version** chooses a fixed app tag or immutable digest instead. Updates use published container images; the server does not need a Git checkout or host Node.js.
 
-## Panel navigation (v1.2.1)
+## Panel navigation (v1.3.0)
 
 The home screen shows live CPU usage, logical CPU/core/thread counts, processor, usable RAM and available RAM, swap, disk capacity, root-filesystem usage, OS, virtualization and the default network interface's IP addresses. CPU use is measured between refreshes; memory use is total minus Linux `MemAvailable` (reclaimable cache is available). Disk capacity and root-filesystem capacity are separate; available filesystem space excludes reserved blocks. Missing measurements say unavailable.
 
@@ -58,7 +60,7 @@ The saved startup preference, enabled-job count and maintenance flags are also s
 | 2 | Backups and database | Create/list backups, integrity check, restore, retention/off-VM copies, expired-backup preview |
 | 3 | Application and tool updates | App update/version/retry; administrator check/update/rollback |
 | 4 | Automatic jobs | Configure, pause and resume backup/app/tool schedules |
-| 5 | Setup and configuration | Install/resume, website/ports/optional HTTPS, dependency repair, bootstrap cleanup, private environment editor |
+| 5 | Setup and configuration | Install/resume, website/ports/optional HTTPS, dependency repair, bootstrap cleanup, private environment editor, Tailscale Funnel |
 | 6 | Logs and diagnostics | Application logs, administrator logs, server diagnostics |
 | 7 | Advanced maintenance | Ubuntu/Docker upgrades and factory reset |
 | H | Help and display | Installed guide and color/emoji check |
@@ -91,6 +93,34 @@ sudo ss -lntup
 For HTTPS, ask IT for a PEM certificate chain and unencrypted PEM private key covering the browser hostname, with the issuing CA trusted on employee devices. Use **Setup and configuration > Website address, ports and HTTPS**, select HTTPS, usually port **443** or **8443**, and provide the two absolute file paths. The script checks the hostname and public-key match before installation. The private key is kept root-only. An existing certificate can be reused by leaving the path blank. `.local` requires an internal CA; use company DNS with an appropriate certificate when available. Switching to HTTPS replaces the configured HTTP listener; no separate redirect listener is added automatically.
 
 HTTP is appropriate for initial connectivity checks. Set up trusted HTTPS before employee use. Do not expose port 3001/the selected internal app port: Docker binds it only to loopback, and Nginx supplies the single trusted proxy hop. [Docker explains why unrestricted published ports can bypass UFW](https://docs.docker.com/engine/install/ubuntu/#firewall-limitations).
+
+## Tailscale Funnel: public HTTPS (v1.3.0)
+
+Choose **5 > 6 — Tailscale Funnel**, then Status, Install/connect, Enable or Disable. Funnel provides a public internet URL such as `https://timesheet.example.ts.net`; visitors use the normal Timesheet login and do not need Tailscale installed. Tailscale manages the public HTTPS certificate, while the existing LAN website can continue using HTTP.
+
+1. Use **Install / connect Tailscale** to install its signed stable Ubuntu package if absent. Open the displayed device sign-in URL using the Tailscale account for this server and approve the device. Login URLs are displayed without being written to the administrator log; auth keys are not requested or saved in app settings.
+2. Change the factory System Admin password in the local Timesheet app. Enable refuses the known factory password; keep the replacement private.
+3. Choose **Enable public HTTPS**. Tailscale may display a second browser approval link for Funnel/HTTPS permissions in a new tailnet. Complete that approval and retry if the command times out. MagicDNS, HTTPS certificates and Funnel permission must be enabled for the device.
+4. The tool takes a safety snapshot, sets the public application base URL and exact LAN/public CORS origins, then briefly restarts the app. A dedicated Nginx listener binds only to `127.0.0.1:8081` by default; Tailscale forwards public HTTPS to it. That listener applies Secure/HttpOnly/SameSite=Lax to authentication cookies and preserves trusted client IPs for rate limiting. The existing LAN listener keeps its original cookie behavior.
+5. Open the public URL and sign in with your private credentials. The home screen and status view show the saved public URL; **Funnel > Status** checks the actual Tailscale mapping and public gate.
+
+The saved mapping does not prove public DNS or internet access works. Test the normal public URL from outside the tailnet before sharing it. During the company-server setup, public DNS initially returned no address even though HTTPS through the Funnel relay worked; the public record later appeared. A computer may retain a failed lookup after that record is available. Recheck DNS and clear its local DNS cache if needed (`Clear-DnsClientCache` in Windows PowerShell). Keep normal TLS certificate verification enabled.
+
+```bash
+timesheet funnel status
+timesheet funnel connect
+timesheet funnel enable --confirm
+timesheet funnel enable --proxy-port 8082 --confirm  # if the default loopback port is occupied
+timesheet funnel disable --confirm
+```
+
+Only this app's HTTPS port 443 mapping is managed. Enable refuses another website or mounted paths already using that port. Disable preserves other Tailscale routes and the LAN website. It blocks local public ingress before removing the mapping, so a cleanup failure leaves the app private. A failed enable also leaves public ingress blocked; correct the issue and retry Enable.
+
+Funnel resumes after reboot through `tailscaled` and the persistent background mapping. Review device approval and key-expiry settings in the Tailscale console for unattended server operation. The tool leaves the system hostname, timezone, DNS resolver and subnet routes under their existing control; connecting uses `--accept-dns=false --accept-routes=false` and preserves the current Tailscale SSH setting. A new installation leaves Tailscale SSH disabled. There is no SSH toggle in this menu; an administrator can separately enable it with `sudo tailscale set --ssh=true`. The Tailscale package manages its own networking rules.
+
+Restoring a snapshot or resetting application data writes a persistent public-access block outside snapshot contents. Public access stays paused after startup and browser System Admin login; verify restored credentials and explicitly enable Funnel again. Rollback to an administrator older than v1.3.0 requires disabling Funnel first. Tailscale device keys and account state are not included in Timesheet snapshots; connect a replacement server separately before enabling sharing there.
+
+This is public sharing, not a tailnet-only access restriction. Funnel uses the device's `*.ts.net` domain and supported HTTPS ports, and has bandwidth limits. See the official [Funnel requirements](https://tailscale.com/docs/features/tailscale-funnel) and [CLI commands](https://tailscale.com/docs/reference/tailscale-cli/funnel).
 
 ## Manual and automatic jobs
 

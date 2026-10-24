@@ -7,7 +7,7 @@ See [the setup and operations guide](README.md) for installation, menus and trou
 ## VERSION
 
 ```text
-1.2.1
+1.3.0
 ```
 
 ## install.sh
@@ -115,6 +115,7 @@ import admin_ops as ops
 import admin_release as release
 import admin_ui as ui
 import admin_system as host
+import admin_funnel as funnel
 
 def prompt(label, default=None):
     answer = input(f"{label}" + (f" [{default}]" if default is not None else "") + ": ").strip()
@@ -180,6 +181,35 @@ def network_menu():
     if confirm(f"Back up and apply network settings: {c.origin(cfg)}?"):
         execute("configure-network", lambda: ops.configure_network(cfg, cert, key))
 
+
+def funnel_menu():
+    terminal = getattr(sys.stdout, "terminal", None) or ui.Terminal()
+    terminal.section("Tailscale Funnel - public HTTPS")
+    terminal.line("Funnel publishes a public internet URL. Timesheet login is still required.")
+    for key, title, description in (
+        ("1", "Status and public URL", "Check Tailscale connection and actual Timesheet sharing state."),
+        ("2", "Install / connect Tailscale", "Install from the signed stable repository, then approve your account in a browser."),
+        ("3", "Enable public HTTPS", "Back up settings, prepare a private loopback proxy and publish this app."),
+        ("4", "Disable public HTTPS", "Remove this app's public proxy and keep the LAN website available."),
+    ):
+        terminal.entry(key, title, description)
+    terminal.line("[0] Back | Example: timesheet funnel status")
+    choice = prompt("Choose", "0")
+    if choice == "1": execute("funnel-status", funnel.status)
+    elif choice == "2": execute("funnel-connect", funnel.connect)
+    elif choice == "3":
+        terminal.line("CAUTION: Public internet access; factory passwords are rejected. A brief restart and safety backup are required.", "warning")
+        cfg = c.config()
+        current = cfg.get("funnel", {})
+        port = choose_port("Local loopback proxy port", current.get("proxy_port", 8081),
+                           current.get("proxy_port") if current.get("enabled") else None, "127.0.0.1")
+        if confirm("Enable public Timesheet access using Tailscale Funnel?"):
+            execute("funnel-enable", lambda: funnel.enable(port))
+    elif choice == "4":
+        if confirm("Disable public Timesheet access? LAN access will remain available."):
+            execute("funnel-disable", funnel.disable)
+    elif choice != "0": raise ValueError("Choose one of the displayed Funnel actions.")
+
 def schedule_menu():
     settings = ops.schedules()
     print(f"Schedules use system timezone: {c.timezone()}")
@@ -234,6 +264,9 @@ def panel_status(terminal):
     if c.CONFIG.exists():
         cfg = c.config()
         terminal.field("Website", c.origin(cfg), "good")
+        if cfg.get("funnel", {}).get("enabled"):
+            terminal.field("Funnel URL", c.public_origin(cfg), "good")
+            terminal.field("Public gate", "PAUSED - enable Funnel again after checking credentials" if (c.ROOT / "funnel.block").exists() else "Open (normal login required)")
         try:
             state = json.loads(ops.inspect("{{json .State}}", check=False) or "{}")
         except ValueError:
@@ -370,6 +403,7 @@ def run_menu_action(choice):
         label, action = simple[choice]
         execute(label, action)
     elif choice == "1": setup_menu()
+    elif choice == "funnel": funnel_menu()
     elif choice == "4":
         if confirm("Stop the application? Employees cannot use it until it is started again."):
             execute("stop", ops.stop)
@@ -416,7 +450,9 @@ def menu(plain=False):
         try:
             if c.CONFIG.exists():
                 cfg = c.config()
-                terminal.line(f"{c.origin(cfg)} | {zone}", "good")
+                public_paused = cfg.get("funnel", {}).get("enabled") and (c.ROOT / "funnel.block").exists()
+                terminal.line(f"{c.public_origin(cfg)} | {zone}" + (" [PUBLIC PAUSED]" if public_paused else ""),
+                              "warning" if public_paused else "good")
                 active_jobs = sum(bool(ops.schedules()[job]["enabled"]) for job in ops.JOBS)
                 maintenance = (c.ROOT / "maintenance.flag").exists() or (c.ROOT / "data/.maintenance").exists()
                 terminal.line(f"Saved: startup {'ON' if cfg.get('autostart', True) else 'OFF'} | "
@@ -497,6 +533,7 @@ def main():
     parser.add_argument("--scheduled", action="store_true")
     parser.add_argument("--confirm", action="store_true")
     parser.add_argument("--retry", action="store_true")
+    parser.add_argument("--proxy-port", type=int, default=8081, help="Funnel's local-only proxy port (default 8081)")
     args = parser.parse_args()
     if os.geteuid() != 0: raise SystemExit("Run installed timesheet (it requests sudo), or use sudo python3 manager.py.")
     os.umask(0o077)
@@ -525,6 +562,14 @@ def main():
             if args.command in commands:
                 commands[args.command]()
                 if args.command == "backup" and args.scheduled and ops.schedules()["auto_prune"]: ops.prune(True)
+            elif args.command == "funnel":
+                actions = {"status": funnel.status, "install": funnel.install, "connect": funnel.connect,
+                           "enable": lambda: funnel.enable(args.proxy_port), "disable": funnel.disable}
+                if args.value not in actions:
+                    raise ValueError("Use timesheet funnel status|install|connect|enable|disable")
+                if args.value in ("enable", "disable") and not args.confirm:
+                    raise ValueError("Public access changes require --confirm. Example: timesheet funnel enable --confirm")
+                actions[args.value]()
             elif args.command == "restore":
                 if not args.confirm or not args.value: raise ValueError("Use timesheet restore /absolute/backup.tgz --confirm")
                 ops.restore(Path(args.value))
@@ -602,6 +647,7 @@ GROUPS = (
         ("Repair dependencies", "10", "Install or repair Docker, Nginx and required Ubuntu packages.", "timesheet dependencies", "Changes system packages"),
         ("Remove bootstrap credentials", "28", "Remove one-time credentials from the environment after a successful login.", "timesheet remove-bootstrap", "Keeps the created account; confirm login first"),
         ("Edit private environment", "29", "Open the protected settings file; apply saved changes with Start.", "Example: edit .env, save and exit, then App control > Start / apply saved settings.", "Advanced; never paste secrets into logs"),
+        ("Tailscale Funnel (public HTTPS)", "funnel", "Connect a Tailscale account, check, enable or disable a public HTTPS link.", "timesheet funnel status", "Public internet access; uses normal Timesheet login"),
     )),
     ("Logs and diagnostics", "🔎", "Investigate errors, disk, ports and services", (
         ("Application logs", "22", "Read the latest 200 lines from the timesheet container.", "timesheet logs", ""),
@@ -942,6 +988,204 @@ class HostStats:
                 ("Host type", virtual), ("IP address", address)], datetime.now().astimezone().strftime("%H:%M:%S %Z")
 ```
 
+## admin_funnel.py
+
+```python
+"""Optional public HTTPS through Tailscale; never publish an unverified backend."""
+from __future__ import annotations
+import copy
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import admin_common as c
+import admin_ops as ops
+
+
+def install():
+    if shutil.which("tailscale"):
+        print("Tailscale is already installed.")
+        return
+    release = dict(line.split("=", 1) for line in Path("/etc/os-release").read_text().splitlines() if "=" in line)
+    version = release.get("VERSION_ID", "").strip('"')
+    codename = {"24.04": "noble", "26.04": "resolute"}.get(version)
+    if release.get("ID", "").strip('"') != "ubuntu" or not codename:
+        raise ValueError("Tailscale installation supports Ubuntu 24.04 and 26.04 LTS.")
+    key = c.fetch(f"https://pkgs.tailscale.com/stable/ubuntu/{codename}.noarmor.gpg")
+    keyring = Path("/usr/share/keyrings/tailscale-archive-keyring.gpg")
+    keyring.parent.mkdir(parents=True, exist_ok=True)
+    keyring.write_bytes(key)
+    keyring.chmod(0o644)
+    c.atomic(Path("/etc/apt/sources.list.d/gcc-timesheet-tailscale.list"),
+             f"deb [signed-by={keyring}] https://pkgs.tailscale.com/stable/ubuntu {codename} main\n", 0o644)
+    c.run(["apt-get", "update"])
+    c.run(["apt-get", "install", "-y", "tailscale"])
+    c.run(["systemctl", "enable", "--now", "tailscaled"])
+
+
+def connect():
+    install()
+    c.run(["systemctl", "enable", "--now", "tailscaled"])
+    prefs = json.loads(c.run(["tailscale", "debug", "prefs"], display=False, sensitive=True, timeout=10).stdout)
+    ssh = "--ssh=" + str(bool(prefs.get("RunSSH", False))).lower()
+    # Login URLs contain a device token: display them, but never log them.
+    result = c.run(["tailscale", "up", "--accept-dns=false", "--accept-routes=false", ssh, "--timeout=30s"],
+                   check=False, display=False, sensitive=True, timeout=40)
+    print((result.stdout + result.stderr).strip())
+    print("Complete the browser approval, then run timesheet funnel status.")
+
+
+def state():
+    if not shutil.which("tailscale"):
+        raise RuntimeError("Tailscale is not installed. Choose Install / connect Tailscale first.")
+    result = c.run(["tailscale", "status", "--json"], display=False, sensitive=True, timeout=10)
+    data = json.loads(result.stdout)
+    if data.get("BackendState") != "Running":
+        raise RuntimeError("Tailscale needs login or is offline. Run timesheet funnel connect.")
+    if data.get("Self", {}).get("Online") is False:
+        raise RuntimeError("Tailscale is offline. Check server connectivity before publishing.")
+    name = data.get("Self", {}).get("DNSName", "").rstrip(".")
+    if not name or c.hostname(name) != name or not name.endswith(".ts.net") or len(name.split(".")) < 4:
+        raise ValueError("Tailscale has no valid device DNS name; check MagicDNS in your tailnet.")
+    routes = json.loads(c.run(["tailscale", "funnel", "status", "--json"], display=False, sensitive=True, timeout=10).stdout or "{}")
+    return name, routes
+
+
+def handler(routes, name):
+    return routes.get("Web", {}).get(name + ":443", {}).get("Handlers", {}).get("/")
+
+
+def target(port):
+    return f"http://127.0.0.1:{c.port_number(port)}"
+
+
+def owns_route(routes, name, port):
+    handlers = routes.get("Web", {}).get(name + ":443", {}).get("Handlers", {})
+    return handlers == {"/": {"Proxy": target(port)}}
+
+
+def status():
+    try:
+        name, routes = state()
+    except (OSError, RuntimeError, ValueError) as error:
+        print(f"Tailscale: {error}")
+        return
+    cfg = c.config() if c.CONFIG.exists() else {}
+    settings = cfg.get("funnel", {})
+    owned = settings.get("enabled") and name == settings.get("hostname") and owns_route(routes, name, settings.get("proxy_port", 8081))
+    public = routes.get("AllowFunnel", {}).get(name + ":443") is True
+    blocked = (c.ROOT / "funnel.block").exists()
+    print(f"Tailscale: connected\nDevice: {name}\nPublic URL: https://{name}")
+    print("Timesheet Funnel: " + ("ENABLED" if owned and public and not blocked else "OFF / pending verification"))
+    if blocked:
+        print("Public access is paused. Verify administrator credentials, then enable Funnel again.")
+    if owned:
+        print(f"Local proxy: 127.0.0.1:{settings['proxy_port']}\nStartup: persistent through tailscaled")
+    print("Funnel is public internet access. Timesheet still requires its normal login.")
+
+
+def check_factory_password():
+    script = '''const D=require("better-sqlite3");
+const d=new D("/app/server/data/timesheet.db",{readonly:true,fileMustExist:true});
+const rows=d.prepare("SELECT password_hash FROM users WHERE lower(email)=? AND active=1").all("systemadmin@barry-wehmiller.com");
+const unsafe=rows.some(r=>require("bcryptjs").compareSync("systemadmin",r.password_hash));
+d.close(); console.log(JSON.stringify({unsafe}));'''
+    result = c.run(["docker", "exec", "-w", "/app/server", "timesheet-app", "node", "-e", script],
+                   display=False, sensitive=True, timeout=15)
+    if json.loads(result.stdout).get("unsafe") is not False:
+        raise RuntimeError("The factory administrator still uses its default password. Change it in Timesheet before enabling public access.")
+
+
+def apply_settings(cfg):
+    """Back up before restarting; rollback settings only, never newer business data."""
+    previous = c.config()
+    environment = (c.ROOT / ".env").read_text()
+    try:
+        ops.stop()
+        ops.snapshot()
+        c.save_config(cfg)
+        c.env_update(ops.network_environment(cfg))
+        ops.write_nginx(cfg)
+        ops.start()
+    except BaseException:
+        c.atomic(c.ROOT / ".env", environment)
+        c.save_config(previous)
+        ops.write_nginx(previous)
+        ops.start()
+        raise
+
+
+def enable(port=8081):
+    cfg = c.config()
+    if cfg.get("funnel", {}).get("enabled"):
+        ops.block_funnel("Public access is being verified.")
+    if not ops.running():
+        raise RuntimeError("Start the Timesheet application before enabling Funnel.")
+    ops.health(15)
+    check_factory_password()
+    name, routes = state()
+    port = c.port_number(port)
+    configured = copy.deepcopy(cfg)
+    configured["funnel"] = {"enabled": True, "hostname": name, "proxy_port": port}
+    ops.validate_config(configured)
+    current = cfg.get("funnel", {})
+    already_configured = current == configured["funnel"]
+    # Never replace a different Serve/Funnel website or any mounted subpaths.
+    if any(config.get("TCP", {}).get("443") or handler(config, name)
+           for config in routes.get("Foreground", {}).values()):
+        raise RuntimeError("Tailscale port 443 already serves another target in a foreground session.")
+    if routes.get("TCP", {}).get("443") or handler(routes, name):
+        if not owns_route(routes, name, port):
+            raise RuntimeError("Tailscale port 443 already serves another target. Preserve it or remove it manually before enabling Timesheet Funnel.")
+    if not already_configured and not c.available(port, "127.0.0.1"):
+        raise RuntimeError(f"Funnel loopback port {port} is occupied. Choose another --proxy-port.")
+    ops.block_funnel("Funnel setup is in progress.")
+    try:
+        if not already_configured:
+            apply_settings(configured)
+        else:
+            ops.write_nginx(configured)
+        # If tailnet approval is needed, its link is displayed but not logged.
+        try:
+            result = c.run(["tailscale", "funnel", "--bg", "--https=443", "--yes", target(port)],
+                           display=False, sensitive=True, timeout=45)
+        except subprocess.TimeoutExpired as error:
+            for value in (error.stdout, error.stderr):
+                if value:
+                    print(value.decode(errors="replace") if isinstance(value, bytes) else value)
+            raise RuntimeError("Complete Tailscale's browser approval, then enable Funnel again.") from None
+        print((result.stdout + result.stderr).strip())
+        actual_name, actual = state()
+        if actual_name != name or not owns_route(actual, name, port) or actual.get("AllowFunnel", {}).get(name + ":443") is not True:
+            raise RuntimeError("Funnel was not enabled for the expected Timesheet proxy.")
+        (c.ROOT / "funnel.block").unlink(missing_ok=True)
+    except BaseException:
+        ops.block_funnel("Funnel setup did not complete. Correct the error and enable again.")
+        raise
+    print(f"Public Timesheet: https://{name}\nLAN website: {c.origin(cfg)}")
+    print("HTTPS certificates and reboot startup are managed by Tailscale. Normal Timesheet login is required.")
+
+
+def disable():
+    cfg = c.config()
+    settings = cfg.get("funnel", {})
+    if not settings.get("enabled"):
+        print("Timesheet Funnel is already disabled.")
+        return
+    ops.block_funnel("Public access disabled by administrator.")
+    try:
+        name, routes = state()
+        if name == settings.get("hostname") and owns_route(routes, name, settings["proxy_port"]):
+            c.run(["tailscale", "funnel", "--https=443", "off"], timeout=15)
+        else:
+            print("Preserved other Tailscale routes. Timesheet's local public proxy is blocked.")
+    except (OSError, RuntimeError, ValueError) as error:
+        print(f"Tailscale cleanup unavailable: {error}. Removing the local public proxy instead.")
+    cfg["funnel"] = {**settings, "enabled": False}
+    apply_settings(cfg)
+    print(f"Public Timesheet disabled. LAN website: {c.origin(cfg)}")
+```
+
 ## admin_common.py
 
 ```python
@@ -1073,6 +1317,11 @@ def origin(cfg):
     default = 443 if cfg["https"] else 80
     suffix = "" if cfg["web_port"] == default else f':{cfg["web_port"]}'
     return f'{"https" if cfg["https"] else "http"}://{cfg["hostname"]}{suffix}'
+
+
+def public_origin(cfg):
+    funnel = cfg.get("funnel", {})
+    return "https://" + funnel["hostname"] if funnel.get("enabled") else origin(cfg)
 
 
 def env_update(updates):
@@ -1271,6 +1520,29 @@ def validate_config(cfg):
         raise ValueError("Invalid automatic startup setting.")
     if not re.fullmatch(re.escape(c.IMAGE) + r"(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}|@sha256:[0-9a-f]{64})", cfg["image_target"]):
         raise ValueError("Image must belong to this project's GHCR repository.")
+    funnel = cfg.get("funnel", {})
+    if not isinstance(funnel, dict) or not isinstance(funnel.get("enabled", False), bool):
+        raise ValueError("Invalid Funnel settings.")
+    if funnel.get("enabled"):
+        if not isinstance(funnel.get("hostname"), str):
+            raise ValueError("Invalid Funnel hostname.")
+        name = c.hostname(funnel.get("hostname", ""))
+        if name != funnel["hostname"] or not name.endswith(".ts.net") or len(name.split(".")) < 4:
+            raise ValueError("Funnel requires this device's Tailscale DNS name.")
+        port = c.port_number(funnel.get("proxy_port", 8081))
+        if port in (cfg["web_port"], cfg["app_port"]):
+            raise ValueError("Funnel's loopback proxy needs a separate port.")
+
+
+def network_environment(cfg):
+    origins = list(dict.fromkeys((c.origin(cfg), c.public_origin(cfg))))
+    return {"COOKIE_SECURE": str(cfg["https"]).lower(), "APP_BASE_URL": c.public_origin(cfg),
+            "CORS_ORIGIN": ",".join(origins)}
+
+
+def block_funnel(reason):
+    # Outside the snapshot contents: restoring data must never reopen this gate.
+    c.atomic(c.ROOT / "funnel.block", reason + "\n", 0o644)
 
 
 def write_compose(cfg):
@@ -1302,7 +1574,7 @@ def nginx_text(cfg):
     ssl_certificate_key {c.ROOT}/tls/server.key;
     ssl_protocols TLSv1.2 TLSv1.3;
 """
-    return f"""# Managed by timesheet v{c.VERSION}; configure through the menu.
+    text = f"""# Managed by timesheet v{c.VERSION}; configure through the menu.
 server {{
     listen {cfg['web_port']}{' ssl' if cfg['https'] else ''};
     listen [::]:{cfg['web_port']}{' ssl' if cfg['https'] else ''};
@@ -1320,6 +1592,32 @@ server {{
     }}
 }}
 """
+    funnel = cfg.get("funnel", {})
+    if funnel.get("enabled"):
+        text += f"""
+# Tailscale terminates public HTTPS; only its local proxy can reach this listener.
+server {{
+    listen 127.0.0.1:{funnel['proxy_port']};
+    server_name {funnel['hostname']};
+    client_max_body_size 100m;
+    set_real_ip_from 127.0.0.1;
+    real_ip_header X-Forwarded-For;
+    location / {{
+        if (-f {c.ROOT}/funnel.block) {{ return 503; }}
+        if (-f {c.ROOT}/maintenance.flag) {{ return 503; }}
+        proxy_pass http://127.0.0.1:{cfg['app_port']};
+        proxy_http_version 1.1;
+        proxy_set_header Host {funnel['hostname']};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_cookie_flags token secure httponly samesite=lax;
+        proxy_cookie_flags refreshToken secure httponly samesite=lax;
+        proxy_read_timeout 120s;
+    }}
+}}
+"""
+    return text
 
 
 def write_nginx(cfg):
@@ -1450,7 +1748,7 @@ def configure_network(cfg, cert=None, key=None):
             c.run(["openssl", "x509", "-in", c.ROOT / "tls/server.crt", "-noout", "-checkend", "0"])
         c.save_config(cfg)
         write_compose(cfg)
-        c.env_update({"COOKIE_SECURE": str(cfg["https"]).lower(), "APP_BASE_URL": c.origin(cfg), "CORS_ORIGIN": c.origin(cfg)})
+        c.env_update(network_environment(cfg))
         write_nginx(cfg)
         avahi()
         start()
@@ -1580,6 +1878,8 @@ def restore_snapshot(path):
             c.run(["docker", "pull", reference])
             if inspect("{{.Id}}", reference) != image_id:
                 raise ValueError("Restored image does not match snapshot architecture/image ID.")
+        if c.config().get("funnel", {}).get("enabled") or json.loads((stage / "admin.json").read_text()).get("funnel", {}).get("enabled"):
+            block_funnel("Public access paused after restore. Check credentials and run timesheet funnel enable --confirm.")
         stop()
         displaced = stage / "displaced"
         displaced.mkdir()
@@ -1640,6 +1940,8 @@ def restore(path):
 
 
 def factory_reset():
+    if c.config().get("funnel", {}).get("enabled"):
+        block_funnel("Public access paused for factory reset. Change the factory password before enabling Funnel again.")
     pause("all")
     with database_operation():
         stop()
@@ -1842,7 +2144,7 @@ def validate_tag(tag):
 def install(source, version):
     if (source / "VERSION").read_text().strip() != version:
         raise ValueError("Bundle version does not match selected release.")
-    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
+    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
         if not (source / name).is_file() or (source / name).is_symlink():
             raise ValueError(f"Incomplete bundle: {name}")
     c.run([sys.executable, "-m", "py_compile", *map(str, source.glob("*.py"))], display=False)
@@ -1918,6 +2220,8 @@ def update():
 def rollback():
     version = (c.LIB / "previous-version").read_text().strip()
     validate_tag(c.TAG_PREFIX + version)
+    if tuple(map(int, version.split("."))) < (1, 3, 0) and c.CONFIG.exists() and c.config().get("funnel", {}).get("enabled"):
+        raise RuntimeError("Disable Funnel before rolling back to an older tool: timesheet funnel disable --confirm")
     target = c.LIB / "releases" / version
     if not (target / "manager.py").is_file():
         raise ValueError("Previous administrator installation is missing.")
@@ -1980,7 +2284,7 @@ import tarfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_ui.py", "admin_system.py", "admin_common.py",
+SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_common.py",
            "admin_ops.py", "admin_release.py", "compose.yaml", "build_release.py"]
 
 def source_reference():

@@ -122,6 +122,29 @@ def validate_config(cfg):
         raise ValueError("Invalid automatic startup setting.")
     if not re.fullmatch(re.escape(c.IMAGE) + r"(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}|@sha256:[0-9a-f]{64})", cfg["image_target"]):
         raise ValueError("Image must belong to this project's GHCR repository.")
+    funnel = cfg.get("funnel", {})
+    if not isinstance(funnel, dict) or not isinstance(funnel.get("enabled", False), bool):
+        raise ValueError("Invalid Funnel settings.")
+    if funnel.get("enabled"):
+        if not isinstance(funnel.get("hostname"), str):
+            raise ValueError("Invalid Funnel hostname.")
+        name = c.hostname(funnel.get("hostname", ""))
+        if name != funnel["hostname"] or not name.endswith(".ts.net") or len(name.split(".")) < 4:
+            raise ValueError("Funnel requires this device's Tailscale DNS name.")
+        port = c.port_number(funnel.get("proxy_port", 8081))
+        if port in (cfg["web_port"], cfg["app_port"]):
+            raise ValueError("Funnel's loopback proxy needs a separate port.")
+
+
+def network_environment(cfg):
+    origins = list(dict.fromkeys((c.origin(cfg), c.public_origin(cfg))))
+    return {"COOKIE_SECURE": str(cfg["https"]).lower(), "APP_BASE_URL": c.public_origin(cfg),
+            "CORS_ORIGIN": ",".join(origins)}
+
+
+def block_funnel(reason):
+    # Outside the snapshot contents: restoring data must never reopen this gate.
+    c.atomic(c.ROOT / "funnel.block", reason + "\n", 0o644)
 
 
 def write_compose(cfg):
@@ -153,7 +176,7 @@ def nginx_text(cfg):
     ssl_certificate_key {c.ROOT}/tls/server.key;
     ssl_protocols TLSv1.2 TLSv1.3;
 """
-    return f"""# Managed by timesheet v{c.VERSION}; configure through the menu.
+    text = f"""# Managed by timesheet v{c.VERSION}; configure through the menu.
 server {{
     listen {cfg['web_port']}{' ssl' if cfg['https'] else ''};
     listen [::]:{cfg['web_port']}{' ssl' if cfg['https'] else ''};
@@ -171,6 +194,32 @@ server {{
     }}
 }}
 """
+    funnel = cfg.get("funnel", {})
+    if funnel.get("enabled"):
+        text += f"""
+# Tailscale terminates public HTTPS; only its local proxy can reach this listener.
+server {{
+    listen 127.0.0.1:{funnel['proxy_port']};
+    server_name {funnel['hostname']};
+    client_max_body_size 100m;
+    set_real_ip_from 127.0.0.1;
+    real_ip_header X-Forwarded-For;
+    location / {{
+        if (-f {c.ROOT}/funnel.block) {{ return 503; }}
+        if (-f {c.ROOT}/maintenance.flag) {{ return 503; }}
+        proxy_pass http://127.0.0.1:{cfg['app_port']};
+        proxy_http_version 1.1;
+        proxy_set_header Host {funnel['hostname']};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_cookie_flags token secure httponly samesite=lax;
+        proxy_cookie_flags refreshToken secure httponly samesite=lax;
+        proxy_read_timeout 120s;
+    }}
+}}
+"""
+    return text
 
 
 def write_nginx(cfg):
@@ -301,7 +350,7 @@ def configure_network(cfg, cert=None, key=None):
             c.run(["openssl", "x509", "-in", c.ROOT / "tls/server.crt", "-noout", "-checkend", "0"])
         c.save_config(cfg)
         write_compose(cfg)
-        c.env_update({"COOKIE_SECURE": str(cfg["https"]).lower(), "APP_BASE_URL": c.origin(cfg), "CORS_ORIGIN": c.origin(cfg)})
+        c.env_update(network_environment(cfg))
         write_nginx(cfg)
         avahi()
         start()
@@ -431,6 +480,8 @@ def restore_snapshot(path):
             c.run(["docker", "pull", reference])
             if inspect("{{.Id}}", reference) != image_id:
                 raise ValueError("Restored image does not match snapshot architecture/image ID.")
+        if c.config().get("funnel", {}).get("enabled") or json.loads((stage / "admin.json").read_text()).get("funnel", {}).get("enabled"):
+            block_funnel("Public access paused after restore. Check credentials and run timesheet funnel enable --confirm.")
         stop()
         displaced = stage / "displaced"
         displaced.mkdir()
@@ -491,6 +542,8 @@ def restore(path):
 
 
 def factory_reset():
+    if c.config().get("funnel", {}).get("enabled"):
+        block_funnel("Public access paused for factory reset. Change the factory password before enabling Funnel again.")
     pause("all")
     with database_operation():
         stop()

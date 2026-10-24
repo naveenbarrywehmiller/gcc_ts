@@ -1,4 +1,13 @@
-# GCC Timesheet Linux Admin v1.2.1
+# GCC Timesheet Linux Admin v1.3.0
+
+- Add optional Tailscale Funnel controls under Setup and configuration, plus `timesheet funnel status|install|connect|enable|disable`.
+- Connect a new tailnet using browser approval without logging device login tokens. Install Tailscale from its signed stable Ubuntu repository only when absent.
+- Preserve the existing Tailscale SSH setting when reconnecting through the menu; SSH remains a separate server setting.
+- Provide public HTTPS through a dedicated Nginx loopback proxy with Secure authentication cookies, trusted client IPs and exact LAN/public CORS origins. Keep the LAN HTTP website available.
+- Back up before applying app settings, reject the known factory password and conflicting Tailscale routes, and leave ingress blocked when setup or cleanup fails.
+- Pause public ingress after backup restore or factory reset; require rechecking credentials and enabling Funnel again. Require disabling Funnel before administrator rollback to a version without these protections.
+
+Existing panel features from v1.2.1 are retained below.
 
 - Add a read-only live home dashboard for CPU, RAM, swap, disks, filesystem usage, OS, virtualization and IP addresses. Refresh every five seconds on suitable terminals; preserve typed selections and support manual refresh in small/plain terminals.
 - Give submenu results fresh screens, wrapped output, readable status/timer sections, clearer backup listings and organized diagnostics. Keep command details in the log and destructive confirmations in place.
@@ -8,8 +17,8 @@
 - Keep operation locking, safety backups and destructive confirmations; add confirmation before stopping the app. Return to the current category after an action, cancellation or ordinary error.
 - Wrap terminal content and long examples for narrow SSH windows. Add the presentation module to installation validation, release bundles and the generated source reference.
 
-Install using the [v1.2.1 installer and guide](https://github.com/naveenbarrywehmiller/gcc_ts/blob/gcc-timesheet-linux-admin-v1.2.1/deploy/linux-admin/README.md), or choose **Application and tool updates > Update administrator** in an existing installation. App data, container image, website settings, schedules and backups are preserved by an administrator-only installation.
+Build this source with `python3 deploy/linux-admin/build_release.py`, extract its bundle and run `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.3.0`. App data, container image, website settings, schedules and backups are preserved by an administrator-only installation. Enabling/disabling Funnel separately applies the public network settings with a safety snapshot and brief app restart.
 
-Validation: 47 unit tests passed on Ubuntu 26.04.1 LTS, including Linux terminal refresh/input checks; 22 read-only installed-panel sessions covered all categories, every action's help and actual status, backups, database integrity, diagnostics and display. The company app remained healthy throughout the tool update.
+Validation: all 60 unit tests passed on Ubuntu 26.04.1 LTS, including the 13 new Funnel tests and the existing Linux terminal refresh/input checks. Installed-server checks verified the public URL with normal DNS and certificate verification, public/LAN health, unauthenticated access rejection, Secure public authentication cookies, exact CORS origins, trusted client IPs and persistent mapping after a Tailscale service restart. See [Funnel validation](https://github.com/naveenbarrywehmiller/gcc_ts/blob/gcc-timesheet-linux-admin-v1.3.0/deploy/linux-admin/FUNNEL_VALIDATION.md) for evidence and limits. The v1.2.1 baseline also includes 22 read-only installed-panel sessions covering every category and action's help.
 
 The existing release workflow continues to run syntax/unit/reference checks and the disposable Ubuntu deployment smoke test before publishing tagged releases.

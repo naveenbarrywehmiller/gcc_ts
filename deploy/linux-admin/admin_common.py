@@ -128,6 +128,11 @@ def origin(cfg):
     return f'{"https" if cfg["https"] else "http"}://{cfg["hostname"]}{suffix}'
 
 
+def public_origin(cfg):
+    funnel = cfg.get("funnel", {})
+    return "https://" + funnel["hostname"] if funnel.get("enabled") else origin(cfg)
+
+
 def env_update(updates):
     path = ROOT / ".env"
     lines = path.read_text().splitlines() if path.exists() else []

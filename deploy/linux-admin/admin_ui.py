@@ -48,6 +48,7 @@ GROUPS = (
         ("Repair dependencies", "10", "Install or repair Docker, Nginx and required Ubuntu packages.", "timesheet dependencies", "Changes system packages"),
         ("Remove bootstrap credentials", "28", "Remove one-time credentials from the environment after a successful login.", "timesheet remove-bootstrap", "Keeps the created account; confirm login first"),
         ("Edit private environment", "29", "Open the protected settings file; apply saved changes with Start.", "Example: edit .env, save and exit, then App control > Start / apply saved settings.", "Advanced; never paste secrets into logs"),
+        ("Tailscale Funnel (public HTTPS)", "funnel", "Connect a Tailscale account, check, enable or disable a public HTTPS link.", "timesheet funnel status", "Public internet access; uses normal Timesheet login"),
     )),
     ("Logs and diagnostics", "🔎", "Investigate errors, disk, ports and services", (
         ("Application logs", "22", "Read the latest 200 lines from the timesheet container.", "timesheet logs", ""),

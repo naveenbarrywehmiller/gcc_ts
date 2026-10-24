@@ -16,7 +16,7 @@ def validate_tag(tag):
 def install(source, version):
     if (source / "VERSION").read_text().strip() != version:
         raise ValueError("Bundle version does not match selected release.")
-    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
+    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
         if not (source / name).is_file() or (source / name).is_symlink():
             raise ValueError(f"Incomplete bundle: {name}")
     c.run([sys.executable, "-m", "py_compile", *map(str, source.glob("*.py"))], display=False)
@@ -92,6 +92,8 @@ def update():
 def rollback():
     version = (c.LIB / "previous-version").read_text().strip()
     validate_tag(c.TAG_PREFIX + version)
+    if tuple(map(int, version.split("."))) < (1, 3, 0) and c.CONFIG.exists() and c.config().get("funnel", {}).get("enabled"):
+        raise RuntimeError("Disable Funnel before rolling back to an older tool: timesheet funnel disable --confirm")
     target = c.LIB / "releases" / version
     if not (target / "manager.py").is_file():
         raise ValueError("Previous administrator installation is missing.")

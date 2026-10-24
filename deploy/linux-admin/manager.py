@@ -15,6 +15,7 @@ import admin_ops as ops
 import admin_release as release
 import admin_ui as ui
 import admin_system as host
+import admin_funnel as funnel
 
 def prompt(label, default=None):
     answer = input(f"{label}" + (f" [{default}]" if default is not None else "") + ": ").strip()
@@ -80,6 +81,35 @@ def network_menu():
     if confirm(f"Back up and apply network settings: {c.origin(cfg)}?"):
         execute("configure-network", lambda: ops.configure_network(cfg, cert, key))
 
+
+def funnel_menu():
+    terminal = getattr(sys.stdout, "terminal", None) or ui.Terminal()
+    terminal.section("Tailscale Funnel - public HTTPS")
+    terminal.line("Funnel publishes a public internet URL. Timesheet login is still required.")
+    for key, title, description in (
+        ("1", "Status and public URL", "Check Tailscale connection and actual Timesheet sharing state."),
+        ("2", "Install / connect Tailscale", "Install from the signed stable repository, then approve your account in a browser."),
+        ("3", "Enable public HTTPS", "Back up settings, prepare a private loopback proxy and publish this app."),
+        ("4", "Disable public HTTPS", "Remove this app's public proxy and keep the LAN website available."),
+    ):
+        terminal.entry(key, title, description)
+    terminal.line("[0] Back | Example: timesheet funnel status")
+    choice = prompt("Choose", "0")
+    if choice == "1": execute("funnel-status", funnel.status)
+    elif choice == "2": execute("funnel-connect", funnel.connect)
+    elif choice == "3":
+        terminal.line("CAUTION: Public internet access; factory passwords are rejected. A brief restart and safety backup are required.", "warning")
+        cfg = c.config()
+        current = cfg.get("funnel", {})
+        port = choose_port("Local loopback proxy port", current.get("proxy_port", 8081),
+                           current.get("proxy_port") if current.get("enabled") else None, "127.0.0.1")
+        if confirm("Enable public Timesheet access using Tailscale Funnel?"):
+            execute("funnel-enable", lambda: funnel.enable(port))
+    elif choice == "4":
+        if confirm("Disable public Timesheet access? LAN access will remain available."):
+            execute("funnel-disable", funnel.disable)
+    elif choice != "0": raise ValueError("Choose one of the displayed Funnel actions.")
+
 def schedule_menu():
     settings = ops.schedules()
     print(f"Schedules use system timezone: {c.timezone()}")
@@ -134,6 +164,9 @@ def panel_status(terminal):
     if c.CONFIG.exists():
         cfg = c.config()
         terminal.field("Website", c.origin(cfg), "good")
+        if cfg.get("funnel", {}).get("enabled"):
+            terminal.field("Funnel URL", c.public_origin(cfg), "good")
+            terminal.field("Public gate", "PAUSED - enable Funnel again after checking credentials" if (c.ROOT / "funnel.block").exists() else "Open (normal login required)")
         try:
             state = json.loads(ops.inspect("{{json .State}}", check=False) or "{}")
         except ValueError:
@@ -270,6 +303,7 @@ def run_menu_action(choice):
         label, action = simple[choice]
         execute(label, action)
     elif choice == "1": setup_menu()
+    elif choice == "funnel": funnel_menu()
     elif choice == "4":
         if confirm("Stop the application? Employees cannot use it until it is started again."):
             execute("stop", ops.stop)
@@ -316,7 +350,9 @@ def menu(plain=False):
         try:
             if c.CONFIG.exists():
                 cfg = c.config()
-                terminal.line(f"{c.origin(cfg)} | {zone}", "good")
+                public_paused = cfg.get("funnel", {}).get("enabled") and (c.ROOT / "funnel.block").exists()
+                terminal.line(f"{c.public_origin(cfg)} | {zone}" + (" [PUBLIC PAUSED]" if public_paused else ""),
+                              "warning" if public_paused else "good")
                 active_jobs = sum(bool(ops.schedules()[job]["enabled"]) for job in ops.JOBS)
                 maintenance = (c.ROOT / "maintenance.flag").exists() or (c.ROOT / "data/.maintenance").exists()
                 terminal.line(f"Saved: startup {'ON' if cfg.get('autostart', True) else 'OFF'} | "
@@ -397,6 +433,7 @@ def main():
     parser.add_argument("--scheduled", action="store_true")
     parser.add_argument("--confirm", action="store_true")
     parser.add_argument("--retry", action="store_true")
+    parser.add_argument("--proxy-port", type=int, default=8081, help="Funnel's local-only proxy port (default 8081)")
     args = parser.parse_args()
     if os.geteuid() != 0: raise SystemExit("Run installed timesheet (it requests sudo), or use sudo python3 manager.py.")
     os.umask(0o077)
@@ -425,6 +462,14 @@ def main():
             if args.command in commands:
                 commands[args.command]()
                 if args.command == "backup" and args.scheduled and ops.schedules()["auto_prune"]: ops.prune(True)
+            elif args.command == "funnel":
+                actions = {"status": funnel.status, "install": funnel.install, "connect": funnel.connect,
+                           "enable": lambda: funnel.enable(args.proxy_port), "disable": funnel.disable}
+                if args.value not in actions:
+                    raise ValueError("Use timesheet funnel status|install|connect|enable|disable")
+                if args.value in ("enable", "disable") and not args.confirm:
+                    raise ValueError("Public access changes require --confirm. Example: timesheet funnel enable --confirm")
+                actions[args.value]()
             elif args.command == "restore":
                 if not args.confirm or not args.value: raise ValueError("Use timesheet restore /absolute/backup.tgz --confirm")
                 ops.restore(Path(args.value))
