@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.34.0...gcc-timesheet-app-v1.35.0) (2026-10-24)
+
+
+### Features
+
+* **linux-admin:** release v1.3.0 with Tailscale Funnel controls ([bbdacb8](https://github.com/naveenbarrywehmiller/gcc_ts/commit/bbdacb871d1a1429ccf03026d95c735b1c217bc6))
+
 ## [1.34.0](https://github.com/naveenbarrywehmiller/gcc_ts/compare/gcc-timesheet-app-v1.33.0...gcc-timesheet-app-v1.34.0) (2026-10-22)
 
 
