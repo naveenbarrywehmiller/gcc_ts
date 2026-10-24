@@ -8,7 +8,7 @@
 
 This version is currently a local build; GitHub publication has not been performed. Build and install the extracted bundle using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.4.0`.
 
-Validation: all 73 tests passed on Ubuntu 26.04.1 LTS, including 13 new reporting-management tests. Installed-tool checks covered LAN/public/API addresses, running reporting status, connection guidance, disabled-state handling and the color/emoji live home screen. Application settings, container identity/start time, image and schedules were unchanged; LAN/public health remained HTTP 200. Production reporting was left disabled, and its key was not revealed or rotated. Enable/disable, key rotation and rollback failure paths were exercised with temporary data and mocks.
+Validation: all 73 administrator tests passed, with real disposable-Ubuntu integration checks for every category's help, installed service controls, reporting enable/disable/key rotation, backup/selected restore/factory reset, expired archive deletion, timers, tool rollback, HTTP/HTTPS, dependency repair, pinned-key SSH copying and OS package maintenance. Application regression checks also passed: 168 tests plus 55 reporting API checks. The company server's real backup was verified and maintenance released through Chrome System Admin login; LAN and public HTTPS login/health passed. Production reporting stayed disabled, its key was not revealed or rotated, and production data was not restored or deleted. The detailed per-action report and remaining external-account/reboot limits are recorded in `FULL_MENU_TEST_REPORT.md`.
 
 ## Previous release: v1.3.0
 
