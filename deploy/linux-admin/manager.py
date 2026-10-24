@@ -10,6 +10,7 @@ import re
 import socket
 import subprocess
 import sys
+import time
 import admin_common as c
 import admin_ops as ops
 import admin_release as release
@@ -373,6 +374,7 @@ def menu(plain=False):
     group = None
     zone = c.timezone()
     stats = host.HostStats()
+    builds = {"values": {}, "expires": 0}
 
     def home(live):
         terminal.line(f"GCC Timesheet Linux Admin v{c.VERSION} | {socket.gethostname()}", "title")
@@ -385,6 +387,21 @@ def menu(plain=False):
                     terminal.line("Public: " + c.public_origin(cfg) + (" [PAUSED]" if public_paused else ""),
                                   "warning" if public_paused else "good")
                 terminal.line("Power BI API: " + c.public_origin(cfg) + powerbi.API_PATH, "accent")
+                if time.monotonic() >= builds["expires"]:
+                    builds["values"] = powerbi.versions()
+                    builds["expires"] = time.monotonic() + 30
+                values = builds["values"]
+                image = cfg.get("image_target", "").removeprefix(c.IMAGE)
+                if image.startswith("@sha256:"):
+                    image = image[1:20] + "... (pinned)"
+                elif image.startswith(":"):
+                    image = image[1:] + (" (main builds)" if image == ":latest" else " (pinned)")
+                else:
+                    image = "Unavailable"
+                terminal.line(f"Timesheet app: {values.get('appVersion') or 'Unavailable'} | Image: {image}", "accent")
+                reporting = {True: "ON", False: "OFF"}.get(values.get("reportingEnabled"), "Unavailable")
+                terminal.line(f"Power BI: API {values.get('apiVersion') or 'Unavailable'} ({reporting}) | "
+                              f"Dashboard supported: {values.get('dashboardVersion') or 'Unavailable'}", "accent")
                 active_jobs = sum(bool(ops.schedules()[job]["enabled"]) for job in ops.JOBS)
                 maintenance = (c.ROOT / "maintenance.flag").exists() or (c.ROOT / "data/.maintenance").exists()
                 terminal.line(f"Saved: startup {'ON' if cfg.get('autostart', True) else 'OFF'} | "
@@ -422,7 +439,9 @@ def menu(plain=False):
                 group = None
                 continue
             if group is None:
-                if choice == "r": continue
+                if choice == "r":
+                    builds["expires"] = 0
+                    continue
                 elif choice == "h": group = len(ui.GROUPS) - 1
                 elif choice.isascii() and choice.isdigit() and 1 <= int(choice) < len(ui.GROUPS): group = int(choice) - 1
                 else: terminal.line("Choose a displayed category, H for help, or 0 to exit.", "warning")
@@ -437,6 +456,7 @@ def menu(plain=False):
             terminal.clear()
             terminal.action_help(entry)
             if not explain:
+                builds["expires"] = 0
                 if entry[1] == "display": terminal.display_check()
                 else:
                     terminal.section("Result / progress")

@@ -62,6 +62,11 @@ def action(category, item, prompts=(), timeout=180):
 def run(maintenance_login):
     if os.environ.get("GITHUB_ACTIONS") != "true" or os.geteuid() != 0:
         raise RuntimeError("Real menu smoke tests require the disposable root GitHub runner.")
+    build = powerbi.versions()
+    assert build["appVersion"] == ops.health()["version"].removeprefix("v")
+    assert build["apiVersion"] and build["dashboardVersion"]
+    assert build["reportingEnabled"] is False
+    print("PASS read-only deployed version metadata while reporting remains disabled")
     for index, group in enumerate(ui.GROUPS):
         category = "h" if index == len(ui.GROUPS) - 1 else str(index + 1)
         for number, entry in enumerate(group[3], 1):

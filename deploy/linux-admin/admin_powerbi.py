@@ -2,6 +2,7 @@
 import json
 import re
 import secrets
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -13,6 +14,30 @@ API_PATH = "/api/powerbi"
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+
+
+def versions():
+    # Read build metadata only: importing the reporting service would open SQLite.
+    script = r'''const fs=require('fs');
+const cfg=require('./src/config/env');
+let app=null, source='';
+try { app=require('./src/config/version').version; } catch {}
+try { source=fs.readFileSync('./src/services/powerBiService.js','utf8'); } catch {}
+// shortcut: these build fields are string literals; use a metadata endpoint if they become computed.
+const field=name=>(source.match(new RegExp(String.raw`\b${name}\s*:\s*['"]([^'"]+)['"]`))||[])[1]||null;
+console.log(JSON.stringify({appVersion:app,apiVersion:field('apiVersion'),
+dashboardVersion:field('dashboardVersion'),reportingEnabled:cfg.powerBiApiEnabled}));'''
+    try:
+        result = c.run(["docker", "exec", "-w", "/app/server", "timesheet-app", "node", "-e", script],
+                       display=False, sensitive=True, timeout=2)
+        data = json.loads(result.stdout)
+        values = {name: value if isinstance(value := data.get(name), str) and
+                  re.fullmatch(r"v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", value) else None
+                  for name in ("appVersion", "apiVersion", "dashboardVersion")}
+        values["reportingEnabled"] = data.get("reportingEnabled") if isinstance(data.get("reportingEnabled"), bool) else None
+        return values
+    except (OSError, RuntimeError, ValueError, AttributeError, subprocess.TimeoutExpired):
+        return {}
 
 
 def addresses():

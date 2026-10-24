@@ -1,8 +1,8 @@
-# GCC Timesheet Linux Admin v1.4.0 — Ubuntu setup and operations
+# GCC Timesheet Linux Admin v1.4.1 — Ubuntu setup and operations
 
-**Installer (v1.4.0):** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.4.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.4.0/install.sh) · [Complete script reference](SCRIPTS.md)
+**Installer (v1.4.1):** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.4.1) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.4.1/install.sh) · [Complete script reference](SCRIPTS.md)
 
-The Power BI management controls and separate LAN/public/API home addresses are new in **v1.4.0**. Choose **Setup and configuration > Power BI reporting management** for status, connection guidance, testing and private reporting controls. Reporting is not enabled by installing this administrator.
+The home-screen software-version summary is new in **v1.4.1**. It shows the running Timesheet build, selected image, Power BI API build and supported dashboard version. Reporting is not enabled by installing this administrator.
 
 On your **Ubuntu VM**, run:
 
@@ -10,9 +10,9 @@ On your **Ubuntu VM**, run:
 sudo apt update
 sudo apt install -y curl ca-certificates
 curl -fL --retry 3 \
-  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.4.0/install.sh \
+  https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.4.1/install.sh \
   -o /tmp/timesheet-install.sh
-sudo bash /tmp/timesheet-install.sh gcc-timesheet-linux-admin-v1.4.0
+sudo bash /tmp/timesheet-install.sh gcc-timesheet-linux-admin-v1.4.1
 timesheet
 ```
 
@@ -26,7 +26,7 @@ The tool reads the existing system hostname and timezone. It does not run `hostn
 
 Ubuntu Server **24.04 or 26.04 LTS**, Python 3.12+, a sudo account and outbound HTTPS access are required. Python and basic download tools are installed by the bootstrap. A starting VM size is 2 vCPU, 4 GB RAM and 60 GB SSD; actual capacity depends on usage. IT should provide a DHCP reservation/static IP and allow access to Ubuntu mirrors, Docker's package repository, GitHub, GHCR and their download endpoints. Configure APT/Docker proxies through IT if required.
 
-**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **Application and tool updates > Choose application version** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.4.0`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
+**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **Application and tool updates > Choose application version** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.4.1`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
 
 ## First installation, in order
 
@@ -46,13 +46,17 @@ If an installation is interrupted after environment creation, choose **Setup and
 
 The Docker image is **`ghcr.io/naveenbarrywehmiller/gcc_ts:latest`** ([package](https://github.com/naveenbarrywehmiller/gcc_ts/pkgs/container/gcc_ts)). `latest` follows main-branch builds, including changes before a tagged app release. **Application and tool updates > Choose application version** chooses a fixed app tag or immutable digest instead. Updates use published container images; the server does not need a Git checkout or host Node.js.
 
-## Panel navigation (v1.4.0)
+## Panel navigation (v1.4.1)
 
 The home screen shows the LAN website with its port, an optional public Funnel website, and the full Power BI API address. With Funnel enabled, the displayed API uses public HTTPS; the Power BI submenu also gives the LAN API address. An address alone does not mean reporting is enabled. Live measurements include CPU usage, logical CPU/core/thread counts, processor, usable RAM and available RAM, swap, disk capacity, root-filesystem usage, OS, virtualization and the default network interface's IP addresses. CPU use is measured between refreshes; memory use is total minus Linux `MemAvailable` (reclaimable cache is available). Disk capacity and root-filesystem capacity are separate; available filesystem space excludes reserved blocks. Missing measurements say unavailable.
 
 On an interactive ANSI terminal with enough room, the home screen refreshes every **5 seconds** and preserves a partially typed selection. **R** refreshes immediately after Enter. A small window, redirected output, `TERM=dumb` or `timesheet --plain` uses a scrollable snapshot with **R** to refresh. Enlarge a small terminal and press R to enable live refresh. Hardware identity is read when the panel opens; CPU, memory, root usage and IP addresses update with each refresh. Refreshing only reads system state and does not restart or update the application.
 
-The saved startup preference, enabled-job count and maintenance flags are also shown. **App control > Status and website** reads actual container health and timer states in labeled sections, without wide Docker tables. It shows each job's saved preference, actual timer state, calendar and next run. Submenus and action results start on fresh screens; operation output wraps to the terminal width, and the result footer returns you to the same category. Full commands remain in the administrator log. CLI status and detailed diagnostics remain available for scripts.
+The saved startup preference, enabled-job count and maintenance flags are also shown. Software versions appear separately: the installed Linux Admin version in the heading, the running Timesheet app build, the selected image tag/digest, Power BI API build version with its enabled/disabled state, and the dashboard version supported by that API. The selected image may differ from the running app until Update application is applied. `latest` follows main builds; fixed tags/digests are labeled pinned.
+
+Version metadata is read from the running container's installed files without opening SQLite, revealing credentials or enabling reporting. It is cached for 30 seconds to keep the five-second resource refresh lightweight; **R** forces a fresh version read, and returning home after an action also invalidates the cache. Missing/stopped/timed-out containers and unrecognized metadata show Unavailable. The supported dashboard version is the API's compatibility declaration, not a measurement of the report open on a user's PC or the installed Microsoft Power BI Desktop version.
+
+**App control > Status and website** reads actual container health and timer states in labeled sections, without wide Docker tables. It shows each job's saved preference, actual timer state, calendar and next run. Submenus and action results start on fresh screens; operation output wraps to the terminal width, and the result footer returns you to the same category. Full commands remain in the administrator log. CLI status and detailed diagnostics remain available for scripts.
 
 | Home choice | Category | Available actions |
 |---|---|---|

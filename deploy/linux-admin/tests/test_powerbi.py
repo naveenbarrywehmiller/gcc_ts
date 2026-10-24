@@ -59,6 +59,58 @@ class PowerBiTests(unittest.TestCase):
         self.assertFalse(run.call_args.kwargs["display"])
         self.assertNotIn(KEY, str(run.call_args.args))
 
+    def test_build_versions_work_when_reporting_is_disabled_and_hide_credentials(self):
+        expected = {"appVersion": "1.35.0", "apiVersion": "2.0.0", "dashboardVersion": "2.2.2", "reportingEnabled": False}
+        with patch.object(c, "run", return_value=subprocess.CompletedProcess([], 0, json.dumps(expected), "")) as run:
+            self.assertEqual(powerbi.versions(), expected)
+        self.assertTrue(run.call_args.kwargs["sensitive"])
+        self.assertLessEqual(run.call_args.kwargs["timeout"], 2)
+        script = run.call_args.args[0][-1]
+        self.assertNotIn("powerBiApiKey", script)
+        self.assertNotIn("require('./src/services/powerBiService')", script)
+        self.assertIn("readFileSync", script)
+
+    def test_missing_or_failed_version_reads_never_invent_versions(self):
+        for value in ({"appVersion": "unknown", "apiVersion": "2.0.0\u001b[31m", "reportingEnabled": "true"}, []):
+            with patch.object(c, "run", return_value=subprocess.CompletedProcess([], 0, json.dumps(value), "")):
+                result = powerbi.versions()
+                self.assertFalse(result.get("appVersion"))
+                self.assertFalse(result.get("apiVersion"))
+                self.assertIsNone(result.get("reportingEnabled"))
+        for error in (RuntimeError("container stopped"), subprocess.TimeoutExpired("docker", 2), ValueError("invalid JSON")):
+            with patch.object(c, "run", side_effect=error):
+                self.assertEqual(powerbi.versions(), {})
+
+    def test_home_reports_running_and_selected_versions_separately_and_manual_refresh_reloads(self):
+        cfg = c.config()
+        cfg["image_target"] = c.IMAGE + ":1.35.0"
+        c.save_config(cfg)
+        values = {"appVersion": "1.34.0", "apiVersion": "2.0.0", "dashboardVersion": "2.2.2", "reportingEnabled": False}
+        with patch.object(powerbi, "versions", return_value=values) as versions, patch("sys.stdout", io.StringIO()) as output, \
+             patch.object(manager.host, "HostStats") as stats, patch.object(c, "timezone", return_value="UTC"), \
+             patch.object(manager.ops, "schedules", return_value=manager.ops.default_schedules()), \
+             patch.object(manager, "prompt", side_effect=["r", "0"]), \
+             patch.object(ui.shutil, "get_terminal_size", return_value=os.terminal_size((80, 40))):
+            stats.return_value.snapshot.return_value = ([], "12:34:56 UTC")
+            manager.menu(True)
+        self.assertEqual(versions.call_count, 2)
+        self.assertIn("Timesheet app: 1.34.0 | Image: 1.35.0 (pinned)", output.getvalue())
+        self.assertIn("Power BI: API 2.0.0 (OFF) | Dashboard supported: 2.2.2", output.getvalue())
+
+    def test_repeated_home_frames_use_cached_metadata(self):
+        with patch.object(powerbi, "versions", return_value={}) as versions, patch("sys.stdout", io.StringIO()), \
+             patch.object(manager.host, "HostStats") as stats, patch.object(c, "timezone", return_value="UTC"), \
+             patch.object(manager.ops, "schedules", return_value=manager.ops.default_schedules()), \
+             patch.object(ui.Terminal, "home_choice") as choose:
+            stats.return_value.snapshot.return_value = ([], "12:34:56 UTC")
+            def frames(render, fallback):
+                render(True)
+                render(True)
+                return "0"
+            choose.side_effect = frames
+            manager.menu(True)
+        versions.assert_called_once()
+
     def test_authenticated_test_uses_headers_and_only_prints_version(self):
         response = MagicMock()
         response.__enter__.return_value = response
@@ -163,6 +215,7 @@ class PowerBiTests(unittest.TestCase):
                  patch.object(manager.host, "HostStats") as stats, patch.object(c, "timezone", return_value="Asia/Kolkata"), \
                  patch.object(manager.ops, "schedules", return_value=manager.ops.default_schedules()), \
                  patch.object(manager, "prompt", return_value="0"), \
+                 patch.object(powerbi, "versions", return_value={"appVersion": "1.35.0", "apiVersion": "2.0.0", "dashboardVersion": "2.2.2", "reportingEnabled": False}), \
                  patch.object(ui.shutil, "get_terminal_size", return_value=os.terminal_size((width, 40))):
                 stats.return_value.snapshot.return_value = ([], "12:34:56 IST")
                 manager.menu(True)

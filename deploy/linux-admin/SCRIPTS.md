@@ -7,7 +7,7 @@ See [the setup and operations guide](README.md) for installation, menus and trou
 ## VERSION
 
 ```text
-1.4.0
+1.4.1
 ```
 
 ## install.sh
@@ -110,6 +110,7 @@ import re
 import socket
 import subprocess
 import sys
+import time
 import admin_common as c
 import admin_ops as ops
 import admin_release as release
@@ -473,6 +474,7 @@ def menu(plain=False):
     group = None
     zone = c.timezone()
     stats = host.HostStats()
+    builds = {"values": {}, "expires": 0}
 
     def home(live):
         terminal.line(f"GCC Timesheet Linux Admin v{c.VERSION} | {socket.gethostname()}", "title")
@@ -485,6 +487,21 @@ def menu(plain=False):
                     terminal.line("Public: " + c.public_origin(cfg) + (" [PAUSED]" if public_paused else ""),
                                   "warning" if public_paused else "good")
                 terminal.line("Power BI API: " + c.public_origin(cfg) + powerbi.API_PATH, "accent")
+                if time.monotonic() >= builds["expires"]:
+                    builds["values"] = powerbi.versions()
+                    builds["expires"] = time.monotonic() + 30
+                values = builds["values"]
+                image = cfg.get("image_target", "").removeprefix(c.IMAGE)
+                if image.startswith("@sha256:"):
+                    image = image[1:20] + "... (pinned)"
+                elif image.startswith(":"):
+                    image = image[1:] + (" (main builds)" if image == ":latest" else " (pinned)")
+                else:
+                    image = "Unavailable"
+                terminal.line(f"Timesheet app: {values.get('appVersion') or 'Unavailable'} | Image: {image}", "accent")
+                reporting = {True: "ON", False: "OFF"}.get(values.get("reportingEnabled"), "Unavailable")
+                terminal.line(f"Power BI: API {values.get('apiVersion') or 'Unavailable'} ({reporting}) | "
+                              f"Dashboard supported: {values.get('dashboardVersion') or 'Unavailable'}", "accent")
                 active_jobs = sum(bool(ops.schedules()[job]["enabled"]) for job in ops.JOBS)
                 maintenance = (c.ROOT / "maintenance.flag").exists() or (c.ROOT / "data/.maintenance").exists()
                 terminal.line(f"Saved: startup {'ON' if cfg.get('autostart', True) else 'OFF'} | "
@@ -522,7 +539,9 @@ def menu(plain=False):
                 group = None
                 continue
             if group is None:
-                if choice == "r": continue
+                if choice == "r":
+                    builds["expires"] = 0
+                    continue
                 elif choice == "h": group = len(ui.GROUPS) - 1
                 elif choice.isascii() and choice.isdigit() and 1 <= int(choice) < len(ui.GROUPS): group = int(choice) - 1
                 else: terminal.line("Choose a displayed category, H for help, or 0 to exit.", "warning")
@@ -537,6 +556,7 @@ def menu(plain=False):
             terminal.clear()
             terminal.action_help(entry)
             if not explain:
+                builds["expires"] = 0
                 if entry[1] == "display": terminal.display_check()
                 else:
                     terminal.section("Result / progress")
@@ -1235,6 +1255,7 @@ def disable():
 import json
 import re
 import secrets
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -1246,6 +1267,30 @@ API_PATH = "/api/powerbi"
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+
+
+def versions():
+    # Read build metadata only: importing the reporting service would open SQLite.
+    script = r'''const fs=require('fs');
+const cfg=require('./src/config/env');
+let app=null, source='';
+try { app=require('./src/config/version').version; } catch {}
+try { source=fs.readFileSync('./src/services/powerBiService.js','utf8'); } catch {}
+// shortcut: these build fields are string literals; use a metadata endpoint if they become computed.
+const field=name=>(source.match(new RegExp(String.raw`\b${name}\s*:\s*['"]([^'"]+)['"]`))||[])[1]||null;
+console.log(JSON.stringify({appVersion:app,apiVersion:field('apiVersion'),
+dashboardVersion:field('dashboardVersion'),reportingEnabled:cfg.powerBiApiEnabled}));'''
+    try:
+        result = c.run(["docker", "exec", "-w", "/app/server", "timesheet-app", "node", "-e", script],
+                       display=False, sensitive=True, timeout=2)
+        data = json.loads(result.stdout)
+        values = {name: value if isinstance(value := data.get(name), str) and
+                  re.fullmatch(r"v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", value) else None
+                  for name in ("appVersion", "apiVersion", "dashboardVersion")}
+        values["reportingEnabled"] = data.get("reportingEnabled") if isinstance(data.get("reportingEnabled"), bool) else None
+        return values
+    except (OSError, RuntimeError, ValueError, AttributeError, subprocess.TimeoutExpired):
+        return {}
 
 
 def addresses():

@@ -1,0 +1,13 @@
+# Linux Admin v1.4.1 home version display
+
+Server validation completed October 23, 2026 (America/Los_Angeles) on Ubuntu 26.04.1 LTS, Python 3.14.4, before publishing this administrator release.
+
+- All **77 unit tests passed**, including four new checks for deployed version metadata while reporting is disabled, bounded/unavailable reads and sanitization, distinguishing running versus selected versions with forced R refresh, and reuse of cached metadata across live frames.
+- The version probe's JavaScript passed syntax checking and executed successfully inside the company's running container. Its app version matched `/api/health/live`. It reads version files, does not import the database-opening reporting service, never requests/reveals a reporting credential and does not enable reporting.
+- The installed 80-column, 40-row color/emoji home screen showed Admin **1.4.1**, Timesheet app **1.35.0**, selected image **1.35.0 (pinned)**, Power BI API **2.0.0 (ON)** and supported dashboard **2.2.2**. Five-second resource refresh and manual R refresh remained usable.
+- Home rendering passed at 20, 32, 40, 60, 80, 120 and 160 columns. Existing Linux pseudo-terminal tests passed for partial typed input, EOF/terminal-mode restoration and small-window snapshot behavior.
+- Metadata is cached for 30 seconds and invalidated by R or a menu action. Missing/stopped/timed-out containers and unknown version values show Unavailable. Long image digests are abbreviated on Home; the full selected reference remains in status/configuration.
+- Before/after SHA-256 checks matched for the private environment, image reference, administrator configuration, Compose configuration and schedules. Container ID, start time and image were unchanged. App health remained HTTP 200 with v1.35.0. Reporting was already ON and stayed ON; no application restart was needed.
+- Python compilation, Bash syntax, generated-reference consistency, repository validation and focused whitespace checks passed. The local code map was rebuilt.
+
+The dashboard value is the installed API's declared supported dashboard build, not the version of Microsoft Power BI Desktop or a report open on another computer. Build metadata fields are currently string literals in the reporting service; future computed fields must use a dedicated metadata contract, otherwise the display deliberately reports Unavailable. No application frontend, schema or dependency was changed, and the Chromium viewport suite was not rerun for this terminal-only change. The [v1.4.1 release](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.4.1) is published only after tagged-release CI passes the disposable Ubuntu deployment and full-menu smoke tests.

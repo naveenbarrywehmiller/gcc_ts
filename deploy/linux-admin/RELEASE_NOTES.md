@@ -1,4 +1,14 @@
-# GCC Timesheet Linux Admin v1.4.0
+# GCC Timesheet Linux Admin v1.4.1
+
+- Add the running Timesheet build, selected Docker tag/digest, Power BI API build and reporting state, and supported dashboard version to Home. The installed Linux Admin version remains in the heading.
+- Read deployed metadata without opening SQLite or enabling reporting. Show Unavailable when the app is stopped or metadata cannot be read; do not substitute the selected tag for the running version.
+- Cache version metadata for 30 seconds, with immediate refresh on R and after a menu action. Preserve five-second resource updates, narrow-terminal wrapping and plain/color modes.
+
+Install using the [v1.4.1 installer and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.4.1). Existing installations can use **Application and tool updates > Update administrator** or `timesheet self-update`. Installing this administrator preserves the current application image, data and reporting state.
+
+Validation: all 77 unit tests passed on Ubuntu 26.04.1 LTS. The installed color/emoji home screen and R refresh displayed the real app/API/supported-dashboard versions; the app build matched live health. Configuration hashes, container ID/start time/image and the existing reporting state were unchanged. See the [version display validation](https://github.com/naveenbarrywehmiller/gcc_ts/blob/gcc-timesheet-linux-admin-v1.4.1/deploy/linux-admin/VERSION_DISPLAY_VALIDATION.md) for evidence and display limits. The tagged-release workflow runs the full disposable-Ubuntu menu/deployment smoke test before publishing assets.
+
+## Previous release: v1.4.0
 
 - Show separate LAN website/port, public Funnel website and full Power BI API address on the live home screen.
 - Add Power BI management under Setup and configuration: actual running status, LAN/public API addresses, dashboard connection instructions, authenticated connection checks, private key display, enable/disable and API-key rotation.
