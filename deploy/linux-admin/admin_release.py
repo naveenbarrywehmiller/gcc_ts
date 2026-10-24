@@ -16,7 +16,7 @@ def validate_tag(tag):
 def install(source, version):
     if (source / "VERSION").read_text().strip() != version:
         raise ValueError("Bundle version does not match selected release.")
-    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
+    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_powerbi.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
         if not (source / name).is_file() or (source / name).is_symlink():
             raise ValueError(f"Incomplete bundle: {name}")
     c.run([sys.executable, "-m", "py_compile", *map(str, source.glob("*.py"))], display=False)

@@ -16,6 +16,7 @@ import admin_release as release
 import admin_ui as ui
 import admin_system as host
 import admin_funnel as funnel
+import admin_powerbi as powerbi
 
 def prompt(label, default=None):
     answer = input(f"{label}" + (f" [{default}]" if default is not None else "") + ": ").strip()
@@ -109,6 +110,33 @@ def funnel_menu():
         if confirm("Disable public Timesheet access? LAN access will remain available."):
             execute("funnel-disable", funnel.disable)
     elif choice != "0": raise ValueError("Choose one of the displayed Funnel actions.")
+
+def powerbi_menu():
+    terminal = getattr(sys.stdout, "terminal", None) or ui.Terminal()
+    terminal.section("Power BI reporting management")
+    entries = (
+        ("Status and API addresses", "Check actual running settings; the API key stays hidden.", powerbi.status),
+        ("Connection and setup guide", "Read URLs, dashboard parameters and Basic credential examples.", powerbi.guide),
+        ("Test reporting connection", "Check the version endpoint using the configured key without displaying it.", powerbi.check_connection),
+        ("View reporting key privately", "Reveal the key in this terminal after confirmation; protect screenshots.", powerbi.show_key),
+        ("Enable reporting API", "Allow authenticated read-only reporting; safety backup and brief restart.", lambda: powerbi.set_enabled(True)),
+        ("Disable reporting API", "Stop reporting refresh access; safety backup and brief restart.", lambda: powerbi.set_enabled(False)),
+        ("Rotate reporting key", "Replace the key; all Power BI clients must update their credentials.", powerbi.rotate_key),
+    )
+    for index, (title, description, _) in enumerate(entries, 1):
+        terminal.entry(str(index), title, description)
+    terminal.line("[0] Back | Example: timesheet powerbi status")
+    choice = prompt("Choose", "0")
+    if choice == "0": return
+    if not choice.isascii() or not choice.isdigit() or not 1 <= int(choice) <= len(entries):
+        raise ValueError("Choose one of the displayed Power BI actions.")
+    title, _, action = entries[int(choice) - 1]
+    if int(choice) >= 4:
+        terminal.line("CAUTION: " + ("The key grants access to organization-wide reporting data." if choice == "4" else
+                      "Brief app restart. Enabling grants reporting access to key holders; rotation breaks existing refresh credentials."), "warning")
+        if not confirm(title + "?"): return
+    execute("powerbi-" + choice, action)
+
 
 def schedule_menu():
     settings = ops.schedules()
@@ -304,6 +332,7 @@ def run_menu_action(choice):
         execute(label, action)
     elif choice == "1": setup_menu()
     elif choice == "funnel": funnel_menu()
+    elif choice == "powerbi": powerbi_menu()
     elif choice == "4":
         if confirm("Stop the application? Employees cannot use it until it is started again."):
             execute("stop", ops.stop)
@@ -351,8 +380,11 @@ def menu(plain=False):
             if c.CONFIG.exists():
                 cfg = c.config()
                 public_paused = cfg.get("funnel", {}).get("enabled") and (c.ROOT / "funnel.block").exists()
-                terminal.line(f"{c.public_origin(cfg)} | {zone}" + (" [PUBLIC PAUSED]" if public_paused else ""),
-                              "warning" if public_paused else "good")
+                terminal.line(f"LAN: {c.origin(cfg)} | {zone}", "good")
+                if cfg.get("funnel", {}).get("enabled"):
+                    terminal.line("Public: " + c.public_origin(cfg) + (" [PAUSED]" if public_paused else ""),
+                                  "warning" if public_paused else "good")
+                terminal.line("Power BI API: " + c.public_origin(cfg) + powerbi.API_PATH, "accent")
                 active_jobs = sum(bool(ops.schedules()[job]["enabled"]) for job in ops.JOBS)
                 maintenance = (c.ROOT / "maintenance.flag").exists() or (c.ROOT / "data/.maintenance").exists()
                 terminal.line(f"Saved: startup {'ON' if cfg.get('autostart', True) else 'OFF'} | "
@@ -469,6 +501,15 @@ def main():
                     raise ValueError("Use timesheet funnel status|install|connect|enable|disable")
                 if args.value in ("enable", "disable") and not args.confirm:
                     raise ValueError("Public access changes require --confirm. Example: timesheet funnel enable --confirm")
+                actions[args.value]()
+            elif args.command == "powerbi":
+                actions = {"status": powerbi.status, "guide": powerbi.guide, "test": powerbi.check_connection,
+                           "key": powerbi.show_key, "enable": lambda: powerbi.set_enabled(True),
+                           "disable": lambda: powerbi.set_enabled(False), "rotate-key": powerbi.rotate_key}
+                if args.value not in actions:
+                    raise ValueError("Use timesheet powerbi status|guide|test|key|enable|disable|rotate-key")
+                if args.value in ("key", "enable", "disable", "rotate-key") and not args.confirm:
+                    raise ValueError("Key display and reporting changes require --confirm.")
                 actions[args.value]()
             elif args.command == "restore":
                 if not args.confirm or not args.value: raise ValueError("Use timesheet restore /absolute/backup.tgz --confirm")

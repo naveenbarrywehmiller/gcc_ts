@@ -1,4 +1,16 @@
-# GCC Timesheet Linux Admin v1.3.0
+# GCC Timesheet Linux Admin v1.4.0
+
+- Show separate LAN website/port, public Funnel website and full Power BI API address on the live home screen.
+- Add Power BI management under Setup and configuration: actual running status, LAN/public API addresses, dashboard connection instructions, authenticated connection checks, private key display, enable/disable and API-key rotation.
+- Keep credentials out of status, connection-test output, command arguments and administrator logs. Require confirmation for private key display or changes; refuse redirected key display and credential-bearing redirects.
+- Back up before reporting changes, restart briefly, verify applied settings and restore only the previous environment on failure. Key rotation preserves reporting's enabled/disabled state.
+- Preserve the seven-category home screen, existing Tailscale SSH preference, Funnel configuration, application image and data. Reporting is not automatically enabled by installation.
+
+This version is currently a local build; GitHub publication has not been performed. Build and install the extracted bundle using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.4.0`.
+
+Validation: all 73 tests passed on Ubuntu 26.04.1 LTS, including 13 new reporting-management tests. Installed-tool checks covered LAN/public/API addresses, running reporting status, connection guidance, disabled-state handling and the color/emoji live home screen. Application settings, container identity/start time, image and schedules were unchanged; LAN/public health remained HTTP 200. Production reporting was left disabled, and its key was not revealed or rotated. Enable/disable, key rotation and rollback failure paths were exercised with temporary data and mocks.
+
+## Previous release: v1.3.0
 
 - Add optional Tailscale Funnel controls under Setup and configuration, plus `timesheet funnel status|install|connect|enable|disable`.
 - Connect a new tailnet using browser approval without logging device login tokens. Install Tailscale from its signed stable Ubuntu repository only when absent.

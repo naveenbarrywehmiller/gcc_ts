@@ -49,6 +49,7 @@ GROUPS = (
         ("Remove bootstrap credentials", "28", "Remove one-time credentials from the environment after a successful login.", "timesheet remove-bootstrap", "Keeps the created account; confirm login first"),
         ("Edit private environment", "29", "Open the protected settings file; apply saved changes with Start.", "Example: edit .env, save and exit, then App control > Start / apply saved settings.", "Advanced; never paste secrets into logs"),
         ("Tailscale Funnel (public HTTPS)", "funnel", "Connect a Tailscale account, check, enable or disable a public HTTPS link.", "timesheet funnel status", "Public internet access; uses normal Timesheet login"),
+        ("Power BI reporting management", "powerbi", "Show API addresses, setup help, test access, manage reporting and its private key.", "timesheet powerbi status", "Key holders can read reporting data; changes require confirmation"),
     )),
     ("Logs and diagnostics", "🔎", "Investigate errors, disk, ports and services", (
         ("Application logs", "22", "Read the latest 200 lines from the timesheet container.", "timesheet logs", ""),

@@ -7,7 +7,7 @@ See [the setup and operations guide](README.md) for installation, menus and trou
 ## VERSION
 
 ```text
-1.3.0
+1.4.0
 ```
 
 ## install.sh
@@ -116,6 +116,7 @@ import admin_release as release
 import admin_ui as ui
 import admin_system as host
 import admin_funnel as funnel
+import admin_powerbi as powerbi
 
 def prompt(label, default=None):
     answer = input(f"{label}" + (f" [{default}]" if default is not None else "") + ": ").strip()
@@ -209,6 +210,33 @@ def funnel_menu():
         if confirm("Disable public Timesheet access? LAN access will remain available."):
             execute("funnel-disable", funnel.disable)
     elif choice != "0": raise ValueError("Choose one of the displayed Funnel actions.")
+
+def powerbi_menu():
+    terminal = getattr(sys.stdout, "terminal", None) or ui.Terminal()
+    terminal.section("Power BI reporting management")
+    entries = (
+        ("Status and API addresses", "Check actual running settings; the API key stays hidden.", powerbi.status),
+        ("Connection and setup guide", "Read URLs, dashboard parameters and Basic credential examples.", powerbi.guide),
+        ("Test reporting connection", "Check the version endpoint using the configured key without displaying it.", powerbi.check_connection),
+        ("View reporting key privately", "Reveal the key in this terminal after confirmation; protect screenshots.", powerbi.show_key),
+        ("Enable reporting API", "Allow authenticated read-only reporting; safety backup and brief restart.", lambda: powerbi.set_enabled(True)),
+        ("Disable reporting API", "Stop reporting refresh access; safety backup and brief restart.", lambda: powerbi.set_enabled(False)),
+        ("Rotate reporting key", "Replace the key; all Power BI clients must update their credentials.", powerbi.rotate_key),
+    )
+    for index, (title, description, _) in enumerate(entries, 1):
+        terminal.entry(str(index), title, description)
+    terminal.line("[0] Back | Example: timesheet powerbi status")
+    choice = prompt("Choose", "0")
+    if choice == "0": return
+    if not choice.isascii() or not choice.isdigit() or not 1 <= int(choice) <= len(entries):
+        raise ValueError("Choose one of the displayed Power BI actions.")
+    title, _, action = entries[int(choice) - 1]
+    if int(choice) >= 4:
+        terminal.line("CAUTION: " + ("The key grants access to organization-wide reporting data." if choice == "4" else
+                      "Brief app restart. Enabling grants reporting access to key holders; rotation breaks existing refresh credentials."), "warning")
+        if not confirm(title + "?"): return
+    execute("powerbi-" + choice, action)
+
 
 def schedule_menu():
     settings = ops.schedules()
@@ -404,6 +432,7 @@ def run_menu_action(choice):
         execute(label, action)
     elif choice == "1": setup_menu()
     elif choice == "funnel": funnel_menu()
+    elif choice == "powerbi": powerbi_menu()
     elif choice == "4":
         if confirm("Stop the application? Employees cannot use it until it is started again."):
             execute("stop", ops.stop)
@@ -451,8 +480,11 @@ def menu(plain=False):
             if c.CONFIG.exists():
                 cfg = c.config()
                 public_paused = cfg.get("funnel", {}).get("enabled") and (c.ROOT / "funnel.block").exists()
-                terminal.line(f"{c.public_origin(cfg)} | {zone}" + (" [PUBLIC PAUSED]" if public_paused else ""),
-                              "warning" if public_paused else "good")
+                terminal.line(f"LAN: {c.origin(cfg)} | {zone}", "good")
+                if cfg.get("funnel", {}).get("enabled"):
+                    terminal.line("Public: " + c.public_origin(cfg) + (" [PAUSED]" if public_paused else ""),
+                                  "warning" if public_paused else "good")
+                terminal.line("Power BI API: " + c.public_origin(cfg) + powerbi.API_PATH, "accent")
                 active_jobs = sum(bool(ops.schedules()[job]["enabled"]) for job in ops.JOBS)
                 maintenance = (c.ROOT / "maintenance.flag").exists() or (c.ROOT / "data/.maintenance").exists()
                 terminal.line(f"Saved: startup {'ON' if cfg.get('autostart', True) else 'OFF'} | "
@@ -570,6 +602,15 @@ def main():
                 if args.value in ("enable", "disable") and not args.confirm:
                     raise ValueError("Public access changes require --confirm. Example: timesheet funnel enable --confirm")
                 actions[args.value]()
+            elif args.command == "powerbi":
+                actions = {"status": powerbi.status, "guide": powerbi.guide, "test": powerbi.check_connection,
+                           "key": powerbi.show_key, "enable": lambda: powerbi.set_enabled(True),
+                           "disable": lambda: powerbi.set_enabled(False), "rotate-key": powerbi.rotate_key}
+                if args.value not in actions:
+                    raise ValueError("Use timesheet powerbi status|guide|test|key|enable|disable|rotate-key")
+                if args.value in ("key", "enable", "disable", "rotate-key") and not args.confirm:
+                    raise ValueError("Key display and reporting changes require --confirm.")
+                actions[args.value]()
             elif args.command == "restore":
                 if not args.confirm or not args.value: raise ValueError("Use timesheet restore /absolute/backup.tgz --confirm")
                 ops.restore(Path(args.value))
@@ -648,6 +689,7 @@ GROUPS = (
         ("Remove bootstrap credentials", "28", "Remove one-time credentials from the environment after a successful login.", "timesheet remove-bootstrap", "Keeps the created account; confirm login first"),
         ("Edit private environment", "29", "Open the protected settings file; apply saved changes with Start.", "Example: edit .env, save and exit, then App control > Start / apply saved settings.", "Advanced; never paste secrets into logs"),
         ("Tailscale Funnel (public HTTPS)", "funnel", "Connect a Tailscale account, check, enable or disable a public HTTPS link.", "timesheet funnel status", "Public internet access; uses normal Timesheet login"),
+        ("Power BI reporting management", "powerbi", "Show API addresses, setup help, test access, manage reporting and its private key.", "timesheet powerbi status", "Key holders can read reporting data; changes require confirmation"),
     )),
     ("Logs and diagnostics", "🔎", "Investigate errors, disk, ports and services", (
         ("Application logs", "22", "Read the latest 200 lines from the timesheet container.", "timesheet logs", ""),
@@ -1184,6 +1226,157 @@ def disable():
     cfg["funnel"] = {**settings, "enabled": False}
     apply_settings(cfg)
     print(f"Public Timesheet disabled. LAN website: {c.origin(cfg)}")
+```
+
+## admin_powerbi.py
+
+```python
+"""Manage the existing read-only reporting API without exposing its credentials."""
+import json
+import re
+import secrets
+import sys
+import urllib.error
+import urllib.request
+import admin_common as c
+import admin_ops as ops
+
+API_PATH = "/api/powerbi"
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+
+
+def addresses():
+    cfg = c.config()
+    result = [("LAN website", c.origin(cfg))]
+    if cfg.get("funnel", {}).get("enabled"):
+        result.append(("Public website", c.public_origin(cfg)))
+    for label, origin in result:
+        print(f"{label}: {origin}")
+        print(f"{label.replace('website', 'Power BI API')}: {origin}{API_PATH}")
+    if (c.ROOT / "funnel.block").exists() and cfg.get("funnel", {}).get("enabled"):
+        print("Public access is paused; the displayed public address is saved configuration.")
+    print("Example endpoint: " + c.public_origin(cfg) + API_PATH + "/version")
+
+
+def settings(private=False):
+    script = '''const c=require('./src/config/env');
+const value={enabled:c.powerBiApiEnabled,keyConfigured:!!c.powerBiApiKey,
+basePath:c.powerBiApiBasePath,maxRecords:c.powerBiMaxRecords,cacheTtl:c.powerBiCacheTtl};'''
+    if private:
+        script += "value.key=c.powerBiApiKey;"
+    script += "console.log(JSON.stringify(value));"
+    result = c.run(["docker", "exec", "-w", "/app/server", "timesheet-app", "node", "-e", script],
+                   display=False, sensitive=True, timeout=15)
+    return json.loads(result.stdout)
+
+
+def status():
+    addresses()
+    value = settings()
+    print("Reporting API: " + ("ENABLED" if value["enabled"] else "DISABLED"))
+    print("Reporting key: " + ("Configured (hidden)" if value["keyConfigured"] else "Not configured"))
+    print(f"Configured API path: {value['basePath']} | canonical path: {API_PATH}")
+    print(f"Maximum records: {value['maxRecords']} | cache: {value['cacheTtl']} seconds")
+    print("Read-only reporting; a dedicated key can read reporting data across the organization.")
+
+
+def guide():
+    addresses()
+    origin = c.public_origin(c.config())
+    print("GCC_Dashboard: Transform data > Edit parameters")
+    print(f"  ApiBaseUrl = {origin}  (website origin, without /api/powerbi)")
+    print("  ApiPath = api/powerbi")
+    print("Data source settings > Edit permissions > Basic: username powerbi; password = reporting API key.")
+    print("Apply credentials to the same website origin, then refresh the report.")
+    print("For a simple Web query, use the full /api/powerbi/version URL to check compatibility.")
+    print("Use HTTPS when sending credentials. Keep keys in Power BI's credential dialog, outside query text and URLs.")
+    print("A refresh using the private LAN address needs a gateway with network access to that server.")
+    print("For Power BI Service, configure its source credentials and verify refresh before scheduling it.")
+    print("Report/workspace publication and refresh schedules are managed in Power BI, separately from this server menu.")
+    print("Guide: https://github.com/" + c.REPO + "/blob/main/powerbi/documentation/POWERBI.md")
+
+
+def check_connection():
+    value = settings(True)
+    cfg = c.config()
+    urls = [("Local authenticated API", f"http://127.0.0.1:{cfg['app_port']}{API_PATH}/version")]
+    if cfg.get("funnel", {}).get("enabled") and not (c.ROOT / "funnel.block").exists():
+        urls.append(("Public authenticated API", c.public_origin(cfg) + API_PATH + "/version"))
+    if not value["enabled"]:
+        print("Reporting API is DISABLED. Enable it explicitly before testing authenticated refresh.")
+        return
+    if not value.get("key"):
+        raise RuntimeError("No reporting key is configured. Enable reporting or rotate its key first.")
+    for label, url in urls:
+        request = urllib.request.Request(url, headers={"X-API-Key": value["key"]})
+        # Never forward reporting credentials to a redirect target.
+        try:
+            with urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect()).open(request, timeout=15) as response:
+                body = response.read(65537)
+                if len(body) > 65536:
+                    raise ValueError("Version response is too large")
+                data = json.loads(body)
+                if not isinstance(data, dict):
+                    raise ValueError("Unexpected version response")
+                if response.status != 200 or not re.fullmatch(r"\d+\.\d+\.\d+", str(data.get("apiVersion", ""))):
+                    raise ValueError("Unexpected version response")
+                print(f"{label}: PASS | API version {data['apiVersion']}")
+        except urllib.error.HTTPError as error:
+            print(f"{label}: FAIL | HTTP {error.code}; no response body or key displayed")
+            error.close()
+        except (OSError, ValueError):
+            print(f"{label}: FAIL | Connection, certificate or version-response check failed")
+
+
+def apply(updates):
+    if not ops.running():
+        raise RuntimeError("Start the application before changing reporting settings.")
+    ops.health(15)
+    original = (c.ROOT / ".env").read_text()
+    try:
+        ops.stop()
+        ops.snapshot()
+        c.env_update(updates)
+        ops.start()
+        current = settings(True)
+        if "POWERBI_API_ENABLED" in updates and current["enabled"] != (updates["POWERBI_API_ENABLED"] == "true"):
+            raise RuntimeError("Reporting enabled/disabled setting was not applied.")
+        if "POWERBI_API_KEY" in updates and current.get("key") != updates["POWERBI_API_KEY"]:
+            raise RuntimeError("Reporting key change was not applied.")
+    except BaseException:
+        c.atomic(c.ROOT / ".env", original)
+        ops.start()
+        raise
+
+
+def set_enabled(enabled):
+    value = settings(True)
+    updates = {"POWERBI_API_ENABLED": str(enabled).lower()}
+    if enabled and not value.get("key"):
+        updates["POWERBI_API_KEY"] = secrets.token_hex(32)
+    elif enabled and len(value["key"]) < 32:
+        raise RuntimeError("Rotate the short reporting key before enabling the API (minimum 32 characters).")
+    apply(updates)
+    print("Reporting API " + ("enabled. Use View reporting key for Power BI credentials." if enabled else "disabled."))
+
+
+def rotate_key():
+    apply({"POWERBI_API_KEY": secrets.token_hex(32)})
+    print("Reporting key rotated. Update every Power BI data-source credential before its next refresh.")
+    print("Reporting enabled/disabled state is preserved. Use View reporting key to retrieve the replacement privately.")
+
+
+def show_key():
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        raise RuntimeError("Key display requires an interactive terminal; redirected output is refused.")
+    value = settings(True)
+    if not value.get("key"):
+        raise RuntimeError("No reporting key is configured. Rotate the key to create one.")
+    print("PRIVATE reporting API key (keep it out of screenshots and logs):")
+    print(value["key"])
 ```
 
 ## admin_common.py
@@ -2144,7 +2337,7 @@ def validate_tag(tag):
 def install(source, version):
     if (source / "VERSION").read_text().strip() != version:
         raise ValueError("Bundle version does not match selected release.")
-    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
+    for name in ("manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_powerbi.py", "admin_common.py", "admin_ops.py", "admin_release.py", "timesheet", "compose.yaml"):
         if not (source / name).is_file() or (source / name).is_symlink():
             raise ValueError(f"Incomplete bundle: {name}")
     c.run([sys.executable, "-m", "py_compile", *map(str, source.glob("*.py"))], display=False)
@@ -2284,7 +2477,7 @@ import tarfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_common.py",
+SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_powerbi.py", "admin_common.py",
            "admin_ops.py", "admin_release.py", "compose.yaml", "build_release.py"]
 
 def source_reference():

@@ -89,3 +89,6 @@ release.install(c.SOURCE, c.VERSION)
 c.run(["/usr/local/bin/timesheet", "--version"])
 c.run(["/usr/local/bin/timesheet", "status"])
 print("PASS: real Ubuntu setup, reboot policy, Nginx, Docker health, backup/restore, web maintenance release, factory reset, port reconfiguration, timer pause and command installation")
+
+from smoke_menu import run as run_menu_checks
+run_menu_checks(maintenance_login)

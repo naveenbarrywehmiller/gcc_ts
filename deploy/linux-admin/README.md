@@ -1,8 +1,8 @@
-# GCC Timesheet Linux Admin v1.3.0 — Ubuntu setup and operations
+# GCC Timesheet Linux Admin v1.4.0 — Ubuntu setup and operations
 
 **Installer (v1.3.0):** [GitHub release and downloads](https://github.com/naveenbarrywehmiller/gcc_ts/releases/tag/gcc-timesheet-linux-admin-v1.3.0) · [Direct installer](https://github.com/naveenbarrywehmiller/gcc_ts/releases/download/gcc-timesheet-linux-admin-v1.3.0/install.sh) · [Complete script reference](SCRIPTS.md)
 
-The optional Tailscale Funnel controls below are new in **v1.3.0**. Choose **Setup and configuration > Tailscale Funnel** to connect an account and manage the public HTTPS link. Existing LAN installations keep their current settings until Funnel is explicitly enabled.
+The Power BI management controls and separate LAN/public/API home addresses are new in **v1.4.0**, currently a local build. The published installer above installs v1.3.0. Build this source with `python3 deploy/linux-admin/build_release.py`, extract the bundle and run `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.4.0` to install the local build. Reporting is not enabled by installing this administrator.
 
 On your **Ubuntu VM**, run:
 
@@ -26,7 +26,7 @@ The tool reads the existing system hostname and timezone. It does not run `hostn
 
 Ubuntu Server **24.04 or 26.04 LTS**, Python 3.12+, a sudo account and outbound HTTPS access are required. Python and basic download tools are installed by the bootstrap. A starting VM size is 2 vCPU, 4 GB RAM and 60 GB SSD; actual capacity depends on usage. IT should provide a DHCP reservation/static IP and allow access to Ubuntu mirrors, Docker's package repository, GitHub, GHCR and their download endpoints. Configure APT/Docker proxies through IT if required.
 
-**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **Application and tool updates > Choose application version** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.3.0`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
+**Application compatibility:** use app **v1.30.0 or later** with this administrator, including `/api/health/live` and `factoryReset.js`. Menu **Application and tool updates > Choose application version** can pin `v1.30.0`. For local installation, build the bundle with `python3 deploy/linux-admin/build_release.py` and install its extracted files using `sudo python3 manager.py install-bundle gcc-timesheet-linux-admin-v1.4.0`. Restoring a snapshot whose app image predates these endpoints requires its original administrator version first, followed by an app/tool upgrade; 1.1.0 aborts/rolls back when the old image cannot pass its health checks.
 
 ## First installation, in order
 
@@ -46,9 +46,9 @@ If an installation is interrupted after environment creation, choose **Setup and
 
 The Docker image is **`ghcr.io/naveenbarrywehmiller/gcc_ts:latest`** ([package](https://github.com/naveenbarrywehmiller/gcc_ts/pkgs/container/gcc_ts)). `latest` follows main-branch builds, including changes before a tagged app release. **Application and tool updates > Choose application version** chooses a fixed app tag or immutable digest instead. Updates use published container images; the server does not need a Git checkout or host Node.js.
 
-## Panel navigation (v1.3.0)
+## Panel navigation (v1.4.0)
 
-The home screen shows live CPU usage, logical CPU/core/thread counts, processor, usable RAM and available RAM, swap, disk capacity, root-filesystem usage, OS, virtualization and the default network interface's IP addresses. CPU use is measured between refreshes; memory use is total minus Linux `MemAvailable` (reclaimable cache is available). Disk capacity and root-filesystem capacity are separate; available filesystem space excludes reserved blocks. Missing measurements say unavailable.
+The home screen shows the LAN website with its port, an optional public Funnel website, and the full Power BI API address. With Funnel enabled, the displayed API uses public HTTPS; the Power BI submenu also gives the LAN API address. An address alone does not mean reporting is enabled. Live measurements include CPU usage, logical CPU/core/thread counts, processor, usable RAM and available RAM, swap, disk capacity, root-filesystem usage, OS, virtualization and the default network interface's IP addresses. CPU use is measured between refreshes; memory use is total minus Linux `MemAvailable` (reclaimable cache is available). Disk capacity and root-filesystem capacity are separate; available filesystem space excludes reserved blocks. Missing measurements say unavailable.
 
 On an interactive ANSI terminal with enough room, the home screen refreshes every **5 seconds** and preserves a partially typed selection. **R** refreshes immediately after Enter. A small window, redirected output, `TERM=dumb` or `timesheet --plain` uses a scrollable snapshot with **R** to refresh. Enlarge a small terminal and press R to enable live refresh. Hardware identity is read when the panel opens; CPU, memory, root usage and IP addresses update with each refresh. Refreshing only reads system state and does not restart or update the application.
 
@@ -60,7 +60,7 @@ The saved startup preference, enabled-job count and maintenance flags are also s
 | 2 | Backups and database | Create/list backups, integrity check, restore, retention/off-VM copies, expired-backup preview |
 | 3 | Application and tool updates | App update/version/retry; administrator check/update/rollback |
 | 4 | Automatic jobs | Configure, pause and resume backup/app/tool schedules |
-| 5 | Setup and configuration | Install/resume, website/ports/optional HTTPS, dependency repair, bootstrap cleanup, private environment editor, Tailscale Funnel |
+| 5 | Setup and configuration | Install/resume, website/ports/optional HTTPS, dependency repair, bootstrap cleanup, private environment editor, Tailscale Funnel, Power BI management |
 | 6 | Logs and diagnostics | Application logs, administrator logs, server diagnostics |
 | 7 | Advanced maintenance | Ubuntu/Docker upgrades and factory reset |
 | H | Help and display | Installed guide and color/emoji check |
@@ -121,6 +121,28 @@ Funnel resumes after reboot through `tailscaled` and the persistent background m
 Restoring a snapshot or resetting application data writes a persistent public-access block outside snapshot contents. Public access stays paused after startup and browser System Admin login; verify restored credentials and explicitly enable Funnel again. Rollback to an administrator older than v1.3.0 requires disabling Funnel first. Tailscale device keys and account state are not included in Timesheet snapshots; connect a replacement server separately before enabling sharing there.
 
 This is public sharing, not a tailnet-only access restriction. Funnel uses the device's `*.ts.net` domain and supported HTTPS ports, and has bandwidth limits. See the official [Funnel requirements](https://tailscale.com/docs/features/tailscale-funnel) and [CLI commands](https://tailscale.com/docs/reference/tailscale-cli/funnel).
+
+## Power BI reporting management
+
+Choose **5 — Setup and configuration > 7 — Power BI reporting management**. The submenu includes actual running status and LAN/public addresses, connection/setup help, an authenticated version check, private key display, enable/disable and key rotation. Home never displays a reporting key. Private key display requires confirmation and an interactive terminal; redirected output is refused.
+
+For example, a LAN site at `http://10.4.2.68:8080` has the reporting API `http://10.4.2.68:8080/api/powerbi`. Each API address is a namespace: append `/version` for compatibility or `/timesheets` for work entries. A configured custom namespace remains available; `/api/powerbi` is also the application's canonical alias.
+
+For the repository's GCC_Dashboard project, set **ApiBaseUrl** to the website origin, such as `https://device.tailnet.ts.net`, and **ApiPath** to `api/powerbi`. Use **Data source settings > Edit permissions > Basic**, username `powerbi`, with the reporting API key as the password. Store the key in Power BI's credential dialog. Use HTTPS for credentials; leave keys out of URLs, M queries, screenshots and Git. See the [dashboard connection guide](https://github.com/naveenbarrywehmiller/gcc_ts/blob/main/powerbi/documentation/POWERBI.md) and Microsoft's [Web connector authentication](https://learn.microsoft.com/en-us/power-query/connectors/web/web).
+
+```bash
+timesheet powerbi status
+timesheet powerbi guide
+timesheet powerbi test
+timesheet powerbi key --confirm          # private interactive terminal only
+timesheet powerbi enable --confirm
+timesheet powerbi disable --confirm
+timesheet powerbi rotate-key --confirm
+```
+
+Reporting stays in its existing state until explicitly changed. Enable/disable and rotation take a safety snapshot and briefly restart the app. If applying a setting fails, the previous private environment is restored; newer business data is never replaced. Enabling creates a strong random key when none exists and rejects an existing key shorter than 32 characters. Rotation preserves the enabled/disabled state and requires updating all Power BI clients' credentials. Connection tests call `/version`, hide credentials and response bodies, verify TLS normally for public HTTPS and refuse redirects.
+
+The reporting key allows organization-wide read access; it is separate from a normal Timesheet login and cannot change records. Report publication, workspace permissions and refresh schedules belong to Power BI. A LAN source needs a gateway with access to the private server for Power BI Service refresh. For public HTTPS, configure the service's source credentials and verify refresh before scheduling it. See Microsoft's [refresh configuration](https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-scheduled-refresh).
 
 ## Manual and automatic jobs
 

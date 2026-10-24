@@ -133,7 +133,7 @@ class MenuTests(unittest.TestCase):
     def test_all_existing_operations_except_removed_choices_are_reachable_once(self):
         entries = [entry for group in ui.GROUPS for entry in group[3]]
         actions = [entry[1] for entry in entries]
-        self.assertCountEqual(actions, [str(n) for n in range(1, 34) if n not in (11, 12)] + ["display", "funnel"])
+        self.assertCountEqual(actions, [str(n) for n in range(1, 34) if n not in (11, 12)] + ["display", "funnel", "powerbi"])
         for title, _, description, example, _ in entries:
             self.assertTrue(title and description and example)
 

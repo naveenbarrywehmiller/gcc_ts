@@ -7,7 +7,7 @@ import tarfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_common.py",
+SCRIPTS = ["VERSION", "install.sh", "timesheet", "manager.py", "admin_ui.py", "admin_system.py", "admin_funnel.py", "admin_powerbi.py", "admin_common.py",
            "admin_ops.py", "admin_release.py", "compose.yaml", "build_release.py"]
 
 def source_reference():
