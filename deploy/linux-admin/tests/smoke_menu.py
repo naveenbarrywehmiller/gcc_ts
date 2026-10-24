@@ -53,9 +53,9 @@ def panel(steps, expected="", timeout=180):
         os.close(slave)
 
 
-def action(category, item, prompts=()):
+def action(category, item, prompts=(), timeout=180):
     panel([("Choose [0]:", category), ("Choose [0]:", str(item)), *prompts,
-           ("Press Enter to return to this category...", ""), ("Choose [0]:", "q")])
+           ("Press Enter to return to this category...", ""), ("Choose [0]:", "q")], timeout=timeout)
 
 
 def run(maintenance_login):
@@ -169,3 +169,6 @@ def run(maintenance_login):
     assert ops.inspect("{{.Id}}") == image_before
     assert release.update() is False  # Published release is older than this local 1.4.0 candidate.
     print("PASS versioned tool install, rollback and latest-release no-op without changing application data")
+
+    from smoke_system import run as run_system_checks
+    run_system_checks(action, maintenance_login, saved)
